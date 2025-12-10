@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIRD - Detección inteligente de retinopatía diabética</title>
+    <link rel="icon" type="image/x-icon" href="https://tmeduca.org/dird/img/favicon.ico">
+
+    <!-- Prevenir caché para todos los archivos excepto el modelo ONNX -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <link rel="stylesheet" href="css/styles.css?v=1.0">
+    <link rel="stylesheet" href="css/model-results.css">
+    <link rel="stylesheet" href="css/pdf-exporter.css?v=1.0">
+
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
+    <!-- En la sección <head> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <!-- CSS de Viewer.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.css">
+    <!-- Script de Viewer.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.6/viewer.min.js"></script>
+
+    <!-- Agregar versión a los scripts para forzar recarga -->
+    <script src="js/config.js?v=1.0"></script>
+    <script src="js/ui-manager.js?v=1.0"></script>
+    <script src="js/image-processor.js?v=1.0"></script>
+    <script src="js/model-handler.js?v=1.0"></script>
+    <script src="js/detection-processor/detection-processor.js?v=1.0"></script>
+    <script src="js/detection-processor/nms-processor.js?v=1.0"></script>
+    <script src="js/detection-processor/yolo-formats-processor.js?v=1.0"></script>
+    <script src="js/detection-processor/detection-utils.js?v=1.0"></script>
+    <script src="js/visualizer.js?v=1.0"></script>
+    <script src="js/debug-tools.js?v=1.0"></script>
+    <script src="js/results-modal.js"></script>
+    <script src="js/main.js?v=1.0"></script>
+    <script src="js/crop-modal.js?v=1.0"></script>
+    <script src="js/zoom.js?v=1.0"></script>
+    <!-- Añadir justo antes de cerrar el head -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <script type="module" src="js/exporter-pdf/index.js?v=1.0"></script>
+    <script src="js/integrar-pdf-exporter.js?v=1.0"></script>
+    <!-- <script src="js/pdf-standalone.js"></script> -->
+    <script src="js/simple-pdf-button.js"></script>
+
+
+
+</head>
+
+<body>
+    <!-- Imagen de cabecera en lugar de título -->
+    <img src="img/header.png" alt="Detector DIRD" class="header-image">
+
+    <div class="upload-container" id="dropArea" hidden>
+        <p>Arrastra y suelta una imagen aquí o haz clic para seleccionar</p>
+        <p>Sube una imagen para analizarla con el modelo DIRDV1s - ONNX</p>
+        <input type="file" id="fileInput" accept="image/*">
+    </div>
+    <button id="uploadBtn" disabled hidden>Procesar Imagenes</button>
+    <div id="debugInfo"></div>
+    <div id="errorMessage"></div>
+    <div id="infoMessage"></div>
+
+
+    <div id="loadingSpinner">
+        <div class="spinner"></div>
+        <p>Procesando imagen...</p>
+    </div>
+
+
+    <div id="resultContainer">
+        <div class="image-container">
+            <div class="image-label">Imagen con detecciones</div>
+            <canvas id="outputCanvas"></canvas>
+        </div>
+    </div>
+
+    <div class="controls-container">
+        <!-- Controles (izquierda) -->
+        <div class="controls">
+            <div class="control-group">
+                <label for="confidenceThreshold">Umbral de confianza:</label>
+                <input type="range" id="confidenceThreshold" min="0" max="1" step="0.001" value="0.25">
+                <span id="confidenceValue" class="value-display">0.25</span>
+            </div>
+            <div class="control-group">
+                <label for="confidenceMultiplier">Multiplicador de confianza:</label>
+                <input type="range" id="confidenceMultiplier" min="1" max="10" step="0.5" value="1">
+                <span id="multiplierValue" class="value-display">1</span>
+            </div>
+            <div class="control-group">
+                <label for="nmsThreshold">Umbral NMS:</label>
+                <input type="range" id="nmsThreshold" min="0" max="1" step="0.05" value="0.45">
+                <span id="nmsValue" class="value-display">0.45</span>
+            </div>
+            <div class="control-group">
+                <label for="maxDetections">Máximo de detecciones:</label>
+                <input type="range" id="maxDetections" min="1" max="50" step="1" value="15">
+                <span id="maxDetectionsValue" class="value-display">15</span>
+            </div>
+            <div class="control-group" style="margin-top: 15px; text-align: center;">
+                <button id="advancedDebugBtn"
+                    style="background-color: #3498db; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Depuración
+                    Avanzada</button>
+            </div>
+        </div>
+
+        <!-- Imagen F1 (derecha) -->
+        <div class="f1-chart">
+            <img src="img/models/F1_curve.png" alt="Gráfico F1" class="f1-image" id="f1Image"
+                title="Haz clic para ver resultados detallados">
+        </div>
+    </div>
+
+
+
+
+    <footer class="footer">
+        <img src="img/footer.png" alt="Proyecto YOLO ONNX" class="footer-image">
+        <div class="footer-info">
+            <div class="footer-text">
+                <h3>Detector YOLO ONNX</h3>
+                <p>Implementación de un detector de objetos utilizando el formato ONNX para un modelo YOLO preentrenado.
+                    Este proyecto permite la detección de elementos específicos en imágenes médicas utilizando
+                    tecnología de visión por computadora.</p>
+                <div class="footer-links">
+                    <a href="#" onclick="toggleDocumentation(); return false;">Documentación</a>
+                    <a href="#" onclick="toggleAbout(); return false;">Acerca del proyecto</a>
+                    <a href="mailto:carolina.almendras@uach.cl">Contacto</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2024 Proyecto DIRD - Todos los derechos reservados
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>
