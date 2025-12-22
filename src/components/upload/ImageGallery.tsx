@@ -9,10 +9,9 @@ interface ImageGalleryProps {
   patientId: string;
   sessionId: string;
   onDelete?: (imageId: number) => void;
-  onView?: (image: Image) => void;
 }
 
-const ImageGallery: React.FC<ImageGalleryProps> = ({ images, patientId, sessionId, onDelete, onView }) => {
+const ImageGallery: React.FC<ImageGalleryProps> = ({ images, patientId, sessionId, onDelete }) => {
   const navigate = useNavigate();
   const [thumbnails, setThumbnails] = React.useState<Map<number, string>>(new Map());
 

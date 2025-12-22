@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowLeft, Layers, Wrench } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -122,7 +122,7 @@ const ImageAnalyzer: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {detections.map((det, idx) => (
+                  {detections.map((det) => (
                     <div
                       key={det.id}
                       className="p-2 bg-coal-50 rounded text-xs flex items-center justify-between"

@@ -14,14 +14,13 @@ import { useConfigStore, type ModelSource } from '@/stores/config-store';
 import { apiInferenceService } from '@/lib/ai/api-inference-service';
 import { PWAInstallButton, PWAInstallStatus } from '@/components/pwa/PWAInstallButton';
 import { Card } from '@/components/ui/card';
-import { Tabs } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
-import { Select } from '@/components/ui/select';
 
 export function Settings() {
   const { t } = useTranslation();
@@ -35,6 +34,7 @@ export function Settings() {
     resetConfig
   } = useConfigStore();
 
+  const [activeTab, setActiveTab] = useState('appearance');
   const [apiTestResult, setApiTestResult] = useState<{
     success: boolean;
     message: string;
@@ -68,29 +68,32 @@ export function Settings() {
         <p className="text-smoke-600 mt-2">{t('settings.description')}</p>
       </div>
 
-      <Tabs defaultValue="appearance" className="w-full">
-        <div className="border-b border-smoke-300 mb-6">
-          <div className="flex gap-1">
-            <TabButton value="appearance" icon={<Palette className="h-4 w-4" />}>
-              {t('settings.tabs.appearance')}
-            </TabButton>
-            <TabButton value="models" icon={<Cpu className="h-4 w-4" />}>
-              {t('settings.tabs.models')}
-            </TabButton>
-            <TabButton value="processing" icon={<Gauge className="h-4 w-4" />}>
-              {t('settings.tabs.processing')}
-            </TabButton>
-            <TabButton value="pwa" icon={<Download className="h-4 w-4" />}>
-              {t('settings.tabs.pwa')}
-            </TabButton>
-            <TabButton value="about" icon={<Info className="h-4 w-4" />}>
-              {t('settings.tabs.about')}
-            </TabButton>
-          </div>
-        </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="border-b border-smoke-300 mb-6">
+          <TabsTrigger value="appearance">
+            <Palette className="h-4 w-4 mr-2" />
+            {t('settings.tabs.appearance')}
+          </TabsTrigger>
+          <TabsTrigger value="models">
+            <Cpu className="h-4 w-4 mr-2" />
+            {t('settings.tabs.models')}
+          </TabsTrigger>
+          <TabsTrigger value="processing">
+            <Gauge className="h-4 w-4 mr-2" />
+            {t('settings.tabs.processing')}
+          </TabsTrigger>
+          <TabsTrigger value="pwa">
+            <Download className="h-4 w-4 mr-2" />
+            {t('settings.tabs.pwa')}
+          </TabsTrigger>
+          <TabsTrigger value="about">
+            <Info className="h-4 w-4 mr-2" />
+            {t('settings.tabs.about')}
+          </TabsTrigger>
+        </TabsList>
 
         {/* Appearance Tab */}
-        <TabPanel value="appearance">
+        <TabsContent value="appearance">
           <Card className="p-6">
             <h2 className="text-xl font-semibold text-coal-800 mb-4">
               {t('settings.appearance.title')}
@@ -162,10 +165,10 @@ export function Settings() {
               </div>
             </div>
           </Card>
-        </TabPanel>
+        </TabsContent>
 
         {/* Models Tab */}
-        <TabPanel value="models">
+        <TabsContent value="models">
           <div className="space-y-6">
             {/* Model Source Selection */}
             <Card className="p-6">
@@ -402,10 +405,10 @@ export function Settings() {
               </Card>
             )}
           </div>
-        </TabPanel>
+        </TabsContent>
 
         {/* Processing Tab */}
-        <TabPanel value="processing">
+        <TabsContent value="processing">
           <Card className="p-6">
             <h2 className="text-xl font-semibold text-coal-800 mb-4">
               {t('settings.processing.title')}
@@ -478,10 +481,10 @@ export function Settings() {
               </div>
             </div>
           </Card>
-        </TabPanel>
+        </TabsContent>
 
         {/* PWA Tab */}
-        <TabPanel value="pwa">
+        <TabsContent value="pwa">
           <Card className="p-6">
             <h2 className="text-xl font-semibold text-coal-800 mb-4">
               {t('settings.pwa.title')}
@@ -531,10 +534,10 @@ export function Settings() {
               </div>
             </div>
           </Card>
-        </TabPanel>
+        </TabsContent>
 
         {/* About Tab */}
-        <TabPanel value="about">
+        <TabsContent value="about">
           <Card className="p-6">
             <h2 className="text-xl font-semibold text-coal-800 mb-4">
               {t('settings.about.title')}
@@ -560,33 +563,8 @@ export function Settings() {
               </div>
             </div>
           </Card>
-        </TabPanel>
+        </TabsContent>
       </Tabs>
     </div>
   );
-}
-
-// Helper components
-function TabButton({
-  value,
-  icon,
-  children
-}: {
-  value: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      data-state={value}
-      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-smoke-600 hover:text-coal-800 border-b-2 border-transparent data-[state=active]:border-primary-500 data-[state=active]:text-primary-500 transition-colors"
-    >
-      {icon}
-      {children}
-    </button>
-  );
-}
-
-function TabPanel({ value, children }: { value: string; children: React.ReactNode }) {
-  return <div data-state={value}>{children}</div>;
 }

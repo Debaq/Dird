@@ -44,7 +44,7 @@ export class ReportGenerator {
     this.addDetectionSummary(data.detections);
     await this.addImages(data.images, data.detections);
     this.addEvaluatorNotes(data.evaluatorNotes || '');
-    this.addFooter(type);
+    this.addFooter();
 
     // Convert to blob
     return this.doc.output('blob');
@@ -255,7 +255,7 @@ export class ReportGenerator {
     }
   }
 
-  private addFooter(type: ReportType) {
+  private addFooter() {
     const pageCount = this.doc.getNumberOfPages();
 
     for (let i = 1; i <= pageCount; i++) {

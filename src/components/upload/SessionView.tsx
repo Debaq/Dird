@@ -10,14 +10,13 @@ import ImageDropzone from './ImageDropzone';
 import ImageGallery from './ImageGallery';
 import ReportGenerator from '../reports/ReportGenerator';
 import { db } from '@/lib/db/schema';
-import type { Image } from '@/lib/db/schema';
 import { exportSession, downloadDirdFile } from '@/lib/export/dird-exporter';
 
 const SessionView: React.FC = () => {
   const { patientId, sessionId } = useParams<{ patientId: string; sessionId: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [selectedImage, setSelectedImage] = useState<Image | null>(null);
+  const [activeTab, setActiveTab] = useState('images');
   const [refreshKey, setRefreshKey] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -168,7 +167,7 @@ const SessionView: React.FC = () => {
       )}
 
       {/* Tabs */}
-      <Tabs defaultValue="images" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
           <TabsTrigger value="images">
             Imágenes ({images?.length || 0})
@@ -197,7 +196,6 @@ const SessionView: React.FC = () => {
                 patientId={patientId!}
                 sessionId={sessionId!}
                 onDelete={!session.locked ? handleDeleteImage : undefined}
-                onView={(img) => setSelectedImage(img)}
               />
             </CardContent>
           </Card>

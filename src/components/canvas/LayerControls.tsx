@@ -1,6 +1,5 @@
 import React from 'react';
 import { Eye, EyeOff, Lock, Unlock } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 export interface CanvasLayer {
@@ -18,7 +17,6 @@ interface LayerControlsProps {
 }
 
 const LayerControls: React.FC<LayerControlsProps> = ({ layers, onLayerUpdate }) => {
-  const { t } = useTranslation();
 
   return (
     <div className="bg-white rounded-lg border border-coal-200 p-4">

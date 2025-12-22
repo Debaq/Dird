@@ -1,22 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Image as KonvaImage, Rect, Group, Text } from 'react-konva';
-import { useTranslation } from 'react-i18next';
 import type { Image } from '@/lib/db/schema';
 
 interface AnnotationCanvasProps {
   image: Image;
   detections?: any[];
-  segmentations?: any[];
-  onAnnotationChange?: (annotations: any) => void;
 }
 
 const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   image,
   detections = [],
-  segmentations = [],
-  onAnnotationChange,
 }) => {
-  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [konvaImage, setKonvaImage] = useState<HTMLImageElement | null>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });

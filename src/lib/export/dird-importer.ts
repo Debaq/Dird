@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 import { db } from '@/lib/db/schema';
-import type { Patient, Session, Image, Detection, Segmentation } from '@/lib/db/schema';
+import type { Patient, Detection, Segmentation } from '@/lib/db/schema';
 import type { DirdExportMetadata } from './dird-exporter';
 
 export interface ImportResult {

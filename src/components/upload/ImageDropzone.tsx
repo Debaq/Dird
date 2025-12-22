@@ -78,7 +78,7 @@ const ImageDropzone: React.FC<ImageDropzoneProps> = ({ sessionId, onUploadComple
 
           // Update status
           setUploadingFiles((prev) =>
-            prev.map((uf, idx) =>
+            prev.map((uf) =>
               uf.file === file ? { ...uf, progress: 100, status: 'success' } : uf
             )
           );
@@ -192,9 +192,9 @@ const ImageDropzone: React.FC<ImageDropzoneProps> = ({ sessionId, onUploadComple
 
       {uploadingFiles.length > 0 && (
         <div className="space-y-2">
-          {uploadingFiles.map((uf, idx) => (
+          {uploadingFiles.map((uf) => (
             <div
-              key={idx}
+              key={uf.file.name}
               className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-coal-200"
             >
               <div className="flex-1">

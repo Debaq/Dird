@@ -72,7 +72,7 @@ export class InferenceService {
     }
   }
 
-  async segmentImage(imageElement: HTMLImageElement, imageId: number): Promise<any> {
+  async segmentImage(imageElement: HTMLImageElement): Promise<any> {
     if (!this.segmentationModel || !this.segmentationModel.isLoaded()) {
       throw new Error('Segmentation model not loaded');
     }

@@ -74,5 +74,6 @@ export default defineConfig({
         }
       }
     }
-  }
+  },
+  base: '/dird/'
 });

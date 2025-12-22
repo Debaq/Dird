@@ -38,16 +38,18 @@ export async function duplicateSession(sessionId: number): Promise<number> {
 
     // 3. Create new images and map old IDs to new IDs
     const imageIdMap = new Map<number, number>();
-    for (const image of originalImages) {
-      const originalImageId = image.id!;
-      const newImageData: Omit<Image, 'id'> = {
-        ...image,
-        sessionId: newSessionId,
-      };
-      delete (newImageData as any).id;
-      
-      const newImageId = await db.images.add(newImageData as Image);
-      imageIdMap.set(originalImageId, newImageId);
+    if (newSessionId) {
+      for (const image of originalImages) {
+        const originalImageId = image.id!;
+        const newImageData: Omit<Image, 'id'> = {
+          ...image,
+          sessionId: newSessionId,
+        };
+        delete (newImageData as any).id;
+        
+        const newImageId = await db.images.add(newImageData as Image);
+        imageIdMap.set(originalImageId, newImageId);
+      }
     }
 
     // 4. Create new detections and segmentations
@@ -84,7 +86,7 @@ export async function duplicateSession(sessionId: number): Promise<number> {
 }
 
 export async function deletePatient(patientId: number): Promise<void> {
-  await db.transaction('rw', db.patients, db.sessions, db.images, db.detections, db.segmentations, db.reports, async () => {
+  await db.transaction('rw', db.patients, db.sessions, db.images, async () => {
     // 1. Get all sessions for the patient
     const sessionsToDelete = await db.sessions.where('patientId').equals(patientId).toArray();
     const sessionIds = sessionsToDelete.map(s => s.id!);
@@ -102,9 +104,6 @@ export async function deletePatient(patientId: number): Promise<void> {
 
       // 4. Delete all images
       await db.images.where('sessionId').anyOf(sessionIds).delete();
-
-      // 5. Delete all reports
-      await db.reports.where('sessionId').anyOf(sessionIds).delete();
     }
 
     // 6. Delete all sessions

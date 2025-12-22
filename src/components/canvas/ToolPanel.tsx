@@ -2,7 +2,6 @@ import React from 'react';
 import { Square, Circle, Eraser, Move, ZoomIn, Hand } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 export type CanvasTool = 'select' | 'bbox' | 'circle' | 'eraser' | 'pan' | 'zoom';
 
