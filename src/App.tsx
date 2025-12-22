@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import MainLayout from '@/components/layout/MainLayout';
 import PatientList from '@/components/patients/PatientList';
@@ -23,20 +23,22 @@ function HomePage() {
           Plataforma de análisis de imágenes oftalmológicas con IA edge-computing.
           Todos los datos permanecen en tu dispositivo.
         </p>
-        <a
-          href="/patients"
+        <Link
+          to="/patients"
           className="inline-flex items-center justify-center rounded-md font-medium bg-primary-500 text-white hover:bg-primary-600 h-10 py-2 px-4"
         >
           Comenzar
-        </a>
+        </Link>
       </div>
     </div>
   );
 }
 
 function App() {
+  const basename = import.meta.env.PROD ? '/dird' : '/';
+
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <Routes>
         {/* Home page */}
         <Route path="/" element={<HomePage />} />
