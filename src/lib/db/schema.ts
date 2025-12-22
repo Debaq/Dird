@@ -5,6 +5,7 @@ export interface Patient {
   patientId: string;
   name: string;
   dateOfBirth: Date;
+  status: 'active' | 'archived';
   metadata?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
@@ -118,6 +119,26 @@ export class DirdDatabase extends Dexie {
       detections: '++id, imageId, type, class, visible',
       segmentations: '++id, imageId, type, class, visible',
       reports: '++id, sessionId, type, generatedAt'
+    }).upgrade(tx => {
+      return tx.table('images').toCollection().modify(image => {
+        if (!image.eyeType) {
+          image.eyeType = 'OI';
+        }
+      });
+    });
+    this.version(4).stores({
+      patients: '++id, patientId, name, status, createdAt', // Added status
+      sessions: '++id, patientId, name, sessionNumber, date, locked',
+      images: '++id, sessionId, eyeType, uploadedAt',
+      detections: '++id, imageId, type, class, visible',
+      segmentations: '++id, imageId, type, class, visible',
+      reports: '++id, sessionId, type, generatedAt'
+    }).upgrade(tx => {
+      return tx.table('patients').toCollection().modify(patient => {
+        if (patient.status === undefined) {
+          patient.status = 'active';
+        }
+      });
     });
   }
 }

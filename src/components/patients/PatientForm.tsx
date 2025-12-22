@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { db } from '@/lib/db/schema';
+import type { Patient } from '@/lib/db/schema';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from '@/components/ui/dialog';
-import { db } from '@/lib/db/schema';
-import type { Patient } from '@/lib/db/schema';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface PatientFormProps {
   open: boolean;
@@ -29,14 +29,33 @@ const PatientForm: React.FC<PatientFormProps> = ({
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    patientId: patient?.patientId || '',
-    name: patient?.name || '',
-    dateOfBirth: patient?.dateOfBirth
-      ? new Date(patient.dateOfBirth).toISOString().split('T')[0]
-      : '',
+    patientId: '',
+    name: '',
+    dateOfBirth: '',
   });
 
+  useEffect(() => {
+    if (open) {
+      if (patient) {
+        setFormData({
+          patientId: patient.patientId || '',
+          name: patient.name || '',
+          dateOfBirth: patient.dateOfBirth
+            ? new Date(patient.dateOfBirth).toISOString().split('T')[0]
+            : '',
+        });
+      } else {
+        setFormData({
+          patientId: '',
+          name: '',
+          dateOfBirth: '',
+        });
+      }
+    }
+  }, [open, patient]);
+
   const handleSubmit = async (e: React.FormEvent) => {
+// ... rest of the component
     e.preventDefault();
     setLoading(true);
 
@@ -46,6 +65,7 @@ const PatientForm: React.FC<PatientFormProps> = ({
         patientId: formData.patientId,
         name: formData.name,
         dateOfBirth: new Date(formData.dateOfBirth),
+        status: (patient?.status || 'active') as 'active' | 'archived',
         createdAt: patient?.createdAt || now,
         updatedAt: now,
       };

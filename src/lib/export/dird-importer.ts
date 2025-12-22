@@ -95,6 +95,7 @@ export async function importDirdFile(file: File): Promise<ImportResult> {
           const newImageId = await db.images.add({
             sessionId: sessionId as number,
             filename,
+            eyeType: 'OI', // Default value for imported images
             originalBlob: blob,
             width: img.width,
             height: img.height,
