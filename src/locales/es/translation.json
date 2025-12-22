@@ -1,0 +1,74 @@
+{
+  "app": {
+    "name": "DIRD",
+    "tagline": "Detección de Retinopatía Diabética"
+  },
+  "patients": {
+    "title": "Pacientes",
+    "create": "Crear Paciente",
+    "name": "Nombre",
+    "id": "ID de Paciente",
+    "dateOfBirth": "Fecha de Nacimiento",
+    "list": "Lista de Pacientes",
+    "details": "Detalles del Paciente",
+    "edit": "Editar Paciente",
+    "delete": "Eliminar Paciente"
+  },
+  "sessions": {
+    "title": "Sesiones",
+    "create": "Nueva Sesión",
+    "locked": "Sesión Bloqueada",
+    "unlock": "Desbloquear",
+    "date": "Fecha",
+    "notes": "Notas",
+    "sessionNumber": "Sesión N°"
+  },
+  "canvas": {
+    "tools": {
+      "bbox": "Caja de Detección",
+      "segment": "Segmentación",
+      "eraser": "Borrador",
+      "pan": "Mover",
+      "zoom": "Zoom"
+    },
+    "layers": {
+      "original": "Imagen Original",
+      "ai_detections": "Detecciones IA",
+      "ai_segmentations": "Segmentaciones IA",
+      "manual": "Anotaciones Manuales"
+    }
+  },
+  "reports": {
+    "generate": "Generar Informe",
+    "preview": "Vista Preliminar",
+    "finalize": "Finalizar y Cerrar Caso",
+    "status": {
+      "preliminary": "VERSIÓN PRELIMINAR",
+      "final": "INFORME FINAL"
+    },
+    "evaluatorNotes": "Notas del Evaluador",
+    "areasOfInterest": "Áreas de Interés"
+  },
+  "models": {
+    "detection": "Detección",
+    "segmentation": "Segmentación",
+    "classes": {
+      "microaneurysm": "Microaneurisma",
+      "hard_exudate": "Exudado Duro",
+      "soft_exudate": "Exudado Blando",
+      "hemorrhage": "Hemorragia",
+      "neovascularization": "Neovascularización"
+    }
+  },
+  "export": {
+    "patient": "Exportar Paciente",
+    "all": "Exportar Todo",
+    "import": "Importar .dird"
+  },
+  "upload": {
+    "dropzone": "Arrastra imágenes aquí o haz clic para seleccionar",
+    "processing": "Procesando...",
+    "accepted": "Archivos aceptados: JPG, PNG",
+    "maxSize": "Tamaño máximo: 10MB"
+  }
+}

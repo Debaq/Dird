@@ -1,0 +1,20 @@
+{
+  "model_version": "yolov8n-seg-retina-v1.0.0",
+  "model_type": "segmentation",
+  "classes": [
+    "microaneurysm",
+    "hard_exudate",
+    "soft_exudate",
+    "hemorrhage",
+    "neovascularization"
+  ],
+  "input_size": [640, 640],
+  "confidence_threshold": 0.5,
+  "iou_threshold": 0.45,
+  "date_trained": "2024-12-18",
+  "metrics": {
+    "mAP50": 0.82,
+    "precision": 0.80,
+    "recall": 0.78
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "app": {
+    "name": "DIRD",
+    "tagline": "Diabetic Retinopathy Detection"
+  },
+  "patients": {
+    "title": "Patients",
+    "create": "Create Patient",
+    "name": "Name",
+    "id": "Patient ID"
+  },
+  "sessions": {
+    "title": "Sessions",
+    "create": "New Session",
+    "locked": "Session Locked",
+    "unlock": "Unlock"
+  },
+  "canvas": {
+    "tools": {
+      "bbox": "Bounding Box",
+      "segment": "Segmentation",
+      "eraser": "Eraser"
+    },
+    "layers": {
+      "original": "Original Image",
+      "ai_detections": "AI Detections",
+      "ai_segmentations": "AI Segmentations",
+      "manual": "Manual Annotations"
+    }
+  },
+  "reports": {
+    "generate": "Generate Report",
+    "preview": "Preview",
+    "finalize": "Finalize and Close Case",
+    "status": {
+      "preliminary": "PRELIMINARY VERSION",
+      "final": "FINAL REPORT"
+    }
+  },
+  "models": {
+    "detection": "Detection",
+    "segmentation": "Segmentation",
+    "classes": {
+      "microaneurysm": "Microaneurysm",
+      "hard_exudate": "Hard Exudate",
+      "soft_exudate": "Soft Exudate",
+      "hemorrhage": "Hemorrhage",
+      "neovascularization": "Neovascularization"
+    }
+  },
+  "export": {
+    "patient": "Export Patient",
+    "all": "Export All",
+    "import": "Import .dird"
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Customize the application to your needs",
+    "tabs": {
+      "appearance": "Appearance",
+      "models": "Models",
+      "processing": "Processing",
+      "pwa": "Installation",
+      "about": "About"
+    },
+    "appearance": {
+      "title": "Appearance Settings",
+      "primaryColor": "Primary Color",
+      "logo": "Logo (URL or path)",
+      "theme": "Theme",
+      "themes": {
+        "light": "Light",
+        "dark": "Dark",
+        "auto": "Auto"
+      },
+      "language": "Language"
+    },
+    "models": {
+      "source": {
+        "title": "Model Source",
+        "local": "Local DIRD Models",
+        "localDescription": "Use locally stored ONNX models. Guarantees complete privacy as all processing happens on your device.",
+        "api": "External API",
+        "apiDescription": "Connect to a custom API for inference. Useful for private, paid, or proprietary models hosted on servers."
+      },
+      "local": {
+        "title": "Local Models Configuration",
+        "detection": "Detection Model",
+        "segmentation": "Segmentation Model"
+      },
+      "api": {
+        "title": "API Configuration",
+        "endpoint": "Endpoint URL",
+        "key": "API Key",
+        "modelName": "Model Name",
+        "timeout": "Timeout",
+        "headers": "Custom Headers (JSON)",
+        "test": "Test Connection",
+        "testing": "Testing...",
+        "connectionSuccess": "Connection successful",
+        "connectionFailed": "Connection failed"
+      }
+    },
+    "processing": {
+      "title": "Processing Settings",
+      "autoProcess": "Auto Process",
+      "autoProcessDescription": "Automatically run model inference when images are uploaded",
+      "maxImageSize": "Max Image Size",
+      "compressionQuality": "Compression Quality",
+      "batchSize": "Batch Size"
+    },
+    "pwa": {
+      "title": "Progressive Web App (PWA)",
+      "status": "Installation Status",
+      "install": "Install Application",
+      "installDescription": "Install DIRD as a standalone app for quick access and offline functionality.",
+      "benefits": {
+        "title": "Benefits of Installing",
+        "offline": "Works completely offline after first load",
+        "faster": "Loads faster with optimized caching",
+        "desktop": "Quick access from your desktop or home screen",
+        "privacy": "Enhanced privacy - all processing is local"
+      }
+    },
+    "about": {
+      "title": "About DIRD",
+      "description": "Ophthalmological image analysis platform with edge-computing AI. All data stays on your device.",
+      "version": "Version",
+      "reset": "Reset Configuration"
+    }
+  },
+  "pwa": {
+    "install": {
+      "title": "Install DIRD",
+      "description": "Install the app for quick access and offline use",
+      "button": "Install",
+      "installing": "Installing...",
+      "installed": "App Installed"
+    }
+  }
+}

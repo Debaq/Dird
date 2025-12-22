@@ -1,0 +1,74 @@
+{
+  "app": {
+    "name": "DIRD",
+    "tagline": "Diabetic Retinopathy Detection"
+  },
+  "patients": {
+    "title": "Patients",
+    "create": "Create Patient",
+    "name": "Name",
+    "id": "Patient ID",
+    "dateOfBirth": "Date of Birth",
+    "list": "Patient List",
+    "details": "Patient Details",
+    "edit": "Edit Patient",
+    "delete": "Delete Patient"
+  },
+  "sessions": {
+    "title": "Sessions",
+    "create": "New Session",
+    "locked": "Locked Session",
+    "unlock": "Unlock",
+    "date": "Date",
+    "notes": "Notes",
+    "sessionNumber": "Session #"
+  },
+  "canvas": {
+    "tools": {
+      "bbox": "Detection Box",
+      "segment": "Segmentation",
+      "eraser": "Eraser",
+      "pan": "Pan",
+      "zoom": "Zoom"
+    },
+    "layers": {
+      "original": "Original Image",
+      "ai_detections": "AI Detections",
+      "ai_segmentations": "AI Segmentations",
+      "manual": "Manual Annotations"
+    }
+  },
+  "reports": {
+    "generate": "Generate Report",
+    "preview": "Preview",
+    "finalize": "Finalize and Close Case",
+    "status": {
+      "preliminary": "PRELIMINARY VERSION",
+      "final": "FINAL REPORT"
+    },
+    "evaluatorNotes": "Evaluator Notes",
+    "areasOfInterest": "Areas of Interest"
+  },
+  "models": {
+    "detection": "Detection",
+    "segmentation": "Segmentation",
+    "classes": {
+      "microaneurysm": "Microaneurysm",
+      "hard_exudate": "Hard Exudate",
+      "soft_exudate": "Soft Exudate",
+      "hemorrhage": "Hemorrhage",
+      "neovascularization": "Neovascularization"
+    }
+  },
+  "export": {
+    "patient": "Export Patient",
+    "all": "Export All",
+    "import": "Import .dird"
+  },
+  "upload": {
+    "dropzone": "Drag images here or click to select",
+    "processing": "Processing...",
+    "accepted": "Accepted files: JPG, PNG",
+    "maxSize": "Max size: 10MB"
+  }
+}

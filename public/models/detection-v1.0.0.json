@@ -1,0 +1,22 @@
+{
+  "model_version": "DIRDv1r1",
+  "model_type": "detection",
+  "classes": [
+"Disco optico",
+"Exudado Duro",
+"Fovea",
+"Hemorragia",
+"Mancha Algodonosa",
+"Microhemorragias",
+"Edema"
+  ],
+  "input_size": [640, 640],
+  "confidence_threshold": 0.5,
+  "iou_threshold": 0.45,
+  "date_trained": "2024-12-15",
+  "metrics": {
+    "mAP50": 0.87,
+    "precision": 0.85,
+    "recall": 0.83
+  }
+}
