@@ -7,6 +7,7 @@ import SessionView from '@/components/upload/SessionView';
 import ImageAnalyzer from '@/components/canvas/ImageAnalyzer';
 import { Settings } from '@/components/settings/Settings';
 import LanguageSync from '@/components/LanguageSync';
+import GlobalReportsList from '@/components/reports/GlobalReportsList';
 
 function App() {
   const { t } = useTranslation();
@@ -35,6 +36,16 @@ function App() {
           }
         />
 
+        {/* Global reports list */}
+        <Route
+          path="/reports"
+          element={
+            <MainLayout>
+              <GlobalReportsList />
+            </MainLayout>
+          }
+        />
+
         {/* Patient details (shows sessions list) */}
         <Route
           path="/patients/:patientId"
@@ -59,7 +70,7 @@ function App() {
         <Route
           path="/patients/:patientId/sessions/:sessionId/images/:imageId"
           element={
-            <MainLayout>
+            <MainLayout fullScreenOnMobile>
               <ImageAnalyzer />
             </MainLayout>
           }

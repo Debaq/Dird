@@ -368,7 +368,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       </div>
       <div
         ref={containerRef}
-        className="w-full h-[calc(100vh-280px)] bg-coal-900 rounded-lg overflow-hidden flex items-center justify-center"
+        className="w-full h-full bg-coal-900 rounded-lg overflow-hidden flex items-center justify-center min-h-[300px]"
         style={{ cursor: getCursor() }}
       >
         <Stage

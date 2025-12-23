@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Settings as SettingsIcon,
@@ -9,7 +9,10 @@ import {
   Info,
   Check,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  FileText
 } from 'lucide-react';
 import { useConfigStore, type ModelSource } from '@/stores/config-store';
 import { apiInferenceService } from '@/lib/ai/api-inference-service';
@@ -23,6 +26,7 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import ModelSettings from './ModelSettings';
+import ReportSettings from './ReportSettings';
 import { getCurrentVersion, type VersionInfo } from '@/utils/version';
 import { changeLanguage } from '@/i18n/config';
 
@@ -48,6 +52,35 @@ export function Settings() {
   const [isCheckingVersion, setIsCheckingVersion] = useState(false);
   const [hasUpdate, setHasUpdate] = useState(false);
   const [isReloading, setIsReloading] = useState(false);
+
+  // Tabs scroll logic
+  const tabsListRef = useRef<HTMLDivElement>(null);
+  const [showLeftScroll, setShowLeftScroll] = useState(false);
+  const [showRightScroll, setShowRightScroll] = useState(false);
+
+  const checkScroll = () => {
+    if (tabsListRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = tabsListRef.current;
+      setShowLeftScroll(scrollLeft > 0);
+      setShowRightScroll(scrollLeft < scrollWidth - clientWidth - 5);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, []);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (tabsListRef.current) {
+      const scrollAmount = 200;
+      tabsListRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   useEffect(() => {
     const loadVersionInfo = async () => {
@@ -128,28 +161,64 @@ export function Settings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="border-b border-smoke-300 mb-6 dark:border-gray-700 dark:bg-gray-800">
-          <TabsTrigger value="appearance" className="dark:text-gray-100 dark:data-[state=active]:text-white">
-            <Palette className="h-4 w-4 mr-2" />
-            {t('settings.tabs.appearance')}
-          </TabsTrigger>
-          <TabsTrigger value="models" className="dark:text-gray-100 dark:data-[state=active]:text-white">
-            <Cpu className="h-4 w-4 mr-2" />
-            {t('settings.tabs.models')}
-          </TabsTrigger>
-          <TabsTrigger value="processing" className="dark:text-gray-100 dark:data-[state=active]:text-white">
-            <Gauge className="h-4 w-4 mr-2" />
-            {t('settings.tabs.processing')}
-          </TabsTrigger>
-          <TabsTrigger value="pwa" className="dark:text-gray-100 dark:data-[state=active]:text-white">
-            <Download className="h-4 w-4 mr-2" />
-            {t('settings.tabs.pwa')}
-          </TabsTrigger>
-          <TabsTrigger value="about" className="dark:text-gray-100 dark:data-[state=active]:text-white">
-            <Info className="h-4 w-4 mr-2" />
-            {t('settings.tabs.about')}
-          </TabsTrigger>
-        </TabsList>
+        <div className="relative group mb-6">
+          {showLeftScroll && (
+            <div className="absolute left-0 top-0 bottom-0 flex items-center z-10 bg-gradient-to-r from-white via-white to-transparent pl-1 pr-4 dark:from-gray-900 dark:via-gray-900">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-full shadow-sm"
+                onClick={() => scroll('left')}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          
+          <TabsList 
+            ref={tabsListRef}
+            onScroll={checkScroll}
+            className="w-full justify-start overflow-x-auto scrollbar-hide border-b border-smoke-300 dark:border-gray-700 dark:bg-gray-800 h-auto p-2 gap-2"
+          >
+            <TabsTrigger value="appearance" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
+              <Palette className="h-4 w-4 mr-2" />
+              {t('settings.tabs.appearance')}
+            </TabsTrigger>
+            <TabsTrigger value="models" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
+              <Cpu className="h-4 w-4 mr-2" />
+              {t('settings.tabs.models')}
+            </TabsTrigger>
+            <TabsTrigger value="report" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
+              <FileText className="h-4 w-4 mr-2" />
+              {t('settings.tabs.report')}
+            </TabsTrigger>
+            <TabsTrigger value="processing" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
+              <Gauge className="h-4 w-4 mr-2" />
+              {t('settings.tabs.processing')}
+            </TabsTrigger>
+            <TabsTrigger value="pwa" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
+              <Download className="h-4 w-4 mr-2" />
+              {t('settings.tabs.pwa')}
+            </TabsTrigger>
+            <TabsTrigger value="about" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
+              <Info className="h-4 w-4 mr-2" />
+              {t('settings.tabs.about')}
+            </TabsTrigger>
+          </TabsList>
+
+          {showRightScroll && (
+            <div className="absolute right-0 top-0 bottom-0 flex items-center z-10 bg-gradient-to-l from-white via-white to-transparent pr-1 pl-4 dark:from-gray-900 dark:via-gray-900">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-full shadow-sm"
+                onClick={() => scroll('right')}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
 
         {/* Appearance Tab */}
         <TabsContent value="appearance">
@@ -516,6 +585,11 @@ export function Settings() {
               </Card>
             )}
           </div>
+        </TabsContent>
+
+        {/* Report Tab */}
+        <TabsContent value="report">
+          <ReportSettings />
         </TabsContent>
 
         {/* Processing Tab */}

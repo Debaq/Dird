@@ -91,7 +91,7 @@ const ExportImportControls: React.FC<ExportImportControlsProps> = ({
 
   return (
     <>
-      <div className="flex items-center space-x-2">
+      <div className="flex flex-wrap items-center gap-2">
         {patientId && (
           <Button variant="outline" onClick={handleExportPatient} size="sm">
             <Download className="w-4 h-4 mr-2" />

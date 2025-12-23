@@ -262,7 +262,43 @@
       "models": "Modelos",
       "processing": "Procesamiento",
       "pwa": "Instalación",
-      "about": "Acerca de"
+      "about": "Acerca de",
+      "report": "Reporte"
+    },
+    "report": {
+      "general": {
+        "title": "Configuración General",
+        "reportTitle": "Título del Reporte",
+        "reportSubtitle": "Subtítulo del Reporte"
+      },
+      "logo": {
+        "title": "Configuración de Logo",
+        "useSystem": "Usar Logo del Sistema",
+        "uploadCustom": "Subir Logo Personalizado"
+      },
+      "colors": {
+        "title": "Colores del Reporte",
+        "primary": "Color Primario",
+        "secondary": "Color Secundario (Acento)",
+        "text": "Color de Texto"
+      },
+      "sections": {
+        "title": "Secciones Visibles",
+        "patientInfo": "Información del Paciente",
+        "summary": "Resumen de Hallazgos",
+        "gallery": "Galería de Imágenes",
+        "evaluatorNotes": "Notas del Evaluador"
+      },
+      "gallery": {
+        "title": "Opciones de Galería",
+        "includeAnnotated": "Incluir Imágenes con Anotaciones (IA)",
+        "includeOriginal": "Incluir Imágenes Originales",
+        "warning": "Debes seleccionar al menos una opción de galería."
+      },
+      "signature": {
+        "title": "Firma",
+        "text": "Texto de la Firma"
+      }
     },
     "appearance": {
       "title": "Configuración de Apariencia",

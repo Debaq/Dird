@@ -26,7 +26,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ activeTool, onToolChange, disable
   return (
     <div className="bg-white rounded-lg border border-coal-200 p-4">
       <h3 className="font-semibold text-coal-800 mb-3">{t('canvas.tools.title')}</h3>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-2 gap-2">
         {tools.map((tool) => {
           const Icon = tool.icon;
           const isActive = activeTool === tool.id;

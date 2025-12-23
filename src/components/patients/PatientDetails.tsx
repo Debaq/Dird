@@ -103,28 +103,35 @@ const PatientDetails: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
-          <Button variant="outline" size="icon" onClick={() => navigate('/patients')}>
+          <Button variant="outline" size="icon" onClick={() => navigate('/patients')} className="flex-shrink-0">
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-coal-800">{patient.name}</h1>
+          <div className="min-w-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-coal-800 truncate" title={patient.name}>
+              {patient.name}
+            </h1>
             <p className="text-smoke-500 mt-1">{t('patients.idLabel')}{patient.patientId}</p>
           </div>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             onClick={() => {
               setPatientToEdit(patient);
               setShowPatientForm(true);
             }}
+            className="flex-1 md:flex-none"
           >
             <Pencil className="w-4 h-4 mr-2" />
             {t('patients.edit')}
           </Button>
-          <Button onClick={handleExportPatient} disabled={isExporting}>
+          <Button 
+            onClick={handleExportPatient} 
+            disabled={isExporting}
+            className="flex-1 md:flex-none"
+          >
             <Download className="w-4 h-4 mr-2" />
             {isExporting ? t('export.exporting') : t('export.patient')}
           </Button>
@@ -190,14 +197,14 @@ const PatientDetails: React.FC = () => {
 
       {/* Sessions */}
       <div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <h2 className="text-2xl font-bold text-coal-800">{t('sessions.title')}</h2>
           <Button
             onClick={() => {
               setSessionToEdit(undefined);
               setShowSessionForm(true);
             }}
-            className="flex items-center space-x-2"
+            className="flex items-center justify-center space-x-2 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" />
             <span>{t('sessions.create')}</span>
@@ -212,16 +219,16 @@ const PatientDetails: React.FC = () => {
                 className="hover:shadow-strong transition-shadow"
               >
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div
-                      className="flex items-center space-x-4 flex-grow cursor-pointer"
+                      className="flex items-center space-x-4 flex-grow cursor-pointer min-w-0"
                       onClick={() => navigate(`/patients/${patientId}/sessions/${session.id}`)}
                     >
-                      <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                      <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
                         <Calendar className="w-6 h-6 text-primary-600" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-coal-800">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-coal-800 truncate">
                           {session.name ||
                             `${t('sessions.session')} ${
                               session.sessionNumber
@@ -232,7 +239,7 @@ const PatientDetails: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-1 pl-4">
+                    <div className="flex items-center space-x-1 sm:pl-4 justify-end">
                       {session.locked ? (
                         <span className="flex items-center text-sm text-accent-600 mr-2">
                           <Lock className="w-4 h-4 mr-1" />

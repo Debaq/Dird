@@ -36,15 +36,42 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
     try {
       const pdfBlob = await generateSessionReport(sessionId, type, evaluatorNotes);
 
-      // Download PDF
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `DIRD_Reporte_${type.toUpperCase()}_${sessionId}_${new Date().toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // Check if a report of the same type already exists for this session
+      const existingReport = await db.reports
+        .where({ sessionId: sessionId, type: type })
+        .first();
+
+      if (existingReport) {
+        // Update the existing report instead of creating a duplicate
+        await db.reports.update(existingReport.id, {
+          pdfBlob: pdfBlob,
+          evaluatorNotes: evaluatorNotes,
+          generatedAt: new Date(),
+        });
+      } else {
+        // Create a new report
+        await db.reports.add({
+          sessionId: sessionId,
+          type: type,
+          pdfBlob: pdfBlob,
+          evaluatorNotes: evaluatorNotes,
+          areasOfInterest: [], // Initialize empty
+          generatedAt: new Date(),
+        });
+      }
+
+      // Only download final reports automatically, not preview reports
+      if (type === 'final') {
+        // Download PDF for final reports
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `DIRD_Reporte_${type.toUpperCase()}_${sessionId}_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
 
       // If final report, lock session
       if (type === 'final') {
@@ -66,8 +93,11 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
 
   return (
     <>
-      <Button onClick={() => setShowDialog(true)} className="flex items-center space-x-2">
-        <FileText className="w-4 h-4" />
+      <Button 
+        onClick={() => setShowDialog(true)} 
+        className="flex items-center justify-center gap-2 h-auto min-h-[40px] py-2 whitespace-normal text-center leading-tight w-full sm:w-auto"
+      >
+        <FileText className="w-4 h-4 flex-shrink-0" />
         <span>{t('reports.generate')}</span>
       </Button>
 
@@ -123,8 +153,8 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                     t('ui.loading')
                   ) : (
                     <>
-                      <Download className="w-3.5 h-3.5 mr-2" />
-                      Descargar Borrador
+                      <FileText className="w-3.5 h-3.5 mr-2" />
+                      Generar Borrador
                     </>
                   )}
                 </Button>

@@ -263,7 +263,43 @@
       "models": "Models",
       "processing": "Processing",
       "pwa": "Installation",
-      "about": "About"
+      "about": "About",
+      "report": "Report"
+    },
+    "report": {
+      "general": {
+        "title": "General Settings",
+        "reportTitle": "Report Title",
+        "reportSubtitle": "Report Subtitle"
+      },
+      "logo": {
+        "title": "Logo Settings",
+        "useSystem": "Use System Logo",
+        "uploadCustom": "Upload Custom Logo"
+      },
+      "colors": {
+        "title": "Report Colors",
+        "primary": "Primary Color",
+        "secondary": "Secondary Color (Accent)",
+        "text": "Text Color"
+      },
+      "sections": {
+        "title": "Visible Sections",
+        "patientInfo": "Patient Information",
+        "summary": "Findings Summary",
+        "gallery": "Image Gallery",
+        "evaluatorNotes": "Evaluator Notes"
+      },
+      "gallery": {
+        "title": "Gallery Options",
+        "includeAnnotated": "Include Annotated Images (AI)",
+        "includeOriginal": "Include Original Images",
+        "warning": "You must select at least one gallery option."
+      },
+      "signature": {
+        "title": "Signature",
+        "text": "Signature Text"
+      }
     },
     "appearance": {
       "title": "Appearance Settings",

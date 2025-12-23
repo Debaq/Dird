@@ -37,6 +37,31 @@ export interface ProcessingConfig {
   batchSize: number;
 }
 
+export interface ReportConfig {
+  title: string;
+  subtitle: string;
+  useSystemLogo: boolean;
+  customLogo: string | null;
+  colors: {
+    primary: string;
+    secondary: string;
+    text: string;
+  };
+  sections: {
+    patientInfo: boolean;
+    summary: boolean;
+    gallery: boolean;
+    evaluatorNotes: boolean;
+  };
+  gallery: {
+    includeOriginal: boolean;
+    includeAnnotated: boolean;
+  };
+  signature: {
+    text: string;
+  };
+}
+
 export interface AppConfig {
   name: string;
   appearance: AppearanceConfig;
@@ -44,6 +69,7 @@ export interface AppConfig {
   localModels: LocalModelConfig;
   apiModels: APIModelConfig;
   processing: ProcessingConfig;
+  report: ReportConfig;
   pwa: {
     installPromptShown: boolean;
     updateAvailable: boolean;
@@ -55,6 +81,7 @@ interface ConfigStore {
   updateConfig: (updates: Partial<AppConfig>) => void;
   updateAppearance: (updates: Partial<AppearanceConfig>) => void;
   updateProcessing: (updates: Partial<ProcessingConfig>) => void;
+  updateReportConfig: (updates: Partial<ReportConfig>) => void;
   updateAPIModels: (updates: Partial<APIModelConfig>) => void;
   updateLocalModels: (updates: Partial<LocalModelConfig>) => void;
   setModelSource: (source: ModelSource) => void;
@@ -94,6 +121,30 @@ const DEFAULT_CONFIG: AppConfig = {
     compressionQuality: 0.8,
     batchSize: 5
   },
+  report: {
+    title: 'DIRD',
+    subtitle: 'Detección de Retinopatía Diabética',
+    useSystemLogo: true,
+    customLogo: null,
+    colors: {
+      primary: '#20B5AE',
+      secondary: '#D87A1A',
+      text: '#282828'
+    },
+    sections: {
+      patientInfo: true,
+      summary: true,
+      gallery: true,
+      evaluatorNotes: true
+    },
+    gallery: {
+      includeOriginal: false,
+      includeAnnotated: true
+    },
+    signature: {
+      text: 'Firma del Especialista'
+    }
+  },
   pwa: {
     installPromptShown: false,
     updateAvailable: false
@@ -123,6 +174,14 @@ export const useConfigStore = create<ConfigStore>()(
           config: {
             ...state.config,
             processing: { ...state.config.processing, ...updates }
+          }
+        })),
+
+      updateReportConfig: (updates) =>
+        set((state) => ({
+          config: {
+            ...state.config,
+            report: { ...state.config.report, ...updates }
           }
         })),
 

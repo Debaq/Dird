@@ -155,7 +155,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                         e.stopPropagation();
                         onLayerUpdate(layer.id, { visible: !layer.visible });
                       }}
-                      className="p-1 hover:bg-coal-100 rounded"
+                      className="p-2 lg:p-1 hover:bg-coal-100 rounded"
                       title={layer.visible ? 'Ocultar capa' : 'Mostrar capa'}
                     >
                       {layer.visible ? (
@@ -170,7 +170,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                           e.stopPropagation();
                           onLayerUpdate(layer.id, { showLabels: !layer.showLabels });
                         }}
-                        className="p-1 hover:bg-coal-100 rounded"
+                        className="p-2 lg:p-1 hover:bg-coal-100 rounded"
                         title={layer.showLabels !== false ? 'Ocultar etiquetas' : 'Mostrar etiquetas'}
                       >
                         <Tag className={cn(
@@ -184,7 +184,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                         e.stopPropagation();
                         onLayerUpdate(layer.id, { locked: !layer.locked });
                       }}
-                      className="p-1 hover:bg-coal-100 rounded"
+                      className="p-2 lg:p-1 hover:bg-coal-100 rounded"
                       disabled={layer.id === 'original'}
                       title={layer.locked ? 'Desbloquear capa' : 'Bloquear capa'}
                     >
@@ -195,7 +195,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                       )}
                     </button>
                     <button
-                      className="p-1 hover:bg-coal-100 rounded"
+                      className="p-2 lg:p-1 hover:bg-coal-100 rounded"
                       title={isExpanded ? 'Cerrar' : 'Expandir'}
                     >
                       <ArrowUpDown 
@@ -250,12 +250,12 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                             )}
                           </div>
                           
-                          <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center space-x-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                             <Select
                               value={detection.class}
                               onValueChange={(newClass) => handleEditDetectionClass(detection, newClass)}
                               options={classDefinitions.map(cls => ({ value: cls.name, label: cls.name }))}
-                              className="h-6 w-[100px] text-xs p-1"
+                              className="h-8 lg:h-6 w-[100px] text-xs p-1"
                               disabled={loadingClasses}
                             />
                             {layer.id === 'detections-ai' && (
@@ -264,7 +264,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                                 variant="ghost"
                                 onClick={() => handleConvertToManual(detection)}
                                 title="Convertir a manual"
-                                className="h-6 px-2"
+                                className="h-8 lg:h-6 px-2"
                               >
                                 <Edit3 className="w-3 h-3" />
                               </Button>
@@ -274,7 +274,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                               variant="destructive"
                               onClick={() => handleDeleteDetection(detection.id!)}
                               title="Eliminar"
-                              className="h-6 px-2"
+                              className="h-8 lg:h-6 px-2"
                             >
                               <Trash2 className="w-3 h-3" />
                             </Button>

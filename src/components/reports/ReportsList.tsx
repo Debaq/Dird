@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { FileText, Download, Calendar, Tag, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { FileText, Download, Calendar, Tag, ShieldCheck, Eye, ShieldAlert, Trash2, Edit3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { db } from '@/lib/db/schema';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import PDFViewerModal from './PDFViewerModal';
 
 interface ReportsListProps {
   sessionId: number;
@@ -13,7 +14,8 @@ interface ReportsListProps {
 
 const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
   const { t } = useTranslation();
-  
+  const [selectedReport, setSelectedReport] = useState<{ blob: Blob; title: string } | null>(null);
+
   const reports = useLiveQuery(
     () => db.reports.where('sessionId').equals(sessionId).reverse().sortBy('generatedAt'),
     [sessionId, refreshKey]
@@ -28,6 +30,58 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handleViewPDF = (pdfBlob: Blob, type: string, date: Date) => {
+    const title = `DIRD_Reporte_${type.toUpperCase()}_${new Date(date).toISOString().split('T')[0]}.pdf`;
+    setSelectedReport({ blob: pdfBlob, title });
+  };
+
+  const handleCloseModal = () => {
+    setSelectedReport(null);
+  };
+
+  const [editingReport, setEditingReport] = useState<{id: number, notes: string} | null>(null);
+
+  const handleDeleteReport = async (reportId: number, type: string) => {
+    if (type === 'final') {
+      alert('No se pueden eliminar informes finales.');
+      return;
+    }
+
+    if (confirm('¿Está seguro de que desea eliminar este informe preliminar? Esta acción no se puede deshacer.')) {
+      try {
+        await db.reports.delete(reportId);
+      } catch (error) {
+        console.error('Error deleting report:', error);
+        alert('Error al eliminar el informe');
+      }
+    }
+  };
+
+  const startEditing = (reportId: number, currentNotes: string) => {
+    setEditingReport({id: reportId, notes: currentNotes});
+  };
+
+  const saveEditedNotes = async () => {
+    if (!editingReport) return;
+
+    try {
+      // Update only the notes in the database without regenerating the PDF
+      await db.reports.update(editingReport.id, {
+        evaluatorNotes: editingReport.notes,
+        generatedAt: new Date(), // Update the timestamp when notes are edited
+      });
+
+      setEditingReport(null);
+    } catch (error) {
+      console.error('Error updating report notes:', error);
+      alert('Error al actualizar las conclusiones');
+    }
+  };
+
+  const cancelEditing = () => {
+    setEditingReport(null);
   };
 
   if (!reports) return <div className="py-8 text-center">{t('ui.loading')}</div>;
@@ -47,18 +101,18 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
   return (
     <div className="space-y-4">
       {reports.map((report) => (
-        <div 
+        <div
           key={report.id}
-          className="flex items-center justify-between p-4 bg-white border border-coal-200 rounded-xl hover:shadow-md transition-all group"
+          className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-coal-200 rounded-xl hover:shadow-md transition-all group gap-4"
         >
           <div className="flex items-center gap-4">
-            <div className={`p-3 rounded-lg ${
+            <div className={`p-3 rounded-lg flex-shrink-0 ${
               report.type === 'final' ? 'bg-accent-50 text-accent-600' : 'bg-primary-50 text-primary-600'
             }`}>
               {report.type === 'final' ? <ShieldCheck className="w-6 h-6" /> : <FileText className="w-6 h-6" />}
             </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
                 <span className="font-bold text-coal-800">
                   {report.type === 'final' ? t('reports.status.final') : t('reports.status.preliminary')}
                 </span>
@@ -66,13 +120,13 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
                   {report.type}
                 </Badge>
               </div>
-              <div className="flex items-center gap-4 text-xs text-smoke-500">
-                <span className="flex items-center gap-1">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-smoke-500">
+                <span className="flex items-center gap-1 whitespace-nowrap">
                   <Calendar className="w-3.5 h-3.5" />
                   {new Date(report.generatedAt).toLocaleString()}
                 </span>
                 {report.evaluatorNotes && (
-                  <span className="flex items-center gap-1 truncate max-w-[200px]">
+                  <span className="flex items-center gap-1 truncate">
                     <Tag className="w-3.5 h-3.5" />
                     {report.evaluatorNotes}
                   </span>
@@ -80,18 +134,92 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
               </div>
             </div>
           </div>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="hover:bg-primary-50 hover:text-primary-700"
-            onClick={() => handleDownload(report.pdfBlob, report.type, report.generatedAt)}
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Descargar PDF
-          </Button>
+
+          <div className="flex flex-col sm:flex-row gap-2 sm:flex-shrink-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto justify-center"
+              onClick={() => handleViewPDF(report.pdfBlob, report.type, report.generatedAt)}
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Ver PDF
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto justify-center"
+              onClick={() => handleDownload(report.pdfBlob, report.type, report.generatedAt)}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Descargar PDF
+            </Button>
+            {report.type === 'preview' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:bg-amber-50 hover:text-amber-700 w-full sm:w-auto justify-center"
+                onClick={() => report.id && startEditing(report.id, report.evaluatorNotes || '')}
+              >
+                <Edit3 className="w-4 h-4 mr-2" />
+                Editar
+              </Button>
+            )}
+            {report.type === 'preview' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:bg-red-50 hover:text-red-700 w-full sm:w-auto justify-center"
+                onClick={() => report.id && handleDeleteReport(report.id, report.type)}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Eliminar
+              </Button>
+            )}
+          </div>
         </div>
       ))}
+
+      {selectedReport && (
+        <PDFViewerModal
+          isOpen={!!selectedReport}
+          onClose={handleCloseModal}
+          pdfBlob={selectedReport.blob}
+          title={selectedReport.title}
+          onDownload={() => {
+            // Extract type from title (e.g., "DIRD_Reporte_FINAL_2025-01-01.pdf" -> "final")
+            const type = selectedReport.title.split('_')[2].replace('.pdf', '').toLowerCase();
+            handleDownload(selectedReport.blob, type, new Date());
+          }}
+        />
+      )}
+
+      {editingReport && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-md p-6">
+            <h3 className="text-lg font-semibold mb-4">Editar Conclusiones</h3>
+            <textarea
+              value={editingReport.notes}
+              onChange={(e) => setEditingReport({...editingReport, notes: e.target.value})}
+              className="w-full h-32 p-3 border border-coal-200 rounded-lg resize-none"
+              placeholder="Ingrese las conclusiones clínicas y recomendaciones..."
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="outline"
+                onClick={cancelEditing}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={saveEditedNotes}
+              >
+                Guardar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

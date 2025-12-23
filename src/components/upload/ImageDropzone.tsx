@@ -44,7 +44,7 @@ const ImageDropzone: React.FC<ImageDropzoneProps> = ({ sessionId, onUploadComple
     <div className="w-full max-w-2xl mx-auto">
       {getHiddenInput()}
 
-      <div className="flex items-center justify-center gap-4 p-4 mb-4 bg-coal-50 rounded-lg">
+      <div className="flex flex-wrap items-center justify-center gap-4 p-4 mb-4 bg-coal-50 rounded-lg">
         <span className="text-sm font-medium text-coal-700">{t('upload.selectEye')}</span>
         <div className="flex gap-2">
           <Button
@@ -68,7 +68,7 @@ const ImageDropzone: React.FC<ImageDropzoneProps> = ({ sessionId, onUploadComple
         onDrop={handleDrop}
         onClick={triggerFileDialog}
         className={cn(
-          'border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer',
+          'border-2 border-dashed rounded-lg p-8 lg:p-12 text-center transition-colors cursor-pointer',
           isDragging ? 'border-primary-500 bg-primary-50' : 'border-coal-300 hover:border-primary-400'
         )}
       >

@@ -210,35 +210,37 @@ const SessionView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <nav className="flex items-center space-x-2 text-sm text-smoke-600">
-        <Link to="/patients" className="hover:text-primary-600 transition-colors">{t('patients.title')}</Link>
-        <ChevronRight className="w-4 h-4" />
-        <Link to={`/patients/${patientId}`} className="hover:text-primary-600 transition-colors">{patient.name}</Link>
-        <ChevronRight className="w-4 h-4" />
-        <span className="text-coal-800 font-medium">{session.name || `${t('sessions.session')} ${session.sessionNumber}`}</span>
+      <nav className="flex flex-wrap items-center gap-2 text-sm text-smoke-600">
+        <Link to="/patients" className="hover:text-primary-600 transition-colors whitespace-nowrap">{t('patients.title')}</Link>
+        <ChevronRight className="w-4 h-4 flex-shrink-0" />
+        <Link to={`/patients/${patientId}`} className="hover:text-primary-600 transition-colors whitespace-nowrap">{patient.name}</Link>
+        <ChevronRight className="w-4 h-4 flex-shrink-0" />
+        <span className="text-coal-800 font-medium whitespace-nowrap">{session.name || `${t('sessions.session')} ${session.sessionNumber}`}</span>
       </nav>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
-          <Button variant="outline" size="icon" onClick={() => navigate(`/patients/${patientId}`)}>
+          <Button variant="outline" size="icon" onClick={() => navigate(`/patients/${patientId}`)} className="flex-shrink-0">
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-coal-800">{session.name || `${t('sessions.session')} ${session.sessionNumber}`}</h1>
-            <p className="text-smoke-500 mt-1">{patient.name} - {formatDate(session.date)}</p>
+          <div className="min-w-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-coal-800 truncate">{session.name || `${t('sessions.session')} ${session.sessionNumber}`}</h1>
+            <p className="text-smoke-500 mt-1 truncate">{patient.name} - {formatDate(session.date)}</p>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={handleExportSession} disabled={isExporting}>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handleExportSession} disabled={isExporting} className="flex-1 md:flex-none">
             <Download className="w-4 h-4 mr-2" />
             {isExporting ? t('export.exporting') : t('export.session')}
           </Button>
           {session.locked ? (
-            <span className="flex items-center text-sm text-accent-600 bg-accent-50 px-3 py-1 rounded-full">
+            <span className="flex items-center text-sm text-accent-600 bg-accent-50 px-3 py-1 rounded-full whitespace-nowrap">
               <Lock className="w-4 h-4 mr-1" />{t('sessions.locked')}
             </span>
           ) : (
-            <ReportGenerator sessionId={parseInt(sessionId!)} onReportGenerated={() => setRefreshKey((prev) => prev + 1)} />
+            <div className="flex-1 md:flex-none">
+              <ReportGenerator sessionId={parseInt(sessionId!)} onReportGenerated={() => setRefreshKey((prev) => prev + 1)} />
+            </div>
           )}
         </div>
       </div>
@@ -255,18 +257,18 @@ const SessionView: React.FC = () => {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList>
-          <TabsTrigger value="images">{t('sessions.tabs.images', { count: images?.length || 0 })}</TabsTrigger>
-          <TabsTrigger value="analysis">{t('sessions.tabs.analysis')}</TabsTrigger>
-          <TabsTrigger value="report">{t('sessions.tabs.report')}</TabsTrigger>
+        <TabsList className="w-full justify-start overflow-x-auto scrollbar-hide h-auto p-1 gap-1">
+          <TabsTrigger value="images" className="flex-shrink-0">{t('sessions.tabs.images', { count: images?.length || 0 })}</TabsTrigger>
+          <TabsTrigger value="analysis" className="flex-shrink-0">{t('sessions.tabs.analysis')}</TabsTrigger>
+          <TabsTrigger value="report" className="flex-shrink-0">{t('sessions.tabs.report')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="images" className="space-y-6">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <CardTitle>{t('sessions.galleryTitle')}</CardTitle>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-2">
                     {images.length > 0 && !session.locked && (
                         <CompactUploader sessionId={parseInt(sessionId!)} onUploadComplete={handleUploadComplete} />
                     )}
@@ -274,8 +276,9 @@ const SessionView: React.FC = () => {
                         <Button
                             onClick={handleProcessWithAI}
                             disabled={isProcessing}
+                            className="h-auto min-h-[40px] py-2 whitespace-normal text-center leading-tight"
                         >
-                            <Play className="w-4 h-4 mr-2" />
+                            <Play className="w-4 h-4 mr-2 flex-shrink-0" />
                             <span>
                             {isProcessing
                                 ? t('processing.inProgress', { current: processingProgress.current, total: processingProgress.total })

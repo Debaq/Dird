@@ -155,7 +155,7 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
         </div>
 
         {/* Floating Controls */}
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col space-y-1 z-10">
+        <div className="absolute top-2 right-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex flex-col space-y-1 z-10">
           {onDelete && !isLocked && (
             <Button
               size="icon"
@@ -186,7 +186,7 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
 
         {/* Move Buttons (User suggestion) */}
         {!isLocked && onMove && (
-          <div className="absolute bottom-16 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute bottom-16 right-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
             <Button
               size="sm"
               variant="secondary"
@@ -217,7 +217,7 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
         {!isLocked && (
           <div
             {...listeners}
-            className="absolute top-2 left-2 p-1.5 bg-white/80 backdrop-blur-sm rounded-md border border-coal-200 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+            className="absolute top-2 left-2 p-1.5 bg-white/80 backdrop-blur-sm rounded-md border border-coal-200 cursor-grab active:cursor-grabbing opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shadow-sm"
           >
             <GripVertical className="w-4 h-4 text-coal-400" />
           </div>

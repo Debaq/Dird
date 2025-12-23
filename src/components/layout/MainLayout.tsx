@@ -1,20 +1,22 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Users, Settings } from 'lucide-react';
+import { Users, Settings, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useConfigStore } from '@/stores/config-store';
 
 interface MainLayoutProps {
   children: React.ReactNode;
+  fullScreenOnMobile?: boolean;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = false }) => {
   const { t } = useTranslation();
   const location = useLocation();
 
   const navItems = [
     { path: '/patients', icon: Users, label: t('patients.title') },
+    { path: '/reports', icon: FileText, label: 'Informes' },
     { path: '/settings', icon: Settings, label: t('settings.title') },
   ];
 
@@ -22,7 +24,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     <div className="flex flex-col min-h-screen bg-ice dark:bg-gray-900 dark:text-gray-100">
       {/* Header */}
       <header
-        className="text-white shadow-strong dark:bg-gray-800"
+        className={cn(
+          "text-white shadow-strong dark:bg-gray-800",
+          fullScreenOnMobile ? "hidden lg:block" : ""
+        )}
         style={{ backgroundColor: useConfigStore().config.appearance.primaryColor }}
       >
         <div className="container mx-auto px-4 py-4">
@@ -45,7 +50,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       </header>
 
       {/* Navigation */}
-      <nav className="bg-white border-b border-coal-200 shadow-light dark:bg-gray-800 dark:border-gray-700 overflow-x-auto scrollbar-hide">
+      <nav 
+        className={cn(
+          "bg-white border-b border-coal-200 shadow-light dark:bg-gray-800 dark:border-gray-700 overflow-x-auto scrollbar-hide",
+          fullScreenOnMobile ? "hidden lg:block" : ""
+        )}
+      >
         <div className="container mx-auto px-4">
           <div className="flex space-x-1 min-w-max">
             {navItems.map((item) => {
@@ -77,10 +87,24 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-grow container mx-auto px-4 py-6 dark:bg-gray-900">{children}</main>
+      <main 
+        className={cn(
+          "flex-grow dark:bg-gray-900",
+          fullScreenOnMobile 
+            ? "lg:container lg:mx-auto lg:px-4 lg:py-6" 
+            : "container mx-auto px-4 py-6"
+        )}
+      >
+        {children}
+      </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-coal-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400">
+      <footer 
+        className={cn(
+          "bg-white border-t border-coal-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400",
+          fullScreenOnMobile ? "hidden lg:block" : ""
+        )}
+      >
         <div className="container mx-auto px-4 py-4">
           <p className="text-center text-sm text-smoke-500 dark:text-gray-400">
             {t('app.name')} - Privacy-first medical imaging analysis
