@@ -38,12 +38,12 @@ const PatientList: React.FC = () => {
   };
 
   const handleDeletePatient = async (patientId: number) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este paciente y todos sus datos? Esta acción es irreversible.')) {
+    if (window.confirm(t('confirmations.deletePatient'))) {
       try {
         await deletePatient(patientId);
       } catch (error) {
         console.error('Error deleting patient:', error);
-        alert('Error al eliminar el paciente.');
+        alert(t('errors.deletePatient'));
       }
     }
   };
@@ -51,12 +51,12 @@ const PatientList: React.FC = () => {
   const handleArchivePatient = async (patient: Patient) => {
     const isArchiving = (patient.status || 'active') === 'active';
     const action = isArchiving ? 'archivar' : 'desarchivar';
-    if (window.confirm(`¿Estás seguro de que quieres ${action} este paciente?`)) {
+    if (window.confirm(t('confirmations.archivePatient', { action }))) {
       try {
         await db.patients.update(patient.id!, { status: isArchiving ? 'archived' : 'active' });
       } catch (error) {
         console.error(`Error ${action}ing patient:`, error);
-        alert(`Error al ${action} el paciente.`);
+        alert(t('errors.archivePatient', { action }));
       }
     }
   };
@@ -73,7 +73,7 @@ const PatientList: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold text-coal-800">{t('patients.title')}</h1>
           <p className="text-smoke-500 mt-1">
-            Gestiona los pacientes y sus sesiones de análisis
+            {t('patients.description')}
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -97,7 +97,7 @@ const PatientList: React.FC = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-smoke-400" />
           <Input
             className="pl-10"
-            placeholder="Buscar por nombre o ID..."
+            placeholder={t('patients.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -108,7 +108,7 @@ const PatientList: React.FC = () => {
             checked={showArchived}
             onCheckedChange={setShowArchived}
           />
-          <Label htmlFor="show-archived">Mostrar archivados</Label>
+          <Label htmlFor="show-archived">{t('patients.showArchived')}</Label>
         </div>
       </div>
 
@@ -131,8 +131,8 @@ const PatientList: React.FC = () => {
         <div className="text-center py-12">
           <p className="text-smoke-500">
             {searchQuery || showArchived
-              ? 'No se encontraron pacientes'
-              : 'No hay pacientes registrados. Crea uno para comenzar.'}
+              ? t('patients.notFound')
+              : t('patients.empty')}
           </p>
         </div>
       )}

@@ -2,19 +2,44 @@ import { ONNXModelManager, preprocessImage, postprocessDetections, applyNMS } fr
 import type { Detection } from './onnx-manager';
 import type { ModelMetadata } from './model-metadata';
 import { db } from '@/lib/db/schema';
+import { modelDownloader } from './model-downloader';
 
 export class InferenceService {
   private detectionModel: ONNXModelManager | null = null;
   private segmentationModel: ONNXModelManager | null = null;
 
-  async loadDetectionModel(modelPath: string, metadata: ModelMetadata): Promise<void> {
+  /**
+   * Load detection model from GitHub or local
+   */
+  async loadDetectionModel(modelPath?: string, metadata?: ModelMetadata): Promise<void> {
+    // If path and metadata provided, use them directly (backward compatibility)
+    if (modelPath && metadata) {
+      this.detectionModel = new ONNXModelManager();
+      await this.detectionModel.loadModel(modelPath, metadata);
+      return;
+    }
+
+    // Otherwise, download from GitHub
+    const { modelUrl, metadata: downloadedMetadata } = await modelDownloader.downloadModel('detection');
     this.detectionModel = new ONNXModelManager();
-    await this.detectionModel.loadModel(modelPath, metadata);
+    await this.detectionModel.loadModel(modelUrl, downloadedMetadata);
   }
 
-  async loadSegmentationModel(modelPath: string, metadata: ModelMetadata): Promise<void> {
+  /**
+   * Load segmentation model from GitHub or local
+   */
+  async loadSegmentationModel(modelPath?: string, metadata?: ModelMetadata): Promise<void> {
+    // If path and metadata provided, use them directly (backward compatibility)
+    if (modelPath && metadata) {
+      this.segmentationModel = new ONNXModelManager();
+      await this.segmentationModel.loadModel(modelPath, metadata);
+      return;
+    }
+
+    // Otherwise, download from GitHub
+    const { modelUrl, metadata: downloadedMetadata } = await modelDownloader.downloadModel('segmentation');
     this.segmentationModel = new ONNXModelManager();
-    await this.segmentationModel.loadModel(modelPath, metadata);
+    await this.segmentationModel.loadModel(modelUrl, downloadedMetadata);
   }
 
   async detectObjects(imageElement: HTMLImageElement, imageId: number): Promise<Detection[]> {
@@ -23,16 +48,25 @@ export class InferenceService {
     }
 
     const metadata = this.detectionModel.getMetadata()!;
+    console.log('🔍 Metadata:', metadata);
 
     // Preprocess image
     const { data, dims } = preprocessImage(imageElement, metadata.input_size);
+    console.log('📐 Input dims:', dims);
 
     // Run inference
     const results = await this.detectionModel.runInference(data, dims);
+    console.log('🤖 Inference results:', results);
 
     // Get output tensor (assuming first output is detections)
     const outputName = Object.keys(results)[0];
     const output = results[outputName];
+    console.log('📊 Output tensor:', {
+      name: outputName,
+      dims: output.dims,
+      size: output.size,
+      dataPreview: Array.from(output.data as Float32Array).slice(0, 20)
+    });
 
     // Post-process results
     let detections = postprocessDetections(
@@ -41,9 +75,11 @@ export class InferenceService {
       imageElement.width,
       imageElement.height
     );
+    console.log('🎯 Detections before NMS:', detections.length, detections);
 
     // Apply NMS
     detections = applyNMS(detections, metadata.iou_threshold);
+    console.log('✅ Detections after NMS:', detections.length, detections);
 
     // Save detections to database
     await this.saveDetections(imageId, detections, metadata.model_version);

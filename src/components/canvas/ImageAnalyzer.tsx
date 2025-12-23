@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next'; // Added this line
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AnnotationCanvas from './AnnotationCanvas';
@@ -44,6 +45,7 @@ const ImageAnalyzer: React.FC = () => {
     imageId: string;
   }>();
   const navigate = useNavigate();
+  const { t } = useTranslation(); // Added this line
   const [layers, setLayers] = useState<CanvasLayer[]>(DEFAULT_LAYERS);
   const [activeTool, setActiveTool] = useState<CanvasTool>('select');
 
@@ -69,7 +71,7 @@ const ImageAnalyzer: React.FC = () => {
   };
 
   if (!image) {
-    return <div>Cargando imagen...</div>;
+    return <div>{t('ui.loadingImage')}</div>;
   }
 
   return (
@@ -85,7 +87,7 @@ const ImageAnalyzer: React.FC = () => {
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-coal-800">Análisis de Imagen</h1>
+            <h1 className="text-3xl font-bold text-coal-800">{t('analysis.title')}</h1>
             <p className="text-smoke-500 mt-1">{image.filename}</p>
           </div>
         </div>
@@ -118,7 +120,7 @@ const ImageAnalyzer: React.FC = () => {
           {detections && detections.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Detecciones</CardTitle>
+                <CardTitle className="text-sm">{t('analysis.detections')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">

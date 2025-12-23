@@ -54,7 +54,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
             .toArray();
           const sessionNumber = existingSessions.length + 1;
           setFormData({
-            name: `Sesión N° ${sessionNumber}`,
+            name: t('sessions.session') + ` N° ${sessionNumber}`,
             date: new Date().toISOString().split('T')[0],
             notes: '',
           });
@@ -62,7 +62,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
         getNextSessionInfo();
       }
     }
-  }, [open, patientId, sessionToEdit, isEditMode]);
+  }, [open, patientId, sessionToEdit, isEditMode, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,7 +104,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
       onOpenChange(false);
     } catch (error) {
       console.error('Error saving session:', error);
-      alert('Error al guardar la sesión');
+      alert(t('errors.saveSession'));
     } finally {
       setLoading(false);
     }
@@ -115,18 +115,18 @@ const SessionForm: React.FC<SessionFormProps> = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {isEditMode ? 'Editar Sesión' : t('sessions.create')}
+            {isEditMode ? t('sessions.form.update') : t('sessions.form.create')}
           </DialogTitle>
           <DialogDescription>
             {isEditMode
-              ? 'Modifica los detalles de esta sesión.'
-              : 'Crea una nueva sesión de análisis para este paciente'}
+              ? t('sessions.form.editDescription')
+              : t('sessions.form.createDescription')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="name">Nombre de la sesión</Label>
+            <Label htmlFor="name">{t('sessions.form.name')}</Label>
             <Input
               id="name"
               type="text"
@@ -136,7 +136,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
             />
           </div>
           <div>
-            <Label htmlFor="date">{t('sessions.date')}</Label>
+            <Label htmlFor="date">{t('sessions.form.date')}</Label>
             <Input
               id="date"
               type="date"
@@ -147,12 +147,12 @@ const SessionForm: React.FC<SessionFormProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="notes">{t('sessions.notes')}</Label>
+            <Label htmlFor="notes">{t('sessions.form.notes')}</Label>
             <Textarea
               id="notes"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Notas adicionales sobre esta sesión..."
+              placeholder={t('sessions.form.notesPlaceholder')}
               rows={4}
             />
           </div>
@@ -164,12 +164,12 @@ const SessionForm: React.FC<SessionFormProps> = ({
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancelar
+              {t('ui.cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
               {loading
-                ? isEditMode ? 'Guardando...' : 'Creando...'
-                : isEditMode ? 'Guardar Cambios' : 'Crear Sesión'}
+                ? isEditMode ? t('ui.saving') : t('ui.creating')
+                : isEditMode ? t('ui.saveChanges') : t('ui.createSession')}
             </Button>
           </div>
         </form>

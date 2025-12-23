@@ -37,14 +37,14 @@ const PatientDetails: React.FC = () => {
       downloadDirdFile(blob, `dird_export_patient_${patient.patientId}`);
     } catch (error) {
       console.error('Error exporting patient:', error);
-      alert('Error al exportar el paciente.');
+      alert(t('errors.exportPatient'));
     } finally {
       setIsExporting(false);
     }
   };
 
   const handleDeleteSession = async (sessionId: number) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta sesión y todos sus datos? Esta acción es irreversible.')) {
+    if (window.confirm(t('confirmations.deleteSession'))) {
       try {
         await db.transaction('rw', db.sessions, db.images, db.detections, db.segmentations, async () => {
           const imagesToDelete = await db.images.where('sessionId').equals(sessionId).toArray();
@@ -61,7 +61,7 @@ const PatientDetails: React.FC = () => {
         });
       } catch (error) {
         console.error('Error deleting session:', error);
-        alert('Error al eliminar la sesión.');
+        alert(t('errors.deleteSession'));
       }
     }
   };
@@ -72,13 +72,13 @@ const PatientDetails: React.FC = () => {
   };
 
   const handleDuplicateSession = async (sessionId: number) => {
-    if (window.confirm('¿Estás seguro de que quieres duplicar esta sesión?')) {
+    if (window.confirm(t('confirmations.duplicateSession'))) {
       setIsDuplicating(sessionId);
       try {
         await duplicateSession(sessionId);
       } catch (error) {
         console.error('Error duplicating session:', error);
-        alert('Error al duplicar la sesión.');
+        alert(t('errors.duplicateSession'));
       } finally {
         setIsDuplicating(null);
       }
@@ -86,7 +86,7 @@ const PatientDetails: React.FC = () => {
   };
 
   if (!patient) {
-    return <div>Cargando...</div>;
+    return <div>{t('ui.loading')}</div>;
   }
 
   const formatDate = (date: Date) => {
@@ -107,13 +107,13 @@ const PatientDetails: React.FC = () => {
           </Button>
           <div>
             <h1 className="text-3xl font-bold text-coal-800">{patient.name}</h1>
-            <p className="text-smoke-500 mt-1">ID: {patient.patientId}</p>
+            <p className="text-smoke-500 mt-1">{t('patients.idLabel')}{patient.patientId}</p>
           </div>
         </div>
         <div>
           <Button onClick={handleExportPatient} disabled={isExporting}>
             <Download className="w-4 h-4 mr-2" />
-            {isExporting ? 'Exportando...' : 'Exportar Paciente'}
+            {isExporting ? t('export.exporting') : t('export.patient')}
           </Button>
         </div>
       </div>
@@ -121,18 +121,18 @@ const PatientDetails: React.FC = () => {
       {/* Patient Info Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Información del Paciente</CardTitle>
+          <CardTitle>{t('patients.infoTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-smoke-500">Fecha de Nacimiento</p>
+              <p className="text-sm text-smoke-500">{t('patients.dateOfBirth')}</p>
               <p className="text-coal-800 font-medium">
                 {formatDate(patient.dateOfBirth)}
               </p>
             </div>
             <div>
-              <p className="text-sm text-smoke-500">Registrado el</p>
+              <p className="text-sm text-smoke-500">{t('patients.registeredOn')}</p>
               <p className="text-coal-800 font-medium">{formatDate(patient.createdAt)}</p>
             </div>
           </div>
@@ -174,7 +174,7 @@ const PatientDetails: React.FC = () => {
                       <div>
                         <h3 className="font-semibold text-coal-800">
                           {session.name ||
-                            `${t('sessions.sessionNumber')} ${
+                            `${t('sessions.session')} ${
                               session.sessionNumber
                             }`}
                         </h3>
@@ -193,7 +193,7 @@ const PatientDetails: React.FC = () => {
                         <>
                           <span className="flex items-center text-sm text-smoke-500 mr-2">
                             <Unlock className="w-4 h-4 mr-1" />
-                            Activa
+                            {t('sessions.status.active')}
                           </span>
                           <Button
                             variant="ghost"
@@ -238,7 +238,7 @@ const PatientDetails: React.FC = () => {
           <Card>
             <CardContent className="py-12 text-center">
               <p className="text-smoke-500">
-                No hay sesiones registradas. Crea una para comenzar el análisis.
+                {t('sessions.empty')}
               </p>
             </CardContent>
           </Card>

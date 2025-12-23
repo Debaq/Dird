@@ -15,9 +15,9 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ activeTool, onToolChange, disable
   const { t } = useTranslation();
 
   const tools = [
-    { id: 'select' as CanvasTool, icon: Hand, label: 'Seleccionar' },
+    { id: 'select' as CanvasTool, icon: Hand, label: t('canvas.tools.select') },
     { id: 'bbox' as CanvasTool, icon: Square, label: t('canvas.tools.bbox') },
-    { id: 'circle' as CanvasTool, icon: Circle, label: 'Círculo' },
+    { id: 'circle' as CanvasTool, icon: Circle, label: t('canvas.tools.circle') },
     { id: 'eraser' as CanvasTool, icon: Eraser, label: t('canvas.tools.eraser') },
     { id: 'pan' as CanvasTool, icon: Move, label: t('canvas.tools.pan') },
     { id: 'zoom' as CanvasTool, icon: ZoomIn, label: t('canvas.tools.zoom') },
@@ -25,7 +25,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ activeTool, onToolChange, disable
 
   return (
     <div className="bg-white rounded-lg border border-coal-200 p-4">
-      <h3 className="font-semibold text-coal-800 mb-3">Herramientas</h3>
+      <h3 className="font-semibold text-coal-800 mb-3">{t('canvas.tools.title')}</h3>
       <div className="grid grid-cols-2 gap-2">
         {tools.map((tool) => {
           const Icon = tool.icon;
@@ -54,7 +54,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ activeTool, onToolChange, disable
       {activeTool === 'bbox' && (
         <div className="mt-4 p-3 bg-primary-50 rounded-lg">
           <p className="text-xs text-primary-800">
-            Haz clic y arrastra para dibujar una caja de detección
+            {t('canvas.tools.bboxInstruction')}
           </p>
         </div>
       )}

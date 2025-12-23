@@ -6,6 +6,13 @@ export interface Patient {
   name: string;
   dateOfBirth: Date;
   status: 'active' | 'archived';
+  diabetes: boolean;
+  diabetesType?: 'type1' | 'type2' | 'gestational' | 'other';
+  diabetesDuration?: number; // años desde diagnóstico
+  hta: boolean; // Hipertensión Arterial
+  dlp: boolean; // Dislipidemia
+  medications: string[]; // medicamentos que toma
+  otherConditions?: string; // otros antecedentes relevantes
   metadata?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;

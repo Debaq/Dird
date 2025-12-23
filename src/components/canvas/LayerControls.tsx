@@ -1,6 +1,7 @@
 import React from 'react';
 import { Eye, EyeOff, Lock, Unlock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next'; // Added this line
 
 export interface CanvasLayer {
   id: string;
@@ -17,10 +18,11 @@ interface LayerControlsProps {
 }
 
 const LayerControls: React.FC<LayerControlsProps> = ({ layers, onLayerUpdate }) => {
+  const { t } = useTranslation(); // Added this line
 
   return (
     <div className="bg-white rounded-lg border border-coal-200 p-4">
-      <h3 className="font-semibold text-coal-800 mb-3">Capas</h3>
+      <h3 className="font-semibold text-coal-800 mb-3">{t('canvas.layers.title')}</h3>
       <div className="space-y-2">
         {layers
           .sort((a, b) => b.zIndex - a.zIndex)
@@ -68,7 +70,7 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layers, onLayerUpdate }) 
 
               {layer.visible && layer.id !== 'original' && (
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs text-smoke-500">Opacidad</span>
+                  <span className="text-xs text-smoke-500">{t('canvas.layers.opacity')}</span>
                   <input
                     type="range"
                     min="0"

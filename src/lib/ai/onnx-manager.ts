@@ -6,27 +6,106 @@ export class ONNXModelManager {
   private metadata: ModelMetadata | null = null;
 
   constructor() {
-    // Configure ONNX Runtime
-    ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/';
+    // Configure ONNX Runtime with optimized settings
+    ort.env.wasm.numThreads = 1;
+    ort.env.wasm.simd = true;
+
+    // Use CDN for WASM files (most reliable option)
+    ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/';
+
+    console.log('ONNX Runtime configured:', {
+      wasmPaths: ort.env.wasm.wasmPaths,
+      numThreads: ort.env.wasm.numThreads,
+      simd: ort.env.wasm.simd
+    });
   }
 
   async loadModel(modelPath: string, metadata: ModelMetadata): Promise<void> {
     try {
       console.log(`Loading ONNX model from ${modelPath}...`);
 
-      // Create inference session with WebGL and WASM backends
-      this.session = await ort.InferenceSession.create(modelPath, {
-        executionProviders: ['webgl', 'wasm'],
-        graphOptimizationLevel: 'all',
-      });
+      // Fetch the model as ArrayBuffer for better compatibility
+      let modelData: ArrayBuffer;
+
+      if (modelPath.startsWith('http://') || modelPath.startsWith('https://')) {
+        console.log('Downloading model...');
+        const response = await fetch(modelPath, {
+          mode: 'cors',
+          cache: 'force-cache'
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch model: ${response.statusText}`);
+        }
+
+        modelData = await response.arrayBuffer();
+        console.log(`Model downloaded: ${(modelData.byteLength / 1024 / 1024).toFixed(2)} MB`);
+      } else {
+        // For local files, fetch as ArrayBuffer
+        const response = await fetch(modelPath);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch local model: ${response.statusText}`);
+        }
+        modelData = await response.arrayBuffer();
+      }
+
+      // Validate ArrayBuffer
+      if (!modelData || modelData.byteLength === 0) {
+        throw new Error('Invalid model data: empty ArrayBuffer');
+      }
+
+      console.log('Creating ONNX inference session...');
+      console.log('Model size:', modelData.byteLength, 'bytes');
+
+      // Try with minimal optimization first (safer for newer models)
+      try {
+        this.session = await ort.InferenceSession.create(modelData, {
+          executionProviders: ['wasm'],
+          graphOptimizationLevel: 'disabled',
+        });
+      } catch (error) {
+        console.warn('Failed with disabled optimization, trying extended...');
+        // If that fails, try with extended optimization
+        this.session = await ort.InferenceSession.create(modelData, {
+          executionProviders: ['wasm'],
+          graphOptimizationLevel: 'extended',
+        });
+      }
+
+      console.log('✅ Model loaded successfully');
+      console.log('Input names:', this.session.inputNames);
+      console.log('Output names:', this.session.outputNames);
 
       this.metadata = metadata;
 
-      console.log('Model loaded successfully');
-      console.log('Input names:', this.session.inputNames);
-      console.log('Output names:', this.session.outputNames);
     } catch (error) {
       console.error('Error loading ONNX model:', error);
+
+      // Provide more helpful error messages
+      if (error instanceof Error) {
+        if (error.message.includes('getValue')) {
+          throw new Error(
+            'Model incompatible with browser runtime. ' +
+            'The model may have been exported with an unsupported ONNX opset version. ' +
+            'Please re-export with opset_version=13-15 for best browser compatibility.'
+          );
+        }
+
+        if (error.message.includes('operator')) {
+          throw new Error(
+            'Model contains unsupported operators. ' +
+            'Please simplify the model or use standard ONNX operators.'
+          );
+        }
+
+        if (error.message.includes('fetch') || error.message.includes('network')) {
+          throw new Error(
+            'Network error while loading model. ' +
+            'Please check your internet connection and try again.'
+          );
+        }
+      }
+
       throw error;
     }
   }
@@ -124,10 +203,21 @@ export function postprocessDetections(
 ): Detection[] {
   const detections: Detection[] = [];
   const outputData = output.data as Float32Array;
-  const [, , numDetections] = output.dims;
+  const dims = output.dims;
+
+  console.log('🔬 Post-process input:', {
+    dims: dims,
+    dataLength: outputData.length,
+    numClasses: metadata.classes.length,
+    confidenceThreshold: metadata.confidence_threshold
+  });
 
   // YOLOv8 output format: [batch, 4 + num_classes, num_detections]
   const numClasses = metadata.classes.length;
+  const numDetections = dims[2];
+  const numRows = dims[1];
+
+  console.log('📏 Computed:', { numDetections, numRows, expected: 4 + numClasses });
 
   for (let i = 0; i < numDetections; i++) {
     // Extract box coordinates (normalized)
@@ -148,6 +238,11 @@ export function postprocessDetections(
       }
     }
 
+    // Debug first few detections
+    if (i < 5) {
+      console.log(`Detection ${i}:`, { x, y, w, h, maxScore, maxClassIndex, threshold: metadata.confidence_threshold });
+    }
+
     // Filter by confidence threshold
     if (maxScore >= metadata.confidence_threshold) {
       detections.push({
@@ -164,6 +259,7 @@ export function postprocessDetections(
     }
   }
 
+  console.log(`✨ Found ${detections.length} detections above threshold`);
   return detections;
 }
 

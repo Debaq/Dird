@@ -1,45 +1,143 @@
 {
   "app": {
     "name": "DIRD",
-    "tagline": "Diabetic Retinopathy Detection"
+    "tagline": "Diabetic Retinopathy Detection",
+    "longDescription": "Ophthalmological image analysis platform with edge-computing AI. All data stays on your device.",
+    "start": "Get Started"
+  },
+  "ui": {
+    "close": "Close",
+    "loading": "Loading...",
+    "loadingImage": "Loading image...",
+    "comingSoon": {
+      "general": "Coming Soon...",
+      "analysis": "AI analysis will be available soon",
+      "reports": "Report generation will be available soon"
+    },
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "creating": "Creating...",
+    "saveChanges": "Save Changes",
+    "createSession": "Create Session"
+  },
+  "errors": {
+    "unknown": "Unknown error",
+    "exportSession": "Error exporting session.",
+    "deleteImage": "Error deleting image",
+    "imageProcessing": "Error processing image",
+    "exportPatient": "Error exporting patient.",
+    "deleteSession": "Error deleting session.",
+    "duplicateSession": "Error duplicating session.",
+    "import": "Import Error",
+    "deletePatient": "Error deleting patient.",
+    "archivePatient": "Error {{action}}ing patient."
+  },
+  "confirmations": {
+    "deleteImage": "Are you sure you want to delete this image and all its associated analyses?",
+    "deleteSession": "Are you sure you want to delete this session and all its data? This action is irreversible.",
+    "duplicateSession": "Are you sure you want to duplicate this session?",
+    "deletePatient": "Are you sure you want to delete this patient and all their data? This action is irreversible.",
+    "archivePatient": "Are you sure you want to {{action}} this patient?"
   },
   "patients": {
     "title": "Patients",
     "create": "Create Patient",
     "name": "Name",
-    "id": "Patient ID"
+    "id": "Patient ID",
+    "idLabel": "ID: ",
+    "infoTitle": "Patient Information",
+    "dateOfBirth": "Date of Birth",
+    "registeredOn": "Registered On",
+    "showArchived": "Show Archived",
+    "searchPlaceholder": "Search by name or ID...",
+    "description": "Manage patients and their analysis sessions",
+    "notFound": "No patients found",
+    "empty": "No patients registered. Create one to start."
   },
   "sessions": {
     "title": "Sessions",
+    "session": "Session",
     "create": "New Session",
     "locked": "Session Locked",
-    "unlock": "Unlock"
+    "unlock": "Unlock",
+    "compareTitle": "Session Comparison",
+    "notesTitle": "Session Notes",
+    "galleryTitle": "Image Gallery",
+    "empty": "No sessions registered. Create one to start the analysis.",
+    "status": {
+      "active": "Active"
+    },
+    "tabs": {
+      "images": "Images",
+      "analysis": "AI Analysis",
+      "report": "Report"
+    },
+    "form": {
+      "name": "Session Name",
+      "notes": "Notes (optional)",
+      "create": "Create Session",
+      "update": "Edit Session",
+      "editDescription": "Modify the details of this session.",
+      "createDescription": "Create a new analysis session for this patient",
+      "notesPlaceholder": "Additional notes about this session...",
+      "date": "Date"
+    }
+  },
+  "upload": {
+    "selectEye": "Select eye:",
+    "addImage": "Add Image",
+    "galleryEmpty": "No images in this session. Upload some to start the analysis.",
+    "eye": {
+      "left": "LI (Left Eye)",
+      "right": "RE (Right Eye)",
+      "leftLabel": "LI (Left Eye)",
+      "rightLabel": "RE (Right Eye)"
+    },
+    "dropzone": "Drag and drop files here or click to select",
+    "accepted": "Supported formats: JPG, PNG",
+    "maxSize": "Max size: 1MB"
   },
   "canvas": {
     "tools": {
+      "title": "Tools",
+      "select": "Select",
       "bbox": "Bounding Box",
       "segment": "Segmentation",
-      "eraser": "Eraser"
+      "eraser": "Eraser",
+      "circle": "Circle",
+      "bboxInstruction": "Click and drag to draw a bounding box"
     },
     "layers": {
+      "title": "Layers",
+      "opacity": "Opacity",
       "original": "Original Image",
       "ai_detections": "AI Detections",
       "ai_segmentations": "AI Segmentations",
       "manual": "Manual Annotations"
     }
   },
+  "analysis": {
+    "title": "Image Analysis",
+    "detections": "Detections"
+  },
   "reports": {
     "generate": "Generate Report",
     "preview": "Preview",
     "finalize": "Finalize and Close Case",
+    "reportType": "Report Type",
+    "evaluatorNotes": "Evaluator Notes (Optional)",
+    "finalWarning": "Note: The final report will lock the session and prevent adding or deleting images or analyses.",
     "status": {
       "preliminary": "PRELIMINARY VERSION",
       "final": "FINAL REPORT"
     }
   },
   "models": {
+    "title": "AI Models",
     "detection": "Detection",
     "segmentation": "Segmentation",
+    "beta": "Beta",
     "classes": {
       "microaneurysm": "Microaneurysm",
       "hard_exudate": "Hard Exudate",
@@ -50,8 +148,20 @@
   },
   "export": {
     "patient": "Export Patient",
+    "session": "Export Session",
     "all": "Export All",
-    "import": "Import .dird"
+    "import": "Import .dird",
+    "exporting": "Exporting...",
+    "dragAndDrop": "Or drag and drop here"
+  },
+  "import": {
+    "importing": "Importing data...",
+    "waitMessage": "This may take a few moments",
+    "errorTitle": "Import Error"
+  },
+  "languages": {
+    "es": "Spanish",
+    "en": "English"
   },
   "settings": {
     "title": "Settings",
@@ -67,6 +177,7 @@
       "title": "Appearance Settings",
       "primaryColor": "Primary Color",
       "logo": "Logo (URL or path)",
+      "logoPlaceholder": "/logo.svg",
       "theme": "Theme",
       "themes": {
         "light": "Light",
@@ -86,7 +197,9 @@
       "local": {
         "title": "Local Models Configuration",
         "detection": "Detection Model",
-        "segmentation": "Segmentation Model"
+        "segmentation": "Segmentation Model",
+        "detectionPlaceholder": "/models/detection-v1.0.0.onnx",
+        "segmentationPlaceholder": "/models/segmentation-v1.0.0.onnx"
       },
       "api": {
         "title": "API Configuration",
@@ -98,7 +211,12 @@
         "test": "Test Connection",
         "testing": "Testing...",
         "connectionSuccess": "Connection successful",
-        "connectionFailed": "Connection failed"
+        "connectionFailed": "Connection failed",
+        "endpointPlaceholder": "https://api.example.com/inference",
+        "keyPlaceholder": "sk-...",
+        "modelNamePlaceholder": "yolov8n-retina-v2.0",
+        "headersPlaceholder": "{
+  \"X-Custom-Header\": \"value\"\n}"
       }
     },
     "processing": {
@@ -137,5 +255,10 @@
       "installing": "Installing...",
       "installed": "App Installed"
     }
+  },
+  "processing": {
+    "complete": "Processing completed successfully",
+    "inProgress": "Processing {{current}}/{{total}}...",
+    "start": "Process with AI"
   }
 }

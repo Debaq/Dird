@@ -1,20 +1,22 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
-import HttpBackend from 'i18next-http-backend';
+
+// Importar traducciones directamente
+import esTranslations from './locales/es.json';
 
 i18n
-  .use(HttpBackend)
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
+    lng: 'es', // Idioma fijo en español
     fallbackLng: 'es',
     debug: import.meta.env.DEV,
+    resources: {
+      es: {
+        translation: esTranslations
+      }
+    },
     interpolation: {
       escapeValue: false
-    },
-    backend: {
-      loadPath: '/locales/{{lng}}/translation.json'
     }
   });
 

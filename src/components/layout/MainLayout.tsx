@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Users, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useConfigStore } from '@/stores/config-store';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -25,7 +26,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <div className="flex items-center justify-between">
             <Link to="/" className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-primary-500 font-bold text-xl">D</span>
+                <img
+                  src={useConfigStore().config.appearance.logo}
+                  alt="Logo"
+                  className="w-6 h-6 object-contain"
+                />
               </div>
               <div>
                 <h1 className="text-xl font-bold">{t('app.name')}</h1>

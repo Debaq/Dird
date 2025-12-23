@@ -20,14 +20,13 @@ function HomePage() {
           {t('app.tagline')}
         </p>
         <p className="text-sm text-smoke-600 mb-8">
-          Plataforma de análisis de imágenes oftalmológicas con IA edge-computing.
-          Todos los datos permanecen en tu dispositivo.
+          {t('app.longDescription')}
         </p>
         <Link
           to="/patients"
           className="inline-flex items-center justify-center rounded-md font-medium bg-primary-500 text-white hover:bg-primary-600 h-10 py-2 px-4"
         >
-          Comenzar
+          {t('app.start')}
         </Link>
       </div>
     </div>
@@ -35,6 +34,7 @@ function HomePage() {
 }
 
 function App() {
+  const { t } = useTranslation();
   const basename = import.meta.env.PROD ? '/dird' : '/';
 
   return (
@@ -89,8 +89,8 @@ function App() {
           element={
             <MainLayout>
               <div className="text-center py-12">
-                <h2 className="text-2xl font-bold text-coal-800 mb-2">Comparación de Sesiones</h2>
-                <p className="text-smoke-500">Próximamente...</p>
+                <h2 className="text-2xl font-bold text-coal-800 mb-2">{t('sessions.compareTitle')}</h2>
+                <p className="text-smoke-500">{t('ui.comingSoon.general')}</p>
               </div>
             </MainLayout>
           }

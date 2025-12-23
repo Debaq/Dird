@@ -113,3 +113,7 @@ export async function deletePatient(patientId: number): Promise<void> {
     await db.patients.delete(patientId);
   });
 }
+
+export async function updateImageEyeType(imageId: number, newEyeType: 'OI' | 'OD'): Promise<void> {
+  await db.images.update(imageId, { eyeType: newEyeType });
+}

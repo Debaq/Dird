@@ -75,5 +75,12 @@ export default defineConfig(({ mode }) => ({
       }
     }
   },
+  server: {
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'credentialless',
+      'Cross-Origin-Opener-Policy': 'same-origin'
+    }
+  },
+  assetsInclude: ['**/*.wasm'],
   base: mode === 'production' ? '/dird/' : '/',
 }));

@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
+import ModelSettings from './ModelSettings';
 
 export function Settings() {
   const { t } = useTranslation();
@@ -169,7 +170,8 @@ export function Settings() {
 
         {/* Models Tab */}
         <TabsContent value="models">
-          <div className="space-y-6">
+          <ModelSettings />
+          <div className="space-y-6 hidden">
             {/* Model Source Selection */}
             <Card className="p-6">
               <h2 className="text-xl font-semibold text-coal-800 mb-4">
