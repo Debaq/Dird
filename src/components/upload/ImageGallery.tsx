@@ -228,7 +228,7 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
 );
 
 interface SortableImageCardProps {
-  image: Image;
+  image: ImageType;
   thumbnail: string | undefined;
   patientId: string;
   sessionId: string;
@@ -264,7 +264,7 @@ const SortableImageCard: React.FC<SortableImageCardProps> = (props) => {
 // Main ImageGallery Component
 const ImageGallery: React.FC<ImageGalleryProps> = ({ images, patientId, sessionId, onDelete, isLocked, refreshKey }) => {
   const [thumbnails, setThumbnails] = useState<Map<number, string>>(new Map());
-  const [activeImage, setActiveImage] = useState<Image | null>(null);
+  const [activeImage, setActiveImage] = useState<ImageType | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -334,7 +334,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, patientId, sessionI
     }
   };
 
-  const DroppableColumn: React.FC<{ id: 'OI' | 'OD'; title: string; imageList: Image[]; className: string; }> = ({ id, title, imageList, className }) => {
+  const DroppableColumn: React.FC<{ id: 'OI' | 'OD'; title: string; imageList: ImageType[]; className: string; }> = ({ id, title, imageList, className }) => {
     const { setNodeRef, isOver } = useDroppable({ id });
     return (
       <div className={cn('space-y-4 p-4 rounded-lg transition-colors', isOver && !isLocked ? 'bg-primary-50' : 'bg-coal-50/50')}>
