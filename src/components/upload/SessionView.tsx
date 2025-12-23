@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { ArrowLeft, Play, Lock, ChevronRight, Download, Plus } from 'lucide-react';
@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ImageDropzone from './ImageDropzone';
 import ImageGallery from './ImageGallery';
 import ReportGenerator from '../reports/ReportGenerator';
+import ReportsList from '../reports/ReportsList';
+import AnalysisView from './AnalysisView';
 import { db } from '@/lib/db/schema';
 import { exportSession, downloadDirdFile } from '@/lib/export/dird-exporter';
 import { inferenceService } from '@/lib/ai/inference-service';
@@ -64,6 +66,40 @@ const SessionView: React.FC = () => {
     [sessionId, refreshKey]
   );
 
+  // Verificar si existe un reporte para esta sesión
+  const reportCount = useLiveQuery(
+    () => (sessionId ? db.reports.where('sessionId').equals(parseInt(sessionId)).count() : Promise.resolve(0)),
+    [sessionId, refreshKey]
+  );
+
+  // Verificar si hay imágenes procesadas con AI (detecciones de tipo 'ai')
+  const aiDetectionsCount = useLiveQuery(async () => {
+    if (!sessionId || !images) return 0;
+    const imageIds = images.map(img => img.id).filter(id => id !== undefined) as number[];
+    if (imageIds.length === 0) return 0;
+
+    return await db.detections
+      .where('imageId')
+      .anyOf(imageIds)
+      .and(detection => detection.type === 'ai')
+      .count();
+  }, [sessionId, images, refreshKey]);
+
+  // Determinar la pestaña por defecto basada en el estado de la sesión
+  useEffect(() => {
+    let defaultTab = 'images';
+
+    if (images && images.length > 0) {
+      if (reportCount && reportCount > 0) {
+        defaultTab = 'report';
+      } else if (aiDetectionsCount && aiDetectionsCount > 0) {
+        defaultTab = 'analysis';
+      }
+    }
+
+    setActiveTab(defaultTab);
+  }, [images, reportCount, aiDetectionsCount]);
+
   const handleExportSession = async () => {
     if (!sessionId) return;
     setIsExporting(true);
@@ -107,10 +143,8 @@ const SessionView: React.FC = () => {
 
     try {
       if (!inferenceService.isDetectionModelLoaded()) {
-        console.log('Loading detection model from GitHub...');
         // Load model from GitHub (with fallback to local)
         await inferenceService.loadDetectionModel();
-        console.log('Model loaded successfully');
       }
 
       const imageIds = images.map(img => img.id).filter(id => id !== undefined) as number[];
@@ -126,9 +160,11 @@ const SessionView: React.FC = () => {
         }
       }
 
+      let totalDetections = 0;
       for (let i = 0; i < images.length; i++) {
         const image = images[i];
         setProcessingProgress({ current: i + 1, total: images.length });
+
         const imageUrl = URL.createObjectURL(image.originalBlob);
         const imgElement = new Image();
         await new Promise((resolve, reject) => {
@@ -138,7 +174,8 @@ const SessionView: React.FC = () => {
         });
 
         if (image.id) {
-          await inferenceService.detectObjects(imgElement, image.id);
+          const detections = await inferenceService.detectObjects(imgElement, image.id);
+          totalDetections += detections.length;
         }
         URL.revokeObjectURL(imageUrl);
       }
@@ -150,7 +187,7 @@ const SessionView: React.FC = () => {
         },
       });
 
-      alert(t('processing.complete'));
+      alert(`${t('processing.complete')}\n\nDetecciones encontradas: ${totalDetections}`);
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Error processing images:', error);
@@ -256,17 +293,45 @@ const SessionView: React.FC = () => {
                 sessionId={sessionId!}
                 onDelete={!session.locked ? handleDeleteImage : undefined}
                 isLocked={session.locked}
+                refreshKey={refreshKey}
               />
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="analysis">
-          <Card><CardContent className="py-12 text-center"><p className="text-smoke-500">{t('ui.comingSoon.analysis')}</p></CardContent></Card>
+          <AnalysisView
+            images={images}
+            sessionId={parseInt(sessionId!)}
+            patientId={patientId!}
+            refreshKey={refreshKey}
+          />
         </TabsContent>
 
         <TabsContent value="report">
-          <Card><CardContent className="py-12 text-center"><p className="text-smoke-500">{t('ui.comingSoon.reports')}</p></CardContent></Card>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Historial de Informes</CardTitle>
+                    <p className="text-sm text-smoke-500 mt-1">
+                      Todos los informes generados para esta sesión
+                    </p>
+                  </div>
+                  {!session.locked && (
+                    <ReportGenerator
+                      sessionId={parseInt(sessionId!)}
+                      onReportGenerated={() => setRefreshKey((prev) => prev + 1)}
+                    />
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ReportsList sessionId={parseInt(sessionId!)} refreshKey={refreshKey} />
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

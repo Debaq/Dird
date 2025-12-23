@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Settings as SettingsIcon,
@@ -8,7 +8,8 @@ import {
   Download,
   Info,
   Check,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { useConfigStore, type ModelSource } from '@/stores/config-store';
 import { apiInferenceService } from '@/lib/ai/api-inference-service';
@@ -22,6 +23,8 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import ModelSettings from './ModelSettings';
+import { getCurrentVersion, type VersionInfo } from '@/utils/version';
+import { changeLanguage } from '@/i18n/config';
 
 export function Settings() {
   const { t } = useTranslation();
@@ -41,6 +44,61 @@ export function Settings() {
     message: string;
   } | null>(null);
   const [isTestingApi, setIsTestingApi] = useState(false);
+  const [currentVersion, setCurrentVersion] = useState<VersionInfo | null>(null);
+  const [isCheckingVersion, setIsCheckingVersion] = useState(false);
+  const [hasUpdate, setHasUpdate] = useState(false);
+  const [isReloading, setIsReloading] = useState(false);
+
+  useEffect(() => {
+    const loadVersionInfo = async () => {
+      setIsCheckingVersion(true);
+      try {
+        const versionInfo = await getCurrentVersion();
+        setCurrentVersion(versionInfo);
+      } catch (error) {
+        console.error('Error loading version info:', error);
+      } finally {
+        setIsCheckingVersion(false);
+      }
+    };
+
+    loadVersionInfo();
+  }, []);
+
+  const checkForUpdates = async () => {
+    setIsCheckingVersion(true);
+    try {
+      const serverVersion = await getCurrentVersion();
+      const localVersion = currentVersion;
+
+      if (localVersion && serverVersion && serverVersion.buildNumber > localVersion.buildNumber) {
+        setHasUpdate(true);
+      } else {
+        setHasUpdate(false);
+      }
+
+      setCurrentVersion(serverVersion);
+    } catch (error) {
+      console.error('Error checking for updates:', error);
+    } finally {
+      setIsCheckingVersion(false);
+    }
+  };
+
+  const forceUpdate = async () => {
+    setIsReloading(true);
+
+    // Limpiar el caché del navegador
+    if ('caches' in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames.map((cacheName) => caches.delete(cacheName))
+      );
+    }
+
+    // Forzar recarga de la página
+    window.location.reload();
+  };
 
   const handleTestApiConnection = async () => {
     setIsTestingApi(true);
@@ -60,34 +118,34 @@ export function Settings() {
   };
 
   return (
-    <div className="container mx-auto py-6 max-w-5xl">
+    <div className="container mx-auto py-6 max-w-5xl dark:text-gray-100">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-coal-800 flex items-center gap-2">
+        <h1 className="text-3xl font-bold text-coal-800 dark:text-gray-100 flex items-center gap-2">
           <SettingsIcon className="h-8 w-8" />
           {t('settings.title')}
         </h1>
-        <p className="text-smoke-600 mt-2">{t('settings.description')}</p>
+        <p className="text-smoke-600 dark:text-gray-400 mt-2">{t('settings.description')}</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="border-b border-smoke-300 mb-6">
-          <TabsTrigger value="appearance">
+        <TabsList className="border-b border-smoke-300 mb-6 dark:border-gray-700 dark:bg-gray-800">
+          <TabsTrigger value="appearance" className="dark:text-gray-100 dark:data-[state=active]:text-white">
             <Palette className="h-4 w-4 mr-2" />
             {t('settings.tabs.appearance')}
           </TabsTrigger>
-          <TabsTrigger value="models">
+          <TabsTrigger value="models" className="dark:text-gray-100 dark:data-[state=active]:text-white">
             <Cpu className="h-4 w-4 mr-2" />
             {t('settings.tabs.models')}
           </TabsTrigger>
-          <TabsTrigger value="processing">
+          <TabsTrigger value="processing" className="dark:text-gray-100 dark:data-[state=active]:text-white">
             <Gauge className="h-4 w-4 mr-2" />
             {t('settings.tabs.processing')}
           </TabsTrigger>
-          <TabsTrigger value="pwa">
+          <TabsTrigger value="pwa" className="dark:text-gray-100 dark:data-[state=active]:text-white">
             <Download className="h-4 w-4 mr-2" />
             {t('settings.tabs.pwa')}
           </TabsTrigger>
-          <TabsTrigger value="about">
+          <TabsTrigger value="about" className="dark:text-gray-100 dark:data-[state=active]:text-white">
             <Info className="h-4 w-4 mr-2" />
             {t('settings.tabs.about')}
           </TabsTrigger>
@@ -95,55 +153,100 @@ export function Settings() {
 
         {/* Appearance Tab */}
         <TabsContent value="appearance">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold text-coal-800 mb-4">
+          <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
+            <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4">
               {t('settings.appearance.title')}
             </h2>
 
             <div className="space-y-6">
               {/* Primary Color */}
               <div>
-                <Label htmlFor="primaryColor">{t('settings.appearance.primaryColor')}</Label>
+                <Label htmlFor="primaryColor" className="dark:text-dark-text">{t('settings.appearance.primaryColor')}</Label>
                 <div className="flex gap-3 mt-2">
                   <Input
                     id="primaryColor"
                     type="color"
                     value={config.appearance.primaryColor}
                     onChange={(e) => updateAppearance({ primaryColor: e.target.value })}
-                    className="w-20 h-10"
+                    className="w-20 h-10 dark:bg-dark-surface dark:border-coal-600"
                   />
                   <Input
                     type="text"
                     value={config.appearance.primaryColor}
                     onChange={(e) => updateAppearance({ primaryColor: e.target.value })}
-                    className="flex-1"
+                    className="flex-1 dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
                   />
                 </div>
               </div>
 
               {/* Logo */}
               <div>
-                <Label htmlFor="logo">{t('settings.appearance.logo')}</Label>
-                <Input
-                  id="logo"
-                  type="text"
-                  value={config.appearance.logo}
-                  onChange={(e) => updateAppearance({ logo: e.target.value })}
-                  placeholder="/logo.svg"
-                  className="mt-2"
-                />
+                <Label className="dark:text-dark-text">{t('settings.appearance.logo')}</Label>
+                <div className="mt-2 flex flex-col gap-3">
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={config.appearance.logo}
+                      onChange={(e) => updateAppearance({ logo: e.target.value })}
+                      placeholder="/logo.svg"
+                      className="dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
+                    />
+                  </div>
+
+                  {/* Logo Preview */}
+                  <div className="mt-2">
+                    <Label className="text-sm font-medium text-smoke-700 dark:text-dark-textSecondary">
+                      {t('settings.appearance.logoPreview')}
+                    </Label>
+                    <div className="mt-1 flex items-center">
+                      <img
+                        src={config.appearance.logo}
+                        alt="Current logo preview"
+                        className="w-12 h-12 object-contain border border-smoke-300 rounded dark:border-coal-600"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/logo-default.svg'; // fallback to default logo
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Logo Upload */}
+                  <div className="mt-2">
+                    <Label className="text-sm font-medium text-smoke-700 dark:text-dark-textSecondary">
+                      {t('settings.appearance.uploadNewLogo')}
+                    </Label>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            if (event.target?.result) {
+                              updateAppearance({ logo: event.target.result as string });
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="dark:bg-dark-surface dark:border-coal-600"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Theme */}
               <div>
-                <Label htmlFor="theme">{t('settings.appearance.theme')}</Label>
+                <Label htmlFor="theme" className="dark:text-dark-text">{t('settings.appearance.theme')}</Label>
                 <select
                   id="theme"
                   value={config.appearance.theme}
                   onChange={(e) =>
                     updateAppearance({ theme: e.target.value as 'light' | 'dark' | 'auto' })
                   }
-                  className="w-full mt-2 rounded-md border border-smoke-300 px-3 py-2"
+                  className="w-full mt-2 rounded-md border border-smoke-300 px-3 py-2 dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
                 >
                   <option value="light">{t('settings.appearance.themes.light')}</option>
                   <option value="dark">{t('settings.appearance.themes.dark')}</option>
@@ -153,15 +256,19 @@ export function Settings() {
 
               {/* Language */}
               <div>
-                <Label htmlFor="language">{t('settings.appearance.language')}</Label>
+                <Label htmlFor="language" className="dark:text-dark-text">{t('settings.appearance.language')}</Label>
                 <select
                   id="language"
                   value={config.appearance.language}
-                  onChange={(e) => updateAppearance({ language: e.target.value })}
-                  className="w-full mt-2 rounded-md border border-smoke-300 px-3 py-2"
+                  onChange={(e) => {
+                    const newLanguage = e.target.value;
+                    updateAppearance({ language: newLanguage });
+                    changeLanguage(newLanguage);
+                  }}
+                  className="w-full mt-2 rounded-md border border-smoke-300 px-3 py-2 dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
                 >
-                  <option value="es">Español</option>
-                  <option value="en">English</option>
+                  <option value="es">{t('languages.es')}</option>
+                  <option value="en">{t('languages.en')}</option>
                 </select>
               </div>
             </div>
@@ -173,8 +280,8 @@ export function Settings() {
           <ModelSettings />
           <div className="space-y-6 hidden">
             {/* Model Source Selection */}
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold text-coal-800 mb-4">
+            <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
+              <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4">
                 {t('settings.models.source.title')}
               </h2>
 
@@ -187,13 +294,13 @@ export function Settings() {
                     value="local"
                     checked={config.modelSource === 'local'}
                     onChange={(e) => setModelSource(e.target.value as ModelSource)}
-                    className="mt-1"
+                    className="mt-1 dark:bg-dark-surface dark:border-coal-600"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="modelSourceLocal" className="font-semibold">
+                    <Label htmlFor="modelSourceLocal" className="font-semibold dark:text-dark-text">
                       {t('settings.models.source.local')}
                     </Label>
-                    <p className="text-sm text-smoke-600 mt-1">
+                    <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
                       {t('settings.models.source.localDescription')}
                     </p>
                   </div>
@@ -207,13 +314,13 @@ export function Settings() {
                     value="api"
                     checked={config.modelSource === 'api'}
                     onChange={(e) => setModelSource(e.target.value as ModelSource)}
-                    className="mt-1"
+                    className="mt-1 dark:bg-dark-surface dark:border-coal-600"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="modelSourceApi" className="font-semibold">
+                    <Label htmlFor="modelSourceApi" className="font-semibold dark:text-dark-text">
                       {t('settings.models.source.api')}
                     </Label>
-                    <p className="text-sm text-smoke-600 mt-1">
+                    <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
                       {t('settings.models.source.apiDescription')}
                     </p>
                   </div>
@@ -223,8 +330,8 @@ export function Settings() {
 
             {/* Local Models Configuration */}
             {config.modelSource === 'local' && (
-              <Card className="p-6">
-                <h2 className="text-xl font-semibold text-coal-800 mb-4">
+              <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
+                <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4">
                   {t('settings.models.local.title')}
                 </h2>
 
@@ -232,7 +339,7 @@ export function Settings() {
                   {/* Detection Model */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <Label className="font-semibold">
+                      <Label className="font-semibold dark:text-dark-text">
                         {t('settings.models.local.detection')}
                       </Label>
                       <Switch
@@ -254,13 +361,14 @@ export function Settings() {
                       }
                       placeholder="/models/detection-v1.0.0.onnx"
                       disabled={!config.localModels.detection.enabled}
+                      className="dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
                     />
                   </div>
 
                   {/* Segmentation Model */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <Label className="font-semibold">
+                      <Label className="font-semibold dark:text-dark-text">
                         {t('settings.models.local.segmentation')}
                       </Label>
                       <Switch
@@ -285,6 +393,7 @@ export function Settings() {
                       }
                       placeholder="/models/segmentation-v1.0.0.onnx"
                       disabled={!config.localModels.segmentation.enabled}
+                      className="dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
                     />
                   </div>
                 </div>
@@ -293,54 +402,54 @@ export function Settings() {
 
             {/* API Models Configuration */}
             {config.modelSource === 'api' && (
-              <Card className="p-6">
-                <h2 className="text-xl font-semibold text-coal-800 mb-4">
+              <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
+                <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4">
                   {t('settings.models.api.title')}
                 </h2>
 
                 <div className="space-y-6">
                   {/* API Endpoint */}
                   <div>
-                    <Label htmlFor="apiEndpoint">{t('settings.models.api.endpoint')}</Label>
+                    <Label htmlFor="apiEndpoint" className="dark:text-dark-text">{t('settings.models.api.endpoint')}</Label>
                     <Input
                       id="apiEndpoint"
                       type="url"
                       value={config.apiModels.endpoint}
                       onChange={(e) => updateAPIModels({ endpoint: e.target.value })}
                       placeholder="https://api.example.com/inference"
-                      className="mt-2"
+                      className="mt-2 dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
                     />
                   </div>
 
                   {/* API Key */}
                   <div>
-                    <Label htmlFor="apiKey">{t('settings.models.api.key')}</Label>
+                    <Label htmlFor="apiKey" className="dark:text-dark-text">{t('settings.models.api.key')}</Label>
                     <Input
                       id="apiKey"
                       type="password"
                       value={config.apiModels.apiKey}
                       onChange={(e) => updateAPIModels({ apiKey: e.target.value })}
                       placeholder="sk-..."
-                      className="mt-2"
+                      className="mt-2 dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
                     />
                   </div>
 
                   {/* Model Name */}
                   <div>
-                    <Label htmlFor="modelName">{t('settings.models.api.modelName')}</Label>
+                    <Label htmlFor="modelName" className="dark:text-dark-text">{t('settings.models.api.modelName')}</Label>
                     <Input
                       id="modelName"
                       type="text"
                       value={config.apiModels.modelName}
                       onChange={(e) => updateAPIModels({ modelName: e.target.value })}
                       placeholder="yolov8n-retina-v2.0"
-                      className="mt-2"
+                      className="mt-2 dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
                     />
                   </div>
 
                   {/* Timeout */}
                   <div>
-                    <Label htmlFor="timeout">
+                    <Label htmlFor="timeout" className="dark:text-dark-text">
                       {t('settings.models.api.timeout')} ({config.apiModels.timeout}ms)
                     </Label>
                     <Slider
@@ -356,7 +465,7 @@ export function Settings() {
 
                   {/* Custom Headers */}
                   <div>
-                    <Label htmlFor="headers">{t('settings.models.api.headers')}</Label>
+                    <Label htmlFor="headers" className="dark:text-dark-text">{t('settings.models.api.headers')}</Label>
                     <Textarea
                       id="headers"
                       value={JSON.stringify(config.apiModels.headers, null, 2)}
@@ -369,7 +478,7 @@ export function Settings() {
                         }
                       }}
                       placeholder='{\n  "X-Custom-Header": "value"\n}'
-                      className="mt-2 font-mono text-sm"
+                      className="mt-2 font-mono text-sm dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
                       rows={4}
                     />
                   </div>
@@ -390,8 +499,8 @@ export function Settings() {
                       <div
                         className={`mt-3 p-3 rounded-md flex items-start gap-2 ${
                           apiTestResult.success
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-red-50 text-red-700'
+                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                            : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300'
                         }`}
                       >
                         {apiTestResult.success ? (
@@ -411,8 +520,8 @@ export function Settings() {
 
         {/* Processing Tab */}
         <TabsContent value="processing">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold text-coal-800 mb-4">
+          <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
+            <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4">
               {t('settings.processing.title')}
             </h2>
 
@@ -420,10 +529,10 @@ export function Settings() {
               {/* Auto Process */}
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="font-semibold">
+                  <Label className="font-semibold dark:text-dark-text">
                     {t('settings.processing.autoProcess')}
                   </Label>
-                  <p className="text-sm text-smoke-600 mt-1">
+                  <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
                     {t('settings.processing.autoProcessDescription')}
                   </p>
                 </div>
@@ -435,8 +544,8 @@ export function Settings() {
 
               {/* Max Image Size */}
               <div>
-                <Label htmlFor="maxImageSize">
-                  {t('settings.processing.maxImageSize')} ({config.processing.maxImageSize} MB)
+                <Label htmlFor="maxImageSize" className="dark:text-dark-text">
+                  {t('settings.processing.maxImageSizeWithUnit', { size: config.processing.maxImageSize })}
                 </Label>
                 <Slider
                   id="maxImageSize"
@@ -451,9 +560,10 @@ export function Settings() {
 
               {/* Compression Quality */}
               <div>
-                <Label htmlFor="compressionQuality">
-                  {t('settings.processing.compressionQuality')} (
-                  {Math.round(config.processing.compressionQuality * 100)}%)
+                <Label htmlFor="compressionQuality" className="dark:text-dark-text">
+                  {t('settings.processing.compressionQualityWithUnit', {
+                    quality: Math.round(config.processing.compressionQuality * 100)
+                  })}
                 </Label>
                 <Slider
                   id="compressionQuality"
@@ -468,8 +578,8 @@ export function Settings() {
 
               {/* Batch Size */}
               <div>
-                <Label htmlFor="batchSize">
-                  {t('settings.processing.batchSize')} ({config.processing.batchSize})
+                <Label htmlFor="batchSize" className="dark:text-dark-text">
+                  {t('settings.processing.batchSizeWithUnit', { size: config.processing.batchSize })}
                 </Label>
                 <Slider
                   id="batchSize"
@@ -487,49 +597,49 @@ export function Settings() {
 
         {/* PWA Tab */}
         <TabsContent value="pwa">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold text-coal-800 mb-4">
+          <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
+            <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4">
               {t('settings.pwa.title')}
             </h2>
 
             <div className="space-y-6">
               {/* Install Status */}
               <div>
-                <Label className="font-semibold">{t('settings.pwa.status')}</Label>
-                <div className="mt-2">
+                <Label className="font-semibold dark:text-dark-text">{t('settings.pwa.status')}</Label>
+                <div className="mt-2 dark:text-dark-text">
                   <PWAInstallStatus />
                 </div>
               </div>
 
               {/* Install Button */}
               <div>
-                <Label className="font-semibold">{t('settings.pwa.install')}</Label>
-                <p className="text-sm text-smoke-600 mt-1 mb-3">
+                <Label className="font-semibold dark:text-dark-text">{t('settings.pwa.install')}</Label>
+                <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1 mb-3">
                   {t('settings.pwa.installDescription')}
                 </p>
                 <PWAInstallButton variant="button" className="w-full" />
               </div>
 
               {/* PWA Info */}
-              <div className="bg-ice p-4 rounded-md">
-                <h3 className="font-semibold text-coal-800 mb-2">
+              <div className="bg-ice p-4 rounded-md dark:bg-dark-surface dark:border dark:border-coal-600">
+                <h3 className="font-semibold text-coal-800 dark:text-dark-text mb-2">
                   {t('settings.pwa.benefits.title')}
                 </h3>
-                <ul className="space-y-2 text-sm text-smoke-600">
+                <ul className="space-y-2 text-sm text-smoke-600 dark:text-dark-textSecondary">
                   <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5" />
+                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
                     <span>{t('settings.pwa.benefits.offline')}</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5" />
+                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
                     <span>{t('settings.pwa.benefits.faster')}</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5" />
+                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
                     <span>{t('settings.pwa.benefits.desktop')}</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5" />
+                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
                     <span>{t('settings.pwa.benefits.privacy')}</span>
                   </li>
                 </ul>
@@ -540,26 +650,65 @@ export function Settings() {
 
         {/* About Tab */}
         <TabsContent value="about">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold text-coal-800 mb-4">
+          <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
+            <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4">
               {t('settings.about.title')}
             </h2>
 
             <div className="space-y-6">
               <div>
-                <h3 className="font-semibold text-coal-800">{config.name}</h3>
-                <p className="text-sm text-smoke-600 mt-1">
+                <h3 className="font-semibold text-coal-800 dark:text-dark-text">{config.name}</h3>
+                <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
                   {t('settings.about.description')}
                 </p>
               </div>
 
-              <div>
-                <Label className="font-semibold">{t('settings.about.version')}</Label>
-                <p className="text-sm text-smoke-600 mt-1">1.0.0</p>
+              <div className="space-y-2">
+                <Label className="font-semibold dark:text-dark-text">{t('settings.about.version')}</Label>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-smoke-600 dark:text-dark-textSecondary">
+                    {currentVersion ? currentVersion.version : isCheckingVersion ? t('settings.about.loading') : '1.0.0'}
+                  </p>
+                  <Button
+                    onClick={checkForUpdates}
+                    variant="outline"
+                    size="sm"
+                    disabled={isCheckingVersion}
+                    className="dark:border-coal-600 dark:text-dark-text dark:hover:bg-dark-background"
+                  >
+                    {isCheckingVersion ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                    <span className="ml-2">{t('settings.about.check')}</span>
+                  </Button>
+                </div>
+                {hasUpdate && (
+                  <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md dark:bg-amber-900/20 dark:border-amber-700">
+                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                      {t('settings.about.updateAvailable')}
+                    </p>
+                    <Button
+                      onClick={forceUpdate}
+                      variant="default"
+                      size="sm"
+                      className="mt-2 w-full dark:bg-amber-600 dark:hover:bg-amber-700"
+                      disabled={isReloading}
+                    >
+                      {isReloading ? (
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      <span className="ml-2">{t('settings.about.updateNow')}</span>
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <div>
-                <Button onClick={resetConfig} variant="outline" className="w-full">
+                <Button onClick={resetConfig} variant="outline" className="w-full dark:border-coal-600 dark:text-dark-text dark:hover:bg-dark-background">
                   {t('settings.about.reset')}
                 </Button>
               </div>

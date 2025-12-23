@@ -69,21 +69,21 @@ const PatientList: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-coal-800">{t('patients.title')}</h1>
           <p className="text-smoke-500 mt-1">
             {t('patients.description')}
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <ExportImportControls onImportComplete={() => {/* Refresh handled by useLiveQuery */}} />
           <Button
             onClick={() => {
               setPatientToEdit(undefined);
               setShowForm(true);
             }}
-            className="flex items-center space-x-2"
+            className="flex items-center justify-center space-x-2"
           >
             <Plus className="w-4 h-4" />
             <span>{t('patients.create')}</span>
@@ -92,7 +92,7 @@ const PatientList: React.FC = () => {
       </div>
 
       {/* Search and Toggles */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-smoke-400" />
           <Input

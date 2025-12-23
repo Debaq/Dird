@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Download, Trash2, RefreshCw, Github, HardDrive, CheckCircle } from 'lucide-react';
+import { Download, Trash2, RefreshCw, CheckCircle } from 'lucide-react';
 import { modelDownloader, formatBytes, type AvailableModel } from '@/lib/ai/model-downloader';
 import { inferenceService } from '@/lib/ai/inference-service';
 
 const ModelSettings: React.FC = () => {
+  const { t } = useTranslation();
   const [cacheSize, setCacheSize] = useState<number>(0);
   const [isDetectionCached, setIsDetectionCached] = useState(false);
   const [isSegmentationCached, setIsSegmentationCached] = useState(false);
   const [detectionVersion, setDetectionVersion] = useState<string | null>(null);
   const [segmentationVersion, setSegmentationVersion] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [config, setConfig] = useState(modelDownloader.getConfig());
   const [availableModels, setAvailableModels] = useState<AvailableModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
 
@@ -71,12 +71,9 @@ const ModelSettings: React.FC = () => {
     }
   };
 
-  // Helper to check if this is the latest version of its type
-  const isLatestVersion = (model: AvailableModel): boolean => {
-    const sameTypeModels = availableModels.filter(m => m.type === model.type);
-    if (sameTypeModels.length === 0) return false;
-    return sameTypeModels[0].version === model.version;
-  };
+
+
+
 
   const handleDownloadDetection = async () => {
     setIsLoading(true);
@@ -110,25 +107,18 @@ const ModelSettings: React.FC = () => {
     }
   };
 
-  const handleBranchChange = (modelType: 'detection' | 'segmentation', branch: string) => {
-    const newConfig = { ...config };
-    if (newConfig[modelType]) {
-      newConfig[modelType] = {
-        ...newConfig[modelType]!,
-        branch,
-      };
-    }
-    setConfig(newConfig);
-    modelDownloader.updateConfig(newConfig);
-  };
+  // handleBranchChange se utiliza para cambiar la rama del modelo
+
+
+
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Configuración de Modelos</CardTitle>
+          <CardTitle>{t('settings.models.title')}</CardTitle>
           <CardDescription>
-            Gestiona los modelos de IA descargados desde GitHub o locales
+            {t('settings.models.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -136,9 +126,9 @@ const ModelSettings: React.FC = () => {
           <div className="border rounded-lg p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-coal-800">Modelos Disponibles</h3>
+                <h3 className="font-semibold text-coal-800">{t('settings.models.available')}</h3>
                 <p className="text-sm text-smoke-500">
-                  Repositorio: <span className="font-mono">github.com/Debaq/dird_models</span>
+                  {t('settings.models.repository')}: <span className="font-mono">github.com/Debaq/dird_models</span>
                 </p>
               </div>
               <Button
@@ -148,17 +138,17 @@ const ModelSettings: React.FC = () => {
                 disabled={loadingModels}
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${loadingModels ? 'animate-spin' : ''}`} />
-                Actualizar
+                {t('ui.refresh')}
               </Button>
             </div>
 
             {loadingModels ? (
               <div className="text-center py-8 text-smoke-500">
-                Buscando modelos disponibles...
+                {t('settings.models.searching')}
               </div>
             ) : availableModels.length === 0 ? (
               <div className="text-center py-8 text-smoke-500">
-                No se encontraron modelos en el repositorio
+                {t('settings.models.notFound')}
               </div>
             ) : (
               <div className="space-y-3">
@@ -166,7 +156,7 @@ const ModelSettings: React.FC = () => {
                 {availableModels.filter(m => m.type === 'detection').length > 0 && (
                   <div>
                     <Label className="text-xs text-smoke-600 uppercase mb-2 block">
-                      Modelos de Detección
+                      {t('settings.models.detectionModels')}
                     </Label>
                     <div className="space-y-2">
                       {availableModels
@@ -190,13 +180,13 @@ const ModelSettings: React.FC = () => {
                                   </Badge>
                                   {isLatest && (
                                     <Badge variant="default" className="text-xs">
-                                      Más reciente
+                                      {t('settings.models.latest')}
                                     </Badge>
                                   )}
                                   {isLoaded && (
                                     <Badge variant="secondary" className="text-xs flex items-center gap-1">
                                       <CheckCircle className="w-3 h-3" />
-                                      En uso
+                                      {t('settings.models.inUse')}
                                     </Badge>
                                   )}
                                 </div>
@@ -210,12 +200,12 @@ const ModelSettings: React.FC = () => {
                                 {isLoaded ? (
                                   <>
                                     <CheckCircle className="w-4 h-4 mr-2" />
-                                    Descargado
+                                    {t('settings.models.downloaded')}
                                   </>
                                 ) : (
                                   <>
                                     <Download className="w-4 h-4 mr-2" />
-                                    Descargar
+                                    {t('settings.models.download')}
                                   </>
                                 )}
                               </Button>
@@ -230,7 +220,7 @@ const ModelSettings: React.FC = () => {
                 {availableModels.filter(m => m.type === 'segmentation').length > 0 && (
                   <div>
                     <Label className="text-xs text-smoke-600 uppercase mb-2 block">
-                      Modelos de Segmentación
+                      {t('settings.models.segmentationModels')}
                     </Label>
                     <div className="space-y-2">
                       {availableModels
@@ -254,13 +244,13 @@ const ModelSettings: React.FC = () => {
                                   </Badge>
                                   {isLatest && (
                                     <Badge variant="default" className="text-xs">
-                                      Más reciente
+                                      {t('settings.models.latest')}
                                     </Badge>
                                   )}
                                   {isLoaded && (
                                     <Badge variant="secondary" className="text-xs flex items-center gap-1">
                                       <CheckCircle className="w-3 h-3" />
-                                      En uso
+                                      {t('settings.models.inUse')}
                                     </Badge>
                                   )}
                                 </div>
@@ -270,7 +260,7 @@ const ModelSettings: React.FC = () => {
                                 size="sm"
                                 disabled
                               >
-                                Próximamente
+                                {t('ui.comingSoon.general')}
                               </Button>
                             </div>
                           );
@@ -284,11 +274,11 @@ const ModelSettings: React.FC = () => {
 
           {/* Current Status */}
           <div className="border rounded-lg p-4 space-y-3">
-            <h3 className="font-semibold text-coal-800">Estado Actual</h3>
+            <h3 className="font-semibold text-coal-800">{t('settings.models.currentStatus')}</h3>
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between p-2 bg-smoke-50 rounded">
                 <div>
-                  <span className="text-smoke-700 font-medium">Modelo de Detección</span>
+                  <span className="text-smoke-700 font-medium">{t('models.detection')}</span>
                   {detectionVersion && (
                     <div className="text-xs text-smoke-500 font-mono mt-0.5">
                       detection-v{detectionVersion}.onnx
@@ -301,12 +291,12 @@ const ModelSettings: React.FC = () => {
                     v{detectionVersion}
                   </Badge>
                 ) : (
-                  <Badge variant="outline">No cargado</Badge>
+                  <Badge variant="outline">{t('settings.models.notLoaded')}</Badge>
                 )}
               </div>
               <div className="flex items-center justify-between p-2 bg-smoke-50 rounded">
                 <div>
-                  <span className="text-smoke-700 font-medium">Modelo de Segmentación</span>
+                  <span className="text-smoke-700 font-medium">{t('models.segmentation')}</span>
                   {segmentationVersion && (
                     <div className="text-xs text-smoke-500 font-mono mt-0.5">
                       segmentation-v{segmentationVersion}.onnx
@@ -319,7 +309,7 @@ const ModelSettings: React.FC = () => {
                     v{segmentationVersion}
                   </Badge>
                 ) : (
-                  <Badge variant="outline">No disponible</Badge>
+                  <Badge variant="outline">{t('settings.models.notAvailable')}</Badge>
                 )}
               </div>
             </div>
@@ -329,9 +319,9 @@ const ModelSettings: React.FC = () => {
           <div className="border-t pt-4 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-coal-800">Cache de Modelos</h3>
+                <h3 className="font-semibold text-coal-800">{t('settings.models.cache')}</h3>
                 <p className="text-sm text-smoke-500">
-                  Tamaño total: <span className="font-medium">{formatBytes(cacheSize)}</span>
+                  {t('settings.models.totalSize')}: <span className="font-medium">{formatBytes(cacheSize)}</span>
                 </p>
               </div>
               <div className="flex gap-2">
@@ -342,7 +332,7 @@ const ModelSettings: React.FC = () => {
                   disabled={isLoading}
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Actualizar
+                  {t('ui.refresh')}
                 </Button>
                 <Button
                   variant="destructive"
@@ -351,7 +341,7 @@ const ModelSettings: React.FC = () => {
                   disabled={isLoading || cacheSize === 0}
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Limpiar Cache
+                  {t('settings.models.clearCache')}
                 </Button>
               </div>
             </div>
@@ -361,20 +351,20 @@ const ModelSettings: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Información</CardTitle>
+          <CardTitle>{t('settings.models.info')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-smoke-600">
           <p>
-            • Los modelos se descargan desde GitHub y se almacenan en cache para uso offline
+            {t('settings.models.info1')}
           </p>
           <p>
-            • Cada rama del repositorio contiene una versión diferente del modelo
+            {t('settings.models.info2')}
           </p>
           <p>
-            • Si la descarga falla, se usará el modelo local como fallback
+            {t('settings.models.info3')}
           </p>
           <p>
-            • El cache persiste entre sesiones y se puede limpiar en cualquier momento
+            {t('settings.models.info4')}
           </p>
         </CardContent>
       </Card>

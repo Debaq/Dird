@@ -212,45 +212,94 @@ export function postprocessDetections(
     confidenceThreshold: metadata.confidence_threshold
   });
 
-  // YOLOv8 output format: [batch, 4 + num_classes, num_detections]
+  // YOLOv8 output format can be:
+  // [batch, num_detections, 4 + num_classes] (transposed)
+  // or [batch, 4 + num_classes, num_detections] (original)
   const numClasses = metadata.classes.length;
-  const numDetections = dims[2];
-  const numRows = dims[1];
+  let numDetections: number;
+  let isTransposed = false;
 
-  console.log('📏 Computed:', { numDetections, numRows, expected: 4 + numClasses });
+  // Detect format based on dimensions
+  if (dims.length === 3) {
+    if (dims[1] === 4 + numClasses || dims[1] === 84) {
+      // Format: [batch, 4+classes, detections]
+      numDetections = dims[2];
+      isTransposed = false;
+    } else {
+      // Format: [batch, detections, 4+classes]
+      numDetections = dims[1];
+      isTransposed = true;
+    }
+  } else {
+    throw new Error(`Unexpected output dimensions: ${dims}`);
+  }
+
+  console.log('📏 Detected format:', {
+    numDetections,
+    isTransposed,
+    expectedRows: 4 + numClasses
+  });
 
   for (let i = 0; i < numDetections; i++) {
-    // Extract box coordinates (normalized)
-    const x = outputData[i];
-    const y = outputData[numDetections + i];
-    const w = outputData[2 * numDetections + i];
-    const h = outputData[3 * numDetections + i];
-
-    // Extract class scores
+    let x, y, w, h;
     let maxScore = 0;
     let maxClassIndex = 0;
 
-    for (let c = 0; c < numClasses; c++) {
-      const score = outputData[(4 + c) * numDetections + i];
-      if (score > maxScore) {
-        maxScore = score;
-        maxClassIndex = c;
+    if (isTransposed) {
+      // Format: [batch, detections, 4+classes]
+      const offset = i * (4 + numClasses);
+      x = outputData[offset];
+      y = outputData[offset + 1];
+      w = outputData[offset + 2];
+      h = outputData[offset + 3];
+
+      for (let c = 0; c < numClasses; c++) {
+        const score = outputData[offset + 4 + c];
+        if (score > maxScore) {
+          maxScore = score;
+          maxClassIndex = c;
+        }
+      }
+    } else {
+      // Format: [batch, 4+classes, detections]
+      x = outputData[i];
+      y = outputData[numDetections + i];
+      w = outputData[2 * numDetections + i];
+      h = outputData[3 * numDetections + i];
+
+      for (let c = 0; c < numClasses; c++) {
+        const score = outputData[(4 + c) * numDetections + i];
+        if (score > maxScore) {
+          maxScore = score;
+          maxClassIndex = c;
+        }
       }
     }
 
     // Debug first few detections
     if (i < 5) {
-      console.log(`Detection ${i}:`, { x, y, w, h, maxScore, maxClassIndex, threshold: metadata.confidence_threshold });
+      console.log(`Detection ${i}:`, {
+        x, y, w, h,
+        maxScore,
+        maxClassIndex,
+        className: metadata.classes[maxClassIndex],
+        threshold: metadata.confidence_threshold
+      });
     }
 
     // Filter by confidence threshold
     if (maxScore >= metadata.confidence_threshold) {
+      // Denormalize coordinates (YOLOv8 uses normalized 0-1 coords)
+      const inputSize = metadata.input_size[0];
+      const scaleX = originalWidth / inputSize;
+      const scaleY = originalHeight / inputSize;
+
       detections.push({
         bbox: {
-          x: (x - w / 2) * originalWidth,
-          y: (y - h / 2) * originalHeight,
-          width: w * originalWidth,
-          height: h * originalHeight,
+          x: (x - w / 2) * scaleX,
+          y: (y - h / 2) * scaleY,
+          width: w * scaleX,
+          height: h * scaleY,
         },
         class: metadata.classes[maxClassIndex],
         confidence: maxScore,

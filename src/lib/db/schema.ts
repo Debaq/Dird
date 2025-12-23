@@ -147,6 +147,21 @@ export class DirdDatabase extends Dexie {
         }
       });
     });
+    this.version(5).stores({
+      patients: '++id, patientId, name, status, createdAt', // Added medical fields
+      sessions: '++id, patientId, name, sessionNumber, date, locked',
+      images: '++id, sessionId, eyeType, uploadedAt',
+      detections: '++id, imageId, type, class, visible',
+      segmentations: '++id, imageId, type, class, visible',
+      reports: '++id, sessionId, type, generatedAt'
+    }).upgrade(tx => {
+      return tx.table('patients').toCollection().modify(patient => {
+        patient.diabetes = false;
+        patient.hta = false;
+        patient.dlp = false;
+        patient.medications = [];
+      });
+    });
   }
 }
 

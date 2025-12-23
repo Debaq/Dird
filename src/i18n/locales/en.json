@@ -2,24 +2,47 @@
   "app": {
     "name": "DIRD",
     "tagline": "Diabetic Retinopathy Detection",
-    "longDescription": "Ophthalmological image analysis platform with edge-computing AI. All data stays on your device.",
-    "start": "Get Started"
+    "longDescription": "Ophthalmological image analysis platform with edge-computing AI. All data remains on your device.",
+    "start": "Start"
   },
   "ui": {
     "close": "Close",
     "loading": "Loading...",
     "loadingImage": "Loading image...",
+    "creating": "Creating...",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "createSession": "Create Session",
+    "confirmDelete": "Are you sure you want to delete this?",
+    "error": "Error",
+    "success": "Success",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear",
+    "apply": "Apply",
+    "reset": "Reset",
+    "export": "Export",
+    "import": "Import",
+    "download": "Download",
+    "upload": "Upload",
+    "browse": "Browse",
+    "select": "Select",
+    "next": "Next",
+    "previous": "Previous",
+    "finish": "Finish",
+    "back": "Back",
+    "continue": "Continue",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "refresh": "Refresh",
     "comingSoon": {
       "general": "Coming Soon...",
       "analysis": "AI analysis will be available soon",
       "reports": "Report generation will be available soon"
     },
     "save": "Save",
-    "cancel": "Cancel",
-    "saving": "Saving...",
-    "creating": "Creating...",
-    "saveChanges": "Save Changes",
-    "createSession": "Create Session"
+    "cancel": "Cancel"
   },
   "errors": {
     "unknown": "Unknown error",
@@ -31,10 +54,10 @@
     "duplicateSession": "Error duplicating session.",
     "import": "Import Error",
     "deletePatient": "Error deleting patient.",
-    "archivePatient": "Error {{action}}ing patient."
+    "archivePatient": "Error {{action}} patient."
   },
   "confirmations": {
-    "deleteImage": "Are you sure you want to delete this image and all its associated analyses?",
+    "deleteImage": "Are you sure you want to delete this image and all associated analyses?",
     "deleteSession": "Are you sure you want to delete this session and all its data? This action is irreversible.",
     "duplicateSession": "Are you sure you want to duplicate this session?",
     "deletePatient": "Are you sure you want to delete this patient and all their data? This action is irreversible.",
@@ -43,28 +66,53 @@
   "patients": {
     "title": "Patients",
     "create": "Create Patient",
+    "edit": "Edit Patient",
+    "delete": "Delete Patient",
+    "search": "Search patients...",
+    "noPatients": "No patients found",
+    "addFirst": "Add your first patient",
     "name": "Name",
     "id": "Patient ID",
     "idLabel": "ID: ",
     "infoTitle": "Patient Information",
     "dateOfBirth": "Date of Birth",
-    "registeredOn": "Registered On",
-    "showArchived": "Show Archived",
+    "registeredOn": "Registered on",
+    "showArchived": "Show archived",
     "searchPlaceholder": "Search by name or ID...",
     "description": "Manage patients and their analysis sessions",
     "notFound": "No patients found",
-    "empty": "No patients registered. Create one to start."
+    "empty": "No patients registered. Create one to start.",
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "birthDate": "Birth Date",
+      "gender": "Gender",
+      "medicalHistory": "Medical History",
+      "address": "Address",
+      "results": "Results"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    }
   },
   "sessions": {
     "title": "Sessions",
     "session": "Session",
     "create": "New Session",
+    "edit": "Edit Session",
+    "delete": "Delete Session",
+    "search": "Search sessions...",
+    "noSessions": "No sessions found",
+    "addFirst": "Add your first session",
     "locked": "Session Locked",
     "unlock": "Unlock",
     "compareTitle": "Session Comparison",
     "notesTitle": "Session Notes",
     "galleryTitle": "Image Gallery",
-    "empty": "No sessions registered. Create one to start the analysis.",
+    "empty": "No sessions registered. Create one to start analysis.",
     "status": {
       "active": "Active"
     },
@@ -73,28 +121,41 @@
       "analysis": "AI Analysis",
       "report": "Report"
     },
+    "fields": {
+      "name": "Name",
+      "date": "Date",
+      "type": "Type",
+      "description": "Description",
+      "images": "Images",
+      "results": "Results"
+    },
+    "types": {
+      "fundus": "Fundus",
+      "oct": "OCT",
+      "visualAcuity": "Visual Acuity"
+    },
     "form": {
       "name": "Session Name",
+      "date": "Date",
       "notes": "Notes (optional)",
+      "notesPlaceholder": "Add notes about the session...",
       "create": "Create Session",
-      "update": "Edit Session",
-      "editDescription": "Modify the details of this session.",
-      "createDescription": "Create a new analysis session for this patient",
-      "notesPlaceholder": "Additional notes about this session...",
-      "date": "Date"
+      "createDescription": "Complete info to create a new session",
+      "update": "Update Session",
+      "editDescription": "Update session info"
     }
   },
   "upload": {
     "selectEye": "Select eye:",
     "addImage": "Add Image",
-    "galleryEmpty": "No images in this session. Upload some to start the analysis.",
+    "galleryEmpty": "No images in this session. Upload some to start analysis.",
     "eye": {
-      "left": "LI (Left Eye)",
+      "left": "LE (Left Eye)",
       "right": "RE (Right Eye)",
-      "leftLabel": "LI (Left Eye)",
+      "leftLabel": "LE (Left Eye)",
       "rightLabel": "RE (Right Eye)"
     },
-    "dropzone": "Drag and drop files here or click to select",
+    "dropzone": "Drag files here or click to select",
     "accepted": "Supported formats: JPG, PNG",
     "maxSize": "Max size: 1MB"
   },
@@ -102,11 +163,13 @@
     "tools": {
       "title": "Tools",
       "select": "Select",
-      "bbox": "Bounding Box",
+      "bbox": "Detection Box",
       "segment": "Segmentation",
       "eraser": "Eraser",
       "circle": "Circle",
-      "bboxInstruction": "Click and drag to draw a bounding box"
+      "pan": "Pan",
+      "zoom": "Zoom",
+      "bboxInstruction": "Click and drag to draw a detection box"
     },
     "layers": {
       "title": "Layers",
@@ -119,17 +182,46 @@
   },
   "analysis": {
     "title": "Image Analysis",
-    "detections": "Detections"
+    "detections": "Detections",
+    "segmentations": "Segmentations",
+    "classes": {
+      "background": "Background",
+      "optic_disc": "Optic Disc",
+      "optic_cup": "Optic Cup",
+      "macula": "Macula",
+      "fovea": "Fovea",
+      "vessels": "Blood Vessels",
+      "exudates": "Exudates",
+      "hemorrhages": "Hemorrhages",
+      "microaneurysms": "Microaneurysms",
+      "drusen": "Drusen",
+      "lesions": "Lesions"
+    },
+    "tools": {
+      "select": "Select",
+      "pan": "Pan",
+      "zoomIn": "Zoom In",
+      "zoomOut": "Zoom Out",
+      "reset": "Reset View",
+      "addAnnotation": "Add Annotation",
+      "delete": "Delete"
+    },
+    "layers": {
+      "original": "Original Image",
+      "segmentationsAI": "AI Segmentations",
+      "detectionsAI": "AI Detections",
+      "manualAnnotations": "Manual Annotations"
+    }
   },
   "reports": {
     "generate": "Generate Report",
-    "preview": "Preview",
+    "preview": "Draft Report",
     "finalize": "Finalize and Close Case",
     "reportType": "Report Type",
     "evaluatorNotes": "Evaluator Notes (Optional)",
-    "finalWarning": "Note: The final report will lock the session and prevent adding or deleting images or analyses.",
+    "finalWarning": "Note: The final report will lock the session and no more images or analyses can be added or removed.",
     "status": {
-      "preliminary": "PRELIMINARY VERSION",
+      "preliminary": "DRAFT VERSION",
       "final": "FINAL REPORT"
     }
   },
@@ -178,6 +270,8 @@
       "primaryColor": "Primary Color",
       "logo": "Logo (URL or path)",
       "logoPlaceholder": "/logo.svg",
+      "logoPreview": "Logo preview",
+      "uploadNewLogo": "Upload new logo",
       "theme": "Theme",
       "themes": {
         "light": "Light",
@@ -190,9 +284,9 @@
       "source": {
         "title": "Model Source",
         "local": "Local DIRD Models",
-        "localDescription": "Use locally stored ONNX models. Guarantees complete privacy as all processing happens on your device.",
+        "localDescription": "Uses locally stored ONNX models. Guarantees total privacy as all processing occurs on your device.",
         "api": "External API",
-        "apiDescription": "Connect to a custom API for inference. Useful for private, paid, or proprietary models hosted on servers."
+        "apiDescription": "Connects to a custom API for inference. Useful for private, paid, or custom models hosted on servers."
       },
       "local": {
         "title": "Local Models Configuration",
@@ -203,7 +297,7 @@
       },
       "api": {
         "title": "API Configuration",
-        "endpoint": "Endpoint URL",
+        "endpoint": "API Endpoint",
         "key": "API Key",
         "modelName": "Model Name",
         "timeout": "Timeout",
@@ -213,19 +307,44 @@
         "connectionSuccess": "Connection successful",
         "connectionFailed": "Connection failed",
         "endpointPlaceholder": "https://api.example.com/inference",
-        "keyPlaceholder": "sk-...",
+        "keyPlaceholder": "sk-…",
         "modelNamePlaceholder": "yolov8n-retina-v2.0",
-        "headersPlaceholder": "{
-  \"X-Custom-Header\": \"value\"\n}"
-      }
+        "headersPlaceholder": "{ \"X-Custom-Header\": \"value\" }"
+      },
+      "title": "Model Settings",
+      "description": "Manage AI models downloaded from GitHub or local sources",
+      "available": "Available Models",
+      "repository": "Repository",
+      "latest": "Latest",
+      "inUse": "In Use",
+      "downloaded": "Downloaded",
+      "download": "Download",
+      "currentStatus": "Current Status",
+      "notLoaded": "Not Loaded",
+      "notAvailable": "Not Available",
+      "cache": "Model Cache",
+      "totalSize": "Total Size",
+      "clearCache": "Clear Cache",
+      "searching": "Searching for available models...",
+      "notFound": "No models found in repository",
+      "info": "Information",
+      "info1": "• Models are downloaded from GitHub and cached for offline use",
+      "info2": "• Each repository branch contains a different model version",
+      "info3": "• If download fails, local model will be used as fallback",
+      "info4": "• Cache persists between sessions and can be cleared at any time",
+      "detectionModels": "Detection Models",
+      "segmentationModels": "Segmentation Models"
     },
     "processing": {
       "title": "Processing Settings",
-      "autoProcess": "Auto Process",
-      "autoProcessDescription": "Automatically run model inference when images are uploaded",
+      "autoProcess": "Automatic Processing",
+      "autoProcessDescription": "Automatically run model when uploading images",
       "maxImageSize": "Max Image Size",
+      "maxImageSizeWithUnit": "Max Image Size ({{size}} MB)",
       "compressionQuality": "Compression Quality",
-      "batchSize": "Batch Size"
+      "compressionQualityWithUnit": "Compression Quality ({{quality}}%)",
+      "batchSize": "Batch Size",
+      "batchSizeWithUnit": "Batch Size ({{size}} )"
     },
     "pwa": {
       "title": "Progressive Web App (PWA)",
@@ -233,18 +352,22 @@
       "install": "Install Application",
       "installDescription": "Install DIRD as a standalone app for quick access and offline functionality.",
       "benefits": {
-        "title": "Benefits of Installing",
+        "title": "Installation Benefits",
         "offline": "Works completely offline after first load",
-        "faster": "Loads faster with optimized caching",
-        "desktop": "Quick access from your desktop or home screen",
-        "privacy": "Enhanced privacy - all processing is local"
+        "faster": "Loads faster with optimized cache",
+        "desktop": "Direct access from your desktop or home screen",
+        "privacy": "Greater privacy - all processing is local"
       }
     },
     "about": {
       "title": "About DIRD",
-      "description": "Ophthalmological image analysis platform with edge-computing AI. All data stays on your device.",
+      "description": "Ophthalmological image analysis platform with edge-computing AI. All data remains on your device.",
       "version": "Version",
-      "reset": "Reset Configuration"
+      "reset": "Reset Configuration",
+      "loading": "Loading...",
+      "check": "Check",
+      "updateAvailable": "New version available. Update recommended to get latest features and fixes.",
+      "updateNow": "Update Now"
     }
   },
   "pwa": {

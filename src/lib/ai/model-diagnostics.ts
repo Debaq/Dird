@@ -62,8 +62,7 @@ export async function diagnoseModel(modelUrl: string): Promise<ModelDiagnostics>
 
       // Check inputs
       for (const inputName of session.inputNames) {
-        const input = session.inputNames[0];
-        console.log(`Input: ${input}`);
+        console.log(`Input: ${inputName}`);
       }
 
       await session.release();

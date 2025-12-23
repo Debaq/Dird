@@ -4,6 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class', // or 'media' or 'class'
   theme: {
     extend: {
       colors: {
@@ -63,6 +64,13 @@ export default {
         snow: '#FFFFFF',
         // Gris Hielo - App general background
         ice: '#F8FAFC',
+        // Colores para tema oscuro
+        dark: {
+          background: '#121212',
+          surface: '#1e1e1e',
+          text: '#e0e0e0',
+          textSecondary: '#a0a0a0',
+        }
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

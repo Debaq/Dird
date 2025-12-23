@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "node scripts/generate-version.cjs && tsc && vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit"
   },

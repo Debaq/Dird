@@ -70,5 +70,11 @@
     "processing": "Procesando...",
     "accepted": "Archivos aceptados: JPG, PNG",
     "maxSize": "Tamaño máximo: 10MB"
+  },
+  "settings": {
+    "appearance": {
+      "logoPreview": "Vista previa del logo",
+      "uploadNewLogo": "Subir nuevo logo"
+    }
   }
 }

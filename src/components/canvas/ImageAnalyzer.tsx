@@ -4,9 +4,9 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next'; // Added this line
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import AnnotationCanvas from './AnnotationCanvas';
-import LayerControls, { type CanvasLayer } from './LayerControls';
+import AdvancedLayerControls, { type CanvasLayer } from './AdvancedLayerControls';
 import ToolPanel, { type CanvasTool } from './ToolPanel';
 import { db } from '@/lib/db/schema';
 
@@ -27,6 +27,7 @@ const DEFAULT_LAYERS: CanvasLayer[] = [
     opacity: 1,
     locked: false,
     zIndex: 2,
+    showLabels: true,
   },
   {
     id: 'manual-annotations',
@@ -35,6 +36,7 @@ const DEFAULT_LAYERS: CanvasLayer[] = [
     opacity: 1,
     locked: false,
     zIndex: 3,
+    showLabels: true,
   },
 ];
 
@@ -59,10 +61,18 @@ const ImageAnalyzer: React.FC = () => {
     [sessionId]
   );
 
-  const detections = useLiveQuery(
+  const allDetections = useLiveQuery(
     () => (imageId ? db.detections.where('imageId').equals(parseInt(imageId)).toArray() : []),
     [imageId]
   );
+
+  // Separar detecciones por tipo
+  const aiDetections = allDetections?.filter((d) => d.type === 'ai') || [];
+  const manualDetections = allDetections?.filter((d) => d.type === 'manual') || [];
+
+  React.useEffect(() => {
+    // Component mounted, no debug logs
+  }, [allDetections, imageId, patientId, sessionId, aiDetections.length, manualDetections.length]);
 
   const handleLayerUpdate = (layerId: string, updates: Partial<CanvasLayer>) => {
     setLayers((prev) =>
@@ -70,8 +80,20 @@ const ImageAnalyzer: React.FC = () => {
     );
   };
 
+  const handleAnnotationAdded = () => {
+    // useLiveQuery automáticamente detectará cambios en db.detections
+    // Este callback está aquí por si necesitamos hacer algo adicional en el futuro
+  };
+
   if (!image) {
-    return <div>{t('ui.loadingImage')}</div>;
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <p className="text-smoke-500">{t('ui.loadingImage')}</p>
+          <p className="text-xs text-smoke-400 mt-2">Image ID: {imageId}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -101,7 +123,11 @@ const ImageAnalyzer: React.FC = () => {
             <CardContent className="p-6">
               <AnnotationCanvas
                 image={image}
-                detections={detections?.filter((d) => d.visible) || []}
+                detections={aiDetections.filter((d) => d.visible)}
+                manualAnnotations={manualDetections.filter((d) => d.visible)}
+                activeTool={activeTool}
+                layers={layers}
+                onAnnotationAdded={handleAnnotationAdded}
               />
             </CardContent>
           </Card>
@@ -115,32 +141,13 @@ const ImageAnalyzer: React.FC = () => {
             disabled={session?.locked}
           />
 
-          <LayerControls layers={layers} onLayerUpdate={handleLayerUpdate} />
-
-          {detections && detections.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">{t('analysis.detections')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {detections.map((det) => (
-                    <div
-                      key={det.id}
-                      className="p-2 bg-coal-50 rounded text-xs flex items-center justify-between"
-                    >
-                      <span className="font-medium">{det.class}</span>
-                      {det.confidence && (
-                        <span className="text-smoke-500">
-                          {Math.round(det.confidence * 100)}%
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <AdvancedLayerControls
+            layers={layers}
+            onLayerUpdate={handleLayerUpdate}
+            aiDetections={aiDetections}
+            manualDetections={manualDetections}
+            onDetectionsUpdate={handleAnnotationAdded}
+          />
         </div>
       </div>
     </div>

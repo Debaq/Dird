@@ -14,6 +14,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           'inline-flex items-center justify-center rounded-md font-medium transition-colors',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400',
           'disabled:opacity-50 disabled:pointer-events-none',
+          'dark:focus-visible:ring-primary-500',
           {
             'bg-primary-500 text-white hover:bg-primary-600': variant === 'default',
             'bg-coal-100 text-coal-800 hover:bg-coal-200': variant === 'secondary',
@@ -27,6 +28,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             'h-11 px-8': size === 'lg',
             'h-10 w-10': size === 'icon',
           },
+          'dark:bg-primary-600 dark:hover:bg-primary-700 dark:text-white',
+          'dark:data-[variant=secondary]:bg-gray-700 dark:data-[variant=secondary]:text-gray-100 dark:data-[variant=secondary]:hover:bg-gray-600',
+          'dark:data-[variant=outline]:border-gray-600 dark:data-[variant=outline]:text-gray-100 dark:data-[variant=outline]:hover:bg-gray-800',
+          'dark:data-[variant=ghost]:hover:bg-gray-800',
+          'dark:data-[variant=destructive]:bg-red-700 dark:data-[variant=destructive]:text-white dark:data-[variant=destructive]:hover:bg-red-800',
           className
         )}
         ref={ref}

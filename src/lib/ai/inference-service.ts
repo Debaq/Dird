@@ -94,8 +94,10 @@ export class InferenceService {
   ): Promise<void> {
     const now = new Date();
 
+    console.log(`💾 Saving ${detections.length} detections to database for image ${imageId}`);
+
     for (const detection of detections) {
-      await db.detections.add({
+      const id = await db.detections.add({
         imageId,
         type: 'ai',
         modelVersion,
@@ -105,7 +107,10 @@ export class InferenceService {
         visible: true,
         createdAt: now,
       });
+      console.log(`  ✓ Saved detection ${id}:`, detection.class, detection.confidence);
     }
+
+    console.log(`✅ All detections saved successfully`);
   }
 
   async segmentImage(imageElement: HTMLImageElement): Promise<any> {

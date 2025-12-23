@@ -32,6 +32,13 @@ const PatientForm: React.FC<PatientFormProps> = ({
     patientId: '',
     name: '',
     dateOfBirth: '',
+    diabetes: false,
+    diabetesType: '',
+    diabetesDuration: '',
+    hta: false,
+    dlp: false,
+    medications: '',
+    otherConditions: '',
   });
 
   useEffect(() => {
@@ -43,42 +50,77 @@ const PatientForm: React.FC<PatientFormProps> = ({
           dateOfBirth: patient.dateOfBirth
             ? new Date(patient.dateOfBirth).toISOString().split('T')[0]
             : '',
+          diabetes: patient.diabetes || false,
+          diabetesType: patient.diabetesType || '',
+          diabetesDuration: patient.diabetesDuration ? patient.diabetesDuration.toString() : '',
+          hta: patient.hta || false,
+          dlp: patient.dlp || false,
+          medications: patient.medications ? patient.medications.join(', ') : '',
+          otherConditions: patient.otherConditions || '',
         });
       } else {
         setFormData({
           patientId: '',
           name: '',
           dateOfBirth: '',
+          diabetes: false,
+          diabetesType: '',
+          diabetesDuration: '',
+          hta: false,
+          dlp: false,
+          medications: '',
+          otherConditions: '',
         });
       }
     }
   }, [open, patient]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-// ... rest of the component
     e.preventDefault();
     setLoading(true);
 
     try {
       const now = new Date();
+      const medicationsArray = formData.medications
+        ? formData.medications.split(',').map(med => med.trim()).filter(med => med)
+        : [];
+
       const patientData = {
         patientId: formData.patientId,
         name: formData.name,
         dateOfBirth: new Date(formData.dateOfBirth),
+        diabetes: formData.diabetes,
+        diabetesType: formData.diabetesType ? formData.diabetesType as 'type1' | 'type2' | 'gestational' | 'other' : undefined,
+        diabetesDuration: formData.diabetesDuration ? parseInt(formData.diabetesDuration) : undefined,
+        hta: formData.hta,
+        dlp: formData.dlp,
+        medications: medicationsArray,
+        otherConditions: formData.otherConditions || undefined,
         status: (patient?.status || 'active') as 'active' | 'archived',
         createdAt: patient?.createdAt || now,
         updatedAt: now,
       };
 
       if (patient?.id) {
-        await db.patients.update(patient.id, patientData);
+        await db.patients.update(patient.id, patientData as any);
       } else {
-        await db.patients.add(patientData);
+        await db.patients.add(patientData as any);
       }
 
       onSuccess?.();
       onOpenChange(false);
-      setFormData({ patientId: '', name: '', dateOfBirth: '' });
+      setFormData({
+        patientId: '',
+        name: '',
+        dateOfBirth: '',
+        diabetes: false,
+        diabetesType: '',
+        diabetesDuration: '',
+        hta: false,
+        dlp: false,
+        medications: '',
+        otherConditions: '',
+      });
     } catch (error) {
       console.error('Error saving patient:', error);
       alert('Error al guardar el paciente');
@@ -138,6 +180,102 @@ const PatientForm: React.FC<PatientFormProps> = ({
               }
               required
             />
+          </div>
+
+          {/* Campos médicos para retinopatía diabética */}
+          <div className="space-y-4 pt-4 border-t border-coal-200">
+            <h3 className="font-medium text-coal-700">Antecedentes Médicos</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="diabetes"
+                  checked={formData.diabetes}
+                  onChange={(e) => setFormData({ ...formData, diabetes: e.target.checked })}
+                  className="h-4 w-4 text-primary-600 rounded border-coal-300 focus:ring-primary-500"
+                />
+                <Label htmlFor="diabetes">Diabetes</Label>
+              </div>
+
+              {formData.diabetes && (
+                <div className="space-y-2">
+                  <Label htmlFor="diabetesType">Tipo de Diabetes</Label>
+                  <select
+                    id="diabetesType"
+                    value={formData.diabetesType}
+                    onChange={(e) => setFormData({ ...formData, diabetesType: e.target.value })}
+                    className="w-full rounded-md border border-coal-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  >
+                    <option value="">Seleccione tipo</option>
+                    <option value="type1">Tipo 1</option>
+                    <option value="type2">Tipo 2</option>
+                    <option value="gestational">Gestacional</option>
+                    <option value="other">Otro</option>
+                  </select>
+                </div>
+              )}
+
+              {formData.diabetes && (
+                <div className="space-y-2">
+                  <Label htmlFor="diabetesDuration">Años con Diabetes</Label>
+                  <Input
+                    id="diabetesDuration"
+                    type="number"
+                    value={formData.diabetesDuration}
+                    onChange={(e) => setFormData({ ...formData, diabetesDuration: e.target.value })}
+                    placeholder="Años desde diagnóstico"
+                    min="0"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="hta"
+                  checked={formData.hta}
+                  onChange={(e) => setFormData({ ...formData, hta: e.target.checked })}
+                  className="h-4 w-4 text-primary-600 rounded border-coal-300 focus:ring-primary-500"
+                />
+                <Label htmlFor="hta">Hipertensión Arterial (HTA)</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="dlp"
+                  checked={formData.dlp}
+                  onChange={(e) => setFormData({ ...formData, dlp: e.target.checked })}
+                  className="h-4 w-4 text-primary-600 rounded border-coal-300 focus:ring-primary-500"
+                />
+                <Label htmlFor="dlp">Dislipidemia (DLP)</Label>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="medications">Medicamentos</Label>
+              <Input
+                id="medications"
+                value={formData.medications}
+                onChange={(e) => setFormData({ ...formData, medications: e.target.value })}
+                placeholder="Lista de medicamentos separados por comas"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="otherConditions">Otros Antecedentes</Label>
+              <textarea
+                id="otherConditions"
+                value={formData.otherConditions}
+                onChange={(e) => setFormData({ ...formData, otherConditions: e.target.value })}
+                placeholder="Otros antecedentes médicos relevantes..."
+                rows={2}
+                className="w-full rounded-md border border-coal-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
+            </div>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">

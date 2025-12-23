@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, EyeOff, Lock, Unlock } from 'lucide-react';
+import { Eye, EyeOff, Lock, Unlock, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next'; // Added this line
 
@@ -10,6 +10,7 @@ export interface CanvasLayer {
   opacity: number;
   locked: boolean;
   zIndex: number;
+  showLabels?: boolean;
 }
 
 interface LayerControlsProps {
@@ -47,6 +48,7 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layers, onLayerUpdate }) 
                   <button
                     onClick={() => onLayerUpdate(layer.id, { visible: !layer.visible })}
                     className="p-1 hover:bg-coal-100 rounded"
+                    title={layer.visible ? 'Ocultar capa' : 'Mostrar capa'}
                   >
                     {layer.visible ? (
                       <Eye className="w-4 h-4 text-primary-500" />
@@ -54,10 +56,23 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layers, onLayerUpdate }) 
                       <EyeOff className="w-4 h-4 text-smoke-400" />
                     )}
                   </button>
+                  {(layer.id === 'detections-ai' || layer.id === 'manual-annotations') && (
+                    <button
+                      onClick={() => onLayerUpdate(layer.id, { showLabels: !layer.showLabels })}
+                      className="p-1 hover:bg-coal-100 rounded"
+                      title={layer.showLabels ? 'Ocultar etiquetas' : 'Mostrar etiquetas'}
+                    >
+                      <Tag className={cn(
+                        "w-4 h-4",
+                        layer.showLabels !== false ? "text-primary-500" : "text-smoke-400"
+                      )} />
+                    </button>
+                  )}
                   <button
                     onClick={() => onLayerUpdate(layer.id, { locked: !layer.locked })}
                     className="p-1 hover:bg-coal-100 rounded"
                     disabled={layer.id === 'original'}
+                    title={layer.locked ? 'Desbloquear capa' : 'Bloquear capa'}
                   >
                     {layer.locked ? (
                       <Lock className="w-4 h-4 text-smoke-400" />

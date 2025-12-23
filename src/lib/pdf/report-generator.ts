@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import type { Session, Patient, Image, Detection } from '@/lib/db/schema';
+import i18n from '@/i18n/config';
+import type { Session, Patient, Image, Detection, Segmentation } from '@/lib/db/schema';
 import { db } from '@/lib/db/schema';
 
 export interface ReportData {
@@ -8,6 +9,7 @@ export interface ReportData {
   session: Session;
   images: Image[];
   detections: Detection[];
+  segmentations: Segmentation[];
   evaluatorNotes?: string;
   areasOfInterest?: Array<{
     imageId: number;
@@ -24,6 +26,8 @@ export class ReportGenerator {
   private readonly pageHeight = 297; // A4 height in mm
   private readonly margin = 20;
   private currentY = 20;
+  private primaryColor: [number, number, number] = [32, 181, 174];
+  private accentColor: [number, number, number] = [216, 122, 26];
 
   constructor() {
     this.doc = new jsPDF({
@@ -34,74 +38,125 @@ export class ReportGenerator {
   }
 
   async generateReport(data: ReportData, type: ReportType): Promise<Blob> {
-    // Reset
     this.currentY = this.margin;
 
-    // Add content
+    // 1. Header
     this.addHeader(type);
-    this.addPatientInfo(data.patient);
-    this.addSessionInfo(data.session);
-    this.addDetectionSummary(data.detections);
-    await this.addImages(data.images, data.detections);
-    this.addEvaluatorNotes(data.evaluatorNotes || '');
+
+    // 2. Patient & Clinical History
+    this.addPatientSection(data.patient);
+
+    // 3. Session Info
+    this.addSessionSection(data.session);
+
+    // 4. Statistical Summary
+    this.addFindingsSummary(data.detections);
+
+    // 5. Visual Analysis (Grouped by eye)
+    await this.addVisualAnalysis(data.images, data.detections, data.segmentations);
+
+    // 6. Conclusions & Notes
+    this.addConclusionSection(data.evaluatorNotes || '');
+
+    // 7. Footer (across all pages)
     this.addFooter();
 
-    // Convert to blob
     return this.doc.output('blob');
   }
 
   private addHeader(type: ReportType) {
-    // Title
-    this.doc.setFontSize(20);
+    // App Branding
+    this.doc.setFontSize(24);
     this.doc.setFont('helvetica', 'bold');
-    this.doc.setTextColor(32, 181, 174); // primary color
-    this.doc.text('DIRD - Reporte de Análisis', this.pageWidth / 2, this.currentY, {
-      align: 'center',
-    });
+    this.doc.setTextColor(...this.primaryColor);
+    this.doc.text('DIRD', this.margin, this.currentY);
+
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setTextColor(100, 100, 100);
+    this.doc.text(i18n.t('app.tagline'), this.margin, this.currentY + 5);
+
+    // Report Title
+    this.doc.setFontSize(18);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(60, 60, 60);
+    const title = type === 'final'
+      ? i18n.t('reports.status.final')
+      : i18n.t('reports.status.preliminary');
+    this.doc.text(title, this.pageWidth - this.margin, this.currentY + 2, { align: 'right' });
+
+    this.currentY += 20;
+
+    // Separator line
+    this.doc.setDrawColor(...this.primaryColor);
+    this.doc.setLineWidth(0.5);
+    this.doc.line(this.margin, this.currentY, this.pageWidth - this.margin, this.currentY);
 
     this.currentY += 10;
+  }
 
-    // Report type watermark
-    if (type === 'preview') {
-      this.doc.setFontSize(16);
-      this.doc.setTextColor(216, 122, 26); // accent color
-      this.doc.text('VERSIÓN PRELIMINAR', this.pageWidth / 2, this.currentY, {
-        align: 'center',
-      });
-      this.currentY += 8;
+  private addPatientSection(patient: Patient) {
+    this.doc.setFontSize(14);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(...this.primaryColor);
+    this.doc.text(i18n.t('patients.infoTitle'), this.margin, this.currentY);
+    this.currentY += 8;
+
+    const body = [
+      [i18n.t('patients.name'), patient.name, i18n.t('patients.dateOfBirth'), new Date(patient.dateOfBirth).toLocaleDateString()],
+      [i18n.t('patients.id'), patient.patientId, i18n.t('patients.fields.medicalHistory'), ''],
+    ];
+
+    // Clinical History row
+    const historyParts = [];
+    if (patient.diabetes) {
+      historyParts.push(`Diabetes ${patient.diabetesType || ''} (${patient.diabetesDuration || 0}a)`);
     }
+    if (patient.hta) historyParts.push('HTA');
+    if (patient.dlp) historyParts.push('DLP');
+    const historyText = historyParts.join(', ') || 'Sin antecedentes relevantes';
 
-    this.currentY += 10;
-    this.doc.setTextColor(0, 0, 0);
-  }
-
-  private addPatientInfo(patient: Patient) {
-    this.doc.setFontSize(14);
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Información del Paciente', this.margin, this.currentY);
-    this.currentY += 8;
-
-    this.doc.setFontSize(11);
-    this.doc.setFont('helvetica', 'normal');
-
-    const patientInfo = [
-      ['Nombre:', patient.name],
-      ['ID Paciente:', patient.patientId],
-      [
-        'Fecha de Nacimiento:',
-        new Date(patient.dateOfBirth).toLocaleDateString('es-ES'),
+    autoTable(this.doc, {
+      startY: this.currentY,
+      head: [],
+      body: [
+        [i18n.t('patients.name'), patient.name, i18n.t('patients.dateOfBirth'), new Date(patient.dateOfBirth).toLocaleDateString()],
+        [i18n.t('patients.id'), patient.patientId, 'Edad', `${this.calculateAge(patient.dateOfBirth)} años`],
+        ['Antecedentes', historyText, 'Medicamentos', patient.medications?.join(', ') || 'Ninguno'],
       ],
-      ['Edad:', this.calculateAge(patient.dateOfBirth).toString() + ' años'],
-    ];
+      theme: 'plain',
+      styles: { fontSize: 9, cellPadding: 2 },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 30 },
+        1: { cellWidth: 60 },
+        2: { fontStyle: 'bold', cellWidth: 35 },
+        3: { cellWidth: 'auto' },
+      },
+    });
+
+    this.currentY = (this.doc as any).lastAutoTable.finalY + 10;
+  }
+
+  private addSessionSection(session: Session) {
+    this.doc.setFontSize(14);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(...this.primaryColor);
+    this.doc.text(i18n.t('sessions.notesTitle'), this.margin, this.currentY);
+    this.currentY += 8;
 
     autoTable(this.doc, {
       startY: this.currentY,
       head: [],
-      body: patientInfo,
+      body: [
+        [i18n.t('sessions.fields.date'), new Date(session.date).toLocaleString()],
+        [i18n.t('sessions.session'), `N° ${session.sessionNumber}`],
+        [i18n.t('models.detection'), session.modelVersions.detection || 'N/A'],
+        [i18n.t('sessions.fields.description'), session.notes || '-'],
+      ],
       theme: 'plain',
-      styles: { fontSize: 10, cellPadding: 2 },
+      styles: { fontSize: 9, cellPadding: 2 },
       columnStyles: {
-        0: { fontStyle: 'bold', cellWidth: 50 },
+        0: { fontStyle: 'bold', cellWidth: 40 },
         1: { cellWidth: 'auto' },
       },
     });
@@ -109,189 +164,142 @@ export class ReportGenerator {
     this.currentY = (this.doc as any).lastAutoTable.finalY + 10;
   }
 
-  private addSessionInfo(session: Session) {
+  private addFindingsSummary(detections: Detection[]) {
     this.doc.setFontSize(14);
     this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Información de la Sesión', this.margin, this.currentY);
+    this.doc.setTextColor(...this.primaryColor);
+    this.doc.text(i18n.t('analysis.detections'), this.margin, this.currentY);
     this.currentY += 8;
 
-    this.doc.setFontSize(11);
-    this.doc.setFont('helvetica', 'normal');
-
-    const sessionInfo = [
-      ['Sesión N°:', session.sessionNumber.toString()],
-      ['Fecha:', new Date(session.date).toLocaleDateString('es-ES')],
-      ['Modelo Detección:', session.modelVersions.detection || 'No utilizado'],
-      ['Modelo Segmentación:', session.modelVersions.segmentation || 'No utilizado'],
-      ['Notas:', session.notes || 'Ninguna'],
-    ];
-
-    autoTable(this.doc, {
-      startY: this.currentY,
-      head: [],
-      body: sessionInfo,
-      theme: 'plain',
-      styles: { fontSize: 10, cellPadding: 2 },
-      columnStyles: {
-        0: { fontStyle: 'bold', cellWidth: 50 },
-        1: { cellWidth: 'auto' },
-      },
-    });
-
-    this.currentY = (this.doc as any).lastAutoTable.finalY + 10;
-  }
-
-  private addDetectionSummary(detections: Detection[]) {
-    this.doc.setFontSize(14);
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Resumen de Detecciones', this.margin, this.currentY);
-    this.currentY += 8;
-
-    // Count detections by class
     const classCounts = new Map<string, number>();
     detections.forEach((det) => {
       classCounts.set(det.class, (classCounts.get(det.class) || 0) + 1);
     });
 
     const summaryData = Array.from(classCounts.entries()).map(([className, count]) => [
-      this.translateClass(className),
+      i18n.t(`models.classes.${className}`),
       count.toString(),
     ]);
 
-    summaryData.push(['Total', detections.length.toString()]);
-
-    autoTable(this.doc, {
-      startY: this.currentY,
-      head: [['Clase', 'Cantidad']],
-      body: summaryData,
-      theme: 'grid',
-      styles: { fontSize: 10, cellPadding: 3 },
-      headStyles: { fillColor: [32, 181, 174], textColor: 255 },
-    });
-
-    this.currentY = (this.doc as any).lastAutoTable.finalY + 10;
+    if (summaryData.length === 0) {
+      this.doc.setFontSize(10);
+      this.doc.setFont('helvetica', 'italic');
+      this.doc.setTextColor(100, 100, 100);
+      this.doc.text('No se encontraron hallazgos significativos en este análisis.', this.margin, this.currentY);
+      this.currentY += 10;
+    } else {
+      autoTable(this.doc, {
+        startY: this.currentY,
+        head: [[i18n.t('sessions.fields.type'), i18n.t('patients.fields.results')]],
+        body: summaryData,
+        theme: 'striped',
+        headStyles: { fillColor: this.primaryColor },
+        styles: { fontSize: 9 },
+      });
+      this.currentY = (this.doc as any).lastAutoTable.finalY + 10;
+    }
   }
 
-  private async addImages(images: Image[], detections: Detection[]) {
-    if (images.length === 0) return;
-
-    this.checkPageBreak(60);
-
+  private async addVisualAnalysis(images: Image[], detections: Detection[], segmentations: Segmentation[]) {
+    this.checkPageBreak(50);
     this.doc.setFontSize(14);
     this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Imágenes Analizadas', this.margin, this.currentY);
+    this.doc.setTextColor(...this.primaryColor);
+    this.doc.text(i18n.t('sessions.galleryTitle'), this.margin, this.currentY);
     this.currentY += 8;
 
-    for (const image of images) {
-      this.checkPageBreak(100);
+    const eyes = ['OD', 'OI'] as const;
 
-      // Image info
-      this.doc.setFontSize(11);
+    for (const eye of eyes) {
+      const eyeImages = images.filter(img => img.eyeType === eye);
+      if (eyeImages.length === 0) continue;
+
+      this.checkPageBreak(30);
+      this.doc.setFontSize(12);
       this.doc.setFont('helvetica', 'bold');
-      this.doc.text(image.filename, this.margin, this.currentY);
+      this.doc.setTextColor(...this.accentColor);
+      this.doc.text(i18n.t(`upload.eye.${eye === 'OD' ? 'right' : 'left'}`), this.margin, this.currentY);
       this.currentY += 6;
 
-      // Add image thumbnail
-      try {
-        const imageUrl = URL.createObjectURL(image.originalBlob);
-        const img = await this.loadImage(imageUrl);
+      for (const image of eyeImages) {
+        this.checkPageBreak(90);
 
-        const maxWidth = this.pageWidth - 2 * this.margin;
-        const maxHeight = 80;
-        const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
-        const width = img.width * scale;
-        const height = img.height * scale;
+        // Image header
+        this.doc.setFontSize(9);
+        this.doc.setFont('helvetica', 'normal');
+        this.doc.setTextColor(60, 60, 60);
+        this.doc.text(`${image.filename} (${new Date(image.uploadedAt).toLocaleTimeString()})`, this.margin, this.currentY);
+        this.currentY += 4;
 
-        this.doc.addImage(img.src, 'JPEG', this.margin, this.currentY, width, height);
-        URL.revokeObjectURL(imageUrl);
+        try {
+          const imageUrl = URL.createObjectURL(image.originalBlob);
+          const img = await this.loadImage(imageUrl);
 
-        this.currentY += height + 5;
-      } catch (error) {
-        console.error('Error adding image to PDF:', error);
-        this.doc.setFontSize(10);
-        this.doc.setTextColor(200, 0, 0);
-        this.doc.text('[Error al cargar imagen]', this.margin, this.currentY);
-        this.currentY += 10;
-        this.doc.setTextColor(0, 0, 0);
-      }
+          const maxWidth = this.pageWidth - 2 * this.margin;
+          const maxHeight = 70;
+          const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+          const width = img.width * scale;
+          const height = img.height * scale;
 
-      // Detections for this image
-      const imageDetections = detections.filter((d) => d.imageId === image.id);
-      if (imageDetections.length > 0) {
-        this.doc.setFontSize(10);
-        this.doc.text(
-          `Detecciones encontradas: ${imageDetections.length}`,
-          this.margin,
-          this.currentY
-        );
-        this.currentY += 10;
+          this.doc.addImage(img.src, 'JPEG', this.margin, this.currentY, width, height);
+
+          // Add detection counts for this image
+          const imgDetections = detections.filter(d => d.imageId === image.id);
+          if (imgDetections.length > 0) {
+            this.doc.setFontSize(8);
+            this.doc.setTextColor(...this.accentColor);
+            this.doc.text(`Detecciones: ${imgDetections.length}`, this.margin + width + 5, this.currentY + 5);
+          }
+
+          URL.revokeObjectURL(imageUrl);
+          this.currentY += height + 10;
+        } catch (error) {
+          console.error('Error adding image to PDF:', error);
+          this.currentY += 10;
+        }
       }
     }
   }
 
-  private addEvaluatorNotes(notes: string) {
-    this.checkPageBreak(40);
-
+  private addConclusionSection(notes: string) {
+    this.checkPageBreak(60);
     this.doc.setFontSize(14);
     this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Notas del Evaluador', this.margin, this.currentY);
+    this.doc.setTextColor(...this.primaryColor);
+    this.doc.text(i18n.t('reports.evaluatorNotes'), this.margin, this.currentY);
     this.currentY += 8;
 
-    this.doc.setFontSize(11);
+    this.doc.setFontSize(10);
     this.doc.setFont('helvetica', 'normal');
+    this.doc.setTextColor(0, 0, 0);
 
-    if (notes) {
-      const splitText = this.doc.splitTextToSize(
-        notes,
-        this.pageWidth - 2 * this.margin
-      );
-      this.doc.text(splitText, this.margin, this.currentY);
-      this.currentY += splitText.length * 5 + 10;
-    } else {
-      this.doc.setTextColor(150, 150, 150);
-      this.doc.text('Sin notas adicionales', this.margin, this.currentY);
-      this.doc.setTextColor(0, 0, 0);
-      this.currentY += 10;
-    }
+    const text = notes || 'Sin observaciones adicionales.';
+    const splitText = this.doc.splitTextToSize(text, this.pageWidth - 2 * this.margin);
+    this.doc.text(splitText, this.margin, this.currentY);
+
+    this.currentY += splitText.length * 5 + 20;
+
+    // Signature Area
+    const sigWidth = 60;
+    this.doc.setDrawColor(200, 200, 200);
+    this.doc.line(this.margin, this.currentY, this.margin + sigWidth, this.currentY);
+    this.doc.setFontSize(8);
+    this.doc.text('Firma del Especialista', this.margin, this.currentY + 5);
+
+    this.doc.line(this.pageWidth - this.margin - sigWidth, this.currentY, this.pageWidth - this.margin, this.currentY);
+    this.doc.text('Sello Institucional', this.pageWidth - this.margin - sigWidth, this.currentY + 5);
   }
 
   private addFooter() {
     const pageCount = this.doc.getNumberOfPages();
-
     for (let i = 1; i <= pageCount; i++) {
       this.doc.setPage(i);
+      this.doc.setFontSize(8);
+      this.doc.setTextColor(150, 150, 150);
 
-      // Footer line
-      this.doc.setDrawColor(200, 200, 200);
-      this.doc.line(
-        this.margin,
-        this.pageHeight - 15,
-        this.pageWidth - this.margin,
-        this.pageHeight - 15
-      );
-
-      // Footer text
-      this.doc.setFontSize(9);
-      this.doc.setTextColor(100, 100, 100);
-      this.doc.text(
-        'DIRD - Detección de Retinopatía Diabética',
-        this.margin,
-        this.pageHeight - 10
-      );
-
-      this.doc.text(
-        `Generado el ${new Date().toLocaleDateString('es-ES')}`,
-        this.pageWidth / 2,
-        this.pageHeight - 10,
-        { align: 'center' }
-      );
-
-      this.doc.text(
-        `Página ${i} de ${pageCount}`,
-        this.pageWidth - this.margin,
-        this.pageHeight - 10,
-        { align: 'right' }
-      );
+      const footerY = this.pageHeight - 10;
+      this.doc.text(`DIRD - ${i18n.t('app.tagline')}`, this.margin, footerY);
+      this.doc.text(`${i18n.t('ui.next')} ${i}/${pageCount}`, this.pageWidth - this.margin, footerY, { align: 'right' });
     }
   }
 
@@ -306,22 +314,11 @@ export class ReportGenerator {
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
     let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
     return age;
-  }
-
-  private translateClass(className: string): string {
-    const translations: Record<string, string> = {
-      microaneurysm: 'Microaneurisma',
-      hard_exudate: 'Exudado Duro',
-      soft_exudate: 'Exudado Blando',
-      hemorrhage: 'Hemorragia',
-      neovascularization: 'Neovascularización',
-    };
-    return translations[className] || className;
   }
 
   private loadImage(src: string): Promise<HTMLImageElement> {
@@ -339,7 +336,6 @@ export async function generateSessionReport(
   type: ReportType,
   evaluatorNotes?: string
 ): Promise<Blob> {
-  // Fetch data
   const session = await db.sessions.get(sessionId);
   if (!session) throw new Error('Session not found');
 
@@ -352,19 +348,23 @@ export async function generateSessionReport(
   );
   const detections = allDetections.flat();
 
+  const allSegmentations = await Promise.all(
+    images.map((img) => db.segmentations.where('imageId').equals(img.id!).toArray())
+  );
+  const segmentations = allSegmentations.flat();
+
   const reportData: ReportData = {
     patient,
     session,
     images,
     detections,
+    segmentations,
     evaluatorNotes,
   };
 
-  // Generate PDF
   const generator = new ReportGenerator();
   const pdfBlob = await generator.generateReport(reportData, type);
 
-  // Save to database
   await db.reports.add({
     sessionId,
     type,
@@ -376,3 +376,4 @@ export async function generateSessionReport(
 
   return pdfBlob;
 }
+

@@ -72,6 +72,27 @@ const PatientCard: React.FC<PatientCardProps> = ({
               <FileText className="w-4 h-4 mr-2" />
               <span>{sessionCount} sesiones</span>
             </div>
+            {/* Resumen de antecedentes médicos */}
+            <div className="flex flex-wrap gap-2 pt-2">
+              {patient.diabetes && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                  Diabetes
+                  {patient.diabetesType && (
+                    <span className="ml-1 text-xs">({patient.diabetesType.replace('type', 'T')})</span>
+                  )}
+                </span>
+              )}
+              {patient.hta && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                  HTA
+                </span>
+              )}
+              {patient.dlp && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  DLP
+                </span>
+              )}
+            </div>
           </div>
         </CardContent>
       </div>

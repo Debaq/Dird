@@ -6,7 +6,8 @@ import { ArrowLeft, Plus, Calendar, Lock, Unlock, Download, Pencil, Trash2, Copy
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SessionForm from './SessionForm';
-import { db, Session } from '@/lib/db/schema';
+import PatientForm from './PatientForm';
+import { db, Session, Patient } from '@/lib/db/schema';
 import { exportPatient, downloadDirdFile } from '@/lib/export/dird-exporter';
 import { duplicateSession } from '@/lib/db/actions';
 
@@ -15,9 +16,11 @@ const PatientDetails: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [showSessionForm, setShowSessionForm] = useState(false);
+  const [showPatientForm, setShowPatientForm] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isDuplicating, setIsDuplicating] = useState<number | null>(null);
   const [sessionToEdit, setSessionToEdit] = useState<Session | undefined>();
+  const [patientToEdit, setPatientToEdit] = useState<Patient | undefined>();
 
   const patient = useLiveQuery(
     () => (patientId ? db.patients.get(parseInt(patientId)) : undefined),
@@ -110,7 +113,17 @@ const PatientDetails: React.FC = () => {
             <p className="text-smoke-500 mt-1">{t('patients.idLabel')}{patient.patientId}</p>
           </div>
         </div>
-        <div>
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setPatientToEdit(patient);
+              setShowPatientForm(true);
+            }}
+          >
+            <Pencil className="w-4 h-4 mr-2" />
+            {t('patients.edit')}
+          </Button>
           <Button onClick={handleExportPatient} disabled={isExporting}>
             <Download className="w-4 h-4 mr-2" />
             {isExporting ? t('export.exporting') : t('export.patient')}
@@ -124,16 +137,52 @@ const PatientDetails: React.FC = () => {
           <CardTitle>{t('patients.infoTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-smoke-500">{t('patients.dateOfBirth')}</p>
-              <p className="text-coal-800 font-medium">
-                {formatDate(patient.dateOfBirth)}
-              </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-smoke-500">{t('patients.dateOfBirth')}</p>
+                <p className="text-coal-800 font-medium">
+                  {formatDate(patient.dateOfBirth)}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-smoke-500">{t('patients.registeredOn')}</p>
+                <p className="text-coal-800 font-medium">{formatDate(patient.createdAt)}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-smoke-500">{t('patients.registeredOn')}</p>
-              <p className="text-coal-800 font-medium">{formatDate(patient.createdAt)}</p>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-smoke-500">Diabetes</p>
+                <p className="text-coal-800 font-medium">
+                  {patient.diabetes ? 'Sí' : 'No'}
+                  {patient.diabetes && patient.diabetesType && (
+                    <span className="ml-2 text-sm text-primary-600">
+                      ({patient.diabetesType.replace('type', 'Tipo ')})
+                      {patient.diabetesDuration && `, ${patient.diabetesDuration} años`}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-smoke-500">Hipertensión Arterial (HTA)</p>
+                <p className="text-coal-800 font-medium">{patient.hta ? 'Sí' : 'No'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-smoke-500">Dislipidemia (DLP)</p>
+                <p className="text-coal-800 font-medium">{patient.dlp ? 'Sí' : 'No'}</p>
+              </div>
+              {patient.medications && patient.medications.length > 0 && (
+                <div>
+                  <p className="text-sm text-smoke-500">Medicamentos</p>
+                  <p className="text-coal-800 font-medium">{patient.medications.join(', ')}</p>
+                </div>
+              )}
+              {patient.otherConditions && (
+                <div>
+                  <p className="text-sm text-smoke-500">Otros Antecedentes</p>
+                  <p className="text-coal-800 font-medium">{patient.otherConditions}</p>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
@@ -254,6 +303,17 @@ const PatientDetails: React.FC = () => {
         onSuccess={() => {
           setShowSessionForm(false);
           setSessionToEdit(undefined);
+        }}
+      />
+
+      {/* Patient Form Dialog */}
+      <PatientForm
+        open={showPatientForm}
+        onOpenChange={setShowPatientForm}
+        patient={patientToEdit}
+        onSuccess={() => {
+          setShowPatientForm(false);
+          setPatientToEdit(undefined);
         }}
       />
     </div>

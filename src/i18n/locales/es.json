@@ -9,6 +9,33 @@
     "close": "Cerrar",
     "loading": "Cargando...",
     "loadingImage": "Cargando imagen...",
+    "creating": "Creando...",
+    "saving": "Guardando...",
+    "saveChanges": "Guardar Cambios",
+    "createSession": "Crear Sesión",
+    "confirmDelete": "¿Estás seguro de que deseas eliminar esto?",
+    "error": "Error",
+    "success": "Éxito",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "clear": "Limpiar",
+    "apply": "Aplicar",
+    "reset": "Restablecer",
+    "export": "Exportar",
+    "import": "Importar",
+    "download": "Descargar",
+    "upload": "Subir",
+    "browse": "Explorar",
+    "select": "Seleccionar",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "finish": "Finalizar",
+    "back": "Atrás",
+    "continue": "Continuar",
+    "yes": "Sí",
+    "no": "No",
+    "ok": "Aceptar",
+    "refresh": "Actualizar",
     "comingSoon": {
       "general": "Próximamente...",
       "analysis": "El análisis AI estará disponible próximamente",
@@ -39,6 +66,11 @@
   "patients": {
     "title": "Pacientes",
     "create": "Crear Paciente",
+    "edit": "Editar Paciente",
+    "delete": "Eliminar Paciente",
+    "search": "Buscar pacientes...",
+    "noPatients": "No se encontraron pacientes",
+    "addFirst": "Agrega tu primer paciente",
     "name": "Nombre",
     "id": "ID de Paciente",
     "idLabel": "ID: ",
@@ -49,12 +81,31 @@
     "searchPlaceholder": "Buscar por nombre o ID...",
     "description": "Gestiona los pacientes y sus sesiones de análisis",
     "notFound": "No se encontraron pacientes",
-    "empty": "No hay pacientes registrados. Crea uno para comenzar."
+    "empty": "No hay pacientes registrados. Crea uno para comenzar.",
+    "fields": {
+      "name": "Nombre",
+      "email": "Correo Electrónico",
+      "phone": "Teléfono",
+      "birthDate": "Fecha de Nacimiento",
+      "gender": "Género",
+      "medicalHistory": "Historial Médico",
+      "address": "Dirección"
+    },
+    "gender": {
+      "male": "Masculino",
+      "female": "Femenino",
+      "other": "Otro"
+    }
   },
   "sessions": {
     "title": "Sesiones",
     "session": "Sesión",
     "create": "Nueva Sesión",
+    "edit": "Editar Sesión",
+    "delete": "Eliminar Sesión",
+    "search": "Buscar sesiones...",
+    "noSessions": "No se encontraron sesiones",
+    "addFirst": "Agrega tu primera sesión",
     "locked": "Sesión Bloqueada",
     "unlock": "Desbloquear",
     "compareTitle": "Comparación de Sesiones",
@@ -69,11 +120,28 @@
       "analysis": "Análisis AI",
       "report": "Reporte"
     },
+    "fields": {
+      "name": "Nombre",
+      "date": "Fecha",
+      "type": "Tipo",
+      "description": "Descripción",
+      "images": "Imágenes",
+      "results": "Resultados"
+    },
+    "types": {
+      "fundus": "Fondo de Ojo",
+      "oct": "OCT",
+      "visualAcuity": "Agudeza Visual"
+    },
     "form": {
       "name": "Nombre de la sesión",
+      "date": "Fecha",
       "notes": "Notas (opcional)",
+      "notesPlaceholder": "Agregar notas sobre la sesión...",
       "create": "Crear Sesión",
-      "update": "Actualizar Sesión"
+      "createDescription": "Completa la información para crear una nueva sesión",
+      "update": "Actualizar Sesión",
+      "editDescription": "Actualiza la información de la sesión"
     }
   },
   "upload": {
@@ -98,6 +166,8 @@
       "segment": "Segmentación",
       "eraser": "Borrador",
       "circle": "Círculo",
+      "pan": "Desplazar",
+      "zoom": "Zoom",
       "bboxInstruction": "Haz clic y arrastra para dibujar una caja de detección"
     },
     "layers": {
@@ -111,7 +181,36 @@
   },
   "analysis": {
     "title": "Análisis de Imagen",
-    "detections": "Detecciones"
+    "detections": "Detecciones",
+    "segmentations": "Segmentaciones",
+    "classes": {
+      "background": "Fondo",
+      "optic_disc": "Disco Óptico",
+      "optic_cup": "Copa Óptica",
+      "macula": "Mácula",
+      "fovea": "Fóvea",
+      "vessels": "Vasos Sanguíneos",
+      "exudates": "Exudados",
+      "hemorrhages": "Hemorragias",
+      "microaneurysms": "Microaneurismas",
+      "drusen": "Drusas",
+      "lesions": "Lesiones"
+    },
+    "tools": {
+      "select": "Seleccionar",
+      "pan": "Desplazar",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar",
+      "reset": "Restablecer Vista",
+      "addAnnotation": "Agregar Anotación",
+      "delete": "Eliminar"
+    },
+    "layers": {
+      "original": "Imagen Original",
+      "segmentationsAI": "Segmentaciones IA",
+      "detectionsAI": "Detecciones IA",
+      "manualAnnotations": "Anotaciones Manuales"
+    }
   },
   "reports": {
     "generate": "Generar Informe",
@@ -170,6 +269,8 @@
       "primaryColor": "Color Principal",
       "logo": "Logo (URL o ruta)",
       "logoPlaceholder": "/logo.svg",
+      "logoPreview": "Vista previa del logo",
+      "uploadNewLogo": "Subir nuevo logo",
       "theme": "Tema",
       "themes": {
         "light": "Claro",
@@ -208,15 +309,41 @@
         "keyPlaceholder": "sk-…",
         "modelNamePlaceholder": "yolov8n-retina-v2.0",
         "headersPlaceholder": "{ \"X-Custom-Header\": \"value\" }"
-      }
+      },
+      "title": "Configuración de Modelos",
+      "description": "Gestiona los modelos de IA descargados desde GitHub o locales",
+      "available": "Modelos Disponibles",
+      "repository": "Repositorio",
+      "latest": "Más reciente",
+      "inUse": "En uso",
+      "downloaded": "Descargado",
+      "download": "Descargar",
+      "currentStatus": "Estado Actual",
+      "notLoaded": "No cargado",
+      "notAvailable": "No disponible",
+      "cache": "Cache de Modelos",
+      "totalSize": "Tamaño total",
+      "clearCache": "Limpiar Cache",
+      "searching": "Buscando modelos disponibles...",
+      "notFound": "No se encontraron modelos en el repositorio",
+      "info": "Información",
+      "info1": "• Los modelos se descargan desde GitHub y se almacenan en cache para uso offline",
+      "info2": "• Cada rama del repositorio contiene una versión diferente del modelo",
+      "info3": "• Si la descarga falla, se usará el modelo local como fallback",
+      "info4": "• El cache persiste entre sesiones y se puede limpiar en cualquier momento",
+      "detectionModels": "Modelos de Detección",
+      "segmentationModels": "Modelos de Segmentación"
     },
     "processing": {
       "title": "Configuración de Procesamiento",
       "autoProcess": "Procesamiento Automático",
       "autoProcessDescription": "Ejecuta automáticamente el modelo al subir imágenes",
       "maxImageSize": "Tamaño Máximo de Imagen",
+      "maxImageSizeWithUnit": "Tamaño Máximo de Imagen ({{size}} MB)",
       "compressionQuality": "Calidad de Compresión",
-      "batchSize": "Tamaño de Lote"
+      "compressionQualityWithUnit": "Calidad de Compresión ({{quality}}%)",
+      "batchSize": "Tamaño de Lote",
+      "batchSizeWithUnit": "Tamaño de Lote ({{size}})"
     },
     "pwa": {
       "title": "Progressive Web App (PWA)",
@@ -235,7 +362,11 @@
       "title": "Acerca de DIRD",
       "description": "Plataforma de análisis de imágenes oftalmológicas con IA edge-computing. Todos los datos permanecen en tu dispositivo.",
       "version": "Versión",
-      "reset": "Restablecer Configuración"
+      "reset": "Restablecer Configuración",
+      "loading": "Cargando...",
+      "check": "Verificar",
+      "updateAvailable": "Nueva versión disponible. Se recomienda actualizar para obtener las últimas características y correcciones.",
+      "updateNow": "Actualizar Ahora"
     }
   },
   "pwa": {

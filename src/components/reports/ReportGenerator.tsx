@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Download, Lock } from 'lucide-react';
+import { FileText, Download, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,6 +32,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
 
   const handleGenerateReport = async (type: ReportType) => {
     setGenerating(true);
+    setReportType(type);
     try {
       const pdfBlob = await generateSessionReport(sessionId, type, evaluatorNotes);
 
@@ -39,7 +40,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `reporte-${type}-${sessionId}-${Date.now()}.pdf`;
+      a.download = `DIRD_Reporte_${type.toUpperCase()}_${sessionId}_${new Date().toISOString().split('T')[0]}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -57,7 +58,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
       onReportGenerated?.();
     } catch (error) {
       console.error('Error generating report:', error);
-      alert('Error al generar el reporte');
+      alert(t('errors.unknown'));
     } finally {
       setGenerating(false);
     }
@@ -73,85 +74,101 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{t('reports.generate')}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary-600" />
+              {t('reports.generate')}
+            </DialogTitle>
             <DialogDescription>
-              Configura las opciones del reporte antes de generarlo
+              Asegúrese de que todos los hallazgos han sido revisados antes de generar el informe.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="notes">{t('reports.evaluatorNotes')}</Label>
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="text-sm font-semibold text-coal-700">
+                {t('reports.evaluatorNotes')}
+              </Label>
               <Textarea
                 id="notes"
                 value={evaluatorNotes}
                 onChange={(e) => setEvaluatorNotes(e.target.value)}
-                placeholder="Agrega tus observaciones sobre el análisis..."
-                rows={6}
-                className="mt-2"
+                placeholder="Escriba aquí las conclusiones clínicas y recomendaciones para el paciente..."
+                rows={5}
+                className="resize-none"
               />
             </div>
 
-            <div className="border-t pt-4">
-              <h3 className="font-semibold text-coal-800 mb-3">Tipo de Reporte</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Preview Report */}
-                <div className="p-4 border-2 border-coal-200 rounded-lg hover:border-primary-400 transition-colors">
-                  <h4 className="font-semibold text-coal-800 mb-2">
-                    {t('reports.status.preliminary')}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Preview Report Card */}
+              <div className="flex flex-col p-4 rounded-xl border border-coal-200 bg-coal-50/50 hover:border-primary-300 transition-all group">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-lg bg-white border border-coal-200 group-hover:border-primary-200">
+                    <FileText className="w-4 h-4 text-primary-500" />
+                  </div>
+                  <h4 className="font-bold text-coal-800 text-sm">
+                    {t('reports.preview')}
                   </h4>
-                  <p className="text-sm text-smoke-600 mb-4">
-                    Reporte preliminar con marca de agua. No bloquea la sesión.
-                  </p>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => handleGenerateReport('preview')}
-                    disabled={generating}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    {generating && reportType === 'preview'
-                      ? 'Generando...'
-                      : 'Descargar Vista Previa'}
-                  </Button>
                 </div>
+                <p className="text-xs text-smoke-600 mb-4 flex-grow">
+                  Genera un borrador para revisión interna. Incluye marca de agua y no bloquea la sesión para futuras ediciones.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full bg-white"
+                  onClick={() => handleGenerateReport('preview')}
+                  disabled={generating}
+                >
+                  {generating && reportType === 'preview' ? (
+                    t('ui.loading')
+                  ) : (
+                    <>
+                      <Download className="w-3.5 h-3.5 mr-2" />
+                      Descargar Borrador
+                    </>
+                  )}
+                </Button>
+              </div>
 
-                {/* Final Report */}
-                <div className="p-4 border-2 border-accent-200 rounded-lg hover:border-accent-400 transition-colors">
-                  <h4 className="font-semibold text-coal-800 mb-2">
-                    {t('reports.status.final')}
+              {/* Final Report Card */}
+              <div className="flex flex-col p-4 rounded-xl border border-accent-100 bg-accent-50/30 hover:border-accent-400 transition-all group">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-lg bg-white border border-accent-100 group-hover:border-accent-200">
+                    <Lock className="w-4 h-4 text-accent-500" />
+                  </div>
+                  <h4 className="font-bold text-coal-800 text-sm">
+                    {t('reports.finalize')}
                   </h4>
-                  <p className="text-sm text-smoke-600 mb-4">
-                    Reporte final. Bloquea la sesión y previene ediciones futuras.
-                  </p>
-                  <Button
-                    className="w-full bg-accent-500 hover:bg-accent-600"
-                    onClick={() => {
-                      if (
-                        confirm(
-                          '¿Estás seguro? El reporte final bloqueará la sesión permanentemente.'
-                        )
-                      ) {
-                        setReportType('final');
-                        handleGenerateReport('final');
-                      }
-                    }}
-                    disabled={generating}
-                  >
-                    <Lock className="w-4 h-4 mr-2" />
-                    {generating && reportType === 'final'
-                      ? 'Generando...'
-                      : t('reports.finalize')}
-                  </Button>
                 </div>
+                <p className="text-xs text-smoke-600 mb-4 flex-grow">
+                  Genera el informe clínico oficial. <strong>Bloquea la sesión permanentemente</strong> para garantizar la integridad de los datos.
+                </p>
+                <Button
+                  size="sm"
+                  className="w-full bg-accent-500 hover:bg-accent-600 text-white"
+                  onClick={() => {
+                    if (confirm(t('reports.finalWarning'))) {
+                      handleGenerateReport('final');
+                    }
+                  }}
+                  disabled={generating}
+                >
+                  {generating && reportType === 'final' ? (
+                    t('ui.loading')
+                  ) : (
+                    <>
+                      <CheckCircle className="w-3.5 h-3.5 mr-2" />
+                      {t('reports.finalize')}
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
 
-            <div className="bg-coal-50 p-3 rounded-lg">
-              <p className="text-xs text-smoke-600">
-                <strong>Nota:</strong> El reporte final bloqueará la sesión y no se podrán
-                realizar más cambios. Asegúrate de revisar toda la información antes de
-                finalizar.
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-100">
+              <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+              <p className="text-[11px] text-amber-800 leading-tight">
+                <strong>Importante:</strong> Los informes generados se guardan localmente en la base de datos del navegador. Puede acceder a ellos desde la pestaña "Reporte" de esta sesión en cualquier momento.
               </p>
             </div>
           </div>
@@ -162,3 +179,4 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
 };
 
 export default ReportGeneratorComponent;
+
