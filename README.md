@@ -11,7 +11,7 @@ DIRD is a privacy-first, edge-computing web application for ophthalmological ima
   * [PWA & INTERNATIONALIZATION](#pwa--internationalization)
 * [CONFIGURATION & FORMATS](#configuration--formats)
   * [PROJECT STRUCTURE](#project-structure)
-  * [DATABASE SCHEMA](#database-schema-dexie-js)
+  * [DATABASE SCHEMA](#database-schema-dexiejs)
   * [MODEL METADATA JSON FORMAT](#model-metadata-json-format)
   * [DIRD EXPORT FORMAT (ZIP)](#dird-export-format-zip-structure)
   * [VITE CONFIGURATION](#vite-configuration-pwa--wasm)
