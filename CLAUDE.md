@@ -1,7 +1,32 @@
 # DIRD - Diabetic Retinopathy Detection Platform
 
-## Project Overview
 DIRD is a privacy-first, edge-computing web application for ophthalmological image analysis. It runs ONNX AI models (YOLOv8n detection + segmentation) entirely in the browser using WebAssembly, ensuring patient data never leaves the device.
+
+* [CORE FEATURES](#core-features)
+* [TECH STACK](#tech-stack)
+  * [CORE FRAMEWORK](#core-framework)
+  * [AI & COMPUTER VISION](#ai-&-computer-vision)
+  * [UI & CANVAS](#ui-&-canvas)
+  * [DATA & PERSISTENCE](#data-&-persistence)
+  * [PWA & INTERNATIONALIZATION](#pwa-&-internationalization)
+* [CONFIGURATION & FORMATS](#configuration-&-formats)
+  * [PROJECT STRUCTURE](#project-structure)
+  * [DATABASE SCHEMA](#database-schema)
+  * [MODEL METADATA JSON FORMAT](#model-metadata-json-format)
+  * [DIRD EXPORT FORMAT (ZIP)](#dird-export-format-(zip-structure))
+  * [VITE CONFIGURATION](#vite-configuration-(pwa-+-wasm))
+  * [CANVAS LAYER SYSTEM](#canvas-layer-system)
+  * [WEB WORKER SETUP](#onnx-inference)
+  * [i18n CONFIGURATION](#i18n-configuration)
+  * [APP CONFIGURATION STORE](#app-configuration-store)
+* [DEVELOPMENT WORKFLOW](#development-workflow)
+* [KEY IMPLEMENTATION NOTES](#key-implementation-notes)
+* [FUTURE ENHANCEMENTS](#future-enhancements)
+* [DEVELOPMENT COMMANDS](#development-commands)
+* [PROJECT DELIVERY](#project-delivery)
+
+
+
 
 ## Core Features
 - **Patient & Session Management**: Create patients, organize fundus images by sessions
@@ -245,7 +270,9 @@ export class DirdDatabase extends Dexie {
 export const db = new DirdDatabase();
 ```
 
-## Model Metadata JSON Format
+## Configuration & Formats
+
+### Model Metadata JSON Format
 
 ```json
 {
@@ -270,7 +297,7 @@ export const db = new DirdDatabase();
 }
 ```
 
-## DIRD Export Format (ZIP Structure)
+### DIRD Export Format (ZIP Structure)
 
 ```
 paciente_Juan_Perez.dird (ZIP file)
@@ -293,7 +320,7 @@ paciente_Juan_Perez.dird (ZIP file)
 │       └── ...
 ```
 
-## Vite Configuration (PWA + WASM)
+### Vite Configuration (PWA + WASM)
 
 ```typescript
 // vite.config.ts
@@ -370,7 +397,7 @@ export default defineConfig({
 });
 ```
 
-## Canvas Layer System
+### Canvas Layer System
 
 ```typescript
 // src/lib/canvas/layer-manager.ts
@@ -393,7 +420,7 @@ export const DEFAULT_LAYERS: CanvasLayer[] = [
 ];
 ```
 
-## Web Worker Setup (ONNX Inference)
+### Web Worker Setup (ONNX Inference)
 
 ```typescript
 // public/workers/onnx-worker.js
@@ -433,7 +460,7 @@ self.addEventListener('message', async (e) => {
 });
 ```
 
-## i18n Configuration
+### i18n Configuration
 
 ```typescript
 // src/i18n/config.ts
@@ -518,7 +545,7 @@ export default i18n;
 }
 ```
 
-## App Configuration Store
+### App Configuration Store
 
 ```typescript
 // src/stores/config-store.ts
