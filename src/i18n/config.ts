@@ -5,6 +5,10 @@ import { initReactI18next } from 'react-i18next';
 import esTranslations from './locales/es.json';
 import enTranslations from './locales/en.json';
 
+// Importar traducciones de clases
+import esClasses from './locales/classes/es.json';
+import enClasses from './locales/classes/en.json';
+
 // Obtener idioma preferido del localStorage o navegador
 const getPreferredLanguage = () => {
   // Intentar obtener del localStorage
@@ -26,10 +30,12 @@ i18n
     debug: import.meta.env.DEV,
     resources: {
       es: {
-        translation: esTranslations
+        translation: esTranslations,
+        classes: esClasses
       },
       en: {
-        translation: enTranslations
+        translation: enTranslations,
+        classes: enClasses
       }
     },
     interpolation: {

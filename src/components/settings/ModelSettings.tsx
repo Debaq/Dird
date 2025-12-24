@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-import { Download, Trash2, RefreshCw, CheckCircle } from 'lucide-react';
+import { Download, Trash2, RefreshCw, CheckCircle, Info } from 'lucide-react';
 import { modelDownloader, formatBytes, type AvailableModel } from '@/lib/ai/model-downloader';
 import { inferenceService } from '@/lib/ai/inference-service';
 import { useConfigStore } from '@/stores/config-store';
+import type { ModelMetadata } from '@/lib/ai/model-metadata';
+import ModelInfoModal from './ModelInfoModal';
 
 const ModelSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -20,7 +22,9 @@ const ModelSettings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [availableModels, setAvailableModels] = useState<AvailableModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
-  
+  const [detectionMetadata, setDetectionMetadata] = useState<ModelMetadata | null>(null);
+  const [showModelInfo, setShowModelInfo] = useState(false);
+
   const { config, updateLocalModels } = useConfigStore();
 
   useEffect(() => {
@@ -37,6 +41,20 @@ const ModelSettings: React.FC = () => {
       const detectionVer = await modelDownloader.getLoadedModelVersion('detection');
       setDetectionVersion(detectionVer);
       setIsDetectionCached(!!detectionVer); // If there's a version, it's cached
+
+      // Try to load metadata if model is cached
+      if (detectionVer) {
+        try {
+          const metadataUrl = `https://raw.githubusercontent.com/Debaq/dird_models/main/detection-v${detectionVer}.json`;
+          const response = await fetch(metadataUrl);
+          if (response.ok) {
+            const metadata = await response.json();
+            setDetectionMetadata(metadata);
+          }
+        } catch (error) {
+          console.warn('Could not load detection metadata:', error);
+        }
+      }
 
       const segmentationVer = await modelDownloader.getLoadedModelVersion('segmentation');
       setSegmentationVersion(segmentationVer);
@@ -283,7 +301,7 @@ const ModelSettings: React.FC = () => {
               {/* Detection Model Status */}
               <div className="p-3 bg-smoke-50 rounded border border-smoke-100">
                 <div className="flex items-center justify-between mb-3">
-                  <div>
+                  <div className="flex-1">
                     <span className="text-coal-700 font-medium">{t('models.detection')}</span>
                     {detectionVersion && (
                       <div className="text-xs text-smoke-500 font-mono mt-0.5">
@@ -291,14 +309,26 @@ const ModelSettings: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  {isDetectionCached ? (
-                    <Badge variant="default" className="flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3" />
-                      v{detectionVersion}
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline">{t('settings.models.notLoaded')}</Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {isDetectionCached && detectionMetadata && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowModelInfo(true)}
+                        className="h-8 px-2"
+                      >
+                        <Info className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {isDetectionCached ? (
+                      <Badge variant="default" className="flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" />
+                        v{detectionVersion}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">{t('settings.models.notLoaded')}</Badge>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Sensitivity Slider */}
@@ -407,6 +437,13 @@ const ModelSettings: React.FC = () => {
           </p>
         </CardContent>
       </Card>
+
+      {/* Model Info Modal */}
+      <ModelInfoModal
+        open={showModelInfo}
+        onOpenChange={setShowModelInfo}
+        metadata={detectionMetadata}
+      />
     </div>
   );
 };

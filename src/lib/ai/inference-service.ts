@@ -4,6 +4,7 @@ import type { ModelMetadata } from './model-metadata';
 import { db } from '@/lib/db/schema';
 import { modelDownloader } from './model-downloader';
 import { useConfigStore } from '@/stores/config-store';
+import { classManager } from '@/lib/classes/class-manager';
 
 export class InferenceService {
   private detectionModel: ONNXModelManager | null = null;
@@ -17,6 +18,8 @@ export class InferenceService {
     if (modelPath && metadata) {
       this.detectionModel = new ONNXModelManager();
       await this.detectionModel.loadModel(modelPath, metadata);
+      // Update class manager with loaded metadata
+      classManager.setModelMetadata(metadata);
       return;
     }
 
@@ -24,6 +27,8 @@ export class InferenceService {
     const { modelUrl, metadata: downloadedMetadata } = await modelDownloader.downloadModel('detection');
     this.detectionModel = new ONNXModelManager();
     await this.detectionModel.loadModel(modelUrl, downloadedMetadata);
+    // Update class manager with loaded metadata
+    classManager.setModelMetadata(downloadedMetadata);
   }
 
   /**
@@ -34,6 +39,8 @@ export class InferenceService {
     if (modelPath && metadata) {
       this.segmentationModel = new ONNXModelManager();
       await this.segmentationModel.loadModel(modelPath, metadata);
+      // Update class manager with loaded metadata
+      classManager.setModelMetadata(metadata);
       return;
     }
 
@@ -41,6 +48,8 @@ export class InferenceService {
     const { modelUrl, metadata: downloadedMetadata } = await modelDownloader.downloadModel('segmentation');
     this.segmentationModel = new ONNXModelManager();
     await this.segmentationModel.loadModel(modelUrl, downloadedMetadata);
+    // Update class manager with loaded metadata
+    classManager.setModelMetadata(downloadedMetadata);
   }
 
   async detectObjects(imageElement: HTMLImageElement, imageId: number): Promise<Detection[]> {
@@ -51,8 +60,11 @@ export class InferenceService {
     const metadata = this.detectionModel.getMetadata()!;
     console.log('🔍 Metadata:', metadata);
 
+    // Get input size (new format or legacy)
+    const inputSize = metadata.model_info?.input_size || metadata.input_size || [640, 640];
+
     // Preprocess image
-    const { data, dims } = preprocessImage(imageElement, metadata.input_size);
+    const { data, dims } = preprocessImage(imageElement, inputSize);
     console.log('📐 Input dims:', dims);
 
     // Run inference
@@ -84,11 +96,13 @@ export class InferenceService {
     console.log('🎯 Detections before NMS:', detections.length, detections);
 
     // Apply NMS
-    detections = applyNMS(detections, metadata.iou_threshold);
+    const iouThreshold = metadata.iou_threshold || 0.45;
+    detections = applyNMS(detections, iouThreshold);
     console.log('✅ Detections after NMS:', detections.length, detections);
 
     // Save detections to database
-    await this.saveDetections(imageId, detections, metadata.model_version);
+    const modelVersion = metadata.model_info?.version || metadata.model_version || 'unknown';
+    await this.saveDetections(imageId, detections, modelVersion);
 
     return detections;
   }
@@ -126,8 +140,11 @@ export class InferenceService {
 
     const metadata = this.segmentationModel.getMetadata()!;
 
+    // Get input size (new format or legacy)
+    const inputSize = metadata.model_info?.input_size || metadata.input_size || [640, 640];
+
     // Preprocess image
-    const { data, dims } = preprocessImage(imageElement, metadata.input_size);
+    const { data, dims } = preprocessImage(imageElement, inputSize);
 
     // Run inference
     const results = await this.segmentationModel.runInference(data, dims);

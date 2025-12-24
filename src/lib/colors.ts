@@ -61,11 +61,19 @@ export const COLORS = {
 export const SEMANTIC_COLORS = {
   // Detection class colors (for bounding boxes and labels)
   DETECTION: {
-    microaneurysm: '#B34B00',      // Accent
-    hard_exudate: '#d87a1a',       // Accent-400
-    soft_exudate: '#f8b05c',       // Accent-300
-    hemorrhage: '#813700',         // Accent-700
-    neovascularization: '#9a4100', // Accent-600
+    // Current model classes
+    optic_disc: '#4CAF50',        // Verde - estructura normal
+    hard_exudate: '#F9A825',      // Amarillo oscuro - exudados
+    fovea: '#2196F3',             // Azul - estructura normal
+    hemorrhage: '#D32F2F',        // Rojo - hemorragia
+    cotton_wool_spot: '#FDD835',  // Amarillo claro - manchas algodonosas
+    microhemorrhages: '#FF6B6B',  // Rojo claro - microhemorragias
+    edema: '#9C27B0',             // Púrpura - edema
+
+    // Legacy classes (backward compatibility)
+    microaneurysm: '#B34B00',
+    soft_exudate: '#f8b05c',
+    neovascularization: '#9a4100',
   },
 
   // UI States

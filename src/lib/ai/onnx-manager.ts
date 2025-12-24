@@ -205,20 +205,26 @@ export function postprocessDetections(
   const detections: Detection[] = [];
   const outputData = output.data as Float32Array;
   const dims = output.dims;
-  
-  const threshold = confidenceThreshold !== undefined ? confidenceThreshold : metadata.confidence_threshold;
+
+  // Get classes (new format or legacy)
+  const classes = metadata.classes || [];
+
+  // Get threshold (parameter, legacy field, or default)
+  const threshold = confidenceThreshold !== undefined
+    ? confidenceThreshold
+    : (metadata.confidence_threshold || 0.5);
 
   console.log('🔬 Post-process input:', {
     dims: dims,
     dataLength: outputData.length,
-    numClasses: metadata.classes.length,
+    numClasses: classes.length,
     confidenceThreshold: threshold
   });
 
   // YOLOv8 output format can be:
   // [batch, num_detections, 4 + num_classes] (transposed)
   // or [batch, 4 + num_classes, num_detections] (original)
-  const numClasses = metadata.classes.length;
+  const numClasses = classes.length;
   let numDetections: number;
   let isTransposed = false;
 
@@ -285,7 +291,7 @@ export function postprocessDetections(
         x, y, w, h,
         maxScore,
         maxClassIndex,
-        className: metadata.classes[maxClassIndex],
+        className: classes[maxClassIndex],
         threshold: threshold
       });
     }
@@ -293,7 +299,8 @@ export function postprocessDetections(
     // Filter by confidence threshold
     if (maxScore >= threshold) {
       // Denormalize coordinates (YOLOv8 uses normalized 0-1 coords)
-      const inputSize = metadata.input_size[0];
+      // Get input size (new format or legacy)
+      const inputSize = metadata.model_info?.input_size?.[0] || metadata.input_size?.[0] || 640;
       const scaleX = originalWidth / inputSize;
       const scaleY = originalHeight / inputSize;
 
@@ -304,7 +311,7 @@ export function postprocessDetections(
           width: w * scaleX,
           height: h * scaleY,
         },
-        class: metadata.classes[maxClassIndex],
+        class: classes[maxClassIndex],
         confidence: maxScore,
         classIndex: maxClassIndex,
       });

@@ -1,21 +1,26 @@
 import { db } from '@/lib/db/schema';
-import { getClassColor } from '@/lib/ai/model-metadata';
+import { getClassColor, type ModelMetadata } from '@/lib/ai/model-metadata';
+import { getClassName } from '@/lib/ai/class-translations';
 
 export interface ClassDefinition {
   name: string;
+  displayName: string; // Nombre traducido para mostrar al usuario
   source: 'ai' | 'custom';
   color: string;
   usageCount: number;
 }
 
-// Clases del modelo AI (hardcodeadas basadas en model-metadata.ts)
-const AI_CLASSES = [
+// Legacy classes (for backward compatibility with old hardcoded values)
+const LEGACY_AI_CLASSES = [
   'microaneurysm',
   'hard_exudate',
   'soft_exudate',
   'hemorrhage',
   'neovascularization',
 ];
+
+// Store the current model metadata
+let currentModelMetadata: ModelMetadata | null = null;
 
 // Paleta de colores para clases personalizadas (12 colores distintos)
 const CUSTOM_COLOR_PALETTE = [
@@ -28,10 +33,22 @@ const STORAGE_KEY = 'dird-class-colors';
 
 export class ClassManager {
   /**
+   * Establece el metadata del modelo actual
+   */
+  setModelMetadata(metadata: ModelMetadata): void {
+    currentModelMetadata = metadata;
+  }
+
+  /**
    * Obtiene las clases del modelo AI
+   * Si hay metadata cargado, usa las clases del modelo
+   * Si no, usa las clases legacy para compatibilidad
    */
   getAIClasses(): string[] {
-    return [...AI_CLASSES];
+    if (currentModelMetadata && currentModelMetadata.classes) {
+      return [...currentModelMetadata.classes];
+    }
+    return [...LEGACY_AI_CLASSES];
   }
 
   /**
@@ -45,10 +62,12 @@ export class ClassManager {
         .equals('manual')
         .toArray();
 
+      const aiClasses = this.getAIClasses();
+
       // Extraer clases únicas, excluir las que son AI classes
       const customClasses = new Set<string>();
       manualDetections.forEach(detection => {
-        if (detection.class && !AI_CLASSES.includes(detection.class)) {
+        if (detection.class && !aiClasses.includes(detection.class)) {
           customClasses.add(detection.class);
         }
       });
@@ -78,9 +97,10 @@ export class ClassManager {
       }
     });
 
-    // Crear definiciones de clases AI
+    // Crear definiciones de clases AI con nombres traducidos
     const aiClassDefs: ClassDefinition[] = aiClasses.map(name => ({
       name,
+      displayName: getClassName(name), // Usa el idioma actual del sistema
       source: 'ai' as const,
       color: getClassColor(name),
       usageCount: usageCount.get(name) || 0,
@@ -91,6 +111,7 @@ export class ClassManager {
       .sort((a, b) => a.localeCompare(b))
       .map(name => ({
         name,
+        displayName: name, // Las clases custom se muestran con su nombre original
         source: 'custom' as const,
         color: this.getColorForClass(name),
         usageCount: usageCount.get(name) || 0,
@@ -105,8 +126,10 @@ export class ClassManager {
    * Primero busca en AI classes, luego en localStorage, finalmente genera uno nuevo
    */
   getColorForClass(className: string): string {
+    const aiClasses = this.getAIClasses();
+
     // Si es clase AI, usar color predefinido
-    if (AI_CLASSES.includes(className)) {
+    if (aiClasses.includes(className)) {
       return getClassColor(className);
     }
 

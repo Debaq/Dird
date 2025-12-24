@@ -1,11 +1,47 @@
-export interface ModelMetadata {
-  model_version: string;
-  model_type: 'detection' | 'segmentation';
-  classes: string[];
-  input_size: [number, number];
-  confidence_threshold: number;
-  iou_threshold: number;
+export interface CriticalFinding {
+  issue: string;
+  metric?: string;
+  observation: string;
+  cause?: string;
+  implication?: string;
+}
+
+export interface AnalysisReport {
+  status: 'EXCELLENT' | 'GOOD' | 'REQUIRES_IMPROVEMENT' | 'CRITICAL';
+  critical_findings: CriticalFinding[];
+  recommendations_next_steps: string[];
+}
+
+export interface PerformanceMetrics {
+  global: {
+    mAP50: number;
+    'mAP50-95': number;
+    precision_overall: number;
+    recall_overall: number;
+  };
+  per_class_mAP50: Record<string, number>;
+}
+
+export interface ModelInfo {
+  version: string;
+  type: string;
   date_trained: string;
+  input_size: [number, number];
+}
+
+export interface ModelMetadata {
+  model_info: ModelInfo;
+  classes: string[];
+  performance_metrics: PerformanceMetrics;
+  analysis_report: AnalysisReport;
+
+  // Legacy fields for backward compatibility
+  model_version?: string;
+  model_type?: 'detection' | 'segmentation';
+  input_size?: [number, number];
+  confidence_threshold?: number;
+  iou_threshold?: number;
+  date_trained?: string;
   metrics?: {
     mAP50?: number;
     precision?: number;
@@ -13,7 +49,7 @@ export interface ModelMetadata {
   };
 }
 
-export interface ModelInfo {
+export interface ModelFile {
   path: string;
   metadata: ModelMetadata;
 }
@@ -32,8 +68,8 @@ export async function loadModelMetadata(metadataPath: string): Promise<ModelMeta
   }
 }
 
-export async function getAvailableModels(): Promise<ModelInfo[]> {
-  const models: ModelInfo[] = [];
+export async function getAvailableModels(): Promise<ModelFile[]> {
+  const models: ModelFile[] = [];
 
   try {
     // Detection model
@@ -62,10 +98,18 @@ export async function getAvailableModels(): Promise<ModelInfo[]> {
 
 export function getClassColor(className: string): string {
   const colors: Record<string, string> = {
+    // Current model classes
+    optic_disc: '#4CAF50',        // Verde - estructura normal
+    hard_exudate: '#F9A825',      // Amarillo oscuro - exudados
+    fovea: '#2196F3',             // Azul - estructura normal
+    hemorrhage: '#D32F2F',        // Rojo - hemorragia
+    cotton_wool_spot: '#FDD835',  // Amarillo claro - manchas algodonosas
+    microhemorrhages: '#FF6B6B',  // Rojo claro - microhemorragias
+    edema: '#9C27B0',             // Púrpura - edema
+
+    // Legacy classes (backward compatibility)
     microaneurysm: '#FF6B6B',
-    hard_exudate: '#F9A825',
     soft_exudate: '#FDD835',
-    hemorrhage: '#D32F2F',
     neovascularization: '#7B1FA2',
   };
 

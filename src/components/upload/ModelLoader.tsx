@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { inferenceService } from '@/lib/ai/inference-service';
 import { getAvailableModels } from '@/lib/ai/model-metadata';
-import type { ModelInfo } from '@/lib/ai/model-metadata';
+import type { ModelFile } from '@/lib/ai/model-metadata';
 
 interface ModelLoaderProps {
   onModelsReady?: () => void;
@@ -13,7 +13,7 @@ interface ModelLoaderProps {
 type ModelStatus = 'idle' | 'loading' | 'loaded' | 'error';
 
 const ModelLoader: React.FC<ModelLoaderProps> = ({ onModelsReady }) => {
-  const [models, setModels] = useState<ModelInfo[]>([]);
+  const [models, setModels] = useState<ModelFile[]>([]);
   const [detectionStatus, setDetectionStatus] = useState<ModelStatus>('idle');
   const [segmentationStatus, setSegmentationStatus] = useState<ModelStatus>('idle');
   const [error, setError] = useState<string | null>(null);
