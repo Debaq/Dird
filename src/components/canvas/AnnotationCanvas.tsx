@@ -68,8 +68,8 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     const scaleX = containerWidth / imgWidth;
     const scaleY = containerHeight / imgHeight;
 
-    // Use the LARGER scale to ensure image covers 100% of container (cover behavior)
-    const newScale = Math.max(scaleX, scaleY);
+    // Use the SMALLER scale to ensure image fits 100% within container (contain behavior)
+    const newScale = Math.min(scaleX, scaleY);
 
     // Calculate offset to center the image
     const scaledWidth = imgWidth * newScale;
@@ -88,16 +88,19 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     setStagePos({ x: 0, y: 0 });
   };
 
-  // Handle window resize
+  // Handle container resize with ResizeObserver
   useEffect(() => {
-    const handleResize = () => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver(() => {
       if (konvaImage) {
         calculateScale(konvaImage.width, konvaImage.height);
       }
-    };
+    });
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    resizeObserver.observe(containerRef.current);
+
+    return () => resizeObserver.disconnect();
   }, [konvaImage]);
 
   // Handle zoom with mouse wheel
@@ -116,7 +119,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     };
 
     const newScale = e.evt.deltaY > 0 ? oldScale * 0.9 : oldScale * 1.1;
-    // Minimum zoom is 1.0 (the initial cover size), maximum is 5x
+    // Minimum zoom is 1.0 (the initial contain size), maximum is 5x
     const clampedScale = Math.max(1.0, Math.min(5, newScale));
 
     setStageScale(clampedScale);
@@ -368,7 +371,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       </div>
       <div
         ref={containerRef}
-        className="w-full h-full bg-coal-900 rounded-lg overflow-hidden flex items-center justify-center min-h-[300px]"
+        className="w-full h-full bg-coal-900 overflow-hidden flex items-center justify-center"
         style={{ cursor: getCursor() }}
       >
         <Stage

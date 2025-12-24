@@ -76,5 +76,33 @@
       "logoPreview": "Logo Preview",
       "uploadNewLogo": "Upload New Logo"
     }
+  },
+  "contribution": {
+    "title": "Contribute",
+    "description": "Help improve Dird with your contribution",
+    "github": {
+      "title": "Repositories",
+      "appDescription": "Main Application",
+      "modelsDescription": "AI Models"
+    },
+    "donation": {
+      "title": "Support us with a coffee",
+      "description": "Your support helps us continue improving Dird",
+      "button": "Buy us a coffee"
+    },
+    "feedback": {
+      "title": "Send Feedback",
+      "component": "Component",
+      "dirdApp": "Dird App",
+      "dirdModels": "Dird Models",
+      "selectComponent": "Select a component",
+      "comment": "Comment",
+      "placeholder": "Write your comment or suggestion here...",
+      "eyePhotos": "Eye Photos (Optional)",
+      "eyePhotosDescription": "Upload eye photos with whitening or marks to help improve the models",
+      "clickToUpload": "Click to upload images",
+      "supportedFormats": "Supported formats: JPG, PNG, WEBP",
+      "submit": "Submit Comment"
+    }
   }
 }

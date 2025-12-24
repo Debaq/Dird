@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { FileText, Download, Calendar, Tag, ShieldCheck, Eye, ShieldAlert, Trash2, Edit3 } from 'lucide-react';
+import { FileText, Download, Calendar, Tag, ShieldCheck, Eye, Trash2, Edit3, CheckCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { db } from '@/lib/db/schema';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import PDFViewerModal from './PDFViewerModal';
+import { regenerateSessionReportBlob } from '@/lib/pdf/report-generator';
+import { generateSessionReport, ReportGenerator, type ReportType } from '@/lib/pdf/report-generator';
 
 interface ReportsListProps {
   sessionId: number;
@@ -21,8 +23,18 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
     [sessionId, refreshKey]
   );
 
-  const handleDownload = (pdfBlob: Blob, type: string, date: Date) => {
-    const url = URL.createObjectURL(pdfBlob);
+  const session = useLiveQuery(() => db.sessions.get(sessionId), [sessionId]);
+
+  const handleDownload = async (pdfBlob: Blob, type: string, date: Date, reportSessionId: number, notes?: string) => {
+    let blobToUse = pdfBlob;
+    if (type === 'preview') {
+      try {
+        blobToUse = await regenerateSessionReportBlob(reportSessionId, notes);
+      } catch (error) {
+        console.error("Error regenerating preview report", error);
+      }
+    }
+    const url = URL.createObjectURL(blobToUse);
     const a = document.createElement('a');
     a.href = url;
     a.download = `DIRD_Reporte_${type.toUpperCase()}_${new Date(date).toISOString().split('T')[0]}.pdf`;
@@ -32,9 +44,17 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
     URL.revokeObjectURL(url);
   };
 
-  const handleViewPDF = (pdfBlob: Blob, type: string, date: Date) => {
+  const handleViewPDF = async (pdfBlob: Blob, type: string, date: Date, reportSessionId: number, notes?: string) => {
+    let blobToUse = pdfBlob;
+    if (type === 'preview') {
+      try {
+        blobToUse = await regenerateSessionReportBlob(reportSessionId, notes);
+      } catch (error) {
+        console.error("Error regenerating preview report", error);
+      }
+    }
     const title = `DIRD_Reporte_${type.toUpperCase()}_${new Date(date).toISOString().split('T')[0]}.pdf`;
-    setSelectedReport({ blob: pdfBlob, title });
+    setSelectedReport({ blob: blobToUse, title });
   };
 
   const handleCloseModal = () => {
@@ -42,6 +62,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
   };
 
   const [editingReport, setEditingReport] = useState<{id: number, notes: string} | null>(null);
+  const [finalizingReport, setFinalizingReport] = useState<number | null>(null);
 
   const handleDeleteReport = async (reportId: number, type: string) => {
     if (type === 'final') {
@@ -56,6 +77,82 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
         console.error('Error deleting report:', error);
         alert('Error al eliminar el informe');
       }
+    }
+  };
+
+  const handleFinalizeReport = async (reportId: number, sessionId: number, notes: string) => {
+    if (!reportId) return;
+
+    if (!confirm('¿Está seguro de que desea finalizar este informe? Esta acción convertirá este informe en final y bloqueará la sesión permanentemente.')) {
+      return;
+    }
+
+    setFinalizingReport(reportId);
+    try {
+      // Get the session and patient data for the report
+      const session = await db.sessions.get(sessionId);
+      if (!session) {
+        throw new Error('Session not found');
+      }
+
+      const patient = await db.patients.get(session.patientId);
+      if (!patient) {
+        throw new Error('Patient not found');
+      }
+
+      const images = await db.images.where('sessionId').equals(sessionId).toArray();
+      const allDetections = await Promise.all(
+        images.map((img) => db.detections.where('imageId').equals(img.id!).toArray())
+      );
+      const detections = allDetections.flat();
+
+      const allSegmentations = await Promise.all(
+        images.map((img) => db.segmentations.where('imageId').equals(img.id!).toArray())
+      );
+      const segmentations = allSegmentations.flat();
+
+      // Generate the final report PDF
+      const reportData = {
+        patient,
+        session,
+        images,
+        detections,
+        segmentations,
+        evaluatorNotes: notes,
+      };
+
+      const generator = new ReportGenerator();
+      const finalPdfBlob = await generator.generateReport(reportData, 'final');
+
+      // Update the existing report to be final (this will overwrite the PDF blob)
+      await db.reports.update(reportId, {
+        type: 'final',
+        pdfBlob: finalPdfBlob,
+        generatedAt: new Date(),
+      });
+
+      // Lock the session
+      await db.sessions.update(sessionId, {
+        locked: true,
+        lockedAt: new Date(),
+      });
+
+      // Download the final report automatically
+      const url = URL.createObjectURL(finalPdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `DIRD_Reporte_FINAL_${sessionId}_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      alert('Informe finalizado y descargado correctamente. La sesión ha sido bloqueada.');
+    } catch (error) {
+      console.error('Error finalizing report:', error);
+      alert('Error al finalizar el informe');
+    } finally {
+      setFinalizingReport(null);
     }
   };
 
@@ -140,7 +237,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
               variant="ghost"
               size="sm"
               className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto justify-center"
-              onClick={() => handleViewPDF(report.pdfBlob, report.type, report.generatedAt)}
+              onClick={() => handleViewPDF(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
             >
               <Eye className="w-4 h-4 mr-2" />
               Ver PDF
@@ -149,7 +246,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
               variant="ghost"
               size="sm"
               className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto justify-center"
-              onClick={() => handleDownload(report.pdfBlob, report.type, report.generatedAt)}
+              onClick={() => handleDownload(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
             >
               <Download className="w-4 h-4 mr-2" />
               Descargar PDF
@@ -176,6 +273,27 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
                 Eliminar
               </Button>
             )}
+            {report.type === 'preview' && session && !session.locked && (
+              <Button
+                variant="default"
+                size="sm"
+                className="hover:bg-accent-600 hover:text-white w-full sm:w-auto bg-accent-500 text-white"
+                onClick={() => report.id && handleFinalizeReport(report.id, report.sessionId, report.evaluatorNotes || '')}
+                disabled={finalizingReport === report.id}
+              >
+                {finalizingReport === report.id ? (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2 animate-spin" />
+                    Finalizando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Finalizar
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
       ))}
@@ -187,9 +305,14 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
           pdfBlob={selectedReport.blob}
           title={selectedReport.title}
           onDownload={() => {
-            // Extract type from title (e.g., "DIRD_Reporte_FINAL_2025-01-01.pdf" -> "final")
-            const type = selectedReport.title.split('_')[2].replace('.pdf', '').toLowerCase();
-            handleDownload(selectedReport.blob, type, new Date());
+            const url = URL.createObjectURL(selectedReport.blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = selectedReport.title;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
           }}
         />
       )}

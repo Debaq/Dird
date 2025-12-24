@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import MainLayout from '@/components/layout/MainLayout';
 import PatientList from '@/components/patients/PatientList';
@@ -8,6 +8,8 @@ import ImageAnalyzer from '@/components/canvas/ImageAnalyzer';
 import { Settings } from '@/components/settings/Settings';
 import LanguageSync from '@/components/LanguageSync';
 import GlobalReportsList from '@/components/reports/GlobalReportsList';
+import SessionComparison from '@/components/patients/SessionComparison';
+import ContributionMenu from '@/components/contribution/ContributionMenu';
 
 function App() {
   const { t } = useTranslation();
@@ -81,10 +83,7 @@ function App() {
           path="/patients/:patientId/compare"
           element={
             <MainLayout>
-              <div className="text-center py-12">
-                <h2 className="text-2xl font-bold text-coal-800 mb-2">{t('sessions.compareTitle')}</h2>
-                <p className="text-smoke-500">{t('ui.comingSoon.general')}</p>
-              </div>
+              <SessionComparison />
             </MainLayout>
           }
         />
@@ -95,6 +94,16 @@ function App() {
           element={
             <MainLayout>
               <Settings />
+            </MainLayout>
+          }
+        />
+
+        {/* Contribution menu */}
+        <Route
+          path="/contribute"
+          element={
+            <MainLayout>
+              <ContributionMenu />
             </MainLayout>
           }
         />

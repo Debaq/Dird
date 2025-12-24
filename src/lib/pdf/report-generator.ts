@@ -3,7 +3,7 @@ import autoTable from 'jspdf-autotable';
 import i18n from '@/i18n/config';
 import type { Session, Patient, Image, Detection, Segmentation } from '@/lib/db/schema';
 import { db } from '@/lib/db/schema';
-import { useConfigStore } from '@/stores/config-store';
+import { useConfigStore, DEFAULT_CONFIG } from '@/stores/config-store';
 
 // Helper to convert hex to rgb
 const hexToRgb = (hex: string): [number, number, number] => {
@@ -31,6 +31,17 @@ export interface ReportData {
   }>;
 }
 
+export interface ComparativeReportData {
+  patient: Patient;
+  sessions: {
+    session: Session;
+    images: Image[];
+    detections: Detection[];
+    segmentations: Segmentation[];
+  }[];
+  evaluatorNotes?: string;
+}
+
 export type ReportType = 'preview' | 'final';
 
 export class ReportGenerator {
@@ -42,7 +53,7 @@ export class ReportGenerator {
   private primaryColor: [number, number, number];
   private accentColor: [number, number, number];
   private darkColor: [number, number, number];
-  private config = useConfigStore.getState().config.report;
+  private config = useConfigStore.getState().config.report || DEFAULT_CONFIG.report;
 
   constructor() {
     this.doc = new jsPDF({
@@ -60,7 +71,7 @@ export class ReportGenerator {
     this.currentY = this.margin;
 
     // 1. Header
-    await this.addHeader(type);
+    await this.addHeader(type, 'single');
 
     // 2. Patient & Session Info
     if (this.config.sections.patientInfo) {
@@ -88,32 +99,46 @@ export class ReportGenerator {
     return this.doc.output('blob');
   }
 
-  private async addHeader(type: ReportType) {
+  async generateComparativeReport(data: ComparativeReportData, type: ReportType): Promise<Blob> {
+    this.currentY = this.margin;
+
+    // 1. Header
+    await this.addHeader(type, 'combined');
+
+    // 2. Patient Info (Common)
+    this.addPatientInfoOnly(data.patient);
+
+    // 3. Comparative Visual Analysis
+    await this.addComparativeVisualAnalysis(data.sessions);
+
+    // 4. Conclusions & Notes
+    this.addConclusionSection(data.evaluatorNotes || '');
+
+    // 5. Footer
+    this.addFooter();
+
+    return this.doc.output('blob');
+  }
+
+  private async addHeader(type: ReportType, category: 'single' | 'combined') {
     // Logo
-    let logoToUse = '/logo.svg'; // Default system logo path (might need base64 or valid URL)
+    let logoToUse = '/logo.svg'; // Default system logo path
     if (this.config.useSystemLogo) {
-       // Logic to load system logo - assuming it's available at public URL or imported
-       // For PDF, better to have base64 or standard image. 
-       // If running in browser, fetch can work.
+       // logic already handled by default path
     } else if (this.config.customLogo) {
       logoToUse = this.config.customLogo;
     }
 
+    let textX = this.margin;
+
     try {
-      // Small optimization: If it's a data URL, use it directly. If path, load it.
-      // Since `loadImage` handles both, we are good.
-      // We might want to check if logoToUse is valid.
-      // For now, let's try to add logo if available.
-      // const img = await this.loadImage(logoToUse);
-      // this.doc.addImage(img, 'PNG', this.margin, this.currentY, 15, 15);
-      
-      // Since existing code didn't have logo image drawing in header, let's add it if requested.
       if (logoToUse) {
          try {
-           await this.loadImage(logoToUse); // Preload check
+           // Convert image (even SVG) to PNG Data URL via Canvas
+           const logoDataUrl = await this.imageToDataUrl(logoToUse);
            const logoSize = 15;
-           this.doc.addImage(logoToUse, 'PNG', this.margin, this.currentY, logoSize, logoSize);
-           // Adjust text X position
+           this.doc.addImage(logoDataUrl, 'PNG', this.margin, this.currentY, logoSize, logoSize);
+           textX += logoSize + 5; // Shift text to the right
          } catch (e) {
            console.warn("Could not load logo", e);
          }
@@ -123,13 +148,11 @@ export class ReportGenerator {
     }
 
     // Title & Subtitle
-    // Adjust X if logo is present
-    const textX = this.margin; // + (this.config.useSystemLogo || this.config.customLogo ? 20 : 0);
-
     this.doc.setFontSize(22);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(...this.primaryColor);
-    this.doc.text(this.config.title, textX, this.currentY + 5);
+    const title = category === 'combined' ? 'Informe Evolutivo' : this.config.title;
+    this.doc.text(title, textX, this.currentY + 5);
 
     this.doc.setFontSize(9);
     this.doc.setFont('helvetica', 'normal');
@@ -140,10 +163,10 @@ export class ReportGenerator {
     this.doc.setFontSize(14);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(...this.darkColor);
-    const title = type === 'final'
+    const statusTitle = type === 'final'
       ? i18n.t('reports.status.final')
       : i18n.t('reports.status.preliminary');
-    this.doc.text(title.toUpperCase(), this.pageWidth - this.margin, this.currentY + 5, { align: 'right' });
+    this.doc.text(statusTitle.toUpperCase(), this.pageWidth - this.margin, this.currentY + 5, { align: 'right' });
 
     this.doc.setFontSize(9);
     this.doc.setFont('helvetica', 'normal');
@@ -160,6 +183,70 @@ export class ReportGenerator {
     this.currentY += 8;
   }
 
+  private addPatientInfoOnly(patient: Patient) {
+    this.doc.setFontSize(11);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(...this.primaryColor);
+    this.doc.text('INFORMACIÓN CLÍNICA', this.margin, this.currentY);
+    this.currentY += 4;
+
+    const fields = this.config.patientInfoFields || DEFAULT_CONFIG.report.patientInfoFields;
+
+    // Build columns for grid layout
+    const leftColumn: { label: string, value: string }[] = [];
+
+    if (fields.name) leftColumn.push({ label: i18n.t('patients.name'), value: patient.name });
+    if (fields.id) leftColumn.push({ label: i18n.t('patients.id'), value: patient.patientId });
+    if (fields.age) leftColumn.push({ label: 'Edad', value: `${this.calculateAge(patient.dateOfBirth)} años` });
+
+    // Merge columns into rows
+    const body: any[] = [];
+    const maxRows = leftColumn.length;
+
+    for (let i = 0; i < maxRows; i++) {
+        const left = leftColumn[i];
+        const row = [];
+
+        if (left) {
+            row.push({ content: left.label, styles: { fontStyle: 'bold', textColor: this.primaryColor } });
+            row.push(left.value);
+            // Empty columns for balance if needed, but for now simple 2 col table
+        }
+        body.push(row);
+    }
+    
+     // History Section
+    const historyParts: string[] = [];
+    if (fields.diabetes && patient.diabetes) historyParts.push(`Diabetes ${patient.diabetesType || ''} (${patient.diabetesDuration || 0}a)`);
+    if (fields.hta && patient.hta) historyParts.push('HTA');
+    if (fields.dlp && patient.dlp) historyParts.push('DLP');
+    if (fields.medications && patient.medications?.length > 0) historyParts.push(`Meds: ${patient.medications.join(', ')}`);
+    if (fields.otherConditions && patient.otherConditions) historyParts.push(`Otros: ${patient.otherConditions}`);
+
+    if (fields.diabetes || fields.hta || fields.dlp || fields.medications || fields.otherConditions) {
+        const historyText = historyParts.join(', ') || 'Sin antecedentes relevantes';
+        body.push([
+            { content: 'Antecedentes', styles: { fontStyle: 'bold', textColor: this.primaryColor } },
+            { content: historyText } // Removed colSpan as we only have 2 columns here
+        ]);
+    }
+
+    if (body.length > 0) {
+        autoTable(this.doc, {
+            startY: this.currentY,
+            head: [],
+            body: body,
+            theme: 'grid',
+            styles: { fontSize: 9, cellPadding: 3, lineColor: [230, 230, 230] },
+            columnStyles: {
+                0: { cellWidth: 35 },
+                1: { cellWidth: 'auto' },
+            },
+        });
+        this.currentY = (this.doc as any).lastAutoTable.finalY + 8;
+    }
+  }
+
   private addPatientAndSessionInfo(patient: Patient, session: Session) {
     this.doc.setFontSize(11);
     this.doc.setFont('helvetica', 'bold');
@@ -167,56 +254,92 @@ export class ReportGenerator {
     this.doc.text('INFORMACIÓN CLÍNICA', this.margin, this.currentY);
     this.currentY += 4;
 
-    // History logic
-    const historyParts = [];
-    if (patient.diabetes) historyParts.push(`Diabetes ${patient.diabetesType || ''} (${patient.diabetesDuration || 0}a)`);
-    if (patient.hta) historyParts.push('HTA');
-    if (patient.dlp) historyParts.push('DLP');
-    const historyText = historyParts.join(', ') || 'Sin antecedentes relevantes';
+    const fields = this.config.patientInfoFields || DEFAULT_CONFIG.report.patientInfoFields;
 
-    // Combined data in one table for compactness
-    autoTable(this.doc, {
-      startY: this.currentY,
-      head: [],
-      body: [
-        [
-          { content: i18n.t('patients.name'), styles: { fontStyle: 'bold', textColor: this.primaryColor } }, 
-          patient.name, 
-          { content: i18n.t('sessions.fields.date'), styles: { fontStyle: 'bold', textColor: this.primaryColor } }, 
-          new Date(session.date).toLocaleString()
-        ],
-        [
-          { content: i18n.t('patients.id'), styles: { fontStyle: 'bold', textColor: this.primaryColor } }, 
-          patient.patientId, 
-          { content: i18n.t('sessions.session'), styles: { fontStyle: 'bold', textColor: this.primaryColor } }, 
-          `N° ${session.sessionNumber}`
-        ],
-        [
-          { content: 'Edad', styles: { fontStyle: 'bold', textColor: this.primaryColor } }, 
-          `${this.calculateAge(patient.dateOfBirth)} años`, 
-          { content: 'Modelo', styles: { fontStyle: 'bold', textColor: this.primaryColor } }, 
-          session.modelVersions.detection || 'N/A'
-        ],
-        [
-          { content: 'Antecedentes', styles: { fontStyle: 'bold', textColor: this.primaryColor } }, 
-          { content: historyText, colSpan: 3 }
-        ],
-        [
-          { content: 'Nota Sesión', styles: { fontStyle: 'bold', textColor: this.primaryColor } }, 
-          { content: session.notes || '-', colSpan: 3 }
-        ]
-      ],
-      theme: 'grid',
-      styles: { fontSize: 9, cellPadding: 3, lineColor: [230, 230, 230] },
-      columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 65 },
-        2: { cellWidth: 25 },
-        3: { cellWidth: 'auto' },
-      },
-    });
+    // Build columns for grid layout
+    const leftColumn: { label: string, value: string }[] = [];
+    const rightColumn: { label: string, value: string }[] = [];
 
-    this.currentY = (this.doc as any).lastAutoTable.finalY + 8;
+    if (fields.name) leftColumn.push({ label: i18n.t('patients.name'), value: patient.name });
+    if (fields.id) leftColumn.push({ label: i18n.t('patients.id'), value: patient.patientId });
+    if (fields.age) leftColumn.push({ label: 'Edad', value: `${this.calculateAge(patient.dateOfBirth)} años` });
+
+    if (fields.sessionDate) rightColumn.push({ label: i18n.t('sessions.fields.date'), value: new Date(session.date).toLocaleString() });
+    
+    // Always include session number if date is included or as a fallback
+    rightColumn.push({ label: i18n.t('sessions.session'), value: `N° ${session.sessionNumber}` });
+    
+    // Model Info
+    rightColumn.push({ label: 'Modelo', value: session.modelVersions.detection || 'N/A' });
+
+    // Merge columns into rows
+    const body: any[] = [];
+    const maxRows = Math.max(leftColumn.length, rightColumn.length);
+
+    for (let i = 0; i < maxRows; i++) {
+        const left = leftColumn[i];
+        const right = rightColumn[i];
+        const row = [];
+
+        if (left) {
+            row.push({ content: left.label, styles: { fontStyle: 'bold', textColor: this.primaryColor } });
+            row.push(left.value);
+        } else {
+            row.push('');
+            row.push('');
+        }
+
+        if (right) {
+            row.push({ content: right.label, styles: { fontStyle: 'bold', textColor: this.primaryColor } });
+            row.push(right.value);
+        } else {
+            row.push('');
+            row.push('');
+        }
+        body.push(row);
+    }
+
+    // History Section
+    const historyParts: string[] = [];
+    if (fields.diabetes && patient.diabetes) historyParts.push(`Diabetes ${patient.diabetesType || ''} (${patient.diabetesDuration || 0}a)`);
+    if (fields.hta && patient.hta) historyParts.push('HTA');
+    if (fields.dlp && patient.dlp) historyParts.push('DLP');
+    if (fields.medications && patient.medications?.length > 0) historyParts.push(`Meds: ${patient.medications.join(', ')}`);
+    if (fields.otherConditions && patient.otherConditions) historyParts.push(`Otros: ${patient.otherConditions}`);
+
+    if (fields.diabetes || fields.hta || fields.dlp || fields.medications || fields.otherConditions) {
+        const historyText = historyParts.join(', ') || 'Sin antecedentes relevantes';
+        body.push([
+            { content: 'Antecedentes', styles: { fontStyle: 'bold', textColor: this.primaryColor } },
+            { content: historyText, colSpan: 3 }
+        ]);
+    }
+
+    // Session Notes
+    if (fields.sessionNotes) {
+        body.push([
+            { content: 'Nota Sesión', styles: { fontStyle: 'bold', textColor: this.primaryColor } },
+            { content: session.notes || '-', colSpan: 3 }
+        ]);
+    }
+
+    // Render Table
+    if (body.length > 0) {
+        autoTable(this.doc, {
+            startY: this.currentY,
+            head: [],
+            body: body,
+            theme: 'grid',
+            styles: { fontSize: 9, cellPadding: 3, lineColor: [230, 230, 230] },
+            columnStyles: {
+                0: { cellWidth: 35 },
+                1: { cellWidth: 55 },
+                2: { cellWidth: 35 },
+                3: { cellWidth: 'auto' },
+            },
+        });
+        this.currentY = (this.doc as any).lastAutoTable.finalY + 8;
+    }
   }
 
   private addFindingsSummary(detections: Detection[]) {
@@ -254,6 +377,76 @@ export class ReportGenerator {
       });
       // Allow content on the right side if we wanted, but for now just move down
       this.currentY = (this.doc as any).lastAutoTable.finalY + 8;
+    }
+  }
+
+  private async addComparativeVisualAnalysis(sessions: ComparativeReportData['sessions']) {
+    this.checkPageBreak(40);
+    this.doc.setFontSize(11);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(...this.primaryColor);
+    this.doc.text('EVOLUCIÓN COMPARATIVA', this.margin, this.currentY);
+    this.currentY += 6;
+
+    // Sort sessions by date
+    const sortedSessions = [...sessions].sort((a, b) => 
+        new Date(a.session.date).getTime() - new Date(b.session.date).getTime()
+    );
+
+    // Columns config
+    const numSessions = sortedSessions.length;
+    // Limit to 3 for now to fit page width comfortably
+    const maxSessionsToShow = Math.min(numSessions, 3);
+    const spacing = 5;
+    const colWidth = (this.pageWidth - (this.margin * 2) - (spacing * (maxSessionsToShow - 1))) / maxSessionsToShow;
+
+    // Iterate by Eye Type (OI then OD)
+    const eyeTypes = ['OI', 'OD'] as const;
+
+    for (const eyeType of eyeTypes) {
+        this.checkPageBreak(80);
+        
+        // Eye Header
+        this.doc.setFontSize(10);
+        this.doc.setFont('helvetica', 'bold');
+        this.doc.setTextColor(...this.accentColor);
+        const eyeLabel = eyeType === 'OI' ? i18n.t('upload.eye.left') : i18n.t('upload.eye.right');
+        this.doc.text(eyeLabel, this.margin, this.currentY);
+        this.currentY += 5;
+
+        let maxRowHeight = 0;
+        let startX = this.margin;
+        const rowStartY = this.currentY;
+
+        for (let i = 0; i < maxSessionsToShow; i++) {
+            const sessionData = sortedSessions[i];
+            const images = sessionData.images.filter(img => img.eyeType === eyeType);
+            
+            // Session Header (Date)
+            this.doc.setFontSize(8);
+            this.doc.setFont('helvetica', 'bold');
+            this.doc.setTextColor(50, 50, 50);
+            const dateStr = new Date(sessionData.session.date).toLocaleDateString();
+            this.doc.text(dateStr, startX, rowStartY);
+
+             if (images.length > 0) {
+                // Take the first image for this eye type for the session
+                // In reality there should be only one per eye per session usually, or we take the first.
+                const img = images[0];
+                const h = await this.drawImageInGrid(img, sessionData.detections, startX, rowStartY + 4, colWidth, false);
+                maxRowHeight = Math.max(maxRowHeight, h);
+            } else {
+                 this.doc.setFontSize(8);
+                 this.doc.setFont('helvetica', 'italic');
+                 this.doc.setTextColor(150, 150, 150);
+                 this.doc.text('Sin imagen', startX, rowStartY + 10);
+                 maxRowHeight = Math.max(maxRowHeight, 20);
+            }
+
+            startX += colWidth + spacing;
+        }
+
+        this.currentY += maxRowHeight + 10;
     }
   }
 
@@ -488,22 +681,19 @@ export class ReportGenerator {
     
     this.currentY += boxHeight + 15;
 
-    // Signature Area - 2 columns
+    // Signature Area
     this.checkPageBreak(30);
     
     const sigY = this.currentY + 10;
-    const sigWidth = 60;
+    const sigWidth = 80;
+    const centerX = (this.pageWidth / 2) - (sigWidth / 2);
 
-    // Specialist
+    // Specialist (Centered)
     this.doc.setDrawColor(200, 200, 200);
-    this.doc.line(this.margin, sigY, this.margin + sigWidth, sigY);
+    this.doc.line(centerX, sigY, centerX + sigWidth, sigY);
     this.doc.setFontSize(8);
     this.doc.setTextColor(100, 100, 100);
-    this.doc.text(this.config.signature.text, this.margin, sigY + 4);
-
-    // Institution
-    this.doc.line(this.pageWidth - this.margin - sigWidth, sigY, this.pageWidth - this.margin, sigY);
-    this.doc.text('Sello Institucional', this.pageWidth - this.margin - sigWidth, sigY + 4);
+    this.doc.text(this.config.signature.text, centerX, sigY + 4, { align: 'left' });
     
     this.currentY = sigY + 20;
   }
@@ -547,6 +737,24 @@ export class ReportGenerator {
       img.src = src;
     });
   }
+
+  private async imageToDataUrl(src: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { reject(new Error('Canvas context not found')); return; }
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
 }
 
 export async function generateSessionReport(
@@ -584,11 +792,10 @@ export async function generateSessionReport(
   const pdfBlob = await generator.generateReport(reportData, type);
 
   // Save report metadata
-  // Check if a report for this session already exists, if so update/add logic as needed.
-  // For now we just add a new record as per original code.
   await db.reports.add({
     sessionId,
     type,
+    reportCategory: 'single',
     pdfBlob,
     evaluatorNotes: evaluatorNotes || '',
     areasOfInterest: [],
@@ -596,4 +803,100 @@ export async function generateSessionReport(
   });
 
   return pdfBlob;
+}
+
+export async function generateCombinedReport(
+  sessionIds: number[],
+  type: ReportType,
+  evaluatorNotes?: string
+): Promise<Blob> {
+  if (sessionIds.length === 0) throw new Error('No sessions selected');
+
+  // Fetch all sessions
+  const sessions = await db.sessions.where('id').anyOf(sessionIds).toArray();
+  if (sessions.length === 0) throw new Error('Sessions not found');
+
+  const patient = await db.patients.get(sessions[0].patientId);
+  if (!patient) throw new Error('Patient not found');
+
+  // Gather data for each session
+  const sessionsData = await Promise.all(sessions.map(async (session) => {
+      const images = await db.images.where('sessionId').equals(session.id!).toArray();
+      const allDetections = await Promise.all(
+        images.map((img) => db.detections.where('imageId').equals(img.id!).toArray())
+      );
+      const detections = allDetections.flat();
+
+      const allSegmentations = await Promise.all(
+        images.map((img) => db.segmentations.where('imageId').equals(img.id!).toArray())
+      );
+      const segmentations = allSegmentations.flat();
+
+      return {
+          session,
+          images,
+          detections,
+          segmentations
+      };
+  }));
+
+  const reportData: ComparativeReportData = {
+    patient,
+    sessions: sessionsData,
+    evaluatorNotes,
+  };
+
+  const generator = new ReportGenerator();
+  const pdfBlob = await generator.generateComparativeReport(reportData, type);
+
+  // Save report metadata (associate with the LATEST session for now, or create a new way to store combined reports)
+  // For simplicity, we store it against the most recent session
+  const sortedSessions = sessions.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const latestSessionId = sortedSessions[0].id!;
+
+  await db.reports.add({
+    sessionId: latestSessionId,
+    type,
+    reportCategory: 'combined',
+    pdfBlob,
+    evaluatorNotes: evaluatorNotes || '',
+    areasOfInterest: [],
+    generatedAt: new Date(),
+  });
+
+  return pdfBlob;
+}
+
+export async function regenerateSessionReportBlob(
+  sessionId: number,
+  evaluatorNotes?: string
+): Promise<Blob> {
+  const session = await db.sessions.get(sessionId);
+  if (!session) throw new Error('Session not found');
+
+  const patient = await db.patients.get(session.patientId);
+  if (!patient) throw new Error('Patient not found');
+
+  const images = await db.images.where('sessionId').equals(sessionId).toArray();
+  const allDetections = await Promise.all(
+    images.map((img) => db.detections.where('imageId').equals(img.id!).toArray())
+  );
+  const detections = allDetections.flat();
+
+  const allSegmentations = await Promise.all(
+    images.map((img) => db.segmentations.where('imageId').equals(img.id!).toArray())
+  );
+  const segmentations = allSegmentations.flat();
+
+  const reportData: ReportData = {
+    patient,
+    session,
+    images,
+    detections,
+    segmentations,
+    evaluatorNotes,
+  };
+
+  const generator = new ReportGenerator();
+  return await generator.generateReport(reportData, 'preview');
 }

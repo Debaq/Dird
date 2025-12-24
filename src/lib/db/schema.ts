@@ -45,6 +45,7 @@ export interface Image {
   width: number;
   height: number;
   uploadedAt: Date;
+  contributionStatus?: 'none' | 'pending' | 'submitted';
 }
 
 export interface Detection {
@@ -83,6 +84,7 @@ export interface Report {
   id?: number;
   sessionId: number;
   type: 'preview' | 'final';
+  reportCategory: 'single' | 'combined';
   pdfBlob: Blob;
   evaluatorNotes: string;
   areasOfInterest: Array<{
@@ -160,6 +162,34 @@ export class DirdDatabase extends Dexie {
         patient.hta = false;
         patient.dlp = false;
         patient.medications = [];
+      });
+    });
+    this.version(6).stores({
+      patients: '++id, patientId, name, status, createdAt',
+      sessions: '++id, patientId, name, sessionNumber, date, locked',
+      images: '++id, sessionId, eyeType, uploadedAt',
+      detections: '++id, imageId, type, class, visible',
+      segmentations: '++id, imageId, type, class, visible',
+      reports: '++id, sessionId, type, reportCategory, generatedAt'
+    }).upgrade(tx => {
+      return tx.table('reports').toCollection().modify(report => {
+        if (report.reportCategory === undefined) {
+          report.reportCategory = 'single';
+        }
+      });
+    });
+    this.version(7).stores({
+      patients: '++id, patientId, name, status, createdAt',
+      sessions: '++id, patientId, name, sessionNumber, date, locked',
+      images: '++id, sessionId, eyeType, uploadedAt, contributionStatus', // Added contributionStatus
+      detections: '++id, imageId, type, class, visible',
+      segmentations: '++id, imageId, type, class, visible',
+      reports: '++id, sessionId, type, reportCategory, generatedAt'
+    }).upgrade(tx => {
+      return tx.table('images').toCollection().modify(image => {
+        if (!image.contributionStatus) {
+          image.contributionStatus = 'none';
+        }
       });
     });
   }

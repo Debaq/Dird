@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowLeft, Plus, Calendar, Lock, Unlock, Download, Pencil, Trash2, Copy } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar, Lock, Unlock, Download, Pencil, Trash2, Copy, ArrowRightLeft, CheckSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SessionForm from './SessionForm';
@@ -21,6 +21,10 @@ const PatientDetails: React.FC = () => {
   const [isDuplicating, setIsDuplicating] = useState<number | null>(null);
   const [sessionToEdit, setSessionToEdit] = useState<Session | undefined>();
   const [patientToEdit, setPatientToEdit] = useState<Patient | undefined>();
+
+  // Comparison Mode State
+  const [isCompareMode, setIsCompareMode] = useState(false);
+  const [selectedSessions, setSelectedSessions] = useState<number[]>([]);
 
   const patient = useLiveQuery(
     () => (patientId ? db.patients.get(parseInt(patientId)) : undefined),
@@ -86,6 +90,19 @@ const PatientDetails: React.FC = () => {
         setIsDuplicating(null);
       }
     }
+  };
+
+  const toggleSessionSelection = (sessionId: number) => {
+    if (selectedSessions.includes(sessionId)) {
+      setSelectedSessions(selectedSessions.filter(id => id !== sessionId));
+    } else {
+      setSelectedSessions([...selectedSessions, sessionId]);
+    }
+  };
+
+  const handleCompareSessions = () => {
+    if (selectedSessions.length < 2) return;
+    navigate(`/patients/${patientId}/compare?sessions=${selectedSessions.join(',')}`);
   };
 
   if (!patient) {
@@ -199,16 +216,32 @@ const PatientDetails: React.FC = () => {
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <h2 className="text-2xl font-bold text-coal-800">{t('sessions.title')}</h2>
-          <Button
-            onClick={() => {
-              setSessionToEdit(undefined);
-              setShowSessionForm(true);
-            }}
-            className="flex items-center justify-center space-x-2 w-full sm:w-auto"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t('sessions.create')}</span>
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+             <Button
+                variant={isCompareMode ? "secondary" : "outline"}
+                onClick={() => {
+                    setIsCompareMode(!isCompareMode);
+                    setSelectedSessions([]);
+                }}
+                className="flex items-center justify-center space-x-2 flex-1 sm:flex-none"
+             >
+                {isCompareMode ? <CheckSquare className="w-4 h-4 text-primary-600" /> : <ArrowRightLeft className="w-4 h-4" />}
+                <span>{isCompareMode ? t('ui.cancel') : t('sessions.compareTitle')}</span>
+             </Button>
+
+             {!isCompareMode && (
+                <Button
+                    onClick={() => {
+                    setSessionToEdit(undefined);
+                    setShowSessionForm(true);
+                    }}
+                    className="flex items-center justify-center space-x-2 flex-1 sm:flex-none"
+                >
+                    <Plus className="w-4 h-4" />
+                    <span>{t('sessions.create')}</span>
+                </Button>
+             )}
+          </div>
         </div>
 
         {sessions && sessions.length > 0 ? (
@@ -216,14 +249,29 @@ const PatientDetails: React.FC = () => {
             {sessions.map((session) => (
               <Card
                 key={session.id}
-                className="hover:shadow-strong transition-shadow"
+                className={`transition-shadow cursor-pointer ${
+                    isCompareMode && selectedSessions.includes(session.id!) 
+                        ? 'ring-2 ring-primary-500 bg-primary-50' 
+                        : 'hover:shadow-strong'
+                }`}
+                onClick={() => {
+                    if (isCompareMode) {
+                        toggleSessionSelection(session.id!);
+                    } else {
+                        navigate(`/patients/${patientId}/sessions/${session.id}`);
+                    }
+                }}
               >
                 <CardContent className="p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div
-                      className="flex items-center space-x-4 flex-grow cursor-pointer min-w-0"
-                      onClick={() => navigate(`/patients/${patientId}/sessions/${session.id}`)}
-                    >
+                    <div className="flex items-center space-x-4 flex-grow min-w-0">
+                      {isCompareMode && (
+                          <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${
+                              selectedSessions.includes(session.id!) ? 'bg-primary-600 border-primary-600' : 'border-smoke-400 bg-white'
+                          }`}>
+                              {selectedSessions.includes(session.id!) && <div className="w-2.5 h-2.5 bg-white rounded-sm" />}
+                          </div>
+                      )}
                       <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
                         <Calendar className="w-6 h-6 text-primary-600" />
                       </div>
@@ -251,37 +299,41 @@ const PatientDetails: React.FC = () => {
                             <Unlock className="w-4 h-4 mr-1" />
                             {t('sessions.status.active')}
                           </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            disabled={isDuplicating === session.id}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDuplicateSession(session.id!);
-                            }}
-                          >
-                            {isDuplicating === session.id ? <div className="w-4 h-4 rounded-full border-2 border-transparent border-t-primary-500 animate-spin" /> : <Copy className="w-4 h-4" />}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditSession(session);
-                            }}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteSession(session.id!);
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4 text-error-500" />
-                          </Button>
+                          {!isCompareMode && (
+                              <>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    disabled={isDuplicating === session.id}
+                                    onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDuplicateSession(session.id!);
+                                    }}
+                                >
+                                    {isDuplicating === session.id ? <div className="w-4 h-4 rounded-full border-2 border-transparent border-t-primary-500 animate-spin" /> : <Copy className="w-4 h-4" />}
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditSession(session);
+                                    }}
+                                >
+                                    <Pencil className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteSession(session.id!);
+                                    }}
+                                >
+                                    <Trash2 className="w-4 h-4 text-error-500" />
+                                </Button>
+                              </>
+                          )}
                         </>
                       )}
                     </div>
@@ -300,6 +352,20 @@ const PatientDetails: React.FC = () => {
           </Card>
         )}
       </div>
+
+      {/* Floating Action Button for Comparison */}
+      {isCompareMode && selectedSessions.length >= 2 && (
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+              <Button 
+                size="lg" 
+                className="shadow-strong rounded-full px-8 animate-in fade-in slide-in-from-bottom-4"
+                onClick={handleCompareSessions}
+              >
+                  {t('sessions.compareAction', { count: selectedSessions.length })}
+                  <ArrowRightLeft className="w-4 h-4 ml-2" />
+              </Button>
+          </div>
+      )}
 
       {/* Session Form Dialog */}
       <SessionForm

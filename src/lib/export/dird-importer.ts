@@ -160,6 +160,7 @@ export async function importDirdFile(file: File): Promise<ImportResult> {
           await db.reports.add({
             sessionId: sessionId as number,
             type: reportType as 'preview' | 'final',
+            reportCategory: 'single',
             pdfBlob: blob,
             evaluatorNotes: '',
             areasOfInterest: [],

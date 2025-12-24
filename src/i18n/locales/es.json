@@ -109,6 +109,7 @@
     "locked": "Sesión Bloqueada",
     "unlock": "Desbloquear",
     "compareTitle": "Comparación de Sesiones",
+    "compareAction": "Comparar ({{count}}) Sesiones",
     "notesTitle": "Notas de la Sesión",
     "galleryTitle": "Galería de Imágenes",
     "empty": "No hay sesiones registradas. Crea una para comenzar el análisis.",
@@ -156,7 +157,8 @@
     },
     "dropzone": "Arrastra archivos aquí o haz click para seleccionar",
     "accepted": "Formatos soportados: JPG, PNG",
-    "maxSize": "Tamaño máximo: 1MB"
+    "maxSize": "Tamaño máximo: 1MB",
+    "noImage": "Sin imagen"
   },
   "canvas": {
     "tools": {
@@ -183,6 +185,8 @@
     "title": "Análisis de Imagen",
     "detections": "Detecciones",
     "segmentations": "Segmentaciones",
+    "findingsFound": "{{count}} hallazgos detectados",
+    "noFindings": "Sin hallazgos",
     "classes": {
       "background": "Fondo",
       "optic_disc": "Disco Óptico",
@@ -218,6 +222,7 @@
     "finalize": "Finalizar y Cerrar Caso",
     "reportType": "Tipo de Reporte",
     "evaluatorNotes": "Notas del Evaluador (Opcional)",
+    "evaluatorNotesPlaceholder": "Agregar observaciones sobre la evolución del paciente...",
     "finalWarning": "Nota: El reporte final bloqueará la sesión y no se podrán añadir o eliminar imágenes ni análisis.",
     "status": {
       "preliminary": "VERSIÓN PRELIMINAR",
@@ -288,6 +293,19 @@
         "summary": "Resumen de Hallazgos",
         "gallery": "Galería de Imágenes",
         "evaluatorNotes": "Notas del Evaluador"
+      },
+      "patientDetails": {
+        "title": "Detalles del Paciente",
+        "name": "Nombre",
+        "id": "ID Paciente",
+        "age": "Edad",
+        "diabetes": "Diabetes",
+        "hta": "Hipertensión (HTA)",
+        "dlp": "Dislipidemia (DLP)",
+        "medications": "Medicamentos",
+        "otherConditions": "Otras Condiciones",
+        "sessionDate": "Fecha Sesión",
+        "sessionNotes": "Notas de Sesión"
       },
       "gallery": {
         "title": "Opciones de Galería",

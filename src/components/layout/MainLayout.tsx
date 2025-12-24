@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Users, Settings, FileText } from 'lucide-react';
+import { Users, Settings, FileText, Coffee, Star } from 'lucide-react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { cn } from '@/lib/utils';
 import { useConfigStore } from '@/stores/config-store';
+import { db } from '@/lib/db/schema';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -14,10 +16,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
   const { t } = useTranslation();
   const location = useLocation();
 
+  const pendingContributions = useLiveQuery(
+    () => db.images.where('contributionStatus').equals('pending').count()
+  );
+
   const navItems = [
     { path: '/patients', icon: Users, label: t('patients.title') },
     { path: '/reports', icon: FileText, label: 'Informes' },
     { path: '/settings', icon: Settings, label: t('settings.title') },
+    { path: '/contribute', icon: Coffee, label: t('contribution.title', 'Contribuir') },
   ];
 
   return (
@@ -61,13 +68,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname.startsWith(item.path);
+              const isContribute = item.path === '/contribute';
+              const showBadge = !!(isContribute && pendingContributions && pendingContributions > 0);
 
               return (
                 <Link
                   key={item.path}
                   to={item.path}
                   className={cn(
-                    'flex items-center space-x-2 px-4 py-3 border-b-2 transition-colors',
+                    'flex items-center space-x-2 px-4 py-3 border-b-2 transition-colors relative',
                     isActive
                       ? 'dark:border-blue-400 dark:text-blue-300'
                       : 'border-transparent text-smoke-600 hover:text-coal-800 hover:border-coal-300 dark:text-gray-200 dark:hover:text-gray-100 dark:hover:border-gray-600'
@@ -77,7 +86,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
                     color: isActive ? useConfigStore().config.appearance.primaryColor : undefined
                   }}
                 >
-                  <Icon className="w-4 h-4 dark:text-gray-200" />
+                  <div className="relative">
+                    <Icon className="w-4 h-4 dark:text-gray-200" />
+                    {showBadge && (
+                      <Star className="absolute -top-3 -right-3 w-4 h-4 text-amber-500 fill-amber-500 animate-pulse" />
+                    )}
+                  </div>
                   <span className="text-sm font-medium">{item.label}</span>
                 </Link>
               );
@@ -97,20 +111,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
       >
         {children}
       </main>
-
-      {/* Footer */}
-      <footer 
-        className={cn(
-          "bg-white border-t border-coal-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400",
-          fullScreenOnMobile ? "hidden lg:block" : ""
-        )}
-      >
-        <div className="container mx-auto px-4 py-4">
-          <p className="text-center text-sm text-smoke-500 dark:text-gray-400">
-            {t('app.name')} - Privacy-first medical imaging analysis
-          </p>
-        </div>
-      </footer>
     </div>
   );
 };

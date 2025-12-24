@@ -1,13 +1,204 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { FileText, Download, Calendar, Tag, ShieldCheck, Eye, Search, Filter, FileSearch } from 'lucide-react';
+import { FileText, Download, Calendar, Tag, ShieldCheck, Eye, Search, FileSearch, ArrowRight, User, CheckCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { db } from '@/lib/db/schema';
+import { useNavigate } from 'react-router-dom';
+import { db, Report } from '@/lib/db/schema';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import PDFViewerModal from './PDFViewerModal';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { regenerateSessionReportBlob } from '@/lib/pdf/report-generator';
+import { generateSessionReport, ReportGenerator, type ReportType } from '@/lib/pdf/report-generator';
+
+interface ReportItemProps {
+  report: Report;
+  onView: (blob: Blob, type: string, date: Date, sessionId: number, notes?: string) => void;
+  onDownload: (blob: Blob, type: string, date: Date, sessionId: number, notes?: string) => void;
+}
+
+const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [isFinalizing, setIsFinalizing] = useState(false);
+
+  const session = useLiveQuery(() => db.sessions.get(report.sessionId));
+  const patient = useLiveQuery(() => session ? db.patients.get(session.patientId) : undefined, [session]);
+
+  if (!session || !patient) return null;
+
+  const handleFinalizeReport = async () => {
+    if (!report.id) return;
+
+    if (!confirm('¿Está seguro de que desea finalizar este informe? Esta acción convertirá este informe en final y bloqueará la sesión permanentemente.')) {
+      return;
+    }
+
+    setIsFinalizing(true);
+    try {
+      // Get the session and patient data for the report
+      const session = await db.sessions.get(report.sessionId);
+      if (!session) {
+        throw new Error('Session not found');
+      }
+
+      const patient = await db.patients.get(session.patientId);
+      if (!patient) {
+        throw new Error('Patient not found');
+      }
+
+      const images = await db.images.where('sessionId').equals(report.sessionId).toArray();
+      const allDetections = await Promise.all(
+        images.map((img) => db.detections.where('imageId').equals(img.id!).toArray())
+      );
+      const detections = allDetections.flat();
+
+      const allSegmentations = await Promise.all(
+        images.map((img) => db.segmentations.where('imageId').equals(img.id!).toArray())
+      );
+      const segmentations = allSegmentations.flat();
+
+      // Generate the final report PDF
+      const reportData = {
+        patient,
+        session,
+        images,
+        detections,
+        segmentations,
+        evaluatorNotes: report.evaluatorNotes,
+      };
+
+      const generator = new ReportGenerator();
+      const finalPdfBlob = await generator.generateReport(reportData, 'final');
+
+      // Update the existing report to be final (this will overwrite the PDF blob)
+      await db.reports.update(report.id, {
+        type: 'final',
+        pdfBlob: finalPdfBlob,
+        generatedAt: new Date(),
+      });
+
+      // Lock the session
+      await db.sessions.update(report.sessionId, {
+        locked: true,
+        lockedAt: new Date(),
+      });
+
+      // Download the final report automatically
+      const url = URL.createObjectURL(finalPdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `DIRD_Reporte_FINAL_${report.sessionId}_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      alert('Informe finalizado y descargado correctamente. La sesión ha sido bloqueada.');
+    } catch (error) {
+      console.error('Error finalizing report:', error);
+      alert('Error al finalizar el informe');
+    } finally {
+      setIsFinalizing(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-coal-200 rounded-xl hover:shadow-md transition-all group">
+      <div className="flex-1 mb-3 sm:mb-0">
+        <div className="flex items-center gap-4">
+          <div className={`p-2 rounded-lg ${
+            report.type === 'final' ? 'bg-accent-50 text-accent-600' : 'bg-primary-50 text-primary-600'
+          }`}>
+            {report.type === 'final' ? <ShieldCheck className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className="font-bold text-coal-800 flex items-center gap-2">
+                <User className="w-4 h-4 text-coal-400" />
+                {patient.name}
+              </span>
+              <Badge variant={report.type === 'final' ? 'default' : 'secondary'} className="text-[10px] uppercase">
+                {report.type === 'final' ? t('reports.status.final') : t('reports.status.preliminary')}
+              </Badge>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs text-smoke-500">
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                {new Date(session.date).toLocaleDateString()}
+              </span>
+              <span className="hidden sm:inline">•</span>
+              <span>
+                Sesión #{session.sessionNumber}
+              </span>
+              {report.evaluatorNotes && (
+                <>
+                  <span className="hidden sm:inline">•</span>
+                  <span className="flex items-center gap-1 truncate max-w-[200px] sm:max-w-none" title={report.evaluatorNotes}>
+                    <Tag className="w-3.5 h-3.5" />
+                    {report.evaluatorNotes}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-2 flex-wrap sm:flex-nowrap">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full sm:w-auto hover:bg-coal-50 hover:text-coal-900 border-coal-200"
+          onClick={() => navigate(`/patients/${patient.id}/sessions/${session.id}`)}
+        >
+          <ArrowRight className="w-4 h-4 mr-2" />
+          Ir a Análisis
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto"
+          onClick={() => onView(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
+        >
+          <Eye className="w-4 h-4 mr-2" />
+          Ver PDF
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto"
+          onClick={() => onDownload(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Descargar
+        </Button>
+        {report.type === 'preview' && !session.locked && (
+          <Button
+            variant="default"
+            size="sm"
+            className="hover:bg-accent-600 hover:text-white w-full sm:w-auto bg-accent-500 text-white"
+            onClick={handleFinalizeReport}
+            disabled={isFinalizing}
+          >
+            {isFinalizing ? (
+              <>
+                <CheckCircle className="w-4 h-4 mr-2 animate-spin" />
+                Finalizando...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Finalizar
+              </>
+            )}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+};
 
 interface GlobalReportsListProps {}
 
@@ -15,9 +206,9 @@ const GlobalReportsList: React.FC<GlobalReportsListProps> = () => {
   const { t } = useTranslation();
   const [selectedReport, setSelectedReport] = useState<{ blob: Blob; title: string } | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<'all' | 'preview' | 'final'>('final'); // Changed default to 'final'
   const [filterDate, setFilterDate] = useState<string>('');
-  const [showPreliminary, setShowPreliminary] = useState(false); // New state for preliminary reports toggle
+  const [filterCategory, setFilterCategory] = useState<'all' | 'single' | 'combined'>('all');
+  const [showPreliminary, setShowPreliminary] = useState(false);
 
   const allReports = useLiveQuery(() => 
     db.reports.orderBy('generatedAt').reverse().toArray()
@@ -27,33 +218,41 @@ const GlobalReportsList: React.FC<GlobalReportsListProps> = () => {
     const matchesSearch = report.evaluatorNotes?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           report.type.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Handle type filtering considering the preliminary reports toggle
-    let matchesType = false;
+    // Handle type filtering (Drafts vs Finals)
+    const matchesStatus = showPreliminary ? true : report.type === 'final';
 
-    if (filterType === 'all') {
-      // If showing all types, check if preliminary reports should be shown
-      matchesType = showPreliminary ? true : report.type !== 'preview';
-    } else if (filterType === 'final') {
-      // If filtering for final reports only
-      matchesType = report.type === 'final';
-    } else if (filterType === 'preview') {
-      // If filtering for preview reports only, check if preliminary reports should be shown
-      matchesType = showPreliminary && report.type === 'preview';
-    }
+    // Handle category filtering (Single vs Combined)
+    const matchesCategory = filterCategory === 'all' ? true : report.reportCategory === filterCategory;
 
     const matchesDate = !filterDate ||
       new Date(report.generatedAt).toDateString() === new Date(filterDate).toDateString();
 
-    return matchesSearch && matchesType && matchesDate;
+    return matchesSearch && matchesStatus && matchesCategory && matchesDate;
   });
 
-  const handleViewPDF = (pdfBlob: Blob, type: string, date: Date, sessionId: number) => {
+  const handleViewPDF = async (pdfBlob: Blob, type: string, date: Date, sessionId: number, notes?: string) => {
+    let blobToUse = pdfBlob;
+    if (type === 'preview') {
+      try {
+        blobToUse = await regenerateSessionReportBlob(sessionId, notes);
+      } catch (error) {
+        console.error("Error regenerating preview report", error);
+      }
+    }
     const title = `DIRD_Reporte_${type.toUpperCase()}_Sesion_${sessionId}_${new Date(date).toISOString().split('T')[0]}.pdf`;
-    setSelectedReport({ blob: pdfBlob, title });
+    setSelectedReport({ blob: blobToUse, title });
   };
 
-  const handleDownload = (pdfBlob: Blob, type: string, date: Date, sessionId: number) => {
-    const url = URL.createObjectURL(pdfBlob);
+  const handleDownload = async (pdfBlob: Blob, type: string, date: Date, sessionId: number, notes?: string) => {
+    let blobToUse = pdfBlob;
+    if (type === 'preview') {
+      try {
+        blobToUse = await regenerateSessionReportBlob(sessionId, notes);
+      } catch (error) {
+         console.error("Error regenerating preview report", error);
+      }
+    }
+    const url = URL.createObjectURL(blobToUse);
     const a = document.createElement('a');
     a.href = url;
     a.download = `DIRD_Reporte_${type.toUpperCase()}_Sesion_${sessionId}_${new Date(date).toISOString().split('T')[0]}.pdf`;
@@ -101,13 +300,13 @@ const GlobalReportsList: React.FC<GlobalReportsListProps> = () => {
 
           <div className="flex gap-2 flex-wrap">
             <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value as 'all' | 'preview' | 'final')}
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value as 'all' | 'single' | 'combined')}
               className="border border-coal-200 rounded-lg px-3 py-2 text-sm bg-white"
             >
-              <option value="all">Todos los tipos</option>
-              <option value="preview">Borradores</option>
-              <option value="final">Finales</option>
+              <option value="all">Todas las categorías</option>
+              <option value="single">Sesiones únicas</option>
+              <option value="combined">Sesiones combinadas</option>
             </select>
 
             <input
@@ -140,66 +339,12 @@ const GlobalReportsList: React.FC<GlobalReportsListProps> = () => {
       {/* Reports List */}
       <div className="space-y-4">
         {filteredReports?.map((report) => (
-          <div
-            key={report.id}
-            className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-coal-200 rounded-xl hover:shadow-md transition-all group"
-          >
-            <div className="flex-1 mb-3 sm:mb-0">
-              <div className="flex items-center gap-4">
-                <div className={`p-2 rounded-lg ${
-                  report.type === 'final' ? 'bg-accent-50 text-accent-600' : 'bg-primary-50 text-primary-600'
-                }`}>
-                  {report.type === 'final' ? <ShieldCheck className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-coal-800">
-                      {report.type === 'final' ? t('reports.status.final') : t('reports.status.preliminary')}
-                    </span>
-                    <Badge variant={report.type === 'final' ? 'default' : 'secondary'} className="text-[10px] uppercase">
-                      {report.type}
-                    </Badge>
-                    <Badge variant="outline" className="text-[10px]">
-                      Sesión #{report.sessionId}
-                    </Badge>
-                  </div>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs text-smoke-500">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {new Date(report.generatedAt).toLocaleString()}
-                    </span>
-                    {report.evaluatorNotes && (
-                      <span className="flex items-center gap-1 truncate max-w-[200px] sm:max-w-none">
-                        <Tag className="w-3.5 h-3.5" />
-                        {report.evaluatorNotes}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto"
-                onClick={() => handleViewPDF(report.pdfBlob, report.type, report.generatedAt, report.sessionId)}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Ver PDF
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto"
-                onClick={() => handleDownload(report.pdfBlob, report.type, report.generatedAt, report.sessionId)}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Descargar
-              </Button>
-            </div>
-          </div>
+          <ReportItem 
+            key={report.id} 
+            report={report} 
+            onView={handleViewPDF}
+            onDownload={handleDownload}
+          />
         ))}
       </div>
 
@@ -211,11 +356,14 @@ const GlobalReportsList: React.FC<GlobalReportsListProps> = () => {
           pdfBlob={selectedReport.blob}
           title={selectedReport.title}
           onDownload={() => {
-            // Extract type and session from title (e.g., "DIRD_Reporte_FINAL_Sesion_123_2025-01-01.pdf")
-            const parts = selectedReport.title.split('_');
-            const type = parts[2].replace('.pdf', '').toLowerCase();
-            const sessionId = parseInt(parts[4]); // Assuming format is "Sesion_123"
-            handleDownload(selectedReport.blob, type, new Date(), sessionId);
+            const url = URL.createObjectURL(selectedReport.blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = selectedReport.title;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
           }}
         />
       )}

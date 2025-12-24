@@ -69,6 +69,17 @@ const DialogDescription = React.forwardRef<
 ));
 DialogDescription.displayName = 'DialogDescription';
 
+const DialogFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-4', className)}
+      {...props}
+    />
+  )
+);
+DialogFooter.displayName = 'DialogFooter';
+
 const DialogClose: React.FC<{ onClose: () => void }> = ({ onClose }) => (
   <button
     onClick={onClose}
@@ -79,4 +90,4 @@ const DialogClose: React.FC<{ onClose: () => void }> = ({ onClose }) => (
   </button>
 );
 
-export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose };
+export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose };

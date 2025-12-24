@@ -57,6 +57,18 @@ export interface ReportConfig {
     includeOriginal: boolean;
     includeAnnotated: boolean;
   };
+  patientInfoFields: {
+    name: boolean;
+    id: boolean;
+    age: boolean;
+    diabetes: boolean;
+    hta: boolean;
+    dlp: boolean;
+    medications: boolean;
+    otherConditions: boolean;
+    sessionDate: boolean;
+    sessionNotes: boolean;
+  };
   signature: {
     text: string;
   };
@@ -88,7 +100,7 @@ interface ConfigStore {
   resetConfig: () => void;
 }
 
-const DEFAULT_CONFIG: AppConfig = {
+export const DEFAULT_CONFIG: AppConfig = {
   name: 'DIRD',
   appearance: {
     primaryColor: '#20B5AE',
@@ -140,6 +152,18 @@ const DEFAULT_CONFIG: AppConfig = {
     gallery: {
       includeOriginal: false,
       includeAnnotated: true
+    },
+    patientInfoFields: {
+      name: true,
+      id: true,
+      age: true,
+      diabetes: true,
+      hta: true,
+      dlp: true,
+      medications: true,
+      otherConditions: true,
+      sessionDate: true,
+      sessionNotes: true
     },
     signature: {
       text: 'Firma del Especialista'
@@ -209,7 +233,26 @@ export const useConfigStore = create<ConfigStore>()(
       resetConfig: () => set({ config: DEFAULT_CONFIG })
     }),
     {
-      name: 'dird-config'
+      name: 'dird-config',
+      version: 2,
+      migrate: (persistedState: any, version) => {
+        if (version === 0) {
+          return {
+            ...persistedState,
+            report: DEFAULT_CONFIG.report,
+          };
+        }
+        if (version === 1) {
+          return {
+            ...persistedState,
+            report: {
+              ...persistedState.report,
+              patientInfoFields: DEFAULT_CONFIG.report.patientInfoFields
+            }
+          };
+        }
+        return persistedState;
+      },
     }
   )
 );

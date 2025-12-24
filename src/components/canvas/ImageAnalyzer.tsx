@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowLeft, Layers, Wrench, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Layers, Wrench, Coffee, Star, Heart } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import AnnotationCanvas from './AnnotationCanvas';
 import AdvancedLayerControls, { type CanvasLayer } from './AdvancedLayerControls';
 import ToolPanel, { type CanvasTool } from './ToolPanel';
@@ -55,12 +63,12 @@ const ImageAnalyzer: React.FC = () => {
   // Mobile UI state
   const [showMobileTools, setShowMobileTools] = useState(false);
   const [showMobileLayers, setShowMobileLayers] = useState(false);
-  const [isLandscape, setIsLandscape] = useState(false);
+  const [showContributionDialog, setShowContributionDialog] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     const checkOrientation = () => {
        const landscape = window.matchMedia("(orientation: landscape)").matches;
-       setIsLandscape(landscape);
        // Auto-collapse panels on landscape to prioritize image
        if (landscape) {
          setShowMobileTools(false);
@@ -102,6 +110,20 @@ const ImageAnalyzer: React.FC = () => {
     // useLiveQuery automáticamente detectará cambios en db.detections
   };
 
+  const handleMark = async () => {
+    if (!image) return;
+    await db.images.update(image.id!, { contributionStatus: 'pending' });
+    setShowContributionDialog(false);
+  };
+
+  const handleUnmark = async () => {
+    if (!image) return;
+    await db.images.update(image.id!, { contributionStatus: 'none' });
+    setShowContributionDialog(false);
+  };
+
+  const showContributionPrompt = (manualDetections.length > 0 || image?.contributionStatus === 'pending') && image?.contributionStatus !== 'submitted';
+
   if (!image) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -136,6 +158,39 @@ const ImageAnalyzer: React.FC = () => {
           </div>
         </div>
 
+        {/* Contribute Button in Header */}
+        {showContributionPrompt && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className={cn(
+              "ml-auto mr-2 flex-shrink-0 transition-all hover:scale-110",
+              image.contributionStatus === 'pending' 
+                ? "text-amber-500 hover:text-red-500 hover:bg-red-50" 
+                : "text-smoke-600 hover:text-amber-500 hover:bg-amber-50"
+            )}
+            title={image.contributionStatus === 'pending' ? 'Gestionar contribución' : 'Marcar para contribuir'}
+            onClick={() => setShowContributionDialog(true)}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            <div className="flex items-center gap-1.5">
+              {image.contributionStatus === 'pending' ? (
+                isHovered ? (
+                  <Heart className="w-6 h-6 fill-current animate-pulse" />
+                ) : (
+                  <Star className="w-6 h-6 fill-current animate-pulse" />
+                )
+              ) : (
+                <>
+                  <Star className="w-5 h-5 animate-pulse" />
+                  <Coffee className="w-5 h-5 animate-pulse" />
+                </>
+              )}
+            </div>
+          </Button>
+        )}
+
         {/* Mobile Toolbar Icons */}
         <div className="flex lg:hidden items-center space-x-1 ml-2 flex-shrink-0">
            <Button 
@@ -152,13 +207,16 @@ const ImageAnalyzer: React.FC = () => {
            <Button 
              variant={showMobileLayers ? "secondary" : "ghost"}
              size="icon"
-             className="w-8 h-8"
+             className="w-8 h-8 relative"
              onClick={() => {
                setShowMobileLayers(!showMobileLayers);
                if (!showMobileLayers) setShowMobileTools(false);
              }}
            >
-             <Layers className="w-4 h-4 text-coal-600 dark:text-gray-300" /> 
+             <Layers className="w-4 h-4 text-coal-600 dark:text-gray-300" />
+             {showContributionPrompt && (
+                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse" />
+             )}
            </Button>
         </div>
       </div>
@@ -171,8 +229,6 @@ const ImageAnalyzer: React.FC = () => {
                 activeTool={activeTool}
                 onToolChange={(tool) => {
                   setActiveTool(tool);
-                  // Optional: Close panel after selecting tool to save space? 
-                  // Let's keep it open for now as per "desplegable" request
                 }}
                 disabled={session?.locked}
               />
@@ -180,7 +236,7 @@ const ImageAnalyzer: React.FC = () => {
          )}
 
          {showMobileLayers && (
-           <div className="absolute top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg p-2 rounded-b-lg border-t border-coal-100 dark:border-gray-700 max-h-[50vh] overflow-y-auto">
+           <div className="absolute top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg p-2 rounded-b-lg border-t border-coal-100 dark:border-gray-700 max-h-[70vh] overflow-y-auto pb-20">
              <AdvancedLayerControls
                layers={layers}
                onLayerUpdate={handleLayerUpdate}
@@ -196,8 +252,8 @@ const ImageAnalyzer: React.FC = () => {
       <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6 flex-grow overflow-hidden relative">
         {/* Canvas Area */}
         <div className="lg:col-span-3 h-full w-full">
-          <Card className="h-full flex flex-col border-0 lg:border shadow-none lg:shadow-sm bg-transparent lg:bg-white lg:dark:bg-gray-800 rounded-none lg:rounded-lg">
-            <CardContent className="flex-grow p-0 lg:p-6 h-full relative">
+          <Card className="h-full flex flex-col border-0 lg:border shadow-none lg:shadow-sm bg-transparent lg:bg-white lg:dark:bg-gray-800 rounded-none lg:rounded-lg overflow-hidden">
+            <CardContent className="flex-grow p-0 h-full relative">
               <AnnotationCanvas
                 image={image}
                 detections={aiDetections.filter((d) => d.visible)}
@@ -227,6 +283,48 @@ const ImageAnalyzer: React.FC = () => {
           />
         </div>
       </div>
+
+      <Dialog open={showContributionDialog} onOpenChange={setShowContributionDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <Star className="w-5 h-5 fill-current" />
+              {t('contribution.title', 'Contribuir')}
+            </DialogTitle>
+            <DialogDescription className="text-base font-medium text-coal-800 dark:text-gray-100">
+              Contribuye con tu imagen y tus marcas para mejorar el modelo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+            <p className="text-sm text-smoke-600 dark:text-gray-300">
+              La contribución incluye la <strong>imagen original</strong> más las <strong>marcas de IA y manuales</strong>, con sus coordenadas diferenciadas y sus clases correspondientes.
+            </p>
+            <p className="text-sm text-smoke-600 dark:text-gray-300 italic">
+              Tus datos serán anonimizados (incluyendo la serialización del nombre de la imagen) antes del envío para garantizar la privacidad. Ve a la sección de "Contribuir" en el menú principal para finalizar el envío y aceptar los términos.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowContributionDialog(false)}>
+              Cancelar
+            </Button>
+            {image?.contributionStatus === 'pending' ? (
+              <Button 
+                variant="destructive"
+                onClick={handleUnmark}
+              >
+                No contribuir
+              </Button>
+            ) : (
+              <Button 
+                className="bg-amber-500 hover:bg-amber-600 text-white"
+                onClick={handleMark}
+              >
+                Marcar
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

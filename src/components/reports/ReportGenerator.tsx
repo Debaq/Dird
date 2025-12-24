@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Download, Lock, CheckCircle, AlertCircle } from 'lucide-react';
+import { FileText, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -53,6 +53,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         await db.reports.add({
           sessionId: sessionId,
           type: type,
+          reportCategory: 'single',
           pdfBlob: pdfBlob,
           evaluatorNotes: evaluatorNotes,
           areasOfInterest: [], // Initialize empty

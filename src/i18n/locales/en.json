@@ -110,6 +110,7 @@
     "locked": "Session Locked",
     "unlock": "Unlock",
     "compareTitle": "Session Comparison",
+    "compareAction": "Compare ({{count}}) Sessions",
     "notesTitle": "Session Notes",
     "galleryTitle": "Image Gallery",
     "empty": "No sessions registered. Create one to start analysis.",
@@ -157,7 +158,8 @@
     },
     "dropzone": "Drag files here or click to select",
     "accepted": "Supported formats: JPG, PNG",
-    "maxSize": "Max size: 1MB"
+    "maxSize": "Max size: 1MB",
+    "noImage": "No image"
   },
   "canvas": {
     "tools": {
@@ -184,6 +186,8 @@
     "title": "Image Analysis",
     "detections": "Detections",
     "segmentations": "Segmentations",
+    "findingsFound": "{{count}} findings detected",
+    "noFindings": "No findings",
     "classes": {
       "background": "Background",
       "optic_disc": "Optic Disc",
@@ -219,6 +223,7 @@
     "finalize": "Finalize and Close Case",
     "reportType": "Report Type",
     "evaluatorNotes": "Evaluator Notes (Optional)",
+    "evaluatorNotesPlaceholder": "Add observations about the patient's progress...",
     "finalWarning": "Note: The final report will lock the session and no more images or analyses can be added or removed.",
     "status": {
       "preliminary": "DRAFT VERSION",
@@ -289,6 +294,19 @@
         "summary": "Findings Summary",
         "gallery": "Image Gallery",
         "evaluatorNotes": "Evaluator Notes"
+      },
+      "patientDetails": {
+        "title": "Patient Details",
+        "name": "Name",
+        "id": "Patient ID",
+        "age": "Age",
+        "diabetes": "Diabetes",
+        "hta": "Hypertension",
+        "dlp": "Dyslipidemia",
+        "medications": "Medications",
+        "otherConditions": "Other Conditions",
+        "sessionDate": "Session Date",
+        "sessionNotes": "Session Notes"
       },
       "gallery": {
         "title": "Gallery Options",

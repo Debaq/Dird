@@ -15,6 +15,7 @@ import { db } from '@/lib/db/schema';
 import { exportSession, downloadDirdFile } from '@/lib/export/dird-exporter';
 import { inferenceService } from '@/lib/ai/inference-service';
 import { useImageUploader } from '@/hooks/useImageUploader';
+import { usePatientStore } from '@/stores/patient-store';
 
 
 const CompactUploader: React.FC<{ sessionId: number; onUploadComplete: () => void }> = ({ sessionId, onUploadComplete }) => {
@@ -45,7 +46,7 @@ const SessionView: React.FC = () => {
   const { patientId, sessionId } = useParams<{ patientId: string; sessionId: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('images');
+  const { sessionViewTab, setSessionViewTab } = usePatientStore();
   const [refreshKey, setRefreshKey] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -65,40 +66,6 @@ const SessionView: React.FC = () => {
     () => (sessionId ? db.images.where('sessionId').equals(parseInt(sessionId)).toArray() : []),
     [sessionId, refreshKey]
   );
-
-  // Verificar si existe un reporte para esta sesión
-  const reportCount = useLiveQuery(
-    () => (sessionId ? db.reports.where('sessionId').equals(parseInt(sessionId)).count() : Promise.resolve(0)),
-    [sessionId, refreshKey]
-  );
-
-  // Verificar si hay imágenes procesadas con AI (detecciones de tipo 'ai')
-  const aiDetectionsCount = useLiveQuery(async () => {
-    if (!sessionId || !images) return 0;
-    const imageIds = images.map(img => img.id).filter(id => id !== undefined) as number[];
-    if (imageIds.length === 0) return 0;
-
-    return await db.detections
-      .where('imageId')
-      .anyOf(imageIds)
-      .and(detection => detection.type === 'ai')
-      .count();
-  }, [sessionId, images, refreshKey]);
-
-  // Determinar la pestaña por defecto basada en el estado de la sesión
-  useEffect(() => {
-    let defaultTab = 'images';
-
-    if (images && images.length > 0) {
-      if (reportCount && reportCount > 0) {
-        defaultTab = 'report';
-      } else if (aiDetectionsCount && aiDetectionsCount > 0) {
-        defaultTab = 'analysis';
-      }
-    }
-
-    setActiveTab(defaultTab);
-  }, [images, reportCount, aiDetectionsCount]);
 
   const handleExportSession = async () => {
     if (!sessionId) return;
@@ -256,7 +223,7 @@ const SessionView: React.FC = () => {
           <ImageDropzone sessionId={parseInt(sessionId!)} onUploadComplete={handleUploadComplete} />
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={sessionViewTab} onValueChange={setSessionViewTab} className="w-full">
         <TabsList className="w-full justify-start overflow-x-auto scrollbar-hide h-auto p-1 gap-1">
           <TabsTrigger value="images" className="flex-shrink-0">{t('sessions.tabs.images', { count: images?.length || 0 })}</TabsTrigger>
           <TabsTrigger value="analysis" className="flex-shrink-0">{t('sessions.tabs.analysis')}</TabsTrigger>

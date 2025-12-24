@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar, User, FileText, Pencil, Trash2, Archive, ArchiveRestore } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import type { Patient } from '@/lib/db/schema';
+
+export type PatientReportStatus = 'no_report' | 'preliminary' | 'final' | 'none';
 
 interface PatientCardProps {
   patient: Patient;
   sessionCount?: number;
+  reportStatus?: PatientReportStatus;
   onEdit: (patient: Patient) => void;
   onDelete: (patientId: number) => void;
   onArchive: (patient: Patient) => void;
@@ -16,6 +20,7 @@ interface PatientCardProps {
 const PatientCard: React.FC<PatientCardProps> = ({
   patient,
   sessionCount = 0,
+  reportStatus = 'none',
   onEdit,
   onDelete,
   onArchive,
@@ -54,7 +59,19 @@ const PatientCard: React.FC<PatientCardProps> = ({
                 <User className="w-6 h-6 text-primary-600" />
               </div>
               <div>
-                <CardTitle className="text-lg">{patient.name}</CardTitle>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <CardTitle className="text-lg">{patient.name}</CardTitle>
+                  {reportStatus === 'no_report' && (
+                    <Badge variant="secondary" className="text-[10px] bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200">
+                      Sin Informe
+                    </Badge>
+                  )}
+                  {reportStatus === 'preliminary' && (
+                    <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200">
+                      Borrador
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-sm text-smoke-500">ID: {patient.patientId}</p>
               </div>
             </div>

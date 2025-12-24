@@ -3,13 +3,22 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { useConfigStore } from '@/stores/config-store';
+import { useConfigStore, DEFAULT_CONFIG } from '@/stores/config-store';
 import { FileText, Image as ImageIcon, Layout, PenTool, Palette } from 'lucide-react';
 
 export default function ReportSettings() {
   const { t } = useTranslation();
   const { config, updateReportConfig } = useConfigStore();
-  const { report } = config;
+  
+  // Ensure we have all fields even if local config is stale
+  const report = {
+    ...DEFAULT_CONFIG.report,
+    ...(config.report || {}),
+    patientInfoFields: {
+      ...DEFAULT_CONFIG.report.patientInfoFields,
+      ...(config.report?.patientInfoFields || {})
+    }
+  };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -217,6 +226,118 @@ export default function ReportSettings() {
           </div>
         </div>
       </Card>
+
+      {/* Patient Details Options */}
+      {report.sections.patientInfo && report.patientInfoFields && (
+        <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
+           <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4 flex items-center gap-2">
+            <Layout className="h-5 w-5" />
+            {t('settings.report.patientDetails.title')}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="field-name"
+                checked={report.patientInfoFields.name}
+                onCheckedChange={(checked) => updateReportConfig({ 
+                  patientInfoFields: { ...report.patientInfoFields, name: checked } 
+                })}
+              />
+              <Label htmlFor="field-name" className="dark:text-dark-text">{t('settings.report.patientDetails.name')}</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="field-id"
+                checked={report.patientInfoFields.id}
+                onCheckedChange={(checked) => updateReportConfig({ 
+                  patientInfoFields: { ...report.patientInfoFields, id: checked } 
+                })}
+              />
+              <Label htmlFor="field-id" className="dark:text-dark-text">{t('settings.report.patientDetails.id')}</Label>
+            </div>
+             <div className="flex items-center space-x-2">
+              <Switch
+                id="field-age"
+                checked={report.patientInfoFields.age}
+                onCheckedChange={(checked) => updateReportConfig({ 
+                  patientInfoFields: { ...report.patientInfoFields, age: checked } 
+                })}
+              />
+              <Label htmlFor="field-age" className="dark:text-dark-text">{t('settings.report.patientDetails.age')}</Label>
+            </div>
+             <div className="flex items-center space-x-2">
+              <Switch
+                id="field-diabetes"
+                checked={report.patientInfoFields.diabetes}
+                onCheckedChange={(checked) => updateReportConfig({ 
+                  patientInfoFields: { ...report.patientInfoFields, diabetes: checked } 
+                })}
+              />
+              <Label htmlFor="field-diabetes" className="dark:text-dark-text">{t('settings.report.patientDetails.diabetes')}</Label>
+            </div>
+             <div className="flex items-center space-x-2">
+              <Switch
+                id="field-hta"
+                checked={report.patientInfoFields.hta}
+                onCheckedChange={(checked) => updateReportConfig({ 
+                  patientInfoFields: { ...report.patientInfoFields, hta: checked } 
+                })}
+              />
+              <Label htmlFor="field-hta" className="dark:text-dark-text">{t('settings.report.patientDetails.hta')}</Label>
+            </div>
+             <div className="flex items-center space-x-2">
+              <Switch
+                id="field-dlp"
+                checked={report.patientInfoFields.dlp}
+                onCheckedChange={(checked) => updateReportConfig({ 
+                  patientInfoFields: { ...report.patientInfoFields, dlp: checked } 
+                })}
+              />
+              <Label htmlFor="field-dlp" className="dark:text-dark-text">{t('settings.report.patientDetails.dlp')}</Label>
+            </div>
+             <div className="flex items-center space-x-2">
+              <Switch
+                id="field-medications"
+                checked={report.patientInfoFields.medications}
+                onCheckedChange={(checked) => updateReportConfig({ 
+                  patientInfoFields: { ...report.patientInfoFields, medications: checked } 
+                })}
+              />
+              <Label htmlFor="field-medications" className="dark:text-dark-text">{t('settings.report.patientDetails.medications')}</Label>
+            </div>
+             <div className="flex items-center space-x-2">
+              <Switch
+                id="field-otherConditions"
+                checked={report.patientInfoFields.otherConditions}
+                onCheckedChange={(checked) => updateReportConfig({ 
+                  patientInfoFields: { ...report.patientInfoFields, otherConditions: checked } 
+                })}
+              />
+              <Label htmlFor="field-otherConditions" className="dark:text-dark-text">{t('settings.report.patientDetails.otherConditions')}</Label>
+            </div>
+             <div className="flex items-center space-x-2">
+              <Switch
+                id="field-sessionDate"
+                checked={report.patientInfoFields.sessionDate}
+                onCheckedChange={(checked) => updateReportConfig({ 
+                  patientInfoFields: { ...report.patientInfoFields, sessionDate: checked } 
+                })}
+              />
+              <Label htmlFor="field-sessionDate" className="dark:text-dark-text">{t('settings.report.patientDetails.sessionDate')}</Label>
+            </div>
+             <div className="flex items-center space-x-2">
+              <Switch
+                id="field-sessionNotes"
+                checked={report.patientInfoFields.sessionNotes}
+                onCheckedChange={(checked) => updateReportConfig({ 
+                  patientInfoFields: { ...report.patientInfoFields, sessionNotes: checked } 
+                })}
+              />
+              <Label htmlFor="field-sessionNotes" className="dark:text-dark-text">{t('settings.report.patientDetails.sessionNotes')}</Label>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Gallery Options */}
       {report.sections.gallery && (
