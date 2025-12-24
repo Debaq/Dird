@@ -30,6 +30,7 @@ export interface AppearanceConfig {
   logo: string;
   theme: 'light' | 'dark' | 'auto';
   language: string;
+  rainbowMode: boolean;
 }
 
 export interface ProcessingConfig {
@@ -108,7 +109,8 @@ export const DEFAULT_CONFIG: AppConfig = {
     primaryColor: '#20B5AE',
     logo: 'logo-default.svg',
     theme: 'light',
-    language: 'es'
+    language: 'es',
+    rainbowMode: true
   },
   modelSource: 'local',
   localModels: {
@@ -238,24 +240,38 @@ export const useConfigStore = create<ConfigStore>()(
     }),
     {
       name: 'dird-config',
-      version: 2,
+      version: 3,
       migrate: (persistedState: any, version) => {
-        if (version === 0) {
-          return {
-            ...persistedState,
+        let state = persistedState;
+
+        if (version < 1) {
+          state = {
+            ...state,
             report: DEFAULT_CONFIG.report,
           };
         }
-        if (version === 1) {
-          return {
-            ...persistedState,
+        
+        if (version < 2) {
+          state = {
+            ...state,
             report: {
-              ...persistedState.report,
+              ...state.report,
               patientInfoFields: DEFAULT_CONFIG.report.patientInfoFields
             }
           };
         }
-        return persistedState;
+
+        if (version < 3) {
+           state = {
+             ...state,
+             appearance: {
+               ...state.appearance,
+               rainbowMode: true
+             }
+           };
+        }
+
+        return state;
       },
     }
   )

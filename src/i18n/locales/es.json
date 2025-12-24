@@ -438,5 +438,33 @@
     "complete": "Procesamiento completado con éxito",
     "inProgress": "Procesando {{current}}/{{total}}...",
     "start": "Procesar con IA"
+  },
+  "contribution": {
+    "title": "Contribuir",
+    "description": "Ayuda a mejorar Dird con tu contribución",
+    "github": {
+      "title": "Repositorios",
+      "appDescription": "Aplicación principal",
+      "modelsDescription": "Modelos de IA"
+    },
+    "donation": {
+      "title": "Apóyanos con un café",
+      "description": "Tu apoyo nos ayuda a seguir mejorando Dird",
+      "button": "Comprar un café"
+    },
+    "feedback": {
+      "title": "Enviar Comentarios",
+      "component": "Componente",
+      "dirdApp": "Aplicación Dird",
+      "dirdModels": "Modelos Dird",
+      "selectComponent": "Selecciona un componente",
+      "comment": "Comentario",
+      "placeholder": "Escribe tu comentario o sugerencia aquí...",
+      "eyePhotos": "Fotos de Ojo (Opcional)",
+      "eyePhotosDescription": "Sube fotos de ojos con blanqueamiento o marcas para ayudar a mejorar los modelos",
+      "clickToUpload": "Haz clic para subir imágenes",
+      "supportedFormats": "Formatos soportados: JPG, PNG, WEBP",
+      "submit": "Enviar Comentario"
+    }
   }
 }

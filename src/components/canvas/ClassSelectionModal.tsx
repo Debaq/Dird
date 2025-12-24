@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectOption } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { classManager, ClassDefinition } from '@/lib/classes/class-manager';
+import { getClassName } from '@/lib/ai/class-translations';
 
 interface ClassSelectionModalProps {
   open: boolean;
@@ -20,6 +22,7 @@ const ClassSelectionModal: React.FC<ClassSelectionModalProps> = ({
   onClassSelected,
   onCancel,
 }) => {
+  const { i18n } = useTranslation();
   const [availableClasses, setAvailableClasses] = useState<ClassDefinition[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [customClassName, setCustomClassName] = useState<string>('');
@@ -51,7 +54,7 @@ const ClassSelectionModal: React.FC<ClassSelectionModalProps> = ({
   const getSelectOptions = (): SelectOption[] => {
     const options: SelectOption[] = availableClasses.map(cls => ({
       value: cls.name,
-      label: `${cls.name} ${cls.source === 'ai' ? '(IA)' : '(Custom)'}`
+      label: `${getClassName(cls.name, i18n.language)} ${cls.source === 'ai' ? '(IA)' : '(Custom)'}`
     }));
 
     // Agregar opción "Otra..."

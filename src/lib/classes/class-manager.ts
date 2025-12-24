@@ -1,12 +1,14 @@
 import { db } from '@/lib/db/schema';
 import { getClassColor, type ModelMetadata } from '@/lib/ai/model-metadata';
 import { getClassName } from '@/lib/ai/class-translations';
+import { useConfigStore } from '@/stores/config-store';
 
 export interface ClassDefinition {
   name: string;
-  displayName: string; // Nombre traducido para mostrar al usuario
+  displayName: string; // Nombre traducido para mostrar al usuario (efectivo)
+  customName: string | null; // Nombre personalizado si existe
   source: 'ai' | 'custom';
-  color: string;
+  color: string; // Color asignado
   usageCount: number;
 }
 
@@ -29,7 +31,8 @@ const CUSTOM_COLOR_PALETTE = [
   '#F8B195', '#C06C84', '#6C5B7B', '#355C7D'
 ];
 
-const STORAGE_KEY = 'dird-class-colors';
+const STORAGE_KEY_COLORS = 'dird-class-colors';
+const STORAGE_KEY_TRANSLATIONS = 'dird-class-translations';
 
 export class ClassManager {
   /**
@@ -100,9 +103,10 @@ export class ClassManager {
     // Crear definiciones de clases AI con nombres traducidos
     const aiClassDefs: ClassDefinition[] = aiClasses.map(name => ({
       name,
-      displayName: getClassName(name), // Usa el idioma actual del sistema
+      displayName: getClassName(name), // Usa el idioma actual del sistema o custom
+      customName: this.getCustomTranslation(name),
       source: 'ai' as const,
-      color: getClassColor(name),
+      color: this.getAssignedColor(name),
       usageCount: usageCount.get(name) || 0,
     }));
 
@@ -111,9 +115,10 @@ export class ClassManager {
       .sort((a, b) => a.localeCompare(b))
       .map(name => ({
         name,
-        displayName: name, // Las clases custom se muestran con su nombre original
+        displayName: this.getCustomTranslation(name) || name, // Las clases custom se muestran con su nombre original o custom
+        customName: this.getCustomTranslation(name),
         source: 'custom' as const,
-        color: this.getColorForClass(name),
+        color: this.getAssignedColor(name),
         usageCount: usageCount.get(name) || 0,
       }));
 
@@ -122,24 +127,39 @@ export class ClassManager {
   }
 
   /**
-   * Obtiene el color para una clase específica
-   * Primero busca en AI classes, luego en localStorage, finalmente genera uno nuevo
+   * Obtiene el color EFECTIVO para una clase (considerando Rainbow Mode)
+   * Usado para renderizar
    */
   getColorForClass(className: string): string {
-    const aiClasses = this.getAIClasses();
-
-    // Si es clase AI, usar color predefinido
-    if (aiClasses.includes(className)) {
-      return getClassColor(className);
+    const { appearance } = useConfigStore.getState().config;
+    
+    // Si Rainbow Mode está desactivado, retornar color principal
+    if (!appearance.rainbowMode) {
+      return appearance.primaryColor;
     }
 
-    // Buscar en localStorage
+    return this.getAssignedColor(className);
+  }
+
+  /**
+   * Obtiene el color ASIGNADO para una clase
+   * (Ignora Rainbow Mode, devuelve el color específico de la clase)
+   */
+  getAssignedColor(className: string): string {
+    const aiClasses = this.getAIClasses();
+
+    // Buscar en localStorage primero (prioridad sobre defaults)
     const storedColor = this.getStoredColor(className);
     if (storedColor) {
       return storedColor;
     }
 
-    // Generar y guardar color nuevo
+    // Si es clase AI y no tiene override, usar color predefinido
+    if (aiClasses.includes(className)) {
+      return getClassColor(className);
+    }
+
+    // Generar y guardar color nuevo si no existe
     const newColor = this.generateColorForClass(className);
     this.saveColorPreference(className, newColor);
     return newColor;
@@ -164,10 +184,10 @@ export class ClassManager {
    */
   saveColorPreference(className: string, color: string): void {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(STORAGE_KEY_COLORS);
       const colors = stored ? JSON.parse(stored) : {};
       colors[className] = color;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(colors));
+      localStorage.setItem(STORAGE_KEY_COLORS, JSON.stringify(colors));
     } catch (error) {
       console.error('Error al guardar preferencia de color:', error);
     }
@@ -178,12 +198,45 @@ export class ClassManager {
    */
   private getStoredColor(className: string): string | null {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(STORAGE_KEY_COLORS);
       if (!stored) return null;
       const colors = JSON.parse(stored);
       return colors[className] || null;
     } catch (error) {
       console.error('Error al leer preferencias de color:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Guarda una traducción personalizada para una clase
+   */
+  saveCustomTranslation(className: string, translation: string): void {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_TRANSLATIONS);
+      const translations = stored ? JSON.parse(stored) : {};
+      if (translation && translation.trim() !== '') {
+        translations[className] = translation.trim();
+      } else {
+        delete translations[className];
+      }
+      localStorage.setItem(STORAGE_KEY_TRANSLATIONS, JSON.stringify(translations));
+    } catch (error) {
+      console.error('Error al guardar traducción:', error);
+    }
+  }
+
+  /**
+   * Obtiene la traducción personalizada para una clase
+   */
+  getCustomTranslation(className: string): string | null {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_TRANSLATIONS);
+      if (!stored) return null;
+      const translations = JSON.parse(stored);
+      return translations[className] || null;
+    } catch (error) {
+      console.error('Error al leer traducción:', error);
       return null;
     }
   }

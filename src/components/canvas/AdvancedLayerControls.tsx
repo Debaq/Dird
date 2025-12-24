@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Lock, Unlock, Tag, Edit3, Trash2, ArrowUpDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  Eye, EyeOff, Lock, Unlock, Tag, Edit3, Trash2, ArrowUpDown
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { db, type Detection } from '@/lib/db/schema';
 import { Button } from '@/components/ui/button';
-import { classManager, type ClassDefinition } from '@/lib/classes/class-manager';
-import { Select } from '@/components/ui/select';
+import { classManager } from '@/lib/classes/class-manager';
 import { getClassName } from '@/lib/ai/class-translations';
+import ClassSelectionModal from './ClassSelectionModal';
 
 export interface CanvasLayer {
   id: string;
@@ -33,26 +35,10 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
   manualDetections,
   onDetectionsUpdate,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [expandedLayers, setExpandedLayers] = useState<Record<string, boolean>>({});
-  const [classDefinitions, setClassDefinitions] = useState<ClassDefinition[]>([]);
-  const [loadingClasses, setLoadingClasses] = useState<boolean>(true);
-
-  useEffect(() => {
-    const loadClassDefinitions = async () => {
-      try {
-        const definitions = await classManager.getAllClasses();
-        setClassDefinitions(definitions);
-        setLoadingClasses(false);
-      } catch (error) {
-        console.error('Error loading class definitions:', error);
-        setClassDefinitions([]);
-        setLoadingClasses(false);
-      }
-    };
-
-    loadClassDefinitions();
-  }, []);
+  const [classModalOpen, setClassModalOpen] = useState(false);
+  const [editingDetection, setEditingDetection] = useState<Detection | null>(null);
 
   const toggleLayerExpansion = (layerId: string) => {
     setExpandedLayers(prev => ({
@@ -102,17 +88,17 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
     }
   };
 
-  const handleConvertToManual = async (detection: Detection) => {
-    try {
-      // Convertir detección AI a manual
-      await db.detections.update(detection.id!, {
-        type: 'manual',
-        customLabel: detection.class, // Guardar la clase original
-      });
-      onDetectionsUpdate();
-    } catch (error) {
-      console.error('Error converting detection to manual:', error);
+  const handleEditClick = (detection: Detection) => {
+    setEditingDetection(detection);
+    setClassModalOpen(true);
+  };
+
+  const handleClassModalConfirm = (newClass: string) => {
+    if (editingDetection) {
+      handleEditDetectionClass(editingDetection, newClass);
     }
+    setClassModalOpen(false);
+    setEditingDetection(null);
   };
 
   return (
@@ -243,7 +229,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                               className="w-3 h-3 rounded-full mr-2"
                               style={{ backgroundColor: classManager.getColorForClass(detection.class) }}
                             />
-                            <span className="font-medium">{getClassName(detection.class)}</span>
+                            <span className="font-medium">{getClassName(detection.class, i18n.language)}</span>
                             {detection.confidence && (
                               <span className="text-smoke-500 ml-2">
                                 {Math.round(detection.confidence * 100)}%
@@ -252,24 +238,15 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                           </div>
                           
                           <div className="flex items-center space-x-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Select
-                              value={detection.class}
-                              onValueChange={(newClass) => handleEditDetectionClass(detection, newClass)}
-                              options={classDefinitions.map(cls => ({ value: cls.name, label: cls.displayName }))}
-                              className="h-8 lg:h-6 w-[100px] text-xs p-1"
-                              disabled={loadingClasses}
-                            />
-                            {layer.id === 'detections-ai' && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleConvertToManual(detection)}
-                                title="Convertir a manual"
-                                className="h-8 lg:h-6 px-2"
-                              >
-                                <Edit3 className="w-3 h-3" />
-                              </Button>
-                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditClick(detection)}
+                              title={layer.id === 'detections-ai' ? "Convertir a manual / Editar" : "Editar clase"}
+                              className="h-8 lg:h-6 px-2"
+                            >
+                              <Edit3 className="w-3 h-3" />
+                            </Button>
                             <Button
                               size="sm"
                               variant="destructive"
@@ -289,6 +266,17 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
             );
           })}
       </div>
+      
+      <ClassSelectionModal
+        open={classModalOpen}
+        onOpenChange={setClassModalOpen}
+        onClassSelected={handleClassModalConfirm}
+        onCancel={() => {
+          setClassModalOpen(false);
+          setEditingDetection(null);
+        }}
+        imageId={0}
+      />
     </div>
   );
 };

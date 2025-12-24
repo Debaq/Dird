@@ -5,6 +5,7 @@
  */
 
 import i18n from '@/i18n/config';
+import { classManager } from '@/lib/classes/class-manager';
 
 /**
  * Obtiene la traducción de una clase según el idioma actual
@@ -13,6 +14,14 @@ import i18n from '@/i18n/config';
  * @returns Nombre traducido de la clase
  */
 export function getClassName(classId: string, language?: string): string {
+  // 1. Revisar si hay una traducción personalizada definida por el usuario
+  // (Solo si no estamos forzando un idioma específico, o si el idioma coincide con el actual)
+  // Nota: Las traducciones personalizadas son agnósticas del idioma por ahora (solo un campo de texto)
+  const customTranslation = classManager.getCustomTranslation(classId);
+  if (customTranslation) {
+    return customTranslation;
+  }
+
   const lang = language || i18n.language;
 
   // Intentar obtener la traducción del namespace 'classes'

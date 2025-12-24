@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-import { Download, Trash2, RefreshCw, CheckCircle, Info } from 'lucide-react';
+import { Download, Trash2, RefreshCw, CheckCircle, Info, Settings2 } from 'lucide-react';
 import { modelDownloader, formatBytes, type AvailableModel } from '@/lib/ai/model-downloader';
 import { inferenceService } from '@/lib/ai/inference-service';
 import { useConfigStore } from '@/stores/config-store';
 import type { ModelMetadata } from '@/lib/ai/model-metadata';
 import ModelInfoModal from './ModelInfoModal';
+import ClassManagementModal from './ClassManagementModal';
 
 const ModelSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -24,6 +25,7 @@ const ModelSettings: React.FC = () => {
   const [loadingModels, setLoadingModels] = useState(false);
   const [detectionMetadata, setDetectionMetadata] = useState<ModelMetadata | null>(null);
   const [showModelInfo, setShowModelInfo] = useState(false);
+  const [showClassManager, setShowClassManager] = useState(false);
 
   const { config, updateLocalModels } = useConfigStore();
 
@@ -311,14 +313,25 @@ const ModelSettings: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     {isDetectionCached && detectionMetadata && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowModelInfo(true)}
-                        className="h-8 px-2"
-                      >
-                        <Info className="w-4 h-4" />
-                      </Button>
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowClassManager(true)}
+                          className="h-8 px-2"
+                          title={t('settings.classes.manage') || "Gestionar Clases"}
+                        >
+                          <Settings2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowModelInfo(true)}
+                          className="h-8 px-2"
+                        >
+                          <Info className="w-4 h-4" />
+                        </Button>
+                      </>
                     )}
                     {isDetectionCached ? (
                       <Badge variant="default" className="flex items-center gap-1">
@@ -443,6 +456,11 @@ const ModelSettings: React.FC = () => {
         open={showModelInfo}
         onOpenChange={setShowModelInfo}
         metadata={detectionMetadata}
+      />
+
+      <ClassManagementModal
+        open={showClassManager}
+        onOpenChange={setShowClassManager}
       />
     </div>
   );

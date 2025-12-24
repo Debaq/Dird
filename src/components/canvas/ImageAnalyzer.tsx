@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowLeft, Layers, Wrench, Coffee, Star, Heart } from 'lucide-react';
+import { ArrowLeft, Layers, Wrench, Coffee, Star, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -59,12 +59,13 @@ const ImageAnalyzer: React.FC = () => {
   const { t } = useTranslation();
   const [layers, setLayers] = useState<CanvasLayer[]>(DEFAULT_LAYERS);
   const [activeTool, setActiveTool] = useState<CanvasTool>('select');
-  
+
   // Mobile UI state
   const [showMobileTools, setShowMobileTools] = useState(false);
   const [showMobileLayers, setShowMobileLayers] = useState(false);
   const [showContributionDialog, setShowContributionDialog] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+
 
   useEffect(() => {
     const checkOrientation = () => {
@@ -90,6 +91,33 @@ const ImageAnalyzer: React.FC = () => {
     () => (sessionId ? db.sessions.get(parseInt(sessionId)) : undefined),
     [sessionId]
   );
+
+  const sessionImages = useLiveQuery(
+    () => (sessionId ? db.images.where('sessionId').equals(parseInt(sessionId)).toArray() : []),
+    [sessionId]
+  );
+
+  const currentImageIdInt = imageId ? parseInt(imageId) : -1;
+  const sortedImages = sessionImages ? sessionImages.sort((a, b) => a.id! - b.id!) : [];
+  const currentIndex = sortedImages.findIndex(img => img.id === currentImageIdInt);
+
+  const handleNavigation = (targetId: number) => {
+    navigate(`/patients/${patientId}/sessions/${sessionId}/images/${targetId}`);
+  };
+
+  const handlePrevImage = () => {
+    if (sortedImages.length <= 1) return;
+    const prevIndex = (currentIndex - 1 + sortedImages.length) % sortedImages.length;
+    const prevId = sortedImages[prevIndex].id;
+    if (prevId) handleNavigation(prevId);
+  };
+
+  const handleNextImage = () => {
+    if (sortedImages.length <= 1) return;
+    const nextIndex = (currentIndex + 1) % sortedImages.length;
+    const nextId = sortedImages[nextIndex].id;
+    if (nextId) handleNavigation(nextId);
+  };
 
   const allDetections = useLiveQuery(
     () => (imageId ? db.detections.where('imageId').equals(parseInt(imageId)).toArray() : []),
@@ -253,7 +281,7 @@ const ImageAnalyzer: React.FC = () => {
         {/* Canvas Area */}
         <div className="lg:col-span-3 h-full w-full">
           <Card className="h-full flex flex-col border-0 lg:border shadow-none lg:shadow-sm bg-transparent lg:bg-white lg:dark:bg-gray-800 rounded-none lg:rounded-lg overflow-hidden">
-            <CardContent className="flex-grow p-0 h-full relative">
+            <CardContent className="flex-grow p-0 h-full relative group">
               <AnnotationCanvas
                 image={image}
                 detections={aiDetections.filter((d) => d.visible)}
@@ -262,6 +290,30 @@ const ImageAnalyzer: React.FC = () => {
                 layers={layers}
                 onAnnotationAdded={handleAnnotationAdded}
               />
+
+              {sortedImages.length > 1 && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/50 dark:bg-black/50 hover:bg-white/80 dark:hover:bg-black/80 rounded-full w-10 h-10 backdrop-blur-sm z-10 shadow-sm border border-black/5 dark:border-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                    onClick={handlePrevImage}
+                    title="Imagen anterior"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-coal-800 dark:text-white" />
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/50 dark:bg-black/50 hover:bg-white/80 dark:hover:bg-black/80 rounded-full w-10 h-10 backdrop-blur-sm z-10 shadow-sm border border-black/5 dark:border-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                    onClick={handleNextImage}
+                    title="Siguiente imagen"
+                  >
+                    <ChevronRight className="w-6 h-6 text-coal-800 dark:text-white" />
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>

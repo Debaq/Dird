@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Stage, Layer, Image as KonvaImage, Rect, Group, Text } from 'react-konva';
 import { RotateCcw, RotateCw } from 'lucide-react';
 import type { Image } from '@/lib/db/schema';
@@ -8,6 +9,7 @@ import { db } from '@/lib/db/schema';
 import { classManager } from '@/lib/classes/class-manager';
 import ClassSelectionModal from './ClassSelectionModal';
 import { getClassName } from '@/lib/ai/class-translations';
+import { useConfigStore } from '@/stores/config-store';
 
 interface AnnotationCanvasProps {
   image: Image;
@@ -26,6 +28,16 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   layers = [],
   onAnnotationAdded,
 }) => {
+  const { i18n } = useTranslation();
+  const { config } = useConfigStore();
+  const rainbowMode = config.appearance.rainbowMode; // Subscribe to rainbow mode changes
+
+  // Key único para forzar re-mount cuando cambian detecciones o rainbow mode
+  const [canvasKey, setCanvasKey] = useState(0);
+
+  // CRÍTICO: Solo mostrar detecciones cuando todo esté listo
+  const [isCanvasReady, setIsCanvasReady] = useState(false);
+
   // Obtener configuración de capas
   const aiDetectionsLayer = layers.find(l => l.id === 'detections-ai');
   const manualAnnotationsLayer = layers.find(l => l.id === 'manual-annotations');
@@ -46,13 +58,23 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
   // Load image
   useEffect(() => {
+    console.log('📸 Iniciando carga de imagen...');
+    setIsCanvasReady(false); // Reset cuando cambia la imagen
+
     const img = new window.Image();
     const url = URL.createObjectURL(image.originalBlob);
 
     img.onload = () => {
+      console.log('📸 Imagen cargada, configurando canvas...');
       setKonvaImage(img);
       calculateScale(img.width, img.height);
       URL.revokeObjectURL(url);
+
+      // Dar un pequeño delay para que Konva termine de renderizar
+      setTimeout(() => {
+        console.log('✅ Canvas listo para recibir detecciones');
+        setIsCanvasReady(true);
+      }, 100);
     };
 
     img.src = url;
@@ -147,19 +169,37 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       return;
     }
 
-    if (activeTool === 'pan' || activeTool === 'select' || activeTool === 'zoom') {
+    if (activeTool === 'pan' || activeTool === 'zoom') {
       setIsPanning(true);
       return;
     }
 
     if (activeTool === 'bbox' || activeTool === 'circle') {
+      // Don't start drawing if clicking on a shape (detection/annotation)
+      // Only allow drawing on the background image or Stage itself
+      const targetName = e.target.getClassName();
+      if (targetName !== 'Image' && targetName !== 'Stage') {
+        return;
+      }
+
       const stage = stageRef.current;
       if (!stage) return;
 
       const pos = stage.getPointerPosition();
-      // Adjust for stage transformations and image offset
-      const x = ((pos.x - stagePos.x) / stageScale - imageOffset.x) / scale;
-      const y = ((pos.y - stagePos.y) / stageScale - imageOffset.y) / scale;
+      if (!pos) return;
+
+      // Improved coordinate calculation
+      // First, remove stage position offset
+      const relativeX = pos.x - stagePos.x;
+      const relativeY = pos.y - stagePos.y;
+
+      // Then divide by stage scale to get canvas coordinates
+      const canvasX = relativeX / stageScale;
+      const canvasY = relativeY / stageScale;
+
+      // Finally, subtract image offset and divide by image scale to get image coordinates
+      const x = (canvasX - imageOffset.x) / scale;
+      const y = (canvasY - imageOffset.y) / scale;
 
       setIsDrawing(true);
       setNewAnnotation({
@@ -179,9 +219,15 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     if (!stage) return;
 
     const pos = stage.getPointerPosition();
-    // Adjust for stage transformations and image offset
-    const x = ((pos.x - stagePos.x) / stageScale - imageOffset.x) / scale;
-    const y = ((pos.y - stagePos.y) / stageScale - imageOffset.y) / scale;
+    if (!pos) return;
+
+    // Improved coordinate calculation (same as handleMouseDown)
+    const relativeX = pos.x - stagePos.x;
+    const relativeY = pos.y - stagePos.y;
+    const canvasX = relativeX / stageScale;
+    const canvasY = relativeY / stageScale;
+    const x = (canvasX - imageOffset.x) / scale;
+    const y = (canvasY - imageOffset.y) / scale;
 
     setNewAnnotation({
       ...newAnnotation,
@@ -191,7 +237,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   };
 
   const handleMouseUp = () => {
-    if (isDrawing && newAnnotation) {
+    if (isDrawing && newAnnotation && konvaImage) {
       // Normalizar coordenadas para que width y height sean siempre positivos
       const normalizedBbox = {
         x: newAnnotation.width < 0 ? newAnnotation.x + newAnnotation.width : newAnnotation.x,
@@ -200,13 +246,24 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         height: Math.abs(newAnnotation.height),
       };
 
+      // Validate bounds - ensure annotation is within image
+      const clampedBbox = {
+        x: Math.max(0, Math.min(normalizedBbox.x, konvaImage.width)),
+        y: Math.max(0, Math.min(normalizedBbox.y, konvaImage.height)),
+        width: Math.min(normalizedBbox.width, konvaImage.width - normalizedBbox.x),
+        height: Math.min(normalizedBbox.height, konvaImage.height - normalizedBbox.y),
+      };
+
+      // Minimum size threshold adjusted for zoom level (smaller threshold when zoomed in)
+      const minSize = 5 / stageScale;
+
       // Only save if the annotation has some size
-      if (normalizedBbox.width > 5 && normalizedBbox.height > 5) {
+      if (clampedBbox.width > minSize && clampedBbox.height > minSize) {
         // En lugar de guardar directamente, guardar como pendiente y abrir modal
-        setPendingAnnotation({ 
-          ...newAnnotation, 
-          ...normalizedBbox,
-          id: Date.now() 
+        setPendingAnnotation({
+          ...newAnnotation,
+          ...clampedBbox,
+          id: Date.now()
         });
         setIsClassModalOpen(true);
       }
@@ -218,6 +275,21 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
   // Estado para rastrear la detección sobre la que está el mouse
   const [hoveredDetectionId, setHoveredDetectionId] = useState<number | null>(null);
+
+  // Forzar re-mount completo cuando cambian las detecciones o rainbow mode (solo si canvas está listo)
+  useEffect(() => {
+    if (isCanvasReady) {
+      console.log('🔄 Detecciones o configuración cambiaron, forzando re-mount.');
+      setCanvasKey(prev => prev + 1);
+    }
+  }, [detections.length, isCanvasReady, rainbowMode]);
+
+  // Forzar re-draw cuando cambia el hover
+  useEffect(() => {
+    if (stageRef.current) {
+      stageRef.current.batchDraw();
+    }
+  }, [hoveredDetectionId]);
 
   // Estado para el historial de deshacer/rehacer
   const [detectionHistory] = useState<any[]>([]);
@@ -334,6 +406,8 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         return 'crosshair';
       case 'eraser':
         return 'not-allowed';
+      case 'select':
+        return 'pointer';
       default:
         return 'default';
     }
@@ -376,6 +450,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         style={{ cursor: getCursor() }}
       >
         <Stage
+          key={`canvas-${canvasKey}`}
           ref={stageRef}
           width={stageSize.width}
           height={stageSize.height}
@@ -385,7 +460,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           y={stagePos.y}
           onWheel={handleWheel}
           onDragEnd={handleDragEnd}
-          draggable={activeTool === 'pan' || activeTool === 'select' || isPanning}
+          draggable={activeTool === 'pan' || isPanning}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -405,10 +480,23 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
         {/* AI Detections Layer */}
         <Layer
+          name="ai-detections-layer"
           opacity={aiDetectionsLayer?.opacity ?? 1}
           visible={aiDetectionsLayer?.visible ?? true}
+          listening={true}
         >
-          {detections.length === 0 && (
+          {!isCanvasReady && (
+            <Text
+              x={imageOffset.x + 20}
+              y={imageOffset.y + 20}
+              text="Cargando detecciones..."
+              fontSize={14}
+              fill="#20B5AE"
+              padding={8}
+              listening={false}
+            />
+          )}
+          {isCanvasReady && detections.length === 0 && (
             <Text
               x={imageOffset.x + 20}
               y={imageOffset.y + 20}
@@ -419,9 +507,9 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
               listening={false}
             />
           )}
-          {detections.map((detection, idx) => {
+          {isCanvasReady && detections.map((detection, idx) => {
             // Calcular ancho del label basado en el texto
-            const translatedClass = getClassName(detection.class);
+            const translatedClass = getClassName(detection.class, i18n.language);
             const labelText = `${translatedClass} ${Math.round((detection.confidence || 0) * 100)}%`;
             const labelFontSize = 10;
             const labelPadding = 6;
@@ -431,6 +519,9 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
             // Verificar si esta detección está siendo hover
             const isHovered = detection.id === hoveredDetectionId;
+            
+            // Obtener color efectivo (respetando rainbow mode y configuraciones)
+            const detectionColor = classManager.getColorForClass(detection.class);
 
             return (
               <Group key={`detection-${detection.id || idx}`}>
@@ -439,15 +530,22 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                   y={detection.bbox.y * scale + imageOffset.y}
                   width={detection.bbox.width * scale}
                   height={detection.bbox.height * scale}
-                  fill="transparent"
-                  stroke={isHovered ? "#FFD700" : "#20B5AE"}
+                  fill={`${detectionColor}1A`} // 10% opacity
+                  stroke={isHovered ? "#FFD700" : detectionColor}
                   strokeWidth={isHovered ? 3 : 1.5}
                   dash={isHovered ? [] : [8, 4]}
-                  hitStrokeWidth={15}
-                  listening={true}
-                  onMouseEnter={() => detection.id && setHoveredDetectionId(detection.id)}
-                  onMouseLeave={() => setHoveredDetectionId(null)}
+                  hitStrokeWidth={10}
+                  perfectDrawEnabled={false}
+                  onMouseEnter={() => {
+                    console.log('🟦 HOVER ENTER - Detection ID:', detection.id, 'Class:', detection.class);
+                    if (detection.id) setHoveredDetectionId(detection.id);
+                  }}
+                  onMouseLeave={() => {
+                    console.log('🟦 HOVER LEAVE - Detection ID:', detection.id);
+                    setHoveredDetectionId(null);
+                  }}
                   onClick={(e) => {
+                    console.log('🟦 CLICK - Detection ID:', detection.id, 'Tool:', activeTool);
                     if (activeTool === 'eraser' && detection.id) {
                       e.cancelBubble = true;
                       db.detections.delete(detection.id).then(() => {
@@ -457,15 +555,14 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                   }}
                 />
                 {showLabels && (
-                  <>
+                  <Group listening={false}>
                     <Rect
                       x={detection.bbox.x * scale + imageOffset.x}
                       y={(detection.bbox.y - labelHeight - 2) * scale + imageOffset.y}
                       width={labelWidth}
                       height={labelHeight}
-                      fill={isHovered ? "#FFD700" : "#20B5AE"}
+                      fill={isHovered ? "#FFD700" : detectionColor}
                       cornerRadius={3}
-                      listening={false}
                     />
                     <Text
                       x={detection.bbox.x * scale + imageOffset.x + labelPadding}
@@ -474,9 +571,8 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                       fontSize={labelFontSize}
                       fill={isHovered ? "black" : "white"}
                       fontStyle="bold"
-                      listening={false}
                     />
-                  </>
+                  </Group>
                 )}
               </Group>
             );
@@ -485,20 +581,25 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
         {/* Manual Annotations Layer */}
         <Layer
+          name="manual-annotations-layer"
           opacity={manualAnnotationsLayer?.opacity ?? 1}
           visible={manualAnnotationsLayer?.visible ?? true}
+          listening={true}
         >
           {/* Saved annotations from database */}
-          {manualAnnotations?.map((annotation, idx) => {
+          {isCanvasReady && manualAnnotations?.map((annotation, idx) => {
             // Para detecciones manuales de la base de datos, usamos bbox
             const color = annotation.class
               ? classManager.getColorForClass(annotation.class)
               : '#FF6B6B'; // fallback color
 
+            // Obtener nombre traducido
+            const translatedClass = annotation.class ? getClassName(annotation.class, i18n.language) : '';
+
             // Calcular ancho del label basado en el texto
             const labelFontSize = 10;
             const labelPadding = 6;
-            const labelWidth = annotation.class ? annotation.class.length * (labelFontSize * 0.6) + labelPadding * 2 : 0;
+            const labelWidth = translatedClass ? translatedClass.length * (labelFontSize * 0.6) + labelPadding * 2 : 0;
             const labelHeight = 16;
             const showLabels = manualAnnotationsLayer?.showLabels ?? true;
 
@@ -516,15 +617,22 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                     y={annotation.bbox.y * scale + imageOffset.y}
                     width={annotation.bbox.width * scale}
                     height={annotation.bbox.height * scale}
-                    fill="transparent"
+                    fill={`${color}20`}
                     stroke={hoverColor}
                     strokeWidth={isHovered ? 3 : 1}
                     strokeDash={isHovered ? [] : [4, 2]}
-                    hitStrokeWidth={15}
-                    listening={true}
-                    onMouseEnter={() => annotation.id && setHoveredDetectionId(annotation.id)}
-                    onMouseLeave={() => setHoveredDetectionId(null)}
+                    hitStrokeWidth={10}
+                    perfectDrawEnabled={false}
+                    onMouseEnter={() => {
+                      console.log('🟧 HOVER ENTER - Manual ID:', annotation.id, 'Class:', annotation.class);
+                      if (annotation.id) setHoveredDetectionId(annotation.id);
+                    }}
+                    onMouseLeave={() => {
+                      console.log('🟧 HOVER LEAVE - Manual ID:', annotation.id);
+                      setHoveredDetectionId(null);
+                    }}
                     onClick={(e) => {
+                      console.log('🟧 CLICK - Manual ID:', annotation.id, 'Tool:', activeTool);
                       if (activeTool === 'eraser' && annotation.id) {
                         e.cancelBubble = true;
                         db.detections.delete(annotation.id).then(() => {
@@ -535,7 +643,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                   />
                   {/* Label con nombre de clase */}
                   {annotation.class && showLabels && (
-                    <>
+                    <Group listening={false}>
                       <Rect
                         x={annotation.bbox.x * scale + imageOffset.x}
                         y={(annotation.bbox.y - labelHeight - 2) * scale + imageOffset.y}
@@ -543,18 +651,16 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                         height={labelHeight}
                         fill={hoverColor}
                         cornerRadius={3}
-                        listening={false}
                       />
                       <Text
                         x={annotation.bbox.x * scale + imageOffset.x + labelPadding}
                         y={(annotation.bbox.y - labelHeight) * scale + imageOffset.y}
-                        text={annotation.class}
+                        text={translatedClass}
                         fontSize={labelFontSize}
                         fill={isHovered ? "black" : "white"}
                         fontStyle="bold"
-                        listening={false}
                       />
-                    </>
+                    </Group>
                   )}
                 </Group>
               );

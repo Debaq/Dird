@@ -5,6 +5,7 @@ import type { Session, Patient, Image, Detection, Segmentation } from '@/lib/db/
 import { db } from '@/lib/db/schema';
 import { useConfigStore, DEFAULT_CONFIG } from '@/stores/config-store';
 import { getAssetPath } from '@/utils/assets';
+import { classManager } from '@/lib/classes/class-manager';
 
 // Helper to convert hex to rgb
 const hexToRgb = (hex: string): [number, number, number] => {
@@ -607,7 +608,10 @@ export class ReportGenerator {
         ctx.textBaseline = 'bottom';
 
         imgDetections.forEach(det => {
-          const color = det.type === 'manual' ? '#D87A1A' : '#20B5AE'; // Accent or Primary
+          // Obtener color de la clase (respetando rainbow mode y settings)
+          const color = det.type === 'manual' 
+            ? classManager.getColorForClass(det.class) // Manual usa su propio color si hay, o fallback
+            : classManager.getColorForClass(det.class); // AI usa el color configurado
           
           ctx.strokeStyle = color;
           ctx.lineWidth = lineWidth;
