@@ -7,6 +7,7 @@ import type { CanvasLayer } from './LayerControls';
 import { db } from '@/lib/db/schema';
 import { classManager } from '@/lib/classes/class-manager';
 import ClassSelectionModal from './ClassSelectionModal';
+import { getClassName } from '@/lib/ai/class-translations';
 
 interface AnnotationCanvasProps {
   image: Image;
@@ -420,7 +421,8 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           )}
           {detections.map((detection, idx) => {
             // Calcular ancho del label basado en el texto
-            const labelText = `${detection.class} ${Math.round((detection.confidence || 0) * 100)}%`;
+            const translatedClass = getClassName(detection.class);
+            const labelText = `${translatedClass} ${Math.round((detection.confidence || 0) * 100)}%`;
             const labelFontSize = 10;
             const labelPadding = 6;
             const labelWidth = labelText.length * (labelFontSize * 0.6) + labelPadding * 2;

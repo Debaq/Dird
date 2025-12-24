@@ -238,11 +238,11 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                           className="p-2 bg-coal-50 rounded text-xs flex items-center justify-between group"
                         >
                           <div className="flex items-center">
-                            <div 
-                              className="w-3 h-3 rounded-full mr-2" 
+                            <div
+                              className="w-3 h-3 rounded-full mr-2"
                               style={{ backgroundColor: classManager.getColorForClass(detection.class) }}
                             />
-                            <span className="font-medium">{detection.class}</span>
+                            <span className="font-medium">{getClassName(detection.class)}</span>
                             {detection.confidence && (
                               <span className="text-smoke-500 ml-2">
                                 {Math.round(detection.confidence * 100)}%
@@ -254,7 +254,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                             <Select
                               value={detection.class}
                               onValueChange={(newClass) => handleEditDetectionClass(detection, newClass)}
-                              options={classDefinitions.map(cls => ({ value: cls.name, label: cls.name }))}
+                              options={classDefinitions.map(cls => ({ value: cls.name, label: cls.displayName }))}
                               className="h-8 lg:h-6 w-[100px] text-xs p-1"
                               disabled={loadingClasses}
                             />
