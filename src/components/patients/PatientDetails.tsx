@@ -294,24 +294,26 @@ const PatientDetails: React.FC = () => {
                           {t('sessions.locked')}
                         </span>
                       ) : (
-                        <>
-                          <span className="flex items-center text-sm text-smoke-500 mr-2">
-                            <Unlock className="w-4 h-4 mr-1" />
-                            {t('sessions.status.active')}
-                          </span>
-                          {!isCompareMode && (
+                        <span className="flex items-center text-sm text-smoke-500 mr-2">
+                          <Unlock className="w-4 h-4 mr-1" />
+                          {t('sessions.status.active')}
+                        </span>
+                      )}
+                      {!isCompareMode && (
+                          <>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                disabled={isDuplicating === session.id}
+                                onClick={(e) => {
+                                e.stopPropagation();
+                                handleDuplicateSession(session.id!);
+                                }}
+                            >
+                                {isDuplicating === session.id ? <div className="w-4 h-4 rounded-full border-2 border-transparent border-t-primary-500 animate-spin" /> : <Copy className="w-4 h-4" />}
+                            </Button>
+                            {!session.locked && ( // Solo mostrar editar y eliminar si no está bloqueado
                               <>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    disabled={isDuplicating === session.id}
-                                    onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDuplicateSession(session.id!);
-                                    }}
-                                >
-                                    {isDuplicating === session.id ? <div className="w-4 h-4 rounded-full border-2 border-transparent border-t-primary-500 animate-spin" /> : <Copy className="w-4 h-4" />}
-                                </Button>
                                 <Button
                                     variant="ghost"
                                     size="icon"
@@ -333,8 +335,8 @@ const PatientDetails: React.FC = () => {
                                     <Trash2 className="w-4 h-4 text-error-500" />
                                 </Button>
                               </>
-                          )}
-                        </>
+                            )}
+                          </>
                       )}
                     </div>
                   </div>

@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logo.svg', 'locales/**/*.json'],
+      includeAssets: ['logo.svg', 'logo-default.svg', 'locales/**/*.json'],
       manifest: {
         name: 'DIRD - Diabetic Retinopathy Detection',
         short_name: 'DIRD',
@@ -29,7 +29,30 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 30 * 1024 * 1024, // 30 MB
+        // Limpiar caches antiguas automáticamente
+        cleanupOutdatedCaches: true,
+        // Activar nuevo SW inmediatamente y tomar control de clientes
+        skipWaiting: true,
+        clientsClaim: true,
+        // Excluir version.json del precaching (debe obtenerse siempre fresco)
+        globIgnores: ['**/version.json'],
         runtimeCaching: [
+          // version.json: siempre obtener versión fresca de la red
+          {
+            urlPattern: /version\.json$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'version-cache',
+              networkTimeoutSeconds: 3,
+              expiration: {
+                maxAgeSeconds: 60 // Solo cachear 1 minuto como fallback
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          // Modelos ONNX: CacheFirst con revalidación periódica
           {
             urlPattern: /\.onnx$/,
             handler: 'CacheFirst',
@@ -38,16 +61,38 @@ export default defineConfig(({ mode }) => ({
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
               }
             }
           },
+          // WASM: CacheFirst con revalidación
           {
             urlPattern: /\.wasm$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'wasm-cache',
               expiration: {
-                maxAgeSeconds: 60 * 60 * 24 * 30
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          // Traducciones: NetworkFirst para tener versiones actualizadas
+          {
+            urlPattern: /locales\/.*\.json$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'locales-cache',
+              networkTimeoutSeconds: 3,
+              expiration: {
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 días
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
               }
             }
           }

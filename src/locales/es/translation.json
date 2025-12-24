@@ -104,5 +104,30 @@
       "supportedFormats": "Formatos soportados: JPG, PNG, WEBP",
       "submit": "Enviar Comentario"
     }
+  },
+  "sessions": {
+    "session": "Sesión",
+    "compareTitle": "Comparar",
+    "compareAction": "Comparar {{count}} sesiones",
+    "empty": "No hay sesiones registradas para este paciente",
+    "galleryTitle": "Galería de Imágenes",
+    "tabs": {
+      "images": "Imágenes ({{count}})",
+      "analysis": "Análisis",
+      "report": "Informe"
+    },
+    "status": {
+      "active": "Activa"
+    },
+    "notesTitle": "Notas de la Sesión",
+    "locked": "Bloqueada",
+    "unlock": "Desbloquear"
+  },
+  "confirmations": {
+    "duplicateSession": "¿Estás seguro de que deseas duplicar esta sesión? Esta acción creará una copia con los mismos elementos pero desbloqueada.",
+    "deleteSession": "¿Estás seguro de que deseas eliminar esta sesión? Esta acción no se puede deshacer."
+  },
+  "errors": {
+    "duplicateSession": "Error al duplicar la sesión"
   }
 }

@@ -1,9 +1,9 @@
-import { db, Session, Image, Detection, Segmentation } from './schema';
+import { db, Session, Image, Detection, Segmentation, Report } from './schema';
 
 export async function duplicateSession(sessionId: number): Promise<number> {
   let newSessionId: number | undefined;
 
-  await db.transaction('rw', db.sessions, db.images, db.detections, db.segmentations, async () => {
+  await db.transaction('rw', [db.sessions, db.images, db.detections, db.segmentations, db.reports], async () => {
     // 1. Get original session and related data
     const originalSession = await db.sessions.get(sessionId);
     if (!originalSession) {
@@ -15,6 +15,7 @@ export async function duplicateSession(sessionId: number): Promise<number> {
 
     const originalDetections = await db.detections.where('imageId').anyOf(originalImageIds).toArray();
     const originalSegmentations = await db.segmentations.where('imageId').anyOf(originalImageIds).toArray();
+    const originalReports = await db.reports.where('sessionId').equals(sessionId).toArray();
 
     // 2. Create new session
     const now = new Date();
@@ -26,13 +27,13 @@ export async function duplicateSession(sessionId: number): Promise<number> {
       name: `Copia de ${originalSession.name || `Sesión ${originalSession.sessionNumber}`}`,
       sessionNumber: newSessionNumber,
       locked: false,
-      date: now,
+      // Mantener la misma fecha que el original, no la fecha de duplicación
+      date: originalSession.date,
       createdAt: now,
       updatedAt: now,
     };
     // remove id from data
     delete (newSessionData as any).id;
-
 
     newSessionId = await db.sessions.add(newSessionData as Session);
 
@@ -46,7 +47,7 @@ export async function duplicateSession(sessionId: number): Promise<number> {
           sessionId: newSessionId,
         };
         delete (newImageData as any).id;
-        
+
         const newImageId = await db.images.add(newImageData as Image);
         imageIdMap.set(originalImageId, newImageId);
       }
@@ -76,6 +77,20 @@ export async function duplicateSession(sessionId: number): Promise<number> {
         await db.segmentations.add(newSegmentationData as Segmentation);
       }
     }
+
+    // 5. Create new reports, converting 'final' reports to 'preview' if session was locked
+    if (newSessionId) {
+      for (const report of originalReports) {
+        const newReportData: Omit<Report, 'id'> = {
+          ...report,
+          sessionId: newSessionId,
+          // Si la sesión original estaba bloqueada, convertir los informes finales a preliminares
+          type: originalSession.locked ? 'preview' : report.type,
+        };
+        delete (newReportData as any).id;
+        await db.reports.add(newReportData as Report);
+      }
+    }
   });
 
   if (newSessionId === undefined) {
@@ -86,7 +101,7 @@ export async function duplicateSession(sessionId: number): Promise<number> {
 }
 
 export async function deletePatient(patientId: number): Promise<void> {
-  await db.transaction('rw', db.patients, db.sessions, db.images, async () => {
+  await db.transaction('rw', [db.patients, db.sessions, db.images], async () => {
     // 1. Get all sessions for the patient
     const sessionsToDelete = await db.sessions.where('patientId').equals(patientId).toArray();
     const sessionIds = sessionsToDelete.map(s => s.id!);

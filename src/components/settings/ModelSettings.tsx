@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
 import { Download, Trash2, RefreshCw, CheckCircle } from 'lucide-react';
 import { modelDownloader, formatBytes, type AvailableModel } from '@/lib/ai/model-downloader';
 import { inferenceService } from '@/lib/ai/inference-service';
+import { useConfigStore } from '@/stores/config-store';
 
 const ModelSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -18,6 +20,8 @@ const ModelSettings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [availableModels, setAvailableModels] = useState<AvailableModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
+  
+  const { config, updateLocalModels } = useConfigStore();
 
   useEffect(() => {
     loadCacheStatus();
@@ -275,28 +279,63 @@ const ModelSettings: React.FC = () => {
           {/* Current Status */}
           <div className="border rounded-lg p-4 space-y-3">
             <h3 className="font-semibold text-coal-800">{t('settings.models.currentStatus')}</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between p-2 bg-smoke-50 rounded">
-                <div>
-                  <span className="text-smoke-700 font-medium">{t('models.detection')}</span>
-                  {detectionVersion && (
-                    <div className="text-xs text-smoke-500 font-mono mt-0.5">
-                      detection-v{detectionVersion}.onnx
-                    </div>
+            <div className="space-y-4 text-sm">
+              {/* Detection Model Status */}
+              <div className="p-3 bg-smoke-50 rounded border border-smoke-100">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <span className="text-coal-700 font-medium">{t('models.detection')}</span>
+                    {detectionVersion && (
+                      <div className="text-xs text-smoke-500 font-mono mt-0.5">
+                        detection-v{detectionVersion}.onnx
+                      </div>
+                    )}
+                  </div>
+                  {isDetectionCached ? (
+                    <Badge variant="default" className="flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3" />
+                      v{detectionVersion}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline">{t('settings.models.notLoaded')}</Badge>
                   )}
                 </div>
-                {isDetectionCached ? (
-                  <Badge variant="default" className="flex items-center gap-1">
-                    <CheckCircle className="w-3 h-3" />
-                    v{detectionVersion}
-                  </Badge>
-                ) : (
-                  <Badge variant="outline">{t('settings.models.notLoaded')}</Badge>
-                )}
+                
+                {/* Sensitivity Slider */}
+                <div className="space-y-2 pt-2 border-t border-smoke-200">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-xs font-medium text-coal-600">
+                      {t('settings.models.sensitivity') || 'Sensibilidad'}
+                    </Label>
+                    <span className="text-xs font-mono text-coal-600">
+                      {Math.round((config.localModels.detection.sensitivity || 0.5) * 100)}%
+                    </span>
+                  </div>
+                  <Slider
+                    defaultValue={[config.localModels.detection.sensitivity || 0.5]}
+                    value={[config.localModels.detection.sensitivity || 0.5]}
+                    min={0.1}
+                    max={0.95}
+                    step={0.05}
+                    onValueChange={(value) => {
+                      updateLocalModels({
+                        detection: {
+                          ...config.localModels.detection,
+                          sensitivity: value[0]
+                        }
+                      });
+                    }}
+                  />
+                  <p className="text-[10px] text-smoke-500">
+                    {t('settings.models.sensitivityHelp') || 'Ajusta el umbral de confianza para las detecciones.'}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center justify-between p-2 bg-smoke-50 rounded">
+
+              {/* Segmentation Model Status */}
+              <div className="flex items-center justify-between p-3 bg-smoke-50 rounded border border-smoke-100">
                 <div>
-                  <span className="text-smoke-700 font-medium">{t('models.segmentation')}</span>
+                  <span className="text-coal-700 font-medium">{t('models.segmentation')}</span>
                   {segmentationVersion && (
                     <div className="text-xs text-smoke-500 font-mono mt-0.5">
                       segmentation-v{segmentationVersion}.onnx

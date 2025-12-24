@@ -3,6 +3,7 @@ import type { Detection } from './onnx-manager';
 import type { ModelMetadata } from './model-metadata';
 import { db } from '@/lib/db/schema';
 import { modelDownloader } from './model-downloader';
+import { useConfigStore } from '@/stores/config-store';
 
 export class InferenceService {
   private detectionModel: ONNXModelManager | null = null;
@@ -68,12 +69,17 @@ export class InferenceService {
       dataPreview: Array.from(output.data as Float32Array).slice(0, 20)
     });
 
+    // Get sensitivity from config
+    const sensitivity = useConfigStore.getState().config.localModels.detection.sensitivity;
+    console.log('🎚️ Using sensitivity override:', sensitivity);
+
     // Post-process results
     let detections = postprocessDetections(
       output,
       metadata,
       imageElement.width,
-      imageElement.height
+      imageElement.height,
+      sensitivity
     );
     console.log('🎯 Detections before NMS:', detections.length, detections);
 

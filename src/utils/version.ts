@@ -1,4 +1,6 @@
 // src/utils/version.ts
+import { getAssetPath } from './assets';
+
 export interface VersionInfo {
   version: string;
   timestamp: number;
@@ -12,7 +14,7 @@ export interface VersionInfo {
 export const generateVersionInfo = (): VersionInfo => {
   const timestamp = Date.now();
   const version = `build-${timestamp}`;
-  
+
   return {
     version,
     timestamp,
@@ -22,11 +24,16 @@ export const generateVersionInfo = (): VersionInfo => {
 
 /**
  * Obtiene la información de versión desde el archivo version.json
+ * @param bustCache - Si es true, agrega un timestamp para evitar el cache del navegador
  * @returns Promise con información de versión
  */
-export const getCurrentVersion = async (): Promise<VersionInfo> => {
+export const getCurrentVersion = async (bustCache = false): Promise<VersionInfo> => {
   try {
-    const response = await fetch('/version.json');
+    const url = getAssetPath('/version.json');
+    const cacheBuster = bustCache ? `?t=${Date.now()}` : '';
+    const response = await fetch(`${url}${cacheBuster}`, {
+      cache: bustCache ? 'no-cache' : 'default'
+    });
     if (response.ok) {
       return await response.json();
     } else {

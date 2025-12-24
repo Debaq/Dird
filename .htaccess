@@ -1,0 +1,56 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Configuración para tmeduca.org/dird
+  RewriteBase /dird/
+
+  # No redireccionar archivos que existen
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Redireccionar todas las peticiones al index.html (SPA routing)
+  RewriteRule . /dird/index.html [L]
+</IfModule>
+
+# Headers de caché para diferentes tipos de archivo
+<IfModule mod_headers.c>
+  # NUNCA cachear index.html ni version.json
+  <FilesMatch "\.(html|json)$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+
+  # Assets versionados (con hash): cachear 1 año
+  <FilesMatch "\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|webp)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Service Worker: cachear poco tiempo (1 día)
+  <FilesMatch "^(sw|registerSW)\.js$">
+    Header set Cache-Control "public, max-age=86400"
+  </FilesMatch>
+
+  # Modelos ONNX y WASM: cachear 30 días pero revalidar
+  <FilesMatch "\.(onnx|wasm)$">
+    Header set Cache-Control "public, max-age=2592000, must-revalidate"
+  </FilesMatch>
+
+  # Manifest: cachear 1 semana
+  <FilesMatch "\.webmanifest$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+</IfModule>
+
+# Comprimir archivos de texto
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css application/javascript application/json
+  AddOutputFilterByType DEFLATE application/x-javascript text/xml application/xml application/xml+rss text/javascript
+</IfModule>
+
+# Habilitar CORS si es necesario para modelos ONNX
+<IfModule mod_headers.c>
+  <FilesMatch "\.(onnx|wasm)$">
+    Header set Access-Control-Allow-Origin "*"
+  </FilesMatch>
+</IfModule>

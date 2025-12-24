@@ -6,6 +6,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { cn } from '@/lib/utils';
 import { useConfigStore } from '@/stores/config-store';
 import { db } from '@/lib/db/schema';
+import { getAssetPath } from '@/utils/assets';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -42,7 +43,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
             <Link to="/" className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center dark:bg-gray-700">
                 <img
-                  src={useConfigStore().config.appearance.logo}
+                  src={getAssetPath(useConfigStore().config.appearance.logo)}
                   alt="Logo"
                   className="w-6 h-6 object-contain"
                 />

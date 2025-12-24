@@ -4,6 +4,7 @@ import i18n from '@/i18n/config';
 import type { Session, Patient, Image, Detection, Segmentation } from '@/lib/db/schema';
 import { db } from '@/lib/db/schema';
 import { useConfigStore, DEFAULT_CONFIG } from '@/stores/config-store';
+import { getAssetPath } from '@/utils/assets';
 
 // Helper to convert hex to rgb
 const hexToRgb = (hex: string): [number, number, number] => {
@@ -122,7 +123,7 @@ export class ReportGenerator {
 
   private async addHeader(type: ReportType, category: 'single' | 'combined') {
     // Logo
-    let logoToUse = '/logo.svg'; // Default system logo path
+    let logoToUse = getAssetPath('/logo.svg'); // Default system logo path
     if (this.config.useSystemLogo) {
        // logic already handled by default path
     } else if (this.config.customLogo) {

@@ -1,0 +1,79 @@
+# Configuración Nginx para DIRD en tmeduca.org/dird
+# Copiar este contenido al archivo de configuración de tu sitio en Nginx
+# Típicamente en: /etc/nginx/sites-available/tmeduca
+
+server {
+    listen 80;
+    server_name tmeduca.org www.tmeduca.org;
+
+    # Ruta donde están los archivos compilados (dist)
+    root /var/www/tmeduca.org;  # Ajustar según tu ruta real
+    index index.html;
+
+    # Habilitar compresión gzip
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/javascript application/json application/xml+rss;
+
+    # Configuración para la aplicación en /dird/
+    location /dird/ {
+        # Alias a la carpeta donde están los archivos de DIRD
+        alias /var/www/tmeduca.org/dird/;  # Ajustar según tu ruta real
+
+        # SPA routing: intentar archivo, luego directorio, finalmente index.html
+        try_files $uri $uri/ /dird/index.html;
+
+        # Headers de caché para index.html y version.json: NUNCA cachear
+        location ~ /dird/(index\.html|version\.json)$ {
+            add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0" always;
+            add_header Pragma "no-cache" always;
+            add_header Expires "0" always;
+            try_files $uri =404;
+        }
+
+        # Service Worker: cachear poco tiempo (1 día)
+        location ~ /dird/(sw|registerSW)\.js$ {
+            add_header Cache-Control "public, max-age=86400" always;
+            try_files $uri =404;
+        }
+
+        # Assets versionados (con hash en el nombre): cachear 1 año
+        location ~ /dird/assets/.*\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|webp)$ {
+            add_header Cache-Control "public, max-age=31536000, immutable" always;
+            try_files $uri =404;
+        }
+
+        # Modelos ONNX y WASM: cachear 30 días con revalidación
+        location ~ /dird/.*\.(onnx|wasm)$ {
+            add_header Cache-Control "public, max-age=2592000, must-revalidate" always;
+            add_header Access-Control-Allow-Origin "*" always;
+            try_files $uri =404;
+        }
+
+        # Manifest: cachear 1 semana
+        location ~ /dird/.*\.webmanifest$ {
+            add_header Cache-Control "public, max-age=604800" always;
+            try_files $uri =404;
+        }
+
+        # Otros archivos estáticos: cachear 1 día
+        location ~ /dird/.*\.(ico|txt)$ {
+            add_header Cache-Control "public, max-age=86400" always;
+            try_files $uri =404;
+        }
+    }
+
+    # Redirección opcional: /dird a /dird/
+    location = /dird {
+        return 301 /dird/;
+    }
+}
+
+# INSTRUCCIONES DE USO PARA tmeduca.org/dird:
+# 1. Subir archivos de dist/ a /var/www/tmeduca.org/dird/ en el servidor
+# 2. Si nginx.conf no está configurado, copiar este contenido a /etc/nginx/sites-available/tmeduca
+# 3. Ajustar las rutas según tu configuración real del servidor
+# 4. Crear symlink: sudo ln -s /etc/nginx/sites-available/tmeduca /etc/nginx/sites-enabled/
+# 5. Probar configuración: sudo nginx -t
+# 6. Recargar Nginx: sudo systemctl reload nginx

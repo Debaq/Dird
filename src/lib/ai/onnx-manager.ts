@@ -199,17 +199,20 @@ export function postprocessDetections(
   output: ort.Tensor,
   metadata: ModelMetadata,
   originalWidth: number,
-  originalHeight: number
+  originalHeight: number,
+  confidenceThreshold?: number
 ): Detection[] {
   const detections: Detection[] = [];
   const outputData = output.data as Float32Array;
   const dims = output.dims;
+  
+  const threshold = confidenceThreshold !== undefined ? confidenceThreshold : metadata.confidence_threshold;
 
   console.log('🔬 Post-process input:', {
     dims: dims,
     dataLength: outputData.length,
     numClasses: metadata.classes.length,
-    confidenceThreshold: metadata.confidence_threshold
+    confidenceThreshold: threshold
   });
 
   // YOLOv8 output format can be:
@@ -283,12 +286,12 @@ export function postprocessDetections(
         maxScore,
         maxClassIndex,
         className: metadata.classes[maxClassIndex],
-        threshold: metadata.confidence_threshold
+        threshold: threshold
       });
     }
 
     // Filter by confidence threshold
-    if (maxScore >= metadata.confidence_threshold) {
+    if (maxScore >= threshold) {
       // Denormalize coordinates (YOLOv8 uses normalized 0-1 coords)
       const inputSize = metadata.input_size[0];
       const scaleX = originalWidth / inputSize;

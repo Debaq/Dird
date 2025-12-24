@@ -29,6 +29,7 @@ import ModelSettings from './ModelSettings';
 import ReportSettings from './ReportSettings';
 import { getCurrentVersion, type VersionInfo } from '@/utils/version';
 import { changeLanguage } from '@/i18n/config';
+import { getAssetPath } from '@/utils/assets';
 
 export function Settings() {
   const { t } = useTranslation();
@@ -49,8 +50,10 @@ export function Settings() {
   } | null>(null);
   const [isTestingApi, setIsTestingApi] = useState(false);
   const [currentVersion, setCurrentVersion] = useState<VersionInfo | null>(null);
+  const [localVersion, setLocalVersion] = useState<VersionInfo | null>(null);
   const [isCheckingVersion, setIsCheckingVersion] = useState(false);
   const [hasUpdate, setHasUpdate] = useState(false);
+  const [updateCheckMessage, setUpdateCheckMessage] = useState<string | null>(null);
   const [isReloading, setIsReloading] = useState(false);
 
   // Tabs scroll logic
@@ -86,8 +89,9 @@ export function Settings() {
     const loadVersionInfo = async () => {
       setIsCheckingVersion(true);
       try {
-        const versionInfo = await getCurrentVersion();
+        const versionInfo = await getCurrentVersion(false);
         setCurrentVersion(versionInfo);
+        setLocalVersion(versionInfo);
       } catch (error) {
         console.error('Error loading version info:', error);
       } finally {
@@ -100,19 +104,26 @@ export function Settings() {
 
   const checkForUpdates = async () => {
     setIsCheckingVersion(true);
+    setUpdateCheckMessage(null);
     try {
-      const serverVersion = await getCurrentVersion();
-      const localVersion = currentVersion;
+      const serverVersion = await getCurrentVersion(true);
 
       if (localVersion && serverVersion && serverVersion.buildNumber > localVersion.buildNumber) {
         setHasUpdate(true);
+        setUpdateCheckMessage(null);
+      } else if (localVersion && serverVersion && serverVersion.buildNumber === localVersion.buildNumber) {
+        setHasUpdate(false);
+        setUpdateCheckMessage(t('settings.about.noUpdates'));
       } else {
         setHasUpdate(false);
+        setUpdateCheckMessage(t('settings.about.checkError'));
       }
 
       setCurrentVersion(serverVersion);
     } catch (error) {
       console.error('Error checking for updates:', error);
+      setHasUpdate(false);
+      setUpdateCheckMessage(t('settings.about.checkError'));
     } finally {
       setIsCheckingVersion(false);
     }
@@ -257,7 +268,7 @@ export function Settings() {
                       type="text"
                       value={config.appearance.logo}
                       onChange={(e) => updateAppearance({ logo: e.target.value })}
-                      placeholder="/logo.svg"
+                      placeholder={getAssetPath('/logo.svg')}
                       className="dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
                     />
                   </div>
@@ -269,12 +280,12 @@ export function Settings() {
                     </Label>
                     <div className="mt-1 flex items-center">
                       <img
-                        src={config.appearance.logo}
+                        src={getAssetPath(config.appearance.logo)}
                         alt="Current logo preview"
                         className="w-12 h-12 object-contain border border-smoke-300 rounded dark:border-coal-600"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = '/logo-default.svg'; // fallback to default logo
+                          target.src = getAssetPath('/logo-default.svg'); // fallback to default logo
                         }}
                       />
                     </div>
@@ -777,6 +788,16 @@ export function Settings() {
                       )}
                       <span className="ml-2">{t('settings.about.updateNow')}</span>
                     </Button>
+                  </div>
+                )}
+                {!hasUpdate && updateCheckMessage && (
+                  <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-md dark:bg-emerald-900/20 dark:border-emerald-700">
+                    <div className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-emerald-700 dark:text-emerald-300" />
+                      <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                        {updateCheckMessage}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>

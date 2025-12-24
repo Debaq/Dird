@@ -16,10 +16,12 @@ export interface LocalModelConfig {
   detection: {
     enabled: boolean;
     modelPath: string;
+    sensitivity: number; // 0-1
   };
   segmentation: {
     enabled: boolean;
     modelPath: string;
+    sensitivity: number; // 0-1
   };
 }
 
@@ -104,7 +106,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   name: 'DIRD',
   appearance: {
     primaryColor: '#20B5AE',
-    logo: '/logo-default.svg',
+    logo: 'logo-default.svg',
     theme: 'light',
     language: 'es'
   },
@@ -112,11 +114,13 @@ export const DEFAULT_CONFIG: AppConfig = {
   localModels: {
     detection: {
       enabled: true,
-      modelPath: '/models/detection-v1.0.0.onnx'
+      modelPath: '/models/detection-v1.0.0.onnx',
+      sensitivity: 0.5
     },
     segmentation: {
       enabled: false,
-      modelPath: '/models/segmentation-v1.0.0.onnx'
+      modelPath: '/models/segmentation-v1.0.0.onnx',
+      sensitivity: 0.5
     }
   },
   apiModels: {

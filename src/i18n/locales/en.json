@@ -59,7 +59,7 @@
   "confirmations": {
     "deleteImage": "Are you sure you want to delete this image and all associated analyses?",
     "deleteSession": "Are you sure you want to delete this session and all its data? This action is irreversible.",
-    "duplicateSession": "Are you sure you want to duplicate this session?",
+    "duplicateSession": "Are you sure you want to duplicate this session? This action will create a copy with the same elements but unlocked.",
     "deletePatient": "Are you sure you want to delete this patient and all their data? This action is irreversible.",
     "archivePatient": "Are you sure you want to {{action}} this patient?"
   },
@@ -421,7 +421,9 @@
       "loading": "Loading...",
       "check": "Check",
       "updateAvailable": "New version available. Update recommended to get latest features and fixes.",
-      "updateNow": "Update Now"
+      "updateNow": "Update Now",
+      "noUpdates": "You have the latest version",
+      "checkError": "Error checking for updates"
     }
   },
   "pwa": {
