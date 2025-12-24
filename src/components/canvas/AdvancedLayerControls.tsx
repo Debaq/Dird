@@ -6,6 +6,7 @@ import { db, type Detection } from '@/lib/db/schema';
 import { Button } from '@/components/ui/button';
 import { classManager, type ClassDefinition } from '@/lib/classes/class-manager';
 import { Select } from '@/components/ui/select';
+import { getClassName } from '@/lib/ai/class-translations';
 
 export interface CanvasLayer {
   id: string;
