@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import PDFViewerModal from './PDFViewerModal';
 import { regenerateSessionReportBlob } from '@/lib/pdf/report-generator';
-import { generateSessionReport, ReportGenerator, type ReportType } from '@/lib/pdf/report-generator';
+import { ReportGenerator } from '@/lib/pdf/report-generator';
 
 interface ReportsListProps {
   sessionId: number;

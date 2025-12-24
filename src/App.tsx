@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import MainLayout from '@/components/layout/MainLayout';
 import PatientList from '@/components/patients/PatientList';
 import PatientDetails from '@/components/patients/PatientDetails';
@@ -12,7 +11,6 @@ import SessionComparison from '@/components/patients/SessionComparison';
 import ContributionMenu from '@/components/contribution/ContributionMenu';
 
 function App() {
-  const { t } = useTranslation();
   const basename = import.meta.env.PROD ? '/dird' : '/';
 
   return (

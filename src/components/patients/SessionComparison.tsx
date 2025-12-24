@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowLeft, FileText, Download } from 'lucide-react';
+import { ArrowLeft, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { db, Session, Image, Detection } from '@/lib/db/schema';
@@ -235,9 +235,10 @@ const SessionComparison: React.FC = () => {
 
       {/* PDF Viewer Modal */}
       <PDFViewerModal 
-        open={showReportPreview}
-        onOpenChange={setShowReportPreview}
-        pdfBlob={previewPdfBlob}
+        isOpen={showReportPreview}
+        onClose={() => setShowReportPreview(false)}
+        pdfBlob={previewPdfBlob || new Blob()}
+        title={t('reports.preview')}
         onDownload={handleDownloadFinalReport}
       />
     </div>

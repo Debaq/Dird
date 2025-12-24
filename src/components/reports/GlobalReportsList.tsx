@@ -10,7 +10,7 @@ import PDFViewerModal from './PDFViewerModal';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { regenerateSessionReportBlob } from '@/lib/pdf/report-generator';
-import { generateSessionReport, ReportGenerator, type ReportType } from '@/lib/pdf/report-generator';
+import { ReportGenerator } from '@/lib/pdf/report-generator';
 
 interface ReportItemProps {
   report: Report;
