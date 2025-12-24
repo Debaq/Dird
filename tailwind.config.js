@@ -88,10 +88,25 @@ export default {
           '0%': { transform: 'translateY(20px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
+        'contribute-pulse': {
+          '0%, 100%': {
+            color: '#878787', // smoke-500 (gris)
+            transform: 'scale(1)',
+          },
+          '33%': {
+            color: '#a855f7', // violeta/púrpura brillante
+            transform: 'scale(1.1)',
+          },
+          '66%': {
+            color: '#f59e0b', // dorado/ámbar brillante
+            transform: 'scale(1.1)',
+          },
+        },
       },
       animation: {
         'fade-in': 'fade-in 0.5s ease-out',
         'slide-up': 'slide-up 0.5s ease-out',
+        'contribute-pulse': 'contribute-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },

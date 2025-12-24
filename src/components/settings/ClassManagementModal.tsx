@@ -34,6 +34,9 @@ const ClassManagementModal: React.FC<ClassManagementModalProps> = ({
   const loadClasses = async () => {
     setIsLoading(true);
     try {
+      // Asegurar que el metadata del modelo esté cargado
+      await classManager.ensureMetadataLoaded();
+
       const all = await classManager.getAllClasses();
       setClasses(all);
       

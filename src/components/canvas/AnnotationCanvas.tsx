@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Stage, Layer, Image as KonvaImage, Rect, Group, Text } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Rect, Group, Text, Transformer, Circle } from 'react-konva';
 import { RotateCcw, RotateCw } from 'lucide-react';
-import type { Image } from '@/lib/db/schema';
+import type { Image, Detection } from '@/lib/db/schema';
 import type { CanvasTool } from './ToolPanel';
 import type { CanvasLayer } from './LayerControls';
 import { db } from '@/lib/db/schema';
@@ -10,6 +10,7 @@ import { classManager } from '@/lib/classes/class-manager';
 import ClassSelectionModal from './ClassSelectionModal';
 import { getClassName } from '@/lib/ai/class-translations';
 import { useConfigStore } from '@/stores/config-store';
+import { useCanvasStore } from '@/stores/canvas-store';
 
 interface AnnotationCanvasProps {
   image: Image;
@@ -30,6 +31,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 }) => {
   const { i18n } = useTranslation();
   const { config } = useConfigStore();
+  const { selectedAnnotationId, setSelectedAnnotation } = useCanvasStore();
   const rainbowMode = config.appearance.rainbowMode; // Subscribe to rainbow mode changes
 
   // Key único para forzar re-mount cuando cambian detecciones o rainbow mode
@@ -43,6 +45,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const manualAnnotationsLayer = layers.find(l => l.id === 'manual-annotations');
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
+  const trRef = useRef<any>(null);
   const [konvaImage, setKonvaImage] = useState<HTMLImageElement | null>(null);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
   const [scale, setScale] = useState(1);
@@ -56,23 +59,101 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const [pendingAnnotation, setPendingAnnotation] = useState<any>(null);
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
 
+  // Update transformer when selection changes
+  useEffect(() => {
+    if (selectedAnnotationId && trRef.current && stageRef.current) {
+      const stage = stageRef.current;
+      const selectedNode = stage.findOne('#det-' + selectedAnnotationId);
+      if (selectedNode) {
+        trRef.current.nodes([selectedNode]);
+        trRef.current.getLayer().batchDraw();
+      } else {
+        trRef.current.nodes([]);
+      }
+    } else if (trRef.current) {
+      trRef.current.nodes([]);
+    }
+  }, [selectedAnnotationId, detections, manualAnnotations, isCanvasReady]);
+
+  // Handle updates (drag/resize)
+  const handleAnnotationChange = async (id: number, newAttrs: any) => {
+    try {
+      const detection = await db.detections.get(id);
+      if (!detection) return;
+
+      // Ensure positive width/height
+      if (newAttrs.width < 0) {
+        newAttrs.x += newAttrs.width;
+        newAttrs.width = Math.abs(newAttrs.width);
+      }
+      if (newAttrs.height < 0) {
+        newAttrs.y += newAttrs.height;
+        newAttrs.height = Math.abs(newAttrs.height);
+      }
+
+      // Convert to image coordinates
+      // The shape in Konva is at (bbox.x * scale + imageOffset.x)
+      // We need to reverse this to get bbox.x
+      const bbox = {
+        x: (newAttrs.x - imageOffset.x) / scale,
+        y: (newAttrs.y - imageOffset.y) / scale,
+        width: newAttrs.width / scale,
+        height: newAttrs.height / scale,
+      };
+
+      const newState = {
+        ...detection,
+        bbox,
+        type: detection.type === 'ai' ? 'manual' : detection.type
+      };
+
+      addToHistory({
+        type: 'update',
+        before: detection,
+        after: newState
+      });
+
+      if (detection.type === 'ai') {
+        // Change to manual
+        await db.detections.update(id, {
+          bbox,
+          type: 'manual'
+        });
+      } else {
+        await db.detections.update(id, {
+          bbox
+        });
+      }
+      onAnnotationAdded?.();
+    } catch (error) {
+      console.error('Error updating annotation:', error);
+    }
+  };
+
+  const checkDeselect = (e: any) => {
+    // deselect when clicked on empty area
+    const clickedOnEmpty = e.target === e.target.getStage();
+    const clickedOnImage = e.target.getClassName() === 'Image';
+    
+    if (clickedOnEmpty || clickedOnImage) {
+      setSelectedAnnotation(null);
+    }
+  };
+
   // Load image
   useEffect(() => {
-    console.log('📸 Iniciando carga de imagen...');
     setIsCanvasReady(false); // Reset cuando cambia la imagen
 
     const img = new window.Image();
     const url = URL.createObjectURL(image.originalBlob);
 
     img.onload = () => {
-      console.log('📸 Imagen cargada, configurando canvas...');
       setKonvaImage(img);
       calculateScale(img.width, img.height);
       URL.revokeObjectURL(url);
 
       // Dar un pequeño delay para que Konva termine de renderizar
       setTimeout(() => {
-        console.log('✅ Canvas listo para recibir detecciones');
         setIsCanvasReady(true);
       }, 100);
     };
@@ -154,14 +235,19 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
   // Handle pan
   const handleDragEnd = (e: any) => {
-    setStagePos({
-      x: e.target.x(),
-      y: e.target.y(),
-    });
+    // Only update stage position if the stage itself was dragged
+    if (e.target === e.target.getStage()) {
+      setStagePos({
+        x: e.target.x(),
+        y: e.target.y(),
+      });
+    }
   };
 
   // Handle annotation drawing
   const handleMouseDown = (e: any) => {
+    checkDeselect(e);
+
     // Middle mouse button (button 1) always enables panning
     if (e.evt.button === 1) {
       setIsPanning(true);
@@ -279,7 +365,6 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   // Forzar re-mount completo cuando cambian las detecciones o rainbow mode (solo si canvas está listo)
   useEffect(() => {
     if (isCanvasReady) {
-      console.log('🔄 Detecciones o configuración cambiaron, forzando re-mount.');
       setCanvasKey(prev => prev + 1);
     }
   }, [detections.length, isCanvasReady, rainbowMode]);
@@ -292,16 +377,26 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   }, [hoveredDetectionId]);
 
   // Estado para el historial de deshacer/rehacer
-  const [detectionHistory] = useState<any[]>([]);
+  type HistoryEntry = 
+    | { type: 'add'; detection: any }
+    | { type: 'delete'; detection: any }
+    | { type: 'update'; before: any; after: any };
+
+  const [detectionHistory, setDetectionHistory] = useState<HistoryEntry[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
 
-  // Handle class selection from modal
+  const addToHistory = (entry: HistoryEntry) => {
+    const newHistory = detectionHistory.slice(0, historyIndex + 1);
+    newHistory.push(entry);
+    setDetectionHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
   const handleClassSelected = async (className: string) => {
     if (!pendingAnnotation || !image.id) return;
 
     try {
-      // Guardar en base de datos como detección manual
-      await db.detections.add({
+      const newDetectionData: Detection = {
         imageId: image.id,
         type: 'manual',
         bbox: {
@@ -313,12 +408,19 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         class: className,
         visible: true,
         createdAt: new Date()
-      });
+      };
+
+      // Guardar en base de datos como detección manual
+      const newId = await db.detections.add(newDetectionData);
+      
+      const savedDetection = { ...newDetectionData, id: newId };
+      
+      addToHistory({ type: 'add', detection: savedDetection });
 
       // Agregar al estado local para visualización inmediata
       setAnnotations([
         ...annotations,
-        { ...pendingAnnotation, class: className }
+        { ...pendingAnnotation, class: className, id: newId }
       ]);
 
       // Limpiar estados
@@ -337,34 +439,54 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const handleUndo = async () => {
     if (historyIndex < 0) return;
 
-    const lastOperation = detectionHistory[historyIndex];
+    const entry = detectionHistory[historyIndex];
 
-    if (lastOperation.type === 'delete') {
-      // Para deshacer una eliminación, necesitamos recrear la detección
-      const newDetection = {
-        ...lastOperation.detection,
-        id: undefined, // Eliminar el ID para que Dexie genere uno nuevo
-      };
-
-      await db.detections.add(newDetection);
+    try {
+      if (entry.type === 'add') {
+        // Deshacer agregar: eliminar
+        if (entry.detection.id) {
+          await db.detections.delete(entry.detection.id);
+        }
+      } else if (entry.type === 'delete') {
+        // Deshacer eliminar: volver a agregar (preservando ID)
+        await db.detections.add(entry.detection);
+      } else if (entry.type === 'update') {
+        // Deshacer actualizar: volver al estado anterior
+        await db.detections.put(entry.before);
+      }
+      
       onAnnotationAdded?.();
+      setHistoryIndex(prev => prev - 1);
+    } catch (error) {
+      console.error('Error in undo:', error);
     }
-
-    setHistoryIndex(prev => prev - 1);
   };
 
   // Función para rehacer la última operación deshecha
   const handleRedo = async () => {
     if (historyIndex >= detectionHistory.length - 1) return;
 
-    const nextOperation = detectionHistory[historyIndex + 1];
+    const entry = detectionHistory[historyIndex + 1];
 
-    if (nextOperation.type === 'delete') {
-      await db.detections.delete(nextOperation.detection.id);
+    try {
+      if (entry.type === 'add') {
+        // Rehacer agregar: volver a agregar
+        await db.detections.add(entry.detection);
+      } else if (entry.type === 'delete') {
+        // Rehacer eliminar: volver a eliminar
+        if (entry.detection.id) {
+          await db.detections.delete(entry.detection.id);
+        }
+      } else if (entry.type === 'update') {
+        // Rehacer actualizar: volver al estado nuevo
+        await db.detections.put(entry.after);
+      }
+
       onAnnotationAdded?.();
+      setHistoryIndex(prev => prev + 1);
+    } catch (error) {
+      console.error('Error in redo:', error);
     }
-
-    setHistoryIndex(prev => prev + 1);
   };
 
   // Manejar teclas de acceso rápido (Ctrl+Z para deshacer, Ctrl+Y o Ctrl+Shift+Z para rehacer)
@@ -522,10 +644,12 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
             
             // Obtener color efectivo (respetando rainbow mode y configuraciones)
             const detectionColor = classManager.getColorForClass(detection.class);
+            const isSelected = selectedAnnotationId === String(detection.id);
 
             return (
               <Group key={`detection-${detection.id || idx}`}>
                 <Rect
+                  id={`det-${detection.id}`}
                   x={detection.bbox.x * scale + imageOffset.x}
                   y={detection.bbox.y * scale + imageOffset.y}
                   width={detection.bbox.width * scale}
@@ -536,24 +660,85 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                   dash={isHovered ? [] : [8, 4]}
                   hitStrokeWidth={10}
                   perfectDrawEnabled={false}
+                  draggable={activeTool === 'select' && isSelected}
                   onMouseEnter={() => {
-                    console.log('🟦 HOVER ENTER - Detection ID:', detection.id, 'Class:', detection.class);
                     if (detection.id) setHoveredDetectionId(detection.id);
                   }}
                   onMouseLeave={() => {
-                    console.log('🟦 HOVER LEAVE - Detection ID:', detection.id);
                     setHoveredDetectionId(null);
                   }}
-                  onClick={(e) => {
-                    console.log('🟦 CLICK - Detection ID:', detection.id, 'Tool:', activeTool);
+                  onClick={async (e) => {
                     if (activeTool === 'eraser' && detection.id) {
                       e.cancelBubble = true;
-                      db.detections.delete(detection.id).then(() => {
-                        onAnnotationAdded?.();
+                      addToHistory({ type: 'delete', detection: detection });
+                      await db.detections.delete(detection.id);
+                      onAnnotationAdded?.();
+                    } else if (activeTool === 'select' && detection.id) {
+                      setSelectedAnnotation(String(detection.id));
+                      e.cancelBubble = true;
+                    }
+                  }}
+                  onDragEnd={(e) => {
+                    if (detection.id) {
+                      handleAnnotationChange(detection.id, {
+                        x: e.target.x(),
+                        y: e.target.y(),
+                        width: e.target.width() * e.target.scaleX(),
+                        height: e.target.height() * e.target.scaleY()
+                      });
+                    }
+                  }}
+                  onTransformEnd={(e) => {
+                    if (detection.id) {
+                      const node = e.target;
+                      const scaleX = node.scaleX();
+                      const scaleY = node.scaleY();
+                      node.scaleX(1);
+                      node.scaleY(1);
+                      handleAnnotationChange(detection.id, {
+                        x: node.x(),
+                        y: node.y(),
+                        width: Math.max(5, node.width() * scaleX),
+                        height: Math.max(5, node.height() * scaleY),
+                        rotation: node.rotation()
                       });
                     }
                   }}
                 />
+                
+                {isSelected && (
+                  <Circle
+                    x={(detection.bbox.x * scale + imageOffset.x) + (detection.bbox.width * scale) / 2}
+                    y={(detection.bbox.y * scale + imageOffset.y) + (detection.bbox.height * scale) / 2}
+                    radius={5}
+                    fill="white"
+                    stroke="black"
+                    strokeWidth={1}
+                    draggable
+                    onDragMove={(e) => {
+                      const circle = e.target;
+                      const rect = stageRef.current?.findOne('#det-' + detection.id);
+                      if (rect) {
+                        const w = rect.width() * rect.scaleX();
+                        const h = rect.height() * rect.scaleY();
+                        rect.x(circle.x() - w / 2);
+                        rect.y(circle.y() - h / 2);
+                      }
+                    }}
+                    onDragEnd={() => {
+                      const rect = stageRef.current?.findOne('#det-' + detection.id);
+                      if (rect && detection.id) {
+                        handleAnnotationChange(detection.id, {
+                          x: rect.x(),
+                          y: rect.y(),
+                          width: rect.width() * rect.scaleX(),
+                          height: rect.height() * rect.scaleY()
+                        });
+                      }
+                    }}
+                  />
+                )}
+
                 {showLabels && (
                   <Group listening={false}>
                     <Rect
@@ -606,6 +791,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
             // Verificar si esta anotación está siendo hover
             const isHovered = annotation.id === hoveredDetectionId;
             const hoverColor = isHovered ? "#FFD700" : color;
+            const isSelected = selectedAnnotationId === String(annotation.id);
 
             // Verificar si es una detección de la base de datos (tiene bbox)
             if (annotation.bbox) {
@@ -613,6 +799,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                 <Group key={`manual-${annotation.id || idx}`}>
                   {/* Caja de anotación */}
                   <Rect
+                    id={`det-${annotation.id}`}
                     x={annotation.bbox.x * scale + imageOffset.x}
                     y={annotation.bbox.y * scale + imageOffset.y}
                     width={annotation.bbox.width * scale}
@@ -623,24 +810,84 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                     strokeDash={isHovered ? [] : [4, 2]}
                     hitStrokeWidth={10}
                     perfectDrawEnabled={false}
+                    draggable={activeTool === 'select' && isSelected}
                     onMouseEnter={() => {
-                      console.log('🟧 HOVER ENTER - Manual ID:', annotation.id, 'Class:', annotation.class);
                       if (annotation.id) setHoveredDetectionId(annotation.id);
                     }}
                     onMouseLeave={() => {
-                      console.log('🟧 HOVER LEAVE - Manual ID:', annotation.id);
                       setHoveredDetectionId(null);
                     }}
-                    onClick={(e) => {
-                      console.log('🟧 CLICK - Manual ID:', annotation.id, 'Tool:', activeTool);
-                      if (activeTool === 'eraser' && annotation.id) {
-                        e.cancelBubble = true;
-                        db.detections.delete(annotation.id).then(() => {
-                          onAnnotationAdded?.();
+                                      onClick={async (e) => {
+                                        if (activeTool === 'eraser' && annotation.id) {
+                                          e.cancelBubble = true;
+                                          addToHistory({ type: 'delete', detection: annotation });
+                                          await db.detections.delete(annotation.id);
+                                          onAnnotationAdded?.();
+                                        } else if (activeTool === 'select' && annotation.id) {
+                                          setSelectedAnnotation(String(annotation.id));
+                                          e.cancelBubble = true;
+                                        }
+                                      }}                    onDragEnd={(e) => {
+                      if (annotation.id) {
+                        handleAnnotationChange(annotation.id, {
+                          x: e.target.x(),
+                          y: e.target.y(),
+                          width: e.target.width() * e.target.scaleX(),
+                          height: e.target.height() * e.target.scaleY()
+                        });
+                      }
+                    }}
+                    onTransformEnd={(e) => {
+                      if (annotation.id) {
+                        const node = e.target;
+                        const scaleX = node.scaleX();
+                        const scaleY = node.scaleY();
+                        node.scaleX(1);
+                        node.scaleY(1);
+                        handleAnnotationChange(annotation.id, {
+                          x: node.x(),
+                          y: node.y(),
+                          width: Math.max(5, node.width() * scaleX),
+                          height: Math.max(5, node.height() * scaleY),
+                          rotation: node.rotation()
                         });
                       }
                     }}
                   />
+                  
+                  {isSelected && (
+                    <Circle
+                      x={(annotation.bbox.x * scale + imageOffset.x) + (annotation.bbox.width * scale) / 2}
+                      y={(annotation.bbox.y * scale + imageOffset.y) + (annotation.bbox.height * scale) / 2}
+                      radius={5}
+                      fill="white"
+                      stroke="black"
+                      strokeWidth={1}
+                      draggable
+                      onDragMove={(e) => {
+                        const circle = e.target;
+                        const rect = stageRef.current?.findOne('#det-' + annotation.id);
+                        if (rect) {
+                          const w = rect.width() * rect.scaleX();
+                          const h = rect.height() * rect.scaleY();
+                          rect.x(circle.x() - w / 2);
+                          rect.y(circle.y() - h / 2);
+                        }
+                      }}
+                      onDragEnd={() => {
+                        const rect = stageRef.current?.findOne('#det-' + annotation.id);
+                        if (rect && annotation.id) {
+                          handleAnnotationChange(annotation.id, {
+                            x: rect.x(),
+                            y: rect.y(),
+                            width: rect.width() * rect.scaleX(),
+                            height: rect.height() * rect.scaleY()
+                          });
+                        }
+                      }}
+                    />
+                  )}
+
                   {/* Label con nombre de clase */}
                   {annotation.class && showLabels && (
                     <Group listening={false}>
@@ -708,6 +955,21 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
               dash={[5, 2]}
             />
           )}
+        </Layer>
+
+        {/* Transformer Layer */}
+        <Layer>
+          <Transformer
+            ref={trRef}
+            rotateEnabled={false}
+            keepRatio={false}
+            boundBoxFunc={(oldBox, newBox) => {
+              if (newBox.width < 5 || newBox.height < 5) {
+                return oldBox;
+              }
+              return newBox;
+            }}
+          />
         </Layer>
       </Stage>
     </div>

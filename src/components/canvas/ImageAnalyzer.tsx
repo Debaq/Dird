@@ -193,9 +193,9 @@ const ImageAnalyzer: React.FC = () => {
             variant="ghost"
             className={cn(
               "ml-auto mr-2 flex-shrink-0 transition-all hover:scale-110",
-              image.contributionStatus === 'pending' 
-                ? "text-amber-500 hover:text-red-500 hover:bg-red-50" 
-                : "text-smoke-600 hover:text-amber-500 hover:bg-amber-50"
+              image.contributionStatus === 'pending'
+                ? "text-amber-500 hover:text-red-500 hover:bg-red-50"
+                : "hover:bg-purple-50 dark:hover:bg-purple-950/20"
             )}
             title={image.contributionStatus === 'pending' ? 'Gestionar contribución' : 'Marcar para contribuir'}
             onClick={() => setShowContributionDialog(true)}
@@ -211,8 +211,8 @@ const ImageAnalyzer: React.FC = () => {
                 )
               ) : (
                 <>
-                  <Star className="w-5 h-5 animate-pulse" />
-                  <Coffee className="w-5 h-5 animate-pulse" />
+                  <Star className="w-5 h-5 animate-contribute-pulse" />
+                  <Coffee className="w-5 h-5 animate-contribute-pulse" />
                 </>
               )}
             </div>

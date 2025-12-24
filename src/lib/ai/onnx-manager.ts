@@ -13,22 +13,15 @@ export class ONNXModelManager {
     // Use CDN for WASM files (most reliable option)
     ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/';
 
-    console.log('ONNX Runtime configured:', {
-      wasmPaths: ort.env.wasm.wasmPaths,
-      numThreads: ort.env.wasm.numThreads,
-      simd: ort.env.wasm.simd
-    });
+    // ONNX Runtime configured with optimized settings
   }
 
   async loadModel(modelPath: string, metadata: ModelMetadata): Promise<void> {
     try {
-      console.log(`Loading ONNX model from ${modelPath}...`);
-
       // Fetch the model as ArrayBuffer for better compatibility
       let modelData: ArrayBuffer;
 
       if (modelPath.startsWith('http://') || modelPath.startsWith('https://')) {
-        console.log('Downloading model...');
         const response = await fetch(modelPath, {
           mode: 'cors',
           cache: 'force-cache'
@@ -39,7 +32,6 @@ export class ONNXModelManager {
         }
 
         modelData = await response.arrayBuffer();
-        console.log(`Model downloaded: ${(modelData.byteLength / 1024 / 1024).toFixed(2)} MB`);
       } else {
         // For local files, fetch as ArrayBuffer
         const response = await fetch(modelPath);
@@ -54,9 +46,6 @@ export class ONNXModelManager {
         throw new Error('Invalid model data: empty ArrayBuffer');
       }
 
-      console.log('Creating ONNX inference session...');
-      console.log('Model size:', modelData.byteLength, 'bytes');
-
       // Try with minimal optimization first (safer for newer models)
       try {
         this.session = await ort.InferenceSession.create(modelData, {
@@ -64,7 +53,6 @@ export class ONNXModelManager {
           graphOptimizationLevel: 'disabled',
         });
       } catch (error) {
-        console.warn('Failed with disabled optimization, trying extended...');
         // If that fails, try with extended optimization
         this.session = await ort.InferenceSession.create(modelData, {
           executionProviders: ['wasm'],
@@ -72,15 +60,9 @@ export class ONNXModelManager {
         });
       }
 
-      console.log('✅ Model loaded successfully');
-      console.log('Input names:', this.session.inputNames);
-      console.log('Output names:', this.session.outputNames);
-
       this.metadata = metadata;
 
     } catch (error) {
-      console.error('Error loading ONNX model:', error);
-
       // Provide more helpful error messages
       if (error instanceof Error) {
         if (error.message.includes('getValue')) {
@@ -124,7 +106,6 @@ export class ONNXModelManager {
       const results = await this.session.run(feeds);
       return results;
     } catch (error) {
-      console.error('Error running inference:', error);
       throw error;
     }
   }
@@ -214,13 +195,6 @@ export function postprocessDetections(
     ? confidenceThreshold
     : (metadata.confidence_threshold || 0.5);
 
-  console.log('🔬 Post-process input:', {
-    dims: dims,
-    dataLength: outputData.length,
-    numClasses: classes.length,
-    confidenceThreshold: threshold
-  });
-
   // YOLOv8 output format can be:
   // [batch, num_detections, 4 + num_classes] (transposed)
   // or [batch, 4 + num_classes, num_detections] (original)
@@ -242,12 +216,6 @@ export function postprocessDetections(
   } else {
     throw new Error(`Unexpected output dimensions: ${dims}`);
   }
-
-  console.log('📏 Detected format:', {
-    numDetections,
-    isTransposed,
-    expectedRows: 4 + numClasses
-  });
 
   for (let i = 0; i < numDetections; i++) {
     let x, y, w, h;
@@ -285,17 +253,6 @@ export function postprocessDetections(
       }
     }
 
-    // Debug first few detections
-    if (i < 5) {
-      console.log(`Detection ${i}:`, {
-        x, y, w, h,
-        maxScore,
-        maxClassIndex,
-        className: classes[maxClassIndex],
-        threshold: threshold
-      });
-    }
-
     // Filter by confidence threshold
     if (maxScore >= threshold) {
       // Denormalize coordinates (YOLOv8 uses normalized 0-1 coords)
@@ -318,7 +275,6 @@ export function postprocessDetections(
     }
   }
 
-  console.log(`✨ Found ${detections.length} detections above threshold`);
   return detections;
 }
 

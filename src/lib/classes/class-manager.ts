@@ -43,6 +43,54 @@ export class ClassManager {
   }
 
   /**
+   * Carga el metadata del modelo desde GitHub si no está en memoria
+   * Intenta cargar desde el modelo descargado o desde GitHub
+   */
+  async ensureMetadataLoaded(): Promise<void> {
+    // Si ya tenemos metadata cargado, no hacer nada
+    if (currentModelMetadata && currentModelMetadata.classes) {
+      // Limpiar colores incorrectos cada vez que se asegura que metadata está cargado
+      this.cleanupIncorrectColors();
+      return;
+    }
+
+    try {
+      // Intentar obtener la versión del modelo cargado desde IndexedDB
+      const cache = await caches.open('dird-models-v1');
+      const keys = await cache.keys();
+
+      // Buscar archivos de metadata en cache
+      for (const request of keys) {
+        if (request.url.includes('detection-v') && request.url.endsWith('.json')) {
+          const response = await cache.match(request);
+          if (response) {
+            const metadata = await response.json();
+            this.setModelMetadata(metadata);
+            // Limpiar colores incorrectos después de cargar metadata
+            this.cleanupIncorrectColors();
+            return;
+          }
+        }
+      }
+
+      // Si no hay en cache, intentar cargar desde GitHub (latest)
+      const response = await fetch('https://raw.githubusercontent.com/Debaq/dird_models/main/detection-v1.0.1.json');
+      if (response.ok) {
+        const metadata = await response.json();
+        this.setModelMetadata(metadata);
+        // Limpiar colores incorrectos después de cargar metadata
+        this.cleanupIncorrectColors();
+        return;
+      }
+    } catch (error) {
+      // Error handling without logging
+    }
+
+    // Si todo falla, usar legacy como último recurso
+    // Using legacy fallback without logging
+  }
+
+  /**
    * Obtiene las clases del modelo AI
    * Si hay metadata cargado, usa las clases del modelo
    * Si no, usa las clases legacy para compatibilidad
@@ -77,7 +125,7 @@ export class ClassManager {
 
       return Array.from(customClasses);
     } catch (error) {
-      console.error('Error al obtener clases personalizadas:', error);
+      // Error handling without logging
       return [];
     }
   }
@@ -159,10 +207,9 @@ export class ClassManager {
       return getClassColor(className);
     }
 
-    // Generar y guardar color nuevo si no existe
-    const newColor = this.generateColorForClass(className);
-    this.saveColorPreference(className, newColor);
-    return newColor;
+    // Para clases custom, generar color pero NO guardarlo automáticamente
+    // Solo se guardará cuando el usuario lo cambie explícitamente en el modal
+    return this.generateColorForClass(className);
   }
 
   /**
@@ -189,7 +236,56 @@ export class ClassManager {
       colors[className] = color;
       localStorage.setItem(STORAGE_KEY_COLORS, JSON.stringify(colors));
     } catch (error) {
-      console.error('Error al guardar preferencia de color:', error);
+      // Error handling without logging
+    }
+  }
+
+  /**
+   * Resetea el color de una clase específica eliminándolo de localStorage
+   * Útil para volver al color por defecto
+   */
+  resetColorPreference(className: string): void {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_COLORS);
+      if (!stored) return;
+
+      const colors = JSON.parse(stored);
+      delete colors[className];
+      localStorage.setItem(STORAGE_KEY_COLORS, JSON.stringify(colors));
+    } catch (error) {
+      // Error handling without logging
+    }
+  }
+
+  /**
+   * Limpia colores guardados incorrectamente para clases AI
+   * Esto soluciona el problema donde clases AI fueron tratadas como custom
+   */
+  cleanupIncorrectColors(): void {
+    try {
+      const aiClasses = this.getAIClasses();
+      const stored = localStorage.getItem(STORAGE_KEY_COLORS);
+      if (!stored) return;
+
+      const colors = JSON.parse(stored);
+      let changed = false;
+
+      // Para cada clase AI, verificar si el color guardado es de la paleta custom
+      aiClasses.forEach(className => {
+        const savedColor = colors[className];
+
+        // Solo eliminamos si es un color de la paleta custom (indica que fue tratado como custom)
+        if (savedColor && CUSTOM_COLOR_PALETTE.includes(savedColor)) {
+          delete colors[className];
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        localStorage.setItem(STORAGE_KEY_COLORS, JSON.stringify(colors));
+      }
+    } catch (error) {
+      // Error handling without logging
     }
   }
 
@@ -203,7 +299,7 @@ export class ClassManager {
       const colors = JSON.parse(stored);
       return colors[className] || null;
     } catch (error) {
-      console.error('Error al leer preferencias de color:', error);
+      // Error handling without logging
       return null;
     }
   }
@@ -222,7 +318,7 @@ export class ClassManager {
       }
       localStorage.setItem(STORAGE_KEY_TRANSLATIONS, JSON.stringify(translations));
     } catch (error) {
-      console.error('Error al guardar traducción:', error);
+      // Error handling without logging
     }
   }
 
@@ -236,7 +332,7 @@ export class ClassManager {
       const translations = JSON.parse(stored);
       return translations[className] || null;
     } catch (error) {
-      console.error('Error al leer traducción:', error);
+      // Error handling without logging
       return null;
     }
   }

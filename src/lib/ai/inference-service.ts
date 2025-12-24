@@ -58,32 +58,22 @@ export class InferenceService {
     }
 
     const metadata = this.detectionModel.getMetadata()!;
-    console.log('🔍 Metadata:', metadata);
 
     // Get input size (new format or legacy)
     const inputSize = metadata.model_info?.input_size || metadata.input_size || [640, 640];
 
     // Preprocess image
     const { data, dims } = preprocessImage(imageElement, inputSize);
-    console.log('📐 Input dims:', dims);
 
     // Run inference
     const results = await this.detectionModel.runInference(data, dims);
-    console.log('🤖 Inference results:', results);
 
     // Get output tensor (assuming first output is detections)
     const outputName = Object.keys(results)[0];
     const output = results[outputName];
-    console.log('📊 Output tensor:', {
-      name: outputName,
-      dims: output.dims,
-      size: output.size,
-      dataPreview: Array.from(output.data as Float32Array).slice(0, 20)
-    });
 
     // Get sensitivity from config
     const sensitivity = useConfigStore.getState().config.localModels.detection.sensitivity;
-    console.log('🎚️ Using sensitivity override:', sensitivity);
 
     // Post-process results
     let detections = postprocessDetections(
@@ -93,12 +83,10 @@ export class InferenceService {
       imageElement.height,
       sensitivity
     );
-    console.log('🎯 Detections before NMS:', detections.length, detections);
 
     // Apply NMS
     const iouThreshold = metadata.iou_threshold || 0.45;
     detections = applyNMS(detections, iouThreshold);
-    console.log('✅ Detections after NMS:', detections.length, detections);
 
     // Save detections to database
     const modelVersion = metadata.model_info?.version || metadata.model_version || 'unknown';
@@ -114,10 +102,8 @@ export class InferenceService {
   ): Promise<void> {
     const now = new Date();
 
-    console.log(`💾 Saving ${detections.length} detections to database for image ${imageId}`);
-
     for (const detection of detections) {
-      const id = await db.detections.add({
+      await db.detections.add({
         imageId,
         type: 'ai',
         modelVersion,
@@ -127,10 +113,7 @@ export class InferenceService {
         visible: true,
         createdAt: now,
       });
-      console.log(`  ✓ Saved detection ${id}:`, detection.class, detection.confidence);
     }
-
-    console.log(`✅ All detections saved successfully`);
   }
 
   async segmentImage(imageElement: HTMLImageElement): Promise<any> {

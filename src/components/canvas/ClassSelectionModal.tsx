@@ -41,6 +41,9 @@ const ClassSelectionModal: React.FC<ClassSelectionModalProps> = ({
   const loadClasses = async () => {
     setLoading(true);
     try {
+      // Asegurar que el metadata del modelo esté cargado
+      await classManager.ensureMetadataLoaded();
+
       const classes = await classManager.getAllClasses();
       setAvailableClasses(classes);
     } catch (error) {
