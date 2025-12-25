@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useConfigStore } from '@/stores/config-store';
-import { changeLanguage, getCurrentLanguage } from '@/i18n/config';
+import { changeLanguage, getCurrentLanguage, detectBrowserLanguage } from '@/i18n/config';
 
 const LanguageSync = () => {
   const config = useConfigStore(state => state.config);
@@ -10,7 +10,12 @@ const LanguageSync = () => {
     const currentLang = getCurrentLanguage();
     const configLang = config.appearance.language;
     
-    if (configLang && configLang !== currentLang) {
+    if (configLang === 'auto') {
+      const detected = detectBrowserLanguage();
+      if (detected !== currentLang) {
+        changeLanguage('auto'); // This will trigger detection in config.ts
+      }
+    } else if (configLang && configLang !== currentLang) {
       changeLanguage(configLang);
     }
   }, [config.appearance.language]);

@@ -134,8 +134,8 @@ const PatientList: React.FC = () => {
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as 'all' | 'pending')}
              >
-                <option value="all">Todos los estados</option>
-                <option value="pending">Pendientes de Informe</option>
+                <option value="all">{t('patients.filter.allStatus')}</option>
+                <option value="pending">{t('patients.filter.pendingReport')}</option>
              </select>
           </div>
 

@@ -103,29 +103,29 @@ const ModelSettings: React.FC = () => {
     setIsLoading(true);
     try {
       await inferenceService.loadDetectionModel();
-      alert('✅ Modelo de detección descargado y cargado exitosamente');
+      alert(`✅ ${t('settings.models.downloadSuccess')}`);
       await loadCacheStatus();
     } catch (error) {
       console.error('Error downloading detection model:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      alert('❌ Error al descargar el modelo:\n\n' + errorMessage);
+      const errorMessage = error instanceof Error ? error.message : t('errors.unknown');
+      alert(`❌ ${t('settings.models.downloadError')}:\n\n` + errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleClearCache = async () => {
-    if (!confirm('¿Estás seguro de que quieres limpiar el cache de modelos?')) return;
+    if (!confirm(t('settings.models.clearCacheConfirm'))) return;
 
     setIsLoading(true);
     try {
       await modelDownloader.clearCache();
       await inferenceService.dispose();
-      alert('Cache limpiado exitosamente');
+      alert(t('settings.models.clearCacheSuccess'));
       await loadCacheStatus();
     } catch (error) {
       console.error('Error clearing cache:', error);
-      alert('Error al limpiar el cache');
+      alert(t('settings.models.clearCacheError'));
     } finally {
       setIsLoading(false);
     }
@@ -319,7 +319,7 @@ const ModelSettings: React.FC = () => {
                           size="sm"
                           onClick={() => setShowClassManager(true)}
                           className="h-8 px-2"
-                          title={t('settings.classes.manage') || "Gestionar Clases"}
+                          title={t('settings.classes.manage')}
                         >
                           <Settings2 className="w-4 h-4" />
                         </Button>
@@ -348,7 +348,7 @@ const ModelSettings: React.FC = () => {
                 <div className="space-y-2 pt-2 border-t border-smoke-200">
                   <div className="flex justify-between items-center">
                     <Label className="text-xs font-medium text-coal-600">
-                      {t('settings.models.sensitivity') || 'Sensibilidad'}
+                      {t('settings.models.sensitivity')}
                     </Label>
                     <span className="text-xs font-mono text-coal-600">
                       {Math.round((config.localModels.detection.sensitivity || 0.5) * 100)}%
@@ -370,7 +370,7 @@ const ModelSettings: React.FC = () => {
                     }}
                   />
                   <p className="text-[10px] text-smoke-500">
-                    {t('settings.models.sensitivityHelp') || 'Ajusta el umbral de confianza para las detecciones.'}
+                    {t('settings.models.sensitivityHelp')}
                   </p>
                 </div>
               </div>

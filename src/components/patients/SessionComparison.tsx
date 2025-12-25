@@ -181,7 +181,7 @@ const SessionComparison: React.FC = () => {
                                             {new Date(data.session.date).toLocaleDateString()}
                                         </span>
                                         <span className="text-smoke-500 text-xs">
-                                            Sesión {data.session.sessionNumber}
+                                            {t('sessions.sessionLabel')}{data.session.sessionNumber}
                                         </span>
                                     </div>
                                     

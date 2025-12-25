@@ -114,7 +114,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
               {t('reports.generate')}
             </DialogTitle>
             <DialogDescription>
-              Asegúrese de que todos los hallazgos han sido revisados antes de generar el informe.
+              {t('reports.dialogDescription')}
             </DialogDescription>
           </DialogHeader>
 
@@ -127,7 +127,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                 id="notes"
                 value={evaluatorNotes}
                 onChange={(e) => setEvaluatorNotes(e.target.value)}
-                placeholder="Escriba aquí las conclusiones clínicas y recomendaciones para el paciente..."
+                placeholder={t('reports.evaluatorNotesPlaceholder')}
                 rows={5}
                 className="resize-none"
               />
@@ -145,7 +145,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                   </h4>
                 </div>
                 <p className="text-xs text-smoke-600 mb-4 flex-grow">
-                  Genera un borrador para revisión interna. Incluye marca de agua y no bloquea la sesión para futuras ediciones.
+                  {t('reports.previewDescription')}
                 </p>
                 <Button
                   variant="outline"
@@ -159,7 +159,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                   ) : (
                     <>
                       <FileText className="w-3.5 h-3.5 mr-2" />
-                      Generar Borrador
+                      {t('reports.previewButton')}
                     </>
                   )}
                 </Button>
@@ -176,7 +176,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                   </h4>
                 </div>
                 <p className="text-xs text-smoke-600 mb-4 flex-grow">
-                  Genera el informe clínico oficial. <strong>Bloquea la sesión permanentemente</strong> para garantizar la integridad de los datos.
+                  {t('reports.finalizeDescription')}
                 </p>
                 <Button
                   size="sm"
@@ -203,7 +203,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
             <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-100">
               <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
               <p className="text-[11px] text-amber-800 leading-tight">
-                <strong>Importante:</strong> Los informes generados se guardan localmente en la base de datos del navegador. Puede acceder a ellos desde la pestaña "Reporte" de esta sesión en cualquier momento.
+                <strong>{t('reports.importantNoteTitle')}</strong> {t('reports.importantNoteBody')}
               </p>
             </div>
           </div>

@@ -22,7 +22,7 @@ const ClassSelectionModal: React.FC<ClassSelectionModalProps> = ({
   onClassSelected,
   onCancel,
 }) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [availableClasses, setAvailableClasses] = useState<ClassDefinition[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [customClassName, setCustomClassName] = useState<string>('');
@@ -63,7 +63,7 @@ const ClassSelectionModal: React.FC<ClassSelectionModalProps> = ({
     // Agregar opción "Otra..."
     options.push({
       value: '__custom__',
-      label: 'Otra...'
+      label: t('canvas.classSelection.other')
     });
 
     return options;
@@ -82,7 +82,7 @@ const ClassSelectionModal: React.FC<ClassSelectionModalProps> = ({
 
     // Validar que no esté vacío
     if (!finalClassName || finalClassName.length === 0) {
-      alert('Por favor selecciona o escribe una clase');
+      alert(t('canvas.classSelection.alert'));
       return;
     }
 
@@ -105,38 +105,38 @@ const ClassSelectionModal: React.FC<ClassSelectionModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Seleccionar clase</DialogTitle>
+          <DialogTitle>{t('canvas.classSelection.title')}</DialogTitle>
           <DialogDescription>
-            Elige la clase para esta anotación
+            {t('canvas.classSelection.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {loading ? (
             <div className="text-center py-4 text-smoke-500">
-              Cargando clases...
+              {t('canvas.classSelection.loading')}
             </div>
           ) : (
             <>
               <div>
-                <Label htmlFor="class-select">Clase de la anotación</Label>
+                <Label htmlFor="class-select">{t('canvas.classSelection.label')}</Label>
                 <Select
                   value={selectedClass}
                   onValueChange={setSelectedClass}
                   options={getSelectOptions()}
-                  placeholder="Selecciona una clase..."
+                  placeholder={t('canvas.classSelection.placeholder')}
                   className="mt-1"
                 />
               </div>
 
               {selectedClass === '__custom__' && (
                 <div>
-                  <Label htmlFor="custom-class-input">Nombre de la clase nueva</Label>
+                  <Label htmlFor="custom-class-input">{t('canvas.classSelection.customLabel')}</Label>
                   <Input
                     id="custom-class-input"
                     value={customClassName}
                     onChange={(e) => setCustomClassName(e.target.value)}
-                    placeholder="Escribe el nombre de la clase..."
+                    placeholder={t('canvas.classSelection.customPlaceholder')}
                     className="mt-1"
                     autoFocus
                   />
@@ -150,13 +150,13 @@ const ClassSelectionModal: React.FC<ClassSelectionModalProps> = ({
               variant="outline"
               onClick={handleCancel}
             >
-              Cancelar
+              {t('ui.cancel')}
             </Button>
             <Button
               onClick={handleConfirm}
               disabled={isConfirmDisabled()}
             >
-              Confirmar
+              {t('canvas.classSelection.confirm')}
             </Button>
           </div>
         </div>

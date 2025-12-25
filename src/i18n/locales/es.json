@@ -45,6 +45,8 @@
     "cancel": "Cancelar"
   },
   "errors": {
+    "savePatient": "Error al guardar el paciente",
+    "saveSession": "Error al guardar la sesión",
     "unknown": "Error desconocido",
     "exportSession": "Error al exportar la sesión.",
     "deleteImage": "Error al eliminar la imagen",
@@ -73,6 +75,7 @@
     "addFirst": "Agrega tu primer paciente",
     "name": "Nombre",
     "id": "ID de Paciente",
+    "years": "años",
     "idLabel": "ID: ",
     "infoTitle": "Información del Paciente",
     "dateOfBirth": "Fecha de Nacimiento",
@@ -82,6 +85,16 @@
     "description": "Gestiona los pacientes y sus sesiones de análisis",
     "notFound": "No se encontraron pacientes",
     "empty": "No hay pacientes registrados. Crea uno para comenzar.",
+    "sessions": "sesiones",
+    "status": {
+      "no_report": "Sin Informe",
+      "preliminary": "Borrador"
+    },
+    "medicalLabels": {
+      "diabetes": "Diabetes",
+      "hta": "HTA",
+      "dlp": "DLP"
+    },
     "fields": {
       "name": "Nombre",
       "email": "Correo Electrónico",
@@ -89,6 +102,7 @@
       "birthDate": "Fecha de Nacimiento",
       "gender": "Género",
       "medicalHistory": "Historial Médico",
+      "medications": "Medicamentos",
       "address": "Dirección",
       "results": "Resultados"
     },
@@ -96,11 +110,37 @@
       "male": "Masculino",
       "female": "Femenino",
       "other": "Otro"
+    },
+    "filter": {
+      "allStatus": "Todos los estados",
+      "pendingReport": "Pendientes de Informe"
+    },
+    "form": {
+      "editDescription": "Edita la información del paciente",
+      "createDescription": "Completa los datos para crear un nuevo paciente",
+      "medicalHistory": "Antecedentes Médicos",
+      "diabetes": "Diabetes",
+      "diabetesType": "Tipo de Diabetes",
+      "selectType": "Seleccione tipo",
+      "types": {
+        "type1": "Tipo 1",
+        "type2": "Tipo 2",
+        "gestational": "Gestacional",
+        "other": "Otro"
+      },
+      "diabetesDuration": "Años con Diabetes",
+      "diabetesDurationPlaceholder": "Años desde diagnóstico",
+      "hta": "Hipertensión Arterial (HTA)",
+      "dlp": "Dislipidemia (DLP)",
+      "medicationsPlaceholder": "Lista de medicamentos separados por comas",
+      "otherConditions": "Otros Antecedentes",
+      "otherConditionsPlaceholder": "Otros antecedentes médicos relevantes..."
     }
   },
   "sessions": {
     "title": "Sesiones",
     "session": "Sesión",
+    "sessionLabel": "Sesión ",
     "create": "Nueva Sesión",
     "edit": "Editar Sesión",
     "delete": "Eliminar Sesión",
@@ -144,6 +184,10 @@
       "createDescription": "Completa la información para crear una nueva sesión",
       "update": "Actualizar Sesión",
       "editDescription": "Actualiza la información de la sesión"
+    },
+    "reportHistory": {
+        "title": "Historial de Informes",
+        "description": "Todos los informes generados para esta sesión"
     }
   },
   "upload": {
@@ -159,7 +203,17 @@
     "dropzone": "Arrastra archivos aquí o haz click para seleccionar",
     "accepted": "Formatos soportados: JPG, PNG",
     "maxSize": "Tamaño máximo: 1MB",
-    "noImage": "Sin imagen"
+    "noImage": "Sin imagen",
+    "gallery": {
+      "viewDetections": "Ver {{count}} detecciones",
+      "viewImage": "Ver imagen",
+      "processingAI": "Procesando IA...",
+      "detectedCount": "detectadas",
+      "deleteImage": "Eliminar imagen",
+      "reprocessAI": "Reprocesar con IA",
+      "moveToRight": "A Ojo Derecho",
+      "moveToLeft": "A Ojo Izquierdo"
+    }
   },
   "canvas": {
     "tools": {
@@ -179,7 +233,30 @@
       "original": "Imagen Original",
       "ai_detections": "Detecciones IA",
       "ai_segmentations": "Segmentaciones IA",
-      "manual": "Anotaciones Manuales"
+      "manual": "Anotaciones Manuales",
+      "show": "Mostrar capa",
+      "hide": "Ocultar capa",
+      "showLabels": "Mostrar etiquetas",
+      "hideLabels": "Ocultar etiquetas",
+      "lock": "Bloquear capa",
+      "unlock": "Desbloquear capa",
+      "expand": "Expandir",
+      "collapse": "Cerrar",
+      "deleteAnnotation": "Eliminar",
+      "editAnnotationClass": "Editar clase",
+      "convertAndEdit": "Convertir a manual / Editar"
+    },
+    "classSelection": {
+      "title": "Seleccionar clase",
+      "description": "Elige la clase para esta anotación",
+      "loading": "Cargando clases...",
+      "label": "Clase de la anotación",
+      "placeholder": "Selecciona una clase...",
+      "other": "Otra...",
+      "customLabel": "Nombre de la clase nueva",
+      "customPlaceholder": "Escribe el nombre de la clase...",
+      "alert": "Por favor selecciona o escribe una clase",
+      "confirm": "Confirmar"
     }
   },
   "analysis": {
@@ -208,26 +285,80 @@
       "zoomOut": "Alejar",
       "reset": "Restablecer Vista",
       "addAnnotation": "Agregar Anotación",
-      "delete": "Eliminar"
+      "delete": "Eliminar",
+      "prevImage": "Imagen anterior",
+      "nextImage": "Siguiente imagen"
     },
     "layers": {
       "original": "Imagen Original",
       "segmentationsAI": "Segmentaciones IA",
       "detectionsAI": "Detecciones IA",
       "manualAnnotations": "Anotaciones Manuales"
+    },
+    "view": {
+      "noImages": "No hay imágenes para analizar",
+      "stats": {
+        "totalImages": "Total Imágenes",
+        "totalDetections": "Total Detecciones",
+        "avgPerImage": "Promedio por Imagen",
+        "processedImages": "Imágenes Procesadas"
+      },
+      "detectionsPerClass": "Detecciones por Clase",
+      "analyzedImages": "Imágenes Analizadas",
+      "noDetections": "No se encontraron detecciones. Procesa las imágenes con IA primero.",
+      "viewDetails": "Ver detalles",
+      "detectionsCount": "detecciones",
+      "noDetectionsLabel": "Sin detecciones"
     }
   },
   "reports": {
+    "title": "Informes",
     "generate": "Generar Informe",
     "preview": "Vista Preliminar",
     "finalize": "Finalizar y Cerrar Caso",
     "reportType": "Tipo de Reporte",
     "evaluatorNotes": "Notas del Evaluador (Opcional)",
-    "evaluatorNotesPlaceholder": "Agregar observaciones sobre la evolución del paciente...",
+    "evaluatorNotesPlaceholder": "Escriba aquí las conclusiones clínicas y recomendaciones para el paciente...",
     "finalWarning": "Nota: El reporte final bloqueará la sesión y no se podrán añadir o eliminar imágenes ni análisis.",
+    "dialogDescription": "Asegúrese de que todos los hallazgos han sido revisados antes de generar el informe.",
+    "previewDescription": "Genera un borrador para revisión interna. Incluye marca de agua y no bloquea la sesión para futuras ediciones.",
+    "previewButton": "Generar Borrador",
+    "finalizeDescription": "Genera el informe clínico oficial. Bloquea la sesión permanentemente para garantizar la integridad de los datos.",
+    "importantNoteTitle": "Importante:",
+    "importantNoteBody": "Los informes generados se guardan localmente en la base de datos del navegador. Puede acceder a ellos desde la pestaña \"Reporte\" de esta sesión en cualquier momento.",
     "status": {
       "preliminary": "VERSIÓN PRELIMINAR",
       "final": "INFORME FINAL"
+    },
+    "list": {
+      "noReports": "No se han generado informes aún",
+      "addFirst": "Utilice el botón \"Generar Informe\" para crear el primer reporte clínico.",
+      "allReportsInfo": "Los informes generados aparecerán aquí para su revisión.",
+      "viewPDF": "Ver PDF",
+      "downloadPDF": "Descargar PDF",
+      "download": "Descargar",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "finalize": "Finalizar",
+      "finalizing": "Finalizando...",
+      "goToAnalysis": "Ir a Análisis",
+      "sessionPrefix": "Sesión #",
+      "deleteConfirm": "¿Está seguro de que desea eliminar este informe preliminar? Esta acción no se puede deshacer.",
+      "deleteFinalError": "No se pueden eliminar informes finales.",
+      "finalizeConfirm": "¿Está seguro de que desea finalizar este informe? Esta acción convertirá este informe en final y bloqueará la sesión permanentemente.",
+      "finalizeSuccess": "Informe finalizado y descargado correctamente. La sesión ha sido bloqueada.",
+      "finalizeSuccessDemo": "Informe finalizado y descargado correctamente. Esta es la sesión demo y permanece abierta para demostración.",
+      "editModalTitle": "Editar Conclusiones",
+      "editModalPlaceholder": "Ingrese las conclusiones clínicas y recomendaciones...",
+      "searchPlaceholder": "Buscar en conclusiones...",
+      "showPreliminary": "Mostrar informes preliminares",
+      "foundCount": "{{count}} informe encontrado",
+      "foundCount_plural": "{{count}} informes encontrados",
+      "categories": {
+        "all": "Todas las categorías",
+        "single": "Sesiones únicas",
+        "combined": "Sesiones combinadas"
+      }
     }
   },
   "models": {
@@ -249,16 +380,28 @@
     "all": "Exportar Todo",
     "import": "Importar .dird",
     "exporting": "Exportando...",
-    "dragAndDrop": "O arrastra y suelta aquí"
+    "dragAndDrop": "O arrastra y suelta aquí",
+    "errorPatient": "Error al exportar el paciente",
+    "errorData": "Error al exportar los datos"
   },
   "import": {
+    "title": "Importar .dird",
+    "description": "Importa un archivo .dird para restaurar datos de pacientes",
+    "selectFile": "Haz clic para seleccionar un archivo .dird",
     "importing": "Importando datos...",
     "waitMessage": "Esto puede tardar unos momentos",
-    "errorTitle": "Error de Importación"
+    "successTitle": "Importación Exitosa",
+    "patientLabel": "Paciente: ",
+    "sessionsImported": "Sesiones importadas: ",
+    "imagesImported": "Imágenes importadas: ",
+    "detectionsImported": "Detecciones importadas: ",
+    "errorTitle": "Error de Importación",
+    "processError": "Error al procesar el archivo"
   },
   "languages": {
     "es": "Español",
-    "en": "English"
+    "en": "English",
+    "auto": "Automático (Sistema)"
   },
   "settings": {
     "title": "Configuración",
@@ -270,6 +413,18 @@
       "pwa": "Instalación",
       "about": "Acerca de",
       "report": "Reporte"
+    },
+    "classes": {
+      "title": "Gestión de Clases del Modelo",
+      "description": "Personaliza los nombres y colores de las clases detectadas.",
+      "rainbowMode": "Modo Arcoiris",
+      "rainbowModeDesc": "Si está activado, cada clase tendrá su propio color. Si no, se usará el color principal.",
+      "list": "Lista de Clases",
+      "idLabel": "ID (JSON)",
+      "nameLabel": "Nombre (Traducción)",
+      "colorLabel": "Color",
+      "placeholder": "Nombre personalizado...",
+      "manage": "Gestionar Clases"
     },
     "report": {
       "general": {
@@ -360,6 +515,7 @@
         "testing": "Probando...",
         "connectionSuccess": "Conexión exitosa",
         "connectionFailed": "Conexión fallida",
+        "unknownError": "Error desconocido",
         "endpointPlaceholder": "https://api.example.com/inference",
         "keyPlaceholder": "sk-…",
         "modelNamePlaceholder": "yolov8n-retina-v2.0",
@@ -387,7 +543,48 @@
       "info3": "• Si la descarga falla, se usará el modelo local como fallback",
       "info4": "• El cache persiste entre sesiones y se puede limpiar en cualquier momento",
       "detectionModels": "Modelos de Detección",
-      "segmentationModels": "Modelos de Segmentación"
+      "segmentationModels": "Modelos de Segmentación",
+      "downloadSuccess": "Modelo de detección descargado y cargado exitosamente",
+      "downloadError": "Error al descargar el modelo",
+      "clearCacheConfirm": "¿Estás seguro de que quieres limpiar el cache de modelos?",
+      "clearCacheSuccess": "Cache limpiado exitosamente",
+      "clearCacheError": "Error al limpiar el cache",
+      "sensitivity": "Sensibilidad",
+      "sensitivityHelp": "Ajusta el umbral de confianza para las detecciones.",
+      "modelInfo": "Información del Modelo",
+      "modelInfoDescription": "Detalles técnicos, métricas de rendimiento y análisis del modelo de detección",
+      "generalInfo": "Información General",
+      "globalMetrics": "Métricas Globales",
+      "globalMetricsPrecision": "Precisión Global",
+      "globalMetricsRecall": "Recall Global",
+      "detectableClasses": "Clases Detectables",
+      "criticalFindings": "Hallazgos Críticos",
+      "recommendations": "Recomendaciones y Próximos Pasos",
+      "type": "Tipo:",
+      "dateTrained": "Fecha de Entrenamiento:",
+      "inputSize": "Tamaño de Entrada:",
+      "modelStatus": "Estado del Modelo:",
+      "metricLabel": "Métrica:",
+      "causeLabel": "Causa:",
+      "implicationLabel": "Implicación:",
+      "statusTexts": {
+        "excellent": "Excelente",
+        "good": "Bueno",
+        "improvement": "Requiere Mejora",
+        "critical": "Crítico"
+      },
+      "loader": {
+        "errorLoading": "No se pudieron cargar los modelos",
+        "detectionUnavailable": "Modelo de detección no disponible",
+        "detectionLoadError": "Error al cargar el modelo de detección",
+        "segmentationUnavailable": "Modelo de segmentación no disponible",
+        "segmentationLoadError": "Error al cargar el modelo de segmentación",
+        "detectionModel": "Modelo de Detección",
+        "segmentationModel": "Modelo de Segmentación",
+        "accuracy": "Precisión: ",
+        "noModels": "No hay modelos disponibles",
+        "load": "Cargar"
+      }
     },
     "processing": {
       "title": "Configuración de Procesamiento",
@@ -438,7 +635,8 @@
   "processing": {
     "complete": "Procesamiento completado con éxito",
     "inProgress": "Procesando {{current}}/{{total}}...",
-    "start": "Procesar con IA"
+    "start": "Procesar con IA",
+    "detectionsFound": "Detecciones encontradas: "
   },
   "contribution": {
     "title": "Contribuir",
@@ -453,6 +651,26 @@
       "description": "Tu apoyo nos ayuda a seguir mejorando Dird",
       "button": "Comprar un café"
     },
+    "dialog": {
+      "description": "Contribuye con tu imagen y tus marcas para mejorar el modelo.",
+      "body1": "La contribución incluye la imagen original más las marcas de IA y manuales, con sus coordenadas diferenciadas y sus clases correspondientes.",
+      "body2": "Tus datos serán anonimizados (incluyendo la serialización del nombre de la imagen) antes del envío para garantizar la privacidad. Ve a la sección de \"Contribuir\" en el menú principal para finalizar el envío y aceptar los términos.",
+      "unmark": "No contribuir",
+      "mark": "Marcar",
+      "manage": "Gestionar contribución",
+      "markToContribute": "Marcar para contribuir"
+    },
+    "images": {
+      "title": "Contribución de Imágenes",
+      "pendingMessage": "Tienes {{count}} imágenes marcadas para contribuir. Estas imágenes son invaluables para re-entrenar y mejorar nuestros modelos de detección.",
+      "terms": "Acepto los términos y condiciones. Entiendo que las imágenes serán enviadas para mejorar los modelos de IA y que no contienen información personal identificable.",
+      "sending": "Enviando...",
+      "success": "¡Gracias! Se enviaron {{count}} imágenes exitosamente.",
+      "failedCount": " ({{count}} fallaron)",
+      "error": "Hubo un error al enviar las imágenes. Por favor revisa la consola o intenta más tarde.",
+      "generalError": "Error general al enviar la contribución",
+      "submit": "Enviar {{count}} Imágenes"
+    },
     "feedback": {
       "title": "Enviar Comentarios",
       "component": "Componente",
@@ -465,7 +683,8 @@
       "eyePhotosDescription": "Sube fotos de ojos con blanqueamiento o marcas para ayudar a mejorar los modelos",
       "clickToUpload": "Haz clic para subir imágenes",
       "supportedFormats": "Formatos soportados: JPG, PNG, WEBP",
-      "submit": "Enviar Comentario"
+      "submit": "Enviar Comentario",
+      "success": "¡Comentario enviado! (Simulado)"
     }
   },
   "demo": {
@@ -477,9 +696,11 @@
       "steps": {
         "init": "Inicializando",
         "patient": "Creando paciente demo",
+        "model": "Cargando modelo de IA",
+        "modelLoaded": "Modelo de IA cargado",
         "images": "Cargando imágenes",
-        "report": "Cargando reporte",
-        "done": "Finalizando"
+        "report": "Cargando reportes",
+        "done": "Completado"
       }
     }
   }

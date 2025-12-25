@@ -9,6 +9,12 @@ import enTranslations from './locales/en.json';
 import esClasses from './locales/classes/es.json';
 import enClasses from './locales/classes/en.json';
 
+// Detectar el idioma del navegador
+export const detectBrowserLanguage = (): string => {
+  const browserLang = navigator.language.split('-')[0];
+  return ['es', 'en'].includes(browserLang) ? browserLang : 'es';
+};
+
 // Obtener idioma preferido del localStorage o navegador
 const getPreferredLanguage = () => {
   // Intentar obtener del localStorage
@@ -16,16 +22,16 @@ const getPreferredLanguage = () => {
   if (savedLang && ['es', 'en'].includes(savedLang)) {
     return savedLang;
   }
-
-  // Si no está guardado, usar el idioma del navegador
-  const browserLang = navigator.language.startsWith('es') ? 'es' : 'en';
-  return browserLang;
+  
+  // Si no hay nada guardado o es 'auto' (aunque aquí leemos localStorage directo, 
+  // 'auto' se gestionará principalmente desde el store), usamos detección.
+  return detectBrowserLanguage();
 };
 
 i18n
   .use(initReactI18next)
   .init({
-    lng: getPreferredLanguage(), // Idioma dinámico
+    lng: getPreferredLanguage(), // Idioma inicial
     fallbackLng: 'es',
     debug: import.meta.env.DEV,
     resources: {
@@ -43,9 +49,13 @@ i18n
     }
   });
 
-// Función para cambiar el idioma
+// Función para cambiar el idioma (acepta 'auto' para limpiar preferencia fija)
 export const changeLanguage = (lang: string) => {
-  if (['es', 'en'].includes(lang)) {
+  if (lang === 'auto') {
+    const detected = detectBrowserLanguage();
+    i18n.changeLanguage(detected);
+    localStorage.removeItem('language'); // Eliminar preferencia fija
+  } else if (['es', 'en'].includes(lang)) {
     i18n.changeLanguage(lang);
     localStorage.setItem('language', lang);
   }

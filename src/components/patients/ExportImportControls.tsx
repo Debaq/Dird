@@ -39,7 +39,7 @@ const ExportImportControls: React.FC<ExportImportControlsProps> = ({
       downloadDirdFile(blob, filename);
     } catch (error) {
       console.error('Error exporting patient:', error);
-      alert('Error al exportar el paciente');
+      alert(t('export.errorPatient'));
     }
   };
 
@@ -50,7 +50,7 @@ const ExportImportControls: React.FC<ExportImportControlsProps> = ({
       downloadDirdFile(blob, filename);
     } catch (error) {
       console.error('Error exporting data:', error);
-      alert('Error al exportar los datos');
+      alert(t('export.errorData'));
     }
   };
 
@@ -72,7 +72,7 @@ const ExportImportControls: React.FC<ExportImportControlsProps> = ({
       console.error('Error importing file:', error);
       setImportResult({
         success: false,
-        error: 'Error al procesar el archivo',
+        error: t('import.processError'),
         sessionsImported: 0,
         imagesImported: 0,
         detectionsImported: 0,
@@ -114,9 +114,9 @@ const ExportImportControls: React.FC<ExportImportControlsProps> = ({
       <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('export.import')}</DialogTitle>
+            <DialogTitle>{t('import.title')}</DialogTitle>
             <DialogDescription>
-              Importa un archivo .dird para restaurar datos de pacientes
+              {t('import.description')}
             </DialogDescription>
           </DialogHeader>
 
@@ -136,9 +136,9 @@ const ExportImportControls: React.FC<ExportImportControlsProps> = ({
                 >
                   <Upload className="w-12 h-12 mx-auto mb-4 text-smoke-400" />
                   <p className="text-coal-800 font-medium mb-2">
-                    Haz clic para seleccionar un archivo .dird
+                    {t('import.selectFile')}
                   </p>
-                  <p className="text-sm text-smoke-500">O arrastra y suelta aquí</p>
+                  <p className="text-sm text-smoke-500">{t('export.dragAndDrop')}</p>
                 </div>
               </>
             )}
@@ -146,8 +146,8 @@ const ExportImportControls: React.FC<ExportImportControlsProps> = ({
             {importing && (
               <div className="text-center py-8">
                 <div className="animate-spin w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                <p className="text-coal-800 font-medium">Importando datos...</p>
-                <p className="text-sm text-smoke-500">Esto puede tardar unos momentos</p>
+                <p className="text-coal-800 font-medium">{t('import.importing')}</p>
+                <p className="text-sm text-smoke-500">{t('import.waitMessage')}</p>
               </div>
             )}
 
@@ -162,18 +162,18 @@ const ExportImportControls: React.FC<ExportImportControlsProps> = ({
                 {importResult.success ? (
                   <div>
                     <h3 className="font-semibold text-green-800 mb-2">
-                      Importación Exitosa
+                      {t('import.successTitle')}
                     </h3>
                     <div className="text-sm text-green-700 space-y-1">
-                      <p>Paciente: {importResult.patient?.name}</p>
-                      <p>Sesiones importadas: {importResult.sessionsImported}</p>
-                      <p>Imágenes importadas: {importResult.imagesImported}</p>
-                      <p>Detecciones importadas: {importResult.detectionsImported}</p>
+                      <p>{t('import.patientLabel')}{importResult.patient?.name}</p>
+                      <p>{t('import.sessionsImported')}{importResult.sessionsImported}</p>
+                      <p>{t('import.imagesImported')}{importResult.imagesImported}</p>
+                      <p>{t('import.detectionsImported')}{importResult.detectionsImported}</p>
                     </div>
                   </div>
                 ) : (
                   <div>
-                    <h3 className="font-semibold text-red-800 mb-2">Error de Importación</h3>
+                    <h3 className="font-semibold text-red-800 mb-2">{t('import.errorTitle')}</h3>
                     <p className="text-sm text-red-700">{importResult.error}</p>
                   </div>
                 )}

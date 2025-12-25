@@ -129,7 +129,7 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center">
             <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full px-4 py-2 shadow-lg text-center">
               <p className="text-sm font-bold text-primary-600">
-                {detectionCount > 0 ? `Ver ${detectionCount} detecciones` : 'Ver imagen'}
+                {detectionCount > 0 ? t('upload.gallery.viewDetections', { count: detectionCount }) : t('upload.gallery.viewImage')}
               </p>
             </div>
           </div>
@@ -137,7 +137,7 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
             <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-20">
               <div className="flex flex-col items-center">
                 <Loader2 className="w-8 h-8 text-primary-500 animate-spin mb-2" />
-                <span className="text-xs font-semibold text-primary-700">Procesando IA...</span>
+                <span className="text-xs font-semibold text-primary-700">{t('upload.gallery.processingAI')}</span>
               </div>
             </div>
           )}
@@ -148,7 +148,7 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
             <p className="text-xs text-smoke-500">{`${image.width} × ${image.height}`}</p>
             {detectionCount > 0 && (
               <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full font-medium">
-                {detectionCount} detectadas
+                {detectionCount} {t('upload.gallery.detectedCount')}
               </span>
             )}
           </div>
@@ -165,7 +165,7 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
                 image.id && onDelete(image.id);
               }}
               className="w-8 h-8 bg-white hover:bg-red-500 text-red-500 hover:text-white shadow-sm"
-              title="Eliminar imagen"
+              title={t('upload.gallery.deleteImage')}
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -177,7 +177,7 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
               onClick={handleReprocessAI}
               disabled={isReprocessing}
               className="w-8 h-8 bg-white hover:bg-primary-50 text-primary-600 shadow-sm"
-              title="Reprocesar con IA"
+              title={t('upload.gallery.reprocessAI')}
             >
               {isReprocessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
             </Button>
@@ -200,13 +200,13 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
             >
               {image.eyeType === 'OI' ? (
                 <>
-                  <span className="text-[10px] mr-1">A Ojo Derecho</span>
+                  <span className="text-[10px] mr-1">{t('upload.gallery.moveToRight')}</span>
                   <ArrowRight className="w-3 h-3" />
                 </>
               ) : (
                 <>
                   <ArrowLeft className="w-3 h-3 mr-1" />
-                  <span className="text-[10px]">A Ojo Izquierdo</span>
+                  <span className="text-[10px]">{t('upload.gallery.moveToLeft')}</span>
                 </>
               )}
             </Button>

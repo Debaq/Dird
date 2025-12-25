@@ -169,7 +169,7 @@ export function Settings() {
     } catch (error) {
       setApiTestResult({
         success: false,
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : t('settings.models.api.unknownError')
       });
     } finally {
       setIsTestingApi(false);
@@ -362,6 +362,7 @@ export function Settings() {
                   }}
                   className="w-full mt-2 rounded-md border border-smoke-300 px-3 py-2 dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
                 >
+                  <option value="auto">{t('languages.auto')}</option>
                   <option value="es">{t('languages.es')}</option>
                   <option value="en">{t('languages.en')}</option>
                 </select>

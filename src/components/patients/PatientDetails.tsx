@@ -194,34 +194,34 @@ const PatientDetails: React.FC = () => {
             </div>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-smoke-500">Diabetes</p>
+                <p className="text-sm text-smoke-500">{t('patients.form.diabetes')}</p>
                 <p className="text-coal-800 font-medium">
-                  {patient.diabetes ? 'Sí' : 'No'}
+                  {patient.diabetes ? t('ui.yes') : t('ui.no')}
                   {patient.diabetes && patient.diabetesType && (
                     <span className="ml-2 text-sm text-primary-600">
-                      ({patient.diabetesType.replace('type', 'Tipo ')})
-                      {patient.diabetesDuration && `, ${patient.diabetesDuration} años`}
+                      ({t(`patients.form.types.${patient.diabetesType}`)})
+                      {patient.diabetesDuration && `, ${patient.diabetesDuration} ${t('patients.years')}`}
                     </span>
                   )}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-smoke-500">Hipertensión Arterial (HTA)</p>
-                <p className="text-coal-800 font-medium">{patient.hta ? 'Sí' : 'No'}</p>
+                <p className="text-sm text-smoke-500">{t('patients.form.hta')}</p>
+                <p className="text-coal-800 font-medium">{patient.hta ? t('ui.yes') : t('ui.no')}</p>
               </div>
               <div>
-                <p className="text-sm text-smoke-500">Dislipidemia (DLP)</p>
-                <p className="text-coal-800 font-medium">{patient.dlp ? 'Sí' : 'No'}</p>
+                <p className="text-sm text-smoke-500">{t('patients.form.dlp')}</p>
+                <p className="text-coal-800 font-medium">{patient.dlp ? t('ui.yes') : t('ui.no')}</p>
               </div>
               {patient.medications && patient.medications.length > 0 && (
                 <div>
-                  <p className="text-sm text-smoke-500">Medicamentos</p>
+                  <p className="text-sm text-smoke-500">{t('patients.fields.medications')}</p>
                   <p className="text-coal-800 font-medium">{patient.medications.join(', ')}</p>
                 </div>
               )}
               {patient.otherConditions && (
                 <div>
-                  <p className="text-sm text-smoke-500">Otros Antecedentes</p>
+                  <p className="text-sm text-smoke-500">{t('patients.form.otherConditions')}</p>
                   <p className="text-coal-800 font-medium">{patient.otherConditions}</p>
                 </div>
               )}

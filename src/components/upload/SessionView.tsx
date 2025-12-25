@@ -75,7 +75,6 @@ const SessionView: React.FC = () => {
       const sessionName = session?.name?.replace(/ /g, '_') || session?.sessionNumber;
       downloadDirdFile(blob, `dird_export_${patient?.patientId}_session_${sessionName}`);
     } catch (error) {
-      console.error('Error exporting session:', error);
       alert(t('errors.exportSession'));
     } finally {
       setIsExporting(false);
@@ -92,7 +91,6 @@ const SessionView: React.FC = () => {
         });
         setRefreshKey((prev) => prev + 1);
       } catch (error) {
-        console.error('Error deleting image:', error);
         alert(t('errors.deleteImage'));
       }
     }
@@ -144,13 +142,6 @@ const SessionView: React.FC = () => {
           const detections = await inferenceService.detectObjects(imgElement, image.id);
           totalDetections += detections.length;
 
-          // 🔍 TEMPORAL: Console.log para extraer JSON de detecciones para paciente demo
-          console.log('═══════════════════════════════════════════════════════');
-          console.log(`📸 Imagen: ${image.filename} (${image.eyeType})`);
-          console.log(`📊 Detecciones encontradas: ${detections.length}`);
-          console.log('📋 JSON de detecciones (copiar para demo):');
-          console.log(JSON.stringify(detections, null, 2));
-          console.log('═══════════════════════════════════════════════════════');
         }
         URL.revokeObjectURL(imageUrl);
       }
@@ -162,10 +153,9 @@ const SessionView: React.FC = () => {
         },
       });
 
-      alert(`${t('processing.complete')}\n\nDetecciones encontradas: ${totalDetections}`);
+      alert(`${t('processing.complete')}\n\n${t('processing.detectionsFound')}${totalDetections}`);
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
-      console.error('Error processing images:', error);
       alert(t('errors.processingImages', { error: (error as Error).message }));
     } finally {
       setIsProcessing(false);
@@ -292,9 +282,9 @@ const SessionView: React.FC = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Historial de Informes</CardTitle>
+                    <CardTitle>{t('sessions.reportHistory.title')}</CardTitle>
                     <p className="text-sm text-smoke-500 mt-1">
-                      Todos los informes generados para esta sesión
+                      {t('sessions.reportHistory.description')}
                     </p>
                   </div>
                   {!session.locked && (

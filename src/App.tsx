@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import MainLayout from '@/components/layout/MainLayout';
 import PatientList from '@/components/patients/PatientList';
 import PatientDetails from '@/components/patients/PatientDetails';
@@ -14,13 +15,14 @@ import { initializeDemoPatient, demoPatientExists, type LoadingProgress } from '
 import { DemoLoadingScreen } from '@/components/demo/DemoLoadingScreen';
 
 function App() {
+  const { t } = useTranslation();
   const basename = import.meta.env.PROD ? '/dird' : '/';
   const [isInitializing, setIsInitializing] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress>({
     step: 'init',
     current: 0,
     total: 1,
-    message: 'Inicializando',
+    message: t('demo.loading.steps.init'),
   });
 
   // Inicializar paciente demo al cargar la aplicación
@@ -28,31 +30,25 @@ function App() {
     let cancelled = false; // Para evitar race conditions
 
     const setupDemoPatient = async () => {
-      console.log('🔍 Verificando si existe paciente demo...');
       const exists = await demoPatientExists();
-      console.log('🔍 Paciente demo existe:', exists);
 
       if (cancelled) return; // Si el componente se desmontó, salir
 
       if (!exists) {
-        console.log('🚀 Iniciando creación de paciente demo...');
         await initializeDemoPatient((progress) => {
           if (!cancelled) {
-            console.log('📊 Progreso:', progress);
             setLoadingProgress(progress);
           }
         });
-        console.log('✅ Paciente demo inicializado completamente');
       }
 
       if (!cancelled) {
-        console.log('🏁 Finalizando carga, ocultando pantalla...');
         setIsInitializing(false);
       }
     };
 
-    setupDemoPatient().catch(error => {
-      console.error('❌ Error al inicializar paciente demo:', error);
+    setupDemoPatient().catch(() => {
+      console.error('❌ Error al inicializar paciente demo');
       if (!cancelled) {
         setIsInitializing(false);
       }

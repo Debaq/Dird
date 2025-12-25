@@ -42,13 +42,13 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layers, onLayerUpdate }) 
                     layer.visible ? 'text-coal-800' : 'text-smoke-400'
                   )}
                 >
-                  {layer.name}
+                  {t(layer.name)}
                 </span>
                 <div className="flex items-center space-x-1">
                   <button
                     onClick={() => onLayerUpdate(layer.id, { visible: !layer.visible })}
                     className="p-1 hover:bg-coal-100 rounded"
-                    title={layer.visible ? 'Ocultar capa' : 'Mostrar capa'}
+                    title={layer.visible ? t('canvas.layers.hide') : t('canvas.layers.show')}
                   >
                     {layer.visible ? (
                       <Eye className="w-4 h-4 text-primary-500" />
@@ -60,7 +60,7 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layers, onLayerUpdate }) 
                     <button
                       onClick={() => onLayerUpdate(layer.id, { showLabels: !layer.showLabels })}
                       className="p-1 hover:bg-coal-100 rounded"
-                      title={layer.showLabels ? 'Ocultar etiquetas' : 'Mostrar etiquetas'}
+                      title={layer.showLabels ? t('canvas.layers.hideLabels') : t('canvas.layers.showLabels')}
                     >
                       <Tag className={cn(
                         "w-4 h-4",
@@ -72,7 +72,7 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layers, onLayerUpdate }) 
                     onClick={() => onLayerUpdate(layer.id, { locked: !layer.locked })}
                     className="p-1 hover:bg-coal-100 rounded"
                     disabled={layer.id === 'original'}
-                    title={layer.locked ? 'Desbloquear capa' : 'Bloquear capa'}
+                    title={layer.locked ? t('canvas.layers.unlock') : t('canvas.layers.lock')}
                   >
                     {layer.locked ? (
                       <Lock className="w-4 h-4 text-smoke-400" />
