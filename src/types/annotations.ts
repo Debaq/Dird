@@ -41,3 +41,8 @@ export interface AnnotationState {
   activeTool: ToolType;
   selectedAnnotationId?: string;
 }
+
+export type HistoryEntry = 
+  | { type: 'add'; detection: any }
+  | { type: 'delete'; detection: any }
+  | { type: 'update'; before: any; after: any };

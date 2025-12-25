@@ -18,6 +18,7 @@ import AdvancedLayerControls, { type CanvasLayer } from './AdvancedLayerControls
 import ToolPanel, { type CanvasTool } from './ToolPanel';
 import { db } from '@/lib/db/schema';
 import { cn } from '@/lib/utils';
+import type { HistoryEntry } from '@/types/annotations';
 
 const DEFAULT_LAYERS: CanvasLayer[] = [
   { id: 'original', name: 'Imagen Original', visible: true, opacity: 1, locked: true, zIndex: 0 },
@@ -59,6 +60,59 @@ const ImageAnalyzer: React.FC = () => {
   const { t } = useTranslation();
   const [layers, setLayers] = useState<CanvasLayer[]>(DEFAULT_LAYERS);
   const [activeTool, setActiveTool] = useState<CanvasTool>('select');
+
+  // History State
+  const [detectionHistory, setDetectionHistory] = useState<HistoryEntry[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
+  const addToHistory = (entry: HistoryEntry) => {
+    const newHistory = detectionHistory.slice(0, historyIndex + 1);
+    newHistory.push(entry);
+    setDetectionHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  const handleUndo = async () => {
+    if (historyIndex < 0) return;
+
+    const entry = detectionHistory[historyIndex];
+
+    try {
+      if (entry.type === 'add') {
+        if (entry.detection.id) {
+          await db.detections.delete(entry.detection.id);
+        }
+      } else if (entry.type === 'delete') {
+        await db.detections.add(entry.detection);
+      } else if (entry.type === 'update') {
+        await db.detections.put(entry.before);
+      }
+      setHistoryIndex(prev => prev - 1);
+    } catch (error) {
+      console.error('Error in undo:', error);
+    }
+  };
+
+  const handleRedo = async () => {
+    if (historyIndex >= detectionHistory.length - 1) return;
+
+    const entry = detectionHistory[historyIndex + 1];
+
+    try {
+      if (entry.type === 'add') {
+        await db.detections.add(entry.detection);
+      } else if (entry.type === 'delete') {
+        if (entry.detection.id) {
+          await db.detections.delete(entry.detection.id);
+        }
+      } else if (entry.type === 'update') {
+        await db.detections.put(entry.after);
+      }
+      setHistoryIndex(prev => prev + 1);
+    } catch (error) {
+      console.error('Error in redo:', error);
+    }
+  };
 
   // Mobile UI state
   const [showMobileTools, setShowMobileTools] = useState(false);
@@ -118,6 +172,21 @@ const ImageAnalyzer: React.FC = () => {
     const nextId = sortedImages[nextIndex].id;
     if (nextId) handleNavigation(nextId);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'PageUp') {
+        e.preventDefault();
+        handlePrevImage();
+      } else if (e.key === 'PageDown') {
+        e.preventDefault();
+        handleNextImage();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handlePrevImage, handleNextImage]);
 
   const allDetections = useLiveQuery(
     () => (imageId ? db.detections.where('imageId').equals(parseInt(imageId)).toArray() : []),
@@ -271,6 +340,7 @@ const ImageAnalyzer: React.FC = () => {
                aiDetections={aiDetections}
                manualDetections={manualDetections}
                onDetectionsUpdate={handleAnnotationAdded}
+               onAddToHistory={addToHistory}
              />
            </div>
          )}
@@ -289,6 +359,13 @@ const ImageAnalyzer: React.FC = () => {
                 activeTool={activeTool}
                 layers={layers}
                 onAnnotationAdded={handleAnnotationAdded}
+                history={{
+                  entries: detectionHistory,
+                  index: historyIndex,
+                  onAdd: addToHistory,
+                  onUndo: handleUndo,
+                  onRedo: handleRedo
+                }}
               />
 
               {sortedImages.length > 1 && (
@@ -332,6 +409,7 @@ const ImageAnalyzer: React.FC = () => {
             aiDetections={aiDetections}
             manualDetections={manualDetections}
             onDetectionsUpdate={handleAnnotationAdded}
+            onAddToHistory={addToHistory}
           />
         </div>
       </div>

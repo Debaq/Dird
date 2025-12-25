@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Stage, Layer, Image as KonvaImage, Rect, Group, Text, Transformer, Circle } from 'react-konva';
-import { RotateCcw, RotateCw } from 'lucide-react';
-import type { Image, Detection } from '@/lib/db/schema';
+import { RotateCcw, RotateCw, Brain, Loader2 } from 'lucide-react';
+import type { Image as ImageType, Detection } from '@/lib/db/schema';
+import type { HistoryEntry } from '@/types/annotations';
 import type { CanvasTool } from './ToolPanel';
 import type { CanvasLayer } from './LayerControls';
 import { db } from '@/lib/db/schema';
@@ -11,9 +12,10 @@ import ClassSelectionModal from './ClassSelectionModal';
 import { getClassName } from '@/lib/ai/class-translations';
 import { useConfigStore } from '@/stores/config-store';
 import { useCanvasStore } from '@/stores/canvas-store';
+import { inferenceService } from '@/lib/ai/inference-service';
 
 interface AnnotationCanvasProps {
-  image: Image;
+  image: ImageType;
   detections?: any[];
   manualAnnotations?: any[];
   activeTool?: CanvasTool;
@@ -58,6 +60,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const [imageOffset, setImageOffset] = useState({ x: 0, y: 0 });
   const [pendingAnnotation, setPendingAnnotation] = useState<any>(null);
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Update transformer when selection changes
   useEffect(() => {
@@ -489,9 +492,46 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     }
   };
 
-  // Manejar teclas de acceso rápido (Ctrl+Z para deshacer, Ctrl+Y o Ctrl+Shift+Z para rehacer)
+  const handleReDetect = async () => {
+    if (!image.id || isProcessing) return;
+
+    if (!confirm('Esto eliminará todas las detecciones de IA actuales para esta imagen y volverá a ejecutar el análisis. ¿Continuar?')) {
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      // 1. Eliminar detecciones AI actuales para esta imagen
+      await db.detections
+        .where('imageId')
+        .equals(image.id)
+        .and(d => d.type === 'ai')
+        .delete();
+
+      // 2. Asegurar que el modelo esté cargado
+      if (!inferenceService.isDetectionModelLoaded()) {
+        await inferenceService.loadDetectionModel();
+      }
+
+      // 3. Ejecutar inferencia
+      if (konvaImage) {
+        await inferenceService.detectObjects(konvaImage, image.id);
+      }
+
+      // 4. Notificar actualización
+      onAnnotationAdded?.();
+    } catch (error) {
+      console.error('Error en re-detección:', error);
+      alert('Error al ejecutar la re-detección.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Manejar teclas de acceso rápido (Ctrl+Z para deshacer, Ctrl+Y o Ctrl+Shift+Z para rehacer, Flechas para mover)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Undo/Redo
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 'z' || e.key === 'Z') {
           if (e.shiftKey) {
@@ -503,11 +543,50 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           handleRedo();
         }
       }
+
+      // Move selected annotation with arrow keys
+      if (selectedAnnotationId && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        
+        const detection = 
+          detections.find(d => String(d.id) === selectedAnnotationId) ||
+          manualAnnotations.find(d => String(d.id) === selectedAnnotationId);
+
+        if (!detection) return;
+
+        // Move by 1 pixel relative to image resolution (finer control)
+        // Adjust delta based on shift key for faster movement (e.g., 10 pixels)
+        const delta = e.shiftKey ? 10 : 1;
+        
+        let newX = detection.bbox.x;
+        let newY = detection.bbox.y;
+
+        switch (e.key) {
+          case 'ArrowUp': newY -= delta; break;
+          case 'ArrowDown': newY += delta; break;
+          case 'ArrowLeft': newX -= delta; break;
+          case 'ArrowRight': newX += delta; break;
+        }
+
+        // Convert back to canvas coordinates for handleAnnotationChange
+        // handleAnnotationChange expects properties as if they came from Konva node (screen/stage coords)
+        const canvasX = newX * scale + imageOffset.x;
+        const canvasY = newY * scale + imageOffset.y;
+        const canvasWidth = detection.bbox.width * scale;
+        const canvasHeight = detection.bbox.height * scale;
+
+        handleAnnotationChange(detection.id, {
+          x: canvasX,
+          y: canvasY,
+          width: canvasWidth,
+          height: canvasHeight
+        });
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [historyIndex, detectionHistory]);
+  }, [historyIndex, detectionHistory, selectedAnnotationId, detections, manualAnnotations, scale, imageOffset]);
 
   // Handle modal close/cancel
   const handleModalClose = () => {
@@ -563,6 +642,18 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
             title="Rehacer (Ctrl+Y)"
           >
             <RotateCw className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleReDetect}
+            disabled={isProcessing}
+            className={`p-2 rounded-lg ${isProcessing ? 'bg-gray-200 text-gray-400' : 'bg-white text-primary-600 hover:bg-primary-50 shadow'}`}
+            title="Re-detectar (IA)"
+          >
+            {isProcessing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Brain className="w-4 h-4" />
+            )}
           </button>
         </div>
       </div>
