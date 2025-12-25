@@ -1,5 +1,5 @@
 import { db } from './schema';
-import type { Patient, Session, Image, Detection } from './schema';
+import type { Patient, Session } from './schema';
 import imageCompression from 'browser-image-compression';
 import { inferenceService } from '@/lib/ai/inference-service';
 import { createCombinedSession } from './combinedSessions';

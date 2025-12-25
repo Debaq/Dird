@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { FileText, Download, Calendar, Tag, ShieldCheck, Eye, Trash2, Edit3, CheckCircle } from 'lucide-react';
+import { FileText, Download, Calendar, ShieldCheck, Eye, Trash2, Edit3, CheckCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { db } from '@/lib/db/schema';
 import { Button } from '@/components/ui/button';
