@@ -10,6 +10,7 @@ import PatientForm from './PatientForm';
 import { db, Session, Patient } from '@/lib/db/schema';
 import { exportPatient, downloadDirdFile } from '@/lib/export/dird-exporter';
 import { duplicateSession } from '@/lib/db/actions';
+import { createCombinedSession } from '@/lib/db/combinedSessions';
 
 const PatientDetails: React.FC = () => {
   const { patientId } = useParams<{ patientId: string }>();
@@ -100,9 +101,26 @@ const PatientDetails: React.FC = () => {
     }
   };
 
-  const handleCompareSessions = () => {
-    if (selectedSessions.length < 2) return;
-    navigate(`/patients/${patientId}/compare?sessions=${selectedSessions.join(',')}`);
+  const handleCompareSessions = async () => {
+    if (selectedSessions.length < 2 || !patientId) return;
+
+    try {
+      // Crear la sesión combinada
+      const combinedSessionId = await createCombinedSession(
+        parseInt(patientId),
+        selectedSessions
+      );
+
+      // Salir del modo de comparación
+      setIsCompareMode(false);
+      setSelectedSessions([]);
+
+      // Navegar a la nueva sesión combinada
+      navigate(`/patients/${patientId}/sessions/${combinedSessionId}`);
+    } catch (error) {
+      console.error('Error al crear sesión combinada:', error);
+      alert(t('errors.sessionCreation'));
+    }
   };
 
   if (!patient) {

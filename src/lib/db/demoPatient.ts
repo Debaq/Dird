@@ -2,6 +2,7 @@ import { db } from './schema';
 import type { Patient, Session, Image, Detection } from './schema';
 import imageCompression from 'browser-image-compression';
 import { inferenceService } from '@/lib/ai/inference-service';
+import { createCombinedSession } from './combinedSessions';
 
 // Identificador único del paciente demo
 export const DEMO_PATIENT_ID = 'DEMO-001';
@@ -20,6 +21,7 @@ export type ProgressCallback = (progress: LoadingProgress) => void;
 // IDs de las sesiones demo (se asignarán al crear)
 export let DEMO_SESSION_FINAL_ID: number | null = null;
 export let DEMO_SESSION_PREVIEW_ID: number | null = null;
+export let DEMO_SESSION_COMPARISON_ID: number | null = null;
 
 /**
  * Verifica si un paciente es el paciente demo
@@ -203,7 +205,7 @@ export async function initializeDemoPatient(onProgress?: ProgressCallback): Prom
       metadata: {
         isDemo: true,
         createdBy: 'system',
-        description: 'Paciente de demostración con dos sesiones (una finalizada y una preview) para mostrar las funcionalidades del sistema.'
+        description: 'Paciente de demostración con dos sesiones normales y una sesión combinada para mostrar las funcionalidades del sistema, especialmente la comparación de sesiones.'
       },
       createdAt: now,
       updatedAt: now,
@@ -287,6 +289,25 @@ export async function initializeDemoPatient(onProgress?: ProgressCallback): Prom
     // Cargar imágenes demo automáticamente
     console.log('🚀 Cargando imágenes demo...');
     await loadAllDemoImages(onProgress);
+
+    // Crear sesión combinada a partir de las sesiones 1 y 2
+    try {
+      console.log('🔗 Creando sesión combinada demo...');
+      if (DEMO_SESSION_FINAL_ID && DEMO_SESSION_PREVIEW_ID) {
+        const demoPatient = await getDemoPatient();
+        if (demoPatient) {
+          const combinedSessionId = await createCombinedSession(
+            demoPatient.id!,
+            [DEMO_SESSION_FINAL_ID, DEMO_SESSION_PREVIEW_ID],
+            'Sesión Combinada Demo - Evolución Temporal'
+          );
+          DEMO_SESSION_COMPARISON_ID = combinedSessionId;
+          console.log(`✅ Sesión combinada demo creada con ID: ${combinedSessionId}`);
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️  No se pudo crear la sesión combinada demo:', error);
+    }
 
     // Intentar cargar los reportes demo si existen
     try {
@@ -716,6 +737,7 @@ export async function removeDemoPatient(): Promise<void> {
 
     DEMO_SESSION_FINAL_ID = null;
     DEMO_SESSION_PREVIEW_ID = null;
+    DEMO_SESSION_COMPARISON_ID = null;
 
     console.log('Paciente demo eliminado');
   });

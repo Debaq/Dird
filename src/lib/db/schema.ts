@@ -31,6 +31,8 @@ export interface Session {
   };
   locked: boolean;
   lockedAt?: Date;
+  type?: 'normal' | 'combined'; // Tipo de sesión: normal o combinada
+  combinedSessionIds?: number[]; // IDs de las sesiones que se combinaron (solo para type: 'combined')
   createdAt: Date;
   updatedAt: Date;
 }
@@ -189,6 +191,20 @@ export class DirdDatabase extends Dexie {
       return tx.table('images').toCollection().modify(image => {
         if (!image.contributionStatus) {
           image.contributionStatus = 'none';
+        }
+      });
+    });
+    this.version(8).stores({
+      patients: '++id, patientId, name, status, createdAt',
+      sessions: '++id, patientId, name, sessionNumber, date, locked, type', // Added type
+      images: '++id, sessionId, eyeType, uploadedAt, contributionStatus',
+      detections: '++id, imageId, type, class, visible',
+      segmentations: '++id, imageId, type, class, visible',
+      reports: '++id, sessionId, type, reportCategory, generatedAt'
+    }).upgrade(tx => {
+      return tx.table('sessions').toCollection().modify(session => {
+        if (!session.type) {
+          session.type = 'normal';
         }
       });
     });
