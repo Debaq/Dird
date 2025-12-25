@@ -46,15 +46,14 @@ const ContributionMenu: React.FC = () => {
       if (!session) return;
       navigate(`/patients/${session.patientId}/sessions/${session.id}/images/${image.id}`);
     } catch (error) {
-      console.error("Error navigating to image:", error);
+      // Error handling without logging
     }
   };
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Logic for submitting comments
-    console.log('Submitting comment:', { comment, selectedComponent });
-    alert('Comentario enviado! (Simulado)');
+    alert(t('contribution.feedback.success'));
     setComment('');
   };
 
@@ -87,8 +86,6 @@ const ContributionMenu: React.FC = () => {
             const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
             const apiUrl = `${normalizedBase}backend/receive_contribution.php`;
 
-            console.log(`🚀 Uploading to: ${apiUrl}`);
-
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 body: formData
@@ -102,10 +99,9 @@ const ContributionMenu: React.FC = () => {
             await db.images.update(img.id!, { contributionStatus: 'submitted' });
             successCount++;
         } catch (err) {
-            console.error(`Error uploading image ${img.filename}:`, err);
             errorCount++;
         }
-        
+
         // Update progress
         setUploadProgress(Math.round(((i + 1) / totalImages) * 100));
       }
@@ -114,15 +110,14 @@ const ContributionMenu: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       if (successCount > 0) {
-          alert(`Gracias! Se enviaron ${successCount} imágenes exitosamente.` + (errorCount > 0 ? ` (${errorCount} fallaron)` : ''));
+          alert(t('contribution.images.success', { count: successCount }) + (errorCount > 0 ? t('contribution.images.failedCount', { count: errorCount }) : ''));
           setAcceptedTerms(false);
       } else if (errorCount > 0) {
-          alert('Hubo un error al enviar las imágenes. Por favor revisa la consola o intenta más tarde.');
+          alert(t('contribution.images.error'));
       }
 
     } catch (error) {
-        console.error('Error submitting contribution:', error);
-        alert('Error general al enviar la contribución');
+        alert(t('contribution.images.generalError'));
     } finally {
         setIsSubmittingImages(false);
         setUploadProgress(0);
@@ -134,10 +129,10 @@ const ContributionMenu: React.FC = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-coal-800 dark:text-gray-100 flex items-center gap-3">
           <Coffee className="h-8 w-8 text-amber-500" />
-          {t('contribution.title', 'Contribuir')}
+          {t('contribution.title')}
         </h1>
         <p className="text-smoke-600 dark:text-gray-400 mt-2">
-          {t('contribution.description', 'Ayuda a mejorar Dird con tu contribución')}
+          {t('contribution.description')}
         </p>
       </div>
 
@@ -145,7 +140,7 @@ const ContributionMenu: React.FC = () => {
       <Card className="p-6 mb-8 dark:bg-dark-surface dark:border-coal-700">
         <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4 flex items-center gap-2">
           <Github className="h-5 w-5" />
-          {t('contribution.github.title', 'Repositorios')}
+          {t('contribution.github.title')}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <a 
@@ -157,7 +152,7 @@ const ContributionMenu: React.FC = () => {
             <div>
               <h3 className="font-medium text-coal-800 dark:text-dark-text">Dird App</h3>
               <p className="text-sm text-smoke-600 dark:text-dark-textSecondary">
-                {t('contribution.github.appDescription', 'Aplicación principal')}
+                {t('contribution.github.appDescription')}
               </p>
             </div>
             <Github className="h-5 w-5 text-gray-500" />
@@ -171,7 +166,7 @@ const ContributionMenu: React.FC = () => {
             <div>
               <h3 className="font-medium text-coal-800 dark:text-dark-text">Dird Models</h3>
               <p className="text-sm text-smoke-600 dark:text-dark-textSecondary">
-                {t('contribution.github.modelsDescription', 'Modelos de IA')}
+                {t('contribution.github.modelsDescription')}
               </p>
             </div>
             <Github className="h-5 w-5 text-gray-500" />
@@ -183,10 +178,10 @@ const ContributionMenu: React.FC = () => {
       <Card className="p-6 mb-8 dark:bg-dark-surface dark:border-coal-700">
         <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4 flex items-center gap-2">
           <Coffee className="h-5 w-5 text-amber-500" />
-          {t('contribution.donation.title', 'Apóyanos con un café')}
+          {t('contribution.donation.title')}
         </h2>
         <p className="text-smoke-600 dark:text-dark-textSecondary mb-4">
-          {t('contribution.donation.description', 'Tu apoyo nos ayuda a seguir mejorando Dird')}
+          {t('contribution.donation.description')}
         </p>
         <a
           href="https://ko-fi.com/tecmedhub"
@@ -195,7 +190,7 @@ const ContributionMenu: React.FC = () => {
         >
           <Button className="bg-amber-500 hover:bg-amber-600 text-white">
             <Coffee className="h-4 w-4 mr-2" />
-            {t('contribution.donation.button', 'Comprar un café')}
+            {t('contribution.donation.button')}
           </Button>
         </a>
       </Card>
@@ -205,12 +200,12 @@ const ContributionMenu: React.FC = () => {
         <Card className="p-6 mb-8 dark:bg-dark-surface dark:border-coal-700 border-l-4 border-l-amber-500">
           <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4 flex items-center gap-2">
             <ImageIcon className="h-5 w-5 text-amber-600" />
-            Contribución de Imágenes
+            {t('contribution.images.title')}
           </h2>
           
           <div className="mb-6">
             <p className="text-sm text-smoke-600 dark:text-gray-400 mb-4">
-                Tienes <strong>{pendingImages.length}</strong> imágenes marcadas para contribuir. Estas imágenes son invaluables para re-entrenar y mejorar nuestros modelos de detección.
+                {t('contribution.images.pendingMessage', { count: pendingImages.length })}
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4">
                 {pendingImages.map((img) => (
@@ -240,14 +235,14 @@ const ContributionMenu: React.FC = () => {
                     disabled={isSubmittingImages}
                  />
                  <Label htmlFor="terms" className="text-sm cursor-pointer leading-tight text-coal-700 dark:text-gray-300">
-                     Acepto los términos y condiciones. Entiendo que las imágenes serán enviadas para mejorar los modelos de IA y que no contienen información personal identificable.
+                     {t('contribution.images.terms')}
                  </Label>
              </div>
 
             {isSubmittingImages && (
               <div className="mb-4">
                 <div className="flex justify-between text-xs text-smoke-500 mb-1">
-                  <span>Enviando...</span>
+                  <span>{t('contribution.images.sending')}</span>
                   <span>{uploadProgress}%</span>
                 </div>
                 <Progress value={uploadProgress} className="h-2" />
@@ -262,12 +257,12 @@ const ContributionMenu: React.FC = () => {
                 {isSubmittingImages ? (
                     <>
                         <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                        Enviando...
+                        {t('contribution.images.sending')}
                     </>
                 ) : (
                     <>
                         <Send className="h-4 w-4 mr-2" />
-                        Enviar {pendingImages.length} Imágenes
+                        {t('contribution.images.submit', { count: pendingImages.length })}
                     </>
                 )}
             </Button>
@@ -279,33 +274,33 @@ const ContributionMenu: React.FC = () => {
       <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
         <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4 flex items-center gap-2">
           <MessageSquare className="h-5 w-5" />
-          {t('contribution.feedback.title', 'Enviar Comentario')}
+          {t('contribution.feedback.title')}
         </h2>
         <form onSubmit={handleCommentSubmit} className="space-y-6">
           <div>
             <Label htmlFor="component" className="dark:text-dark-text">
-              {t('contribution.feedback.component', 'Componente')}
+              {t('contribution.feedback.component')}
             </Label>
             <Select
               value={selectedComponent}
               onValueChange={(value) => setSelectedComponent(value as 'dird' | 'dird-models')}
               options={[
-                { value: 'dird', label: t('contribution.feedback.dirdApp', 'Aplicación Dird') },
-                { value: 'dird-models', label: t('contribution.feedback.dirdModels', 'Modelos Dird') }
+                { value: 'dird', label: t('contribution.feedback.dirdApp') },
+                { value: 'dird-models', label: t('contribution.feedback.dirdModels') }
               ]}
-              placeholder={t('contribution.feedback.selectComponent', 'Selecciona un componente')}
+              placeholder={t('contribution.feedback.selectComponent')}
             />
           </div>
 
           <div>
             <Label htmlFor="comment" className="dark:text-dark-text">
-              {t('contribution.feedback.comment', 'Comentario')}
+              {t('contribution.feedback.comment')}
             </Label>
             <Textarea
               id="comment"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder={t('contribution.feedback.placeholder', 'Escribe tu comentario o sugerencia aquí...')}
+              placeholder={t('contribution.feedback.placeholder')}
               className="mt-2 min-h-[120px] dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
             />
           </div>
@@ -316,7 +311,7 @@ const ContributionMenu: React.FC = () => {
             variant="secondary"
           >
             <Send className="h-4 w-4 mr-2" />
-            Enviar Comentario
+            {t('contribution.feedback.submit')}
           </Button>
         </form>
       </Card>

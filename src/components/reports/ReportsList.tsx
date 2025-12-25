@@ -67,16 +67,16 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
 
   const handleDeleteReport = async (reportId: number, type: string) => {
     if (type === 'final') {
-      alert('No se pueden eliminar informes finales.');
+      alert(t('reports.list.deleteFinalError'));
       return;
     }
 
-    if (confirm('¿Está seguro de que desea eliminar este informe preliminar? Esta acción no se puede deshacer.')) {
+    if (confirm(t('reports.list.deleteConfirm'))) {
       try {
         await db.reports.delete(reportId);
       } catch (error) {
         console.error('Error deleting report:', error);
-        alert('Error al eliminar el informe');
+        alert(t('errors.unknown'));
       }
     }
   };
@@ -84,7 +84,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
   const handleFinalizeReport = async (reportId: number, sessionId: number, notes: string) => {
     if (!reportId) return;
 
-    if (!confirm('¿Está seguro de que desea finalizar este informe? Esta acción convertirá este informe en final y bloqueará la sesión permanentemente.')) {
+    if (!confirm(t('reports.list.finalizeConfirm'))) {
       return;
     }
 
@@ -152,12 +152,12 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
       URL.revokeObjectURL(url);
 
       const message = isDemoPreview
-        ? 'Informe finalizado y descargado correctamente. Esta es la sesión demo y permanece abierta para demostración.'
-        : 'Informe finalizado y descargado correctamente. La sesión ha sido bloqueada.';
+        ? t('reports.list.finalizeSuccessDemo')
+        : t('reports.list.finalizeSuccess');
       alert(message);
     } catch (error) {
       console.error('Error finalizing report:', error);
-      alert('Error al finalizar el informe');
+      alert(t('errors.unknown'));
     } finally {
       setFinalizingReport(null);
     }
@@ -194,9 +194,9 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
     return (
       <div className="py-12 text-center border-2 border-dashed border-coal-200 rounded-xl bg-coal-50/50">
         <FileText className="w-12 h-12 text-smoke-300 mx-auto mb-4" />
-        <p className="text-smoke-600 font-medium">No se han generado informes aún</p>
+        <p className="text-smoke-600 font-medium">{t('reports.list.noReports')}</p>
         <p className="text-smoke-400 text-sm mt-1">
-          Utilice el botón "Generar Informe" para crear el primer reporte clínico.
+          {t('reports.list.addFirst')}
         </p>
       </div>
     );
@@ -241,7 +241,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
               onClick={() => handleViewPDF(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
             >
               <Eye className="w-4 h-4 mr-2" />
-              Ver PDF
+              {t('reports.list.viewPDF')}
             </Button>
             <Button
               variant="ghost"
@@ -250,7 +250,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
               onClick={() => handleDownload(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
             >
               <Download className="w-4 h-4 mr-2" />
-              Descargar PDF
+              {t('reports.list.downloadPDF')}
             </Button>
             {report.type === 'preview' && (
               <Button
@@ -260,7 +260,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
                 onClick={() => report.id && startEditing(report.id, report.evaluatorNotes || '')}
               >
                 <Edit3 className="w-4 h-4 mr-2" />
-                Editar
+                {t('reports.list.edit')}
               </Button>
             )}
             {report.type === 'preview' && (
@@ -271,7 +271,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
                 onClick={() => report.id && handleDeleteReport(report.id, report.type)}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Eliminar
+                {t('reports.list.delete')}
               </Button>
             )}
             {report.type === 'preview' && session && !session.locked && (
@@ -285,12 +285,12 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
                 {finalizingReport === report.id ? (
                   <>
                     <CheckCircle className="w-4 h-4 mr-2 animate-spin" />
-                    Finalizando...
+                    {t('reports.list.finalizing')}
                   </>
                 ) : (
                   <>
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Finalizar
+                    {t('reports.list.finalize')}
                   </>
                 )}
               </Button>
@@ -321,24 +321,24 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
       {editingReport && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold mb-4">Editar Conclusiones</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('reports.list.editModalTitle')}</h3>
             <textarea
               value={editingReport.notes}
               onChange={(e) => setEditingReport({...editingReport, notes: e.target.value})}
               className="w-full h-32 p-3 border border-coal-200 rounded-lg resize-none"
-              placeholder="Ingrese las conclusiones clínicas y recomendaciones..."
+              placeholder={t('reports.list.editModalPlaceholder')}
             />
             <div className="flex justify-end gap-2 mt-4">
               <Button
                 variant="outline"
                 onClick={cancelEditing}
               >
-                Cancelar
+                {t('ui.cancel')}
               </Button>
               <Button
                 onClick={saveEditedNotes}
               >
-                Guardar
+                {t('ui.save')}
               </Button>
             </div>
           </div>

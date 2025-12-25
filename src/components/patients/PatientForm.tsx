@@ -123,7 +123,7 @@ const PatientForm: React.FC<PatientFormProps> = ({
       });
     } catch (error) {
       console.error('Error saving patient:', error);
-      alert('Error al guardar el paciente');
+      alert(t('errors.savePatient'));
     } finally {
       setLoading(false);
     }
@@ -138,8 +138,8 @@ const PatientForm: React.FC<PatientFormProps> = ({
           </DialogTitle>
           <DialogDescription>
             {patient
-              ? 'Edita la información del paciente'
-              : 'Completa los datos para crear un nuevo paciente'}
+              ? t('patients.form.editDescription')
+              : t('patients.form.createDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -184,7 +184,7 @@ const PatientForm: React.FC<PatientFormProps> = ({
 
           {/* Campos médicos para retinopatía diabética */}
           <div className="space-y-4 pt-4 border-t border-coal-200">
-            <h3 className="font-medium text-coal-700">Antecedentes Médicos</h3>
+            <h3 className="font-medium text-coal-700">{t('patients.form.medicalHistory')}</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center space-x-2">
@@ -195,36 +195,36 @@ const PatientForm: React.FC<PatientFormProps> = ({
                   onChange={(e) => setFormData({ ...formData, diabetes: e.target.checked })}
                   className="h-4 w-4 text-primary-600 rounded border-coal-300 focus:ring-primary-500"
                 />
-                <Label htmlFor="diabetes">Diabetes</Label>
+                <Label htmlFor="diabetes">{t('patients.form.diabetes')}</Label>
               </div>
 
               {formData.diabetes && (
                 <div className="space-y-2">
-                  <Label htmlFor="diabetesType">Tipo de Diabetes</Label>
+                  <Label htmlFor="diabetesType">{t('patients.form.diabetesType')}</Label>
                   <select
                     id="diabetesType"
                     value={formData.diabetesType}
                     onChange={(e) => setFormData({ ...formData, diabetesType: e.target.value })}
                     className="w-full rounded-md border border-coal-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
                   >
-                    <option value="">Seleccione tipo</option>
-                    <option value="type1">Tipo 1</option>
-                    <option value="type2">Tipo 2</option>
-                    <option value="gestational">Gestacional</option>
-                    <option value="other">Otro</option>
+                    <option value="">{t('patients.form.selectType')}</option>
+                    <option value="type1">{t('patients.form.types.type1')}</option>
+                    <option value="type2">{t('patients.form.types.type2')}</option>
+                    <option value="gestational">{t('patients.form.types.gestational')}</option>
+                    <option value="other">{t('patients.form.types.other')}</option>
                   </select>
                 </div>
               )}
 
               {formData.diabetes && (
                 <div className="space-y-2">
-                  <Label htmlFor="diabetesDuration">Años con Diabetes</Label>
+                  <Label htmlFor="diabetesDuration">{t('patients.form.diabetesDuration')}</Label>
                   <Input
                     id="diabetesDuration"
                     type="number"
                     value={formData.diabetesDuration}
                     onChange={(e) => setFormData({ ...formData, diabetesDuration: e.target.value })}
-                    placeholder="Años desde diagnóstico"
+                    placeholder={t('patients.form.diabetesDurationPlaceholder')}
                     min="0"
                   />
                 </div>
@@ -240,7 +240,7 @@ const PatientForm: React.FC<PatientFormProps> = ({
                   onChange={(e) => setFormData({ ...formData, hta: e.target.checked })}
                   className="h-4 w-4 text-primary-600 rounded border-coal-300 focus:ring-primary-500"
                 />
-                <Label htmlFor="hta">Hipertensión Arterial (HTA)</Label>
+                <Label htmlFor="hta">{t('patients.form.hta')}</Label>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -251,27 +251,27 @@ const PatientForm: React.FC<PatientFormProps> = ({
                   onChange={(e) => setFormData({ ...formData, dlp: e.target.checked })}
                   className="h-4 w-4 text-primary-600 rounded border-coal-300 focus:ring-primary-500"
                 />
-                <Label htmlFor="dlp">Dislipidemia (DLP)</Label>
+                <Label htmlFor="dlp">{t('patients.form.dlp')}</Label>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="medications">Medicamentos</Label>
+              <Label htmlFor="medications">{t('patients.fields.medications')}</Label>
               <Input
                 id="medications"
                 value={formData.medications}
                 onChange={(e) => setFormData({ ...formData, medications: e.target.value })}
-                placeholder="Lista de medicamentos separados por comas"
+                placeholder={t('patients.form.medicationsPlaceholder')}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="otherConditions">Otros Antecedentes</Label>
+              <Label htmlFor="otherConditions">{t('patients.form.otherConditions')}</Label>
               <textarea
                 id="otherConditions"
                 value={formData.otherConditions}
                 onChange={(e) => setFormData({ ...formData, otherConditions: e.target.value })}
-                placeholder="Otros antecedentes médicos relevantes..."
+                placeholder={t('patients.form.otherConditionsPlaceholder')}
                 rows={2}
                 className="w-full rounded-md border border-coal-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
               />
@@ -285,10 +285,10 @@ const PatientForm: React.FC<PatientFormProps> = ({
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Cancelar
+              {t('ui.cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Guardando...' : 'Guardar'}
+              {loading ? t('ui.saving') : t('ui.save')}
             </Button>
           </div>
         </form>

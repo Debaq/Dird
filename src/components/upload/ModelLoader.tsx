@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle, AlertCircle, Loader } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ interface ModelLoaderProps {
 type ModelStatus = 'idle' | 'loading' | 'loaded' | 'error';
 
 const ModelLoader: React.FC<ModelLoaderProps> = ({ onModelsReady }) => {
+  const { t } = useTranslation();
   const [models, setModels] = useState<ModelFile[]>([]);
   const [detectionStatus, setDetectionStatus] = useState<ModelStatus>('idle');
   const [segmentationStatus, setSegmentationStatus] = useState<ModelStatus>('idle');
@@ -28,14 +30,14 @@ const ModelLoader: React.FC<ModelLoaderProps> = ({ onModelsReady }) => {
       setModels(availableModels);
     } catch (error) {
       console.error('Error loading model metadata:', error);
-      setError('No se pudieron cargar los modelos');
+      setError(t('models.loader.errorLoading'));
     }
   };
 
   const loadDetectionModel = async () => {
     const detectionModel = models.find((m) => m.metadata.model_type === 'detection');
     if (!detectionModel) {
-      setError('Modelo de detección no disponible');
+      setError(t('models.loader.detectionUnavailable'));
       return;
     }
 
@@ -49,14 +51,14 @@ const ModelLoader: React.FC<ModelLoaderProps> = ({ onModelsReady }) => {
     } catch (error) {
       console.error('Error loading detection model:', error);
       setDetectionStatus('error');
-      setError('Error al cargar el modelo de detección');
+      setError(t('models.loader.detectionLoadError'));
     }
   };
 
   const loadSegmentationModel = async () => {
     const segmentationModel = models.find((m) => m.metadata.model_type === 'segmentation');
     if (!segmentationModel) {
-      setError('Modelo de segmentación no disponible');
+      setError(t('models.loader.segmentationUnavailable'));
       return;
     }
 
@@ -73,7 +75,7 @@ const ModelLoader: React.FC<ModelLoaderProps> = ({ onModelsReady }) => {
     } catch (error) {
       console.error('Error loading segmentation model:', error);
       setSegmentationStatus('error');
-      setError('Error al cargar el modelo de segmentación');
+      setError(t('models.loader.segmentationLoadError'));
     }
   };
 
@@ -102,7 +104,7 @@ const ModelLoader: React.FC<ModelLoaderProps> = ({ onModelsReady }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Modelos de IA</CardTitle>
+        <CardTitle>{t('models.title')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
@@ -115,11 +117,11 @@ const ModelLoader: React.FC<ModelLoaderProps> = ({ onModelsReady }) => {
         {detectionModel && (
           <div className="flex items-center justify-between p-3 bg-coal-50 rounded-lg">
             <div className="flex-1">
-              <h4 className="font-medium text-coal-800">Modelo de Detección</h4>
+              <h4 className="font-medium text-coal-800">{t('models.loader.detectionModel')}</h4>
               <p className="text-xs text-smoke-500">{detectionModel.metadata.model_version}</p>
               {detectionStatus === 'loaded' && (
                 <p className="text-xs text-green-600 mt-1">
-                  Precisión: {(detectionModel.metadata.metrics?.precision || 0) * 100}%
+                  {t('models.loader.accuracy')}{(detectionModel.metadata.metrics?.precision || 0) * 100}%
                 </p>
               )}
             </div>
@@ -127,7 +129,7 @@ const ModelLoader: React.FC<ModelLoaderProps> = ({ onModelsReady }) => {
               {getStatusIcon(detectionStatus)}
               {detectionStatus === 'idle' && (
                 <Button size="sm" onClick={loadDetectionModel}>
-                  Cargar
+                  {t('models.loader.load')}
                 </Button>
               )}
             </div>
@@ -138,17 +140,17 @@ const ModelLoader: React.FC<ModelLoaderProps> = ({ onModelsReady }) => {
         {segmentationModel && (
           <div className="flex items-center justify-between p-3 bg-coal-50 rounded-lg">
             <div className="flex-1">
-              <h4 className="font-medium text-coal-800">Modelo de Segmentación</h4>
+              <h4 className="font-medium text-coal-800">{t('models.loader.segmentationModel')}</h4>
               <p className="text-xs text-smoke-500">
                 {segmentationModel.metadata.model_version}
               </p>
-              <p className="text-xs text-accent-600 mt-1">Beta</p>
+              <p className="text-xs text-accent-600 mt-1">{t('models.beta')}</p>
             </div>
             <div className="flex items-center space-x-2">
               {getStatusIcon(segmentationStatus)}
               {segmentationStatus === 'idle' && (
                 <Button size="sm" variant="outline" onClick={loadSegmentationModel}>
-                  Cargar
+                  {t('models.loader.load')}
                 </Button>
               )}
             </div>
@@ -157,7 +159,7 @@ const ModelLoader: React.FC<ModelLoaderProps> = ({ onModelsReady }) => {
 
         {models.length === 0 && !error && (
           <p className="text-sm text-smoke-500 text-center py-4">
-            No hay modelos disponibles
+            {t('models.loader.noModels')}
           </p>
         )}
       </CardContent>

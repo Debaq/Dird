@@ -100,9 +100,9 @@ const ClassManagementModal: React.FC<ClassManagementModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>{t('settings.classes.title') || 'Gestión de Clases del Modelo'}</DialogTitle>
+          <DialogTitle>{t('settings.classes.title')}</DialogTitle>
           <DialogDescription>
-            {t('settings.classes.description') || 'Personaliza los nombres y colores de las clases detectadas.'}
+            {t('settings.classes.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -111,10 +111,10 @@ const ClassManagementModal: React.FC<ClassManagementModalProps> = ({
           <div className="flex items-center justify-between p-4 bg-secondary/10 rounded-lg border border-secondary/20">
             <div className="space-y-0.5">
               <Label className="text-base font-medium">
-                {t('settings.classes.rainbowMode') || 'Modo Arcoiris'}
+                {t('settings.classes.rainbowMode')}
               </Label>
               <p className="text-sm text-muted-foreground">
-                {t('settings.classes.rainbowModeDesc') || 'Si está activado, cada clase tendrá su propio color. Si no, se usará el color principal.'}
+                {t('settings.classes.rainbowModeDesc')}
               </p>
             </div>
             <Switch
@@ -125,7 +125,7 @@ const ClassManagementModal: React.FC<ClassManagementModalProps> = ({
 
           <div className="flex items-center justify-between px-1">
             <h3 className="text-sm font-medium text-muted-foreground">
-              {t('settings.classes.list') || 'Lista de Clases'}
+              {t('settings.classes.list')}
             </h3>
             <Button variant="ghost" size="sm" onClick={loadClasses} disabled={isLoading}>
               <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
@@ -136,9 +136,9 @@ const ClassManagementModal: React.FC<ClassManagementModalProps> = ({
           <div className="flex-1 border rounded-md overflow-hidden bg-background">
             <div className="grid grid-cols-12 gap-4 p-3 border-b bg-muted/50 text-xs font-medium text-muted-foreground">
               <div className="col-span-1 text-center">#</div>
-              <div className="col-span-3">ID (JSON)</div>
-              <div className="col-span-5">Nombre (Traducción)</div>
-              <div className="col-span-3 text-center">Color</div>
+              <div className="col-span-3">{t('settings.classes.idLabel')}</div>
+              <div className="col-span-5">{t('settings.classes.nameLabel')}</div>
+              <div className="col-span-3 text-center">{t('settings.classes.colorLabel')}</div>
             </div>
             
             <div className="h-[400px] overflow-y-auto border rounded-md">
@@ -155,7 +155,7 @@ const ClassManagementModal: React.FC<ClassManagementModalProps> = ({
                       <Input
                         value={edits[cls.name]?.translation || ''}
                         onChange={(e) => handleTranslationChange(cls.name, e.target.value)}
-                        placeholder={cls.displayName !== cls.name ? cls.displayName : 'Nombre personalizado...'}
+                        placeholder={cls.displayName !== cls.name ? cls.displayName : t('settings.classes.placeholder')}
                         className="h-8 text-sm"
                       />
                     </div>

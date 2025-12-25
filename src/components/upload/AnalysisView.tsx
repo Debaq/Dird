@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Eye, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ interface ImageWithDetections {
 
 const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientId, refreshKey }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [imagesWithDetections, setImagesWithDetections] = useState<ImageWithDetections[]>([]);
   const [detectionStats, setDetectionStats] = useState<Record<string, number>>({});
   const [totalDetections, setTotalDetections] = useState(0);
@@ -72,7 +74,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <p className="text-smoke-500">No hay imágenes para analizar</p>
+          <p className="text-smoke-500">{t('analysis.view.noImages')}</p>
         </CardContent>
       </Card>
     );
@@ -86,7 +88,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-smoke-500">Total Imágenes</p>
+                <p className="text-sm text-smoke-500">{t('analysis.view.stats.totalImages')}</p>
                 <p className="text-3xl font-bold text-coal-800">{images.length}</p>
               </div>
               <Eye className="w-8 h-8 text-primary-500" />
@@ -98,7 +100,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-smoke-500">Total Detecciones</p>
+                <p className="text-sm text-smoke-500">{t('analysis.view.stats.totalDetections')}</p>
                 <p className="text-3xl font-bold text-coal-800">{totalDetections}</p>
               </div>
               <TrendingUp className="w-8 h-8 text-accent-500" />
@@ -109,7 +111,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
         <Card>
           <CardContent className="pt-6">
             <div>
-              <p className="text-sm text-smoke-500">Promedio por Imagen</p>
+              <p className="text-sm text-smoke-500">{t('analysis.view.stats.avgPerImage')}</p>
               <p className="text-3xl font-bold text-coal-800">
                 {images.length > 0 ? (totalDetections / images.length).toFixed(1) : 0}
               </p>
@@ -120,7 +122,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
         <Card>
           <CardContent className="pt-6">
             <div>
-              <p className="text-sm text-smoke-500">Imágenes Procesadas</p>
+              <p className="text-sm text-smoke-500">{t('analysis.view.stats.processedImages')}</p>
               <p className="text-3xl font-bold text-coal-800">
                 {imagesWithDetections.filter(i => i.detections.length > 0).length}
               </p>
@@ -133,7 +135,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
       {Object.keys(detectionStats).length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Detecciones por Clase</CardTitle>
+            <CardTitle>{t('analysis.view.detectionsPerClass')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -164,13 +166,13 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
       {/* Images Grid */}
       <Card>
         <CardHeader>
-          <CardTitle>Imágenes Analizadas</CardTitle>
+          <CardTitle>{t('analysis.view.analyzedImages')}</CardTitle>
         </CardHeader>
         <CardContent>
           {totalDetections === 0 ? (
             <div className="text-center py-12">
               <p className="text-smoke-500">
-                No se encontraron detecciones. Procesa las imágenes con IA primero.
+                {t('analysis.view.noDetections')}
               </p>
             </div>
           ) : (
@@ -189,12 +191,12 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center">
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full px-4 py-2 shadow-lg">
-                        <p className="text-sm font-bold text-primary-600">Ver detalles</p>
+                        <p className="text-sm font-bold text-primary-600">{t('analysis.view.viewDetails')}</p>
                       </div>
                     </div>
                     {detections.length > 0 && (
                       <div className="absolute top-2 right-2 bg-primary-500 text-white px-3 py-1 rounded-full text-xs font-bold">
-                        {detections.length} detecciones
+                        {detections.length} {t('analysis.view.detectionsCount')}
                       </div>
                     )}
                   </div>
@@ -219,7 +221,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
                       ))}
                     </div>
                     {detections.length === 0 && (
-                      <p className="text-xs text-smoke-400">Sin detecciones</p>
+                      <p className="text-xs text-smoke-400">{t('analysis.view.noDetectionsLabel')}</p>
                     )}
                   </div>
                   <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -21,10 +21,10 @@ import { cn } from '@/lib/utils';
 import type { HistoryEntry } from '@/types/annotations';
 
 const DEFAULT_LAYERS: CanvasLayer[] = [
-  { id: 'original', name: 'Imagen Original', visible: true, opacity: 1, locked: true, zIndex: 0 },
+  { id: 'original', name: 'canvas.layers.original', visible: true, opacity: 1, locked: true, zIndex: 0 },
   {
     id: 'segmentations-ai',
-    name: 'Segmentaciones IA',
+    name: 'canvas.layers.ai_segmentations',
     visible: true,
     opacity: 0.6,
     locked: false,
@@ -32,7 +32,7 @@ const DEFAULT_LAYERS: CanvasLayer[] = [
   },
   {
     id: 'detections-ai',
-    name: 'Detecciones IA',
+    name: 'canvas.layers.ai_detections',
     visible: true,
     opacity: 1,
     locked: false,
@@ -41,7 +41,7 @@ const DEFAULT_LAYERS: CanvasLayer[] = [
   },
   {
     id: 'manual-annotations',
-    name: 'Anotaciones Manuales',
+    name: 'canvas.layers.manual',
     visible: true,
     opacity: 1,
     locked: false,
@@ -266,7 +266,7 @@ const ImageAnalyzer: React.FC = () => {
                 ? "text-amber-500 hover:text-red-500 hover:bg-red-50"
                 : "hover:bg-purple-50 dark:hover:bg-purple-950/20"
             )}
-            title={image.contributionStatus === 'pending' ? 'Gestionar contribución' : 'Marcar para contribuir'}
+            title={image.contributionStatus === 'pending' ? t('contribution.dialog.manage') : t('contribution.dialog.markToContribute')}
             onClick={() => setShowContributionDialog(true)}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -375,7 +375,7 @@ const ImageAnalyzer: React.FC = () => {
                     size="icon"
                     className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/50 dark:bg-black/50 hover:bg-white/80 dark:hover:bg-black/80 rounded-full w-10 h-10 backdrop-blur-sm z-10 shadow-sm border border-black/5 dark:border-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                     onClick={handlePrevImage}
-                    title="Imagen anterior"
+                    title={t('analysis.tools.prevImage')}
                   >
                     <ChevronLeft className="w-6 h-6 text-coal-800 dark:text-white" />
                   </Button>
@@ -385,7 +385,7 @@ const ImageAnalyzer: React.FC = () => {
                     size="icon"
                     className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/50 dark:bg-black/50 hover:bg-white/80 dark:hover:bg-black/80 rounded-full w-10 h-10 backdrop-blur-sm z-10 shadow-sm border border-black/5 dark:border-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                     onClick={handleNextImage}
-                    title="Siguiente imagen"
+                    title={t('analysis.tools.nextImage')}
                   >
                     <ChevronRight className="w-6 h-6 text-coal-800 dark:text-white" />
                   </Button>
@@ -419,37 +419,37 @@ const ImageAnalyzer: React.FC = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-amber-600">
               <Star className="w-5 h-5 fill-current" />
-              {t('contribution.title', 'Contribuir')}
+              {t('contribution.title')}
             </DialogTitle>
             <DialogDescription className="text-base font-medium text-coal-800 dark:text-gray-100">
-              Contribuye con tu imagen y tus marcas para mejorar el modelo.
+              {t('contribution.dialog.description')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-3">
             <p className="text-sm text-smoke-600 dark:text-gray-300">
-              La contribución incluye la <strong>imagen original</strong> más las <strong>marcas de IA y manuales</strong>, con sus coordenadas diferenciadas y sus clases correspondientes.
+              {t('contribution.dialog.body1')}
             </p>
             <p className="text-sm text-smoke-600 dark:text-gray-300 italic">
-              Tus datos serán anonimizados (incluyendo la serialización del nombre de la imagen) antes del envío para garantizar la privacidad. Ve a la sección de "Contribuir" en el menú principal para finalizar el envío y aceptar los términos.
+              {t('contribution.dialog.body2')}
             </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowContributionDialog(false)}>
-              Cancelar
+              {t('ui.cancel')}
             </Button>
             {image?.contributionStatus === 'pending' ? (
               <Button 
                 variant="destructive"
                 onClick={handleUnmark}
               >
-                No contribuir
+                {t('contribution.dialog.unmark')}
               </Button>
             ) : (
               <Button 
                 className="bg-amber-500 hover:bg-amber-600 text-white"
                 onClick={handleMark}
               >
-                Marcar
+                {t('contribution.dialog.mark')}
               </Button>
             )}
           </DialogFooter>

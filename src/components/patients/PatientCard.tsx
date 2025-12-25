@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, User, FileText, Pencil, Trash2, Archive, ArchiveRestore } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +28,7 @@ const PatientCard: React.FC<PatientCardProps> = ({
   onArchive,
 }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const isDemo = isDemoPatient(patient.patientId);
 
   const formatDate = (date: Date) => {
@@ -65,16 +67,16 @@ const PatientCard: React.FC<PatientCardProps> = ({
                   <CardTitle className="text-lg">{patient.name}</CardTitle>
                   {reportStatus === 'no_report' && (
                     <Badge variant="secondary" className="text-[10px] bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200">
-                      Sin Informe
+                      {t('patients.status.no_report')}
                     </Badge>
                   )}
                   {reportStatus === 'preliminary' && (
                     <Badge variant="secondary" className="text-[10px] bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200">
-                      Borrador
+                      {t('patients.status.preliminary')}
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-smoke-500">ID: {patient.patientId}</p>
+                <p className="text-sm text-smoke-500">{t('patients.idLabel')}{patient.patientId}</p>
               </div>
             </div>
           </div>
@@ -84,18 +86,18 @@ const PatientCard: React.FC<PatientCardProps> = ({
             <div className="flex items-center text-sm text-smoke-600">
               <Calendar className="w-4 h-4 mr-2" />
               <span>
-                {formatDate(patient.dateOfBirth)} ({calculateAge(patient.dateOfBirth)} años)
+                {formatDate(patient.dateOfBirth)} ({calculateAge(patient.dateOfBirth)} {t('patients.years')})
               </span>
             </div>
             <div className="flex items-center text-sm text-smoke-600">
               <FileText className="w-4 h-4 mr-2" />
-              <span>{sessionCount} sesiones</span>
+              <span>{sessionCount} {t('patients.sessions')}</span>
             </div>
             {/* Resumen de antecedentes médicos */}
             <div className="flex flex-wrap gap-2 pt-2">
               {patient.diabetes && (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                  Diabetes
+                  {t('patients.medicalLabels.diabetes')}
                   {patient.diabetesType && (
                     <span className="ml-1 text-xs">({patient.diabetesType.replace('type', 'T')})</span>
                   )}
@@ -103,12 +105,12 @@ const PatientCard: React.FC<PatientCardProps> = ({
               )}
               {patient.hta && (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                  HTA
+                  {t('patients.medicalLabels.hta')}
                 </span>
               )}
               {patient.dlp && (
                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                  DLP
+                  {t('patients.medicalLabels.dlp')}
                 </span>
               )}
             </div>

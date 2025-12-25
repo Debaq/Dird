@@ -26,10 +26,10 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
   if (!metadata) return null;
 
   const statusConfig = {
-    EXCELLENT: { color: 'bg-green-500', icon: CheckCircle, text: 'Excelente' },
-    GOOD: { color: 'bg-blue-500', icon: Info, text: 'Bueno' },
-    REQUIRES_IMPROVEMENT: { color: 'bg-yellow-500', icon: AlertTriangle, text: 'Requiere Mejora' },
-    CRITICAL: { color: 'bg-red-500', icon: AlertCircle, text: 'Crítico' },
+    EXCELLENT: { color: 'bg-green-500', icon: CheckCircle, text: t('settings.models.statusTexts.excellent') },
+    GOOD: { color: 'bg-blue-500', icon: Info, text: t('settings.models.statusTexts.good') },
+    REQUIRES_IMPROVEMENT: { color: 'bg-yellow-500', icon: AlertTriangle, text: t('settings.models.statusTexts.improvement') },
+    CRITICAL: { color: 'bg-red-500', icon: AlertCircle, text: t('settings.models.statusTexts.critical') },
   };
 
   const status = metadata.analysis_report?.status || 'GOOD';
@@ -40,13 +40,13 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl flex items-center gap-2">
-            {t('settings.models.modelInfo') || 'Información del Modelo'}
+            {t('settings.models.modelInfo')}
             <Badge variant="outline" className="font-mono">
               {metadata.model_info?.version || 'N/A'}
             </Badge>
           </DialogTitle>
           <DialogDescription>
-            Detalles técnicos, métricas de rendimiento y análisis del modelo de detección
+            {t('settings.models.modelInfoDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -54,25 +54,25 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
           {/* Model Info */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Información General</CardTitle>
+              <CardTitle className="text-lg">{t('settings.models.generalInfo')}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-smoke-600">Tipo:</span>
+                <span className="text-smoke-600">{t('settings.models.type')}</span>
                 <div className="font-medium text-coal-800">{metadata.model_info?.type || 'N/A'}</div>
               </div>
               <div>
-                <span className="text-smoke-600">Fecha de Entrenamiento:</span>
+                <span className="text-smoke-600">{t('settings.models.dateTrained')}</span>
                 <div className="font-medium text-coal-800">{metadata.model_info?.date_trained || 'N/A'}</div>
               </div>
               <div>
-                <span className="text-smoke-600">Tamaño de Entrada:</span>
+                <span className="text-smoke-600">{t('settings.models.inputSize')}</span>
                 <div className="font-medium text-coal-800">
                   {metadata.model_info?.input_size ? `${metadata.model_info.input_size[0]} x ${metadata.model_info.input_size[1]}` : 'N/A'}
                 </div>
               </div>
               <div>
-                <span className="text-smoke-600">Estado del Modelo:</span>
+                <span className="text-smoke-600">{t('settings.models.modelStatus')}</span>
                 <div className="flex items-center gap-2 mt-1">
                   <StatusIcon className={`w-4 h-4 ${statusConfig[status].color.replace('bg-', 'text-')}`} />
                   <span className="font-medium text-coal-800">{statusConfig[status].text}</span>
@@ -85,7 +85,7 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
           {metadata.performance_metrics && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Métricas Globales</CardTitle>
+                <CardTitle className="text-lg">{t('settings.models.globalMetrics')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-2 gap-4">
@@ -109,7 +109,7 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
                   </div>
                   <div>
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm text-smoke-600">Precisión Global</span>
+                      <span className="text-sm text-smoke-600">{t('settings.models.globalMetricsPrecision') || 'Precisión Global'}</span>
                       <span className="text-sm font-medium text-coal-800">
                         {(metadata.performance_metrics.global.precision_overall * 100).toFixed(1)}%
                       </span>
@@ -118,7 +118,7 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
                   </div>
                   <div>
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm text-smoke-600">Recall Global</span>
+                      <span className="text-sm text-smoke-600">{t('settings.models.globalMetricsRecall') || 'Recall Global'}</span>
                       <span className="text-sm font-medium text-coal-800">
                         {(metadata.performance_metrics.global.recall_overall * 100).toFixed(1)}%
                       </span>
@@ -134,7 +134,7 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
           {metadata.classes && metadata.performance_metrics?.per_class_mAP50 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Clases Detectables</CardTitle>
+                <CardTitle className="text-lg">{t('settings.models.detectableClasses')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -182,7 +182,7 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                  Hallazgos Críticos
+                  {t('settings.models.criticalFindings')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -191,18 +191,18 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
                     <div className="font-medium text-coal-800 mb-1">{finding.issue}</div>
                     {finding.metric && (
                       <div className="text-sm text-smoke-600 mb-1">
-                        <span className="font-medium">Métrica:</span> {finding.metric}
+                        <span className="font-medium">{t('settings.models.metricLabel')}</span> {finding.metric}
                       </div>
                     )}
                     <div className="text-sm text-smoke-700">{finding.observation}</div>
                     {finding.cause && (
                       <div className="text-sm text-smoke-600 mt-1">
-                        <span className="font-medium">Causa:</span> {finding.cause}
+                        <span className="font-medium">{t('settings.models.causeLabel')}</span> {finding.cause}
                       </div>
                     )}
                     {finding.implication && (
                       <div className="text-sm text-smoke-600 mt-1">
-                        <span className="font-medium">Implicación:</span> {finding.implication}
+                        <span className="font-medium">{t('settings.models.implicationLabel')}</span> {finding.implication}
                       </div>
                     )}
                   </div>
@@ -217,7 +217,7 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Info className="w-5 h-5 text-blue-600" />
-                  Recomendaciones y Próximos Pasos
+                  {t('settings.models.recommendations')}
                 </CardTitle>
               </CardHeader>
               <CardContent>

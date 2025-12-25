@@ -32,7 +32,7 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
   const handleFinalizeReport = async () => {
     if (!report.id) return;
 
-    if (!confirm('¿Está seguro de que desea finalizar este informe? Esta acción convertirá este informe en final y bloqueará la sesión permanentemente.')) {
+    if (!confirm(t('reports.list.finalizeConfirm'))) {
       return;
     }
 
@@ -100,12 +100,12 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
       URL.revokeObjectURL(url);
 
       const message = isDemoPreview
-        ? 'Informe finalizado y descargado correctamente. Esta es la sesión demo y permanece abierta para demostración.'
-        : 'Informe finalizado y descargado correctamente. La sesión ha sido bloqueada.';
+        ? t('reports.list.finalizeSuccessDemo')
+        : t('reports.list.finalizeSuccess');
       alert(message);
     } catch (error) {
       console.error('Error finalizing report:', error);
-      alert('Error al finalizar el informe');
+      alert(t('errors.unknown'));
     } finally {
       setIsFinalizing(false);
     }
@@ -137,7 +137,7 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
               </span>
               <span className="hidden sm:inline">•</span>
               <span>
-                Sesión #{session.sessionNumber}
+                {t('reports.list.sessionPrefix')}{session.sessionNumber}
               </span>
             </div>
           </div>
@@ -152,7 +152,7 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
           onClick={() => navigate(`/patients/${patient.id}/sessions/${session.id}`)}
         >
           <ArrowRight className="w-4 h-4 mr-2" />
-          Ir a Análisis
+          {t('reports.list.goToAnalysis')}
         </Button>
         <Button
           variant="ghost"
@@ -161,7 +161,7 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
           onClick={() => onView(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
         >
           <Eye className="w-4 h-4 mr-2" />
-          Ver PDF
+          {t('reports.list.viewPDF')}
         </Button>
         <Button
           variant="ghost"
@@ -170,7 +170,7 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
           onClick={() => onDownload(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
         >
           <Download className="w-4 h-4 mr-2" />
-          Descargar
+          {t('reports.list.download')}
         </Button>
         {report.type === 'preview' && !session.locked && (
           <Button
@@ -183,12 +183,12 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
             {isFinalizing ? (
               <>
                 <CheckCircle className="w-4 h-4 mr-2 animate-spin" />
-                Finalizando...
+                {t('reports.list.finalizing')}
               </>
             ) : (
               <>
                 <CheckCircle className="w-4 h-4 mr-2" />
-                Finalizar
+                {t('reports.list.finalize')}
               </>
             )}
           </Button>
@@ -272,9 +272,9 @@ const GlobalReportsList: React.FC<GlobalReportsListProps> = () => {
     return (
       <div className="py-12 text-center border-2 border-dashed border-coal-200 rounded-xl bg-coal-50/50">
         <FileSearch className="w-12 h-12 text-smoke-300 mx-auto mb-4" />
-        <p className="text-smoke-600 font-medium">No se han generado informes aún</p>
+        <p className="text-smoke-600 font-medium">{t('reports.list.noReports')}</p>
         <p className="text-smoke-400 text-sm mt-1">
-          Los informes generados aparecerán aquí para su revisión.
+          {t('reports.list.allReportsInfo')}
         </p>
       </div>
     );
@@ -289,7 +289,7 @@ const GlobalReportsList: React.FC<GlobalReportsListProps> = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-smoke-400 w-4 h-4" />
             <Input
               type="text"
-              placeholder="Buscar en conclusiones..."
+              placeholder={t('reports.list.editModalPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-full"
@@ -302,9 +302,9 @@ const GlobalReportsList: React.FC<GlobalReportsListProps> = () => {
               onChange={(e) => setFilterCategory(e.target.value as 'all' | 'single' | 'combined')}
               className="border border-coal-200 rounded-lg px-3 py-2 text-sm bg-white"
             >
-              <option value="all">Todas las categorías</option>
-              <option value="single">Sesiones únicas</option>
-              <option value="combined">Sesiones combinadas</option>
+              <option value="all">{t('reports.list.categories.all')}</option>
+              <option value="single">{t('reports.list.categories.single')}</option>
+              <option value="combined">{t('reports.list.categories.combined')}</option>
             </select>
 
             <input
@@ -324,14 +324,14 @@ const GlobalReportsList: React.FC<GlobalReportsListProps> = () => {
             onCheckedChange={setShowPreliminary}
           />
           <label htmlFor="show-preliminary" className="text-sm font-medium text-coal-700">
-            Mostrar informes preliminares
+            {t('reports.list.showPreliminary')}
           </label>
         </div>
       </div>
 
       {/* Reports Count */}
       <div className="text-smoke-600 text-sm">
-        {filteredReports?.length} informe{filteredReports?.length !== 1 ? 's' : ''} encontrado{filteredReports?.length !== 1 ? 's' : ''}
+        {t('reports.list.foundCount', { count: filteredReports?.length || 0 })}
       </div>
 
       {/* Reports List */}

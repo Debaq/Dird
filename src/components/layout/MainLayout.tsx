@@ -23,9 +23,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
 
   const navItems = [
     { path: '/patients', icon: Users, label: t('patients.title') },
-    { path: '/reports', icon: FileText, label: 'Informes' },
+    { path: '/reports', icon: FileText, label: t('reports.title') },
     { path: '/settings', icon: Settings, label: t('settings.title') },
-    { path: '/contribute', icon: Coffee, label: t('contribution.title', 'Contribuir') },
+    { path: '/contribute', icon: Coffee, label: t('contribution.title') },
   ];
 
   return (

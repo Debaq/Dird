@@ -258,7 +258,8 @@
   },
   "languages": {
     "es": "Spanish",
-    "en": "English"
+    "en": "English",
+    "auto": "Automatic (System)"
   },
   "settings": {
     "title": "Settings",

@@ -155,7 +155,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                       layer.visible ? 'text-coal-800' : 'text-smoke-400'
                     )}
                   >
-                    {layer.name}
+                    {t(layer.name)}
                     {layerDetections.length > 0 && (
                       <span className="ml-2 bg-coal-100 text-coal-600 text-xs px-2 py-0.5 rounded-full">
                         {layerDetections.length}
@@ -169,7 +169,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                         onLayerUpdate(layer.id, { visible: !layer.visible });
                       }}
                       className="p-2 lg:p-1 hover:bg-coal-100 rounded"
-                      title={layer.visible ? 'Ocultar capa' : 'Mostrar capa'}
+                      title={layer.visible ? t('canvas.layers.hide') : t('canvas.layers.show')}
                     >
                       {layer.visible ? (
                         <Eye className="w-4 h-4 text-primary-500" />
@@ -184,7 +184,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                           onLayerUpdate(layer.id, { showLabels: !layer.showLabels });
                         }}
                         className="p-2 lg:p-1 hover:bg-coal-100 rounded"
-                        title={layer.showLabels !== false ? 'Ocultar etiquetas' : 'Mostrar etiquetas'}
+                        title={layer.showLabels !== false ? t('canvas.layers.hideLabels') : t('canvas.layers.showLabels')}
                       >
                         <Tag className={cn(
                           "w-4 h-4",
@@ -199,7 +199,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                       }}
                       className="p-2 lg:p-1 hover:bg-coal-100 rounded"
                       disabled={layer.id === 'original'}
-                      title={layer.locked ? 'Desbloquear capa' : 'Bloquear capa'}
+                      title={layer.locked ? t('canvas.layers.unlock') : t('canvas.layers.lock')}
                     >
                       {layer.locked ? (
                         <Lock className="w-4 h-4 text-smoke-400" />
@@ -209,7 +209,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                     </button>
                     <button
                       className="p-2 lg:p-1 hover:bg-coal-100 rounded"
-                      title={isExpanded ? 'Cerrar' : 'Expandir'}
+                      title={isExpanded ? t('canvas.layers.collapse') : t('canvas.layers.expand')}
                     >
                       <ArrowUpDown 
                         className={cn(
@@ -268,7 +268,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                               size="sm"
                               variant="ghost"
                               onClick={() => handleEditClick(detection)}
-                              title={layer.id === 'detections-ai' ? "Convertir a manual / Editar" : "Editar clase"}
+                              title={layer.id === 'detections-ai' ? t('canvas.layers.convertAndEdit') : t('canvas.layers.editAnnotationClass')}
                               className="h-8 lg:h-6 px-2"
                             >
                               <Edit3 className="w-3 h-3" />
@@ -277,7 +277,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                               size="sm"
                               variant="destructive"
                               onClick={() => handleDeleteDetection(detection.id!)}
-                              title="Eliminar"
+                              title={t('canvas.layers.deleteAnnotation')}
                               className="h-8 lg:h-6 px-2"
                             >
                               <Trash2 className="w-3 h-3" />

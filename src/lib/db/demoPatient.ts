@@ -3,6 +3,7 @@ import type { Patient, Session } from './schema';
 import imageCompression from 'browser-image-compression';
 import { inferenceService } from '@/lib/ai/inference-service';
 import { createCombinedSession } from './combinedSessions';
+import i18n from '@/i18n/config';
 
 // Identificador único del paciente demo
 export const DEMO_PATIENT_ID = 'DEMO-001';
@@ -77,20 +78,14 @@ export async function cleanDuplicateDemoPatients(): Promise<number> {
   const demoPatients = await getAllDemoPatients();
 
   if (demoPatients.length <= 1) {
-    console.log('No hay pacientes demo duplicados');
     return 0;
   }
-
-  console.log(`Encontrados ${demoPatients.length} pacientes demo duplicados`);
 
   // Ordenar por fecha de creación (el más antiguo primero)
   const sorted = demoPatients.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
 
   // Mantener el primero (más antiguo), eliminar el resto
-  const toKeep = sorted[0];
   const toDelete = sorted.slice(1);
-
-  console.log(`Manteniendo paciente demo con ID ${toKeep.id}, eliminando ${toDelete.length} duplicados`);
 
   // Eliminar duplicados
   for (const patient of toDelete) {
@@ -123,7 +118,6 @@ export async function cleanDuplicateDemoPatients(): Promise<number> {
     await db.patients.delete(patient.id!);
   }
 
-  console.log(`${toDelete.length} pacientes demo duplicados eliminados`);
   return toDelete.length;
 }
 
@@ -141,11 +135,9 @@ export async function initializeDemoPatient(onProgress?: ProgressCallback): Prom
   if (initFlag === 'true' && initTimestamp) {
     const elapsed = now - parseInt(initTimestamp);
     if (elapsed < 120000) { // 2 minutos
-      console.log('⏳ Ya hay una inicialización en progreso, esperando...');
       return;
     } else {
       // Si han pasado más de 2 minutos, asumir que falló y limpiar
-      console.log('⚠️  Inicialización anterior bloqueada, limpiando...');
       localStorage.removeItem('demo_patient_initializing');
       localStorage.removeItem('demo_patient_init_timestamp');
     }
@@ -156,7 +148,7 @@ export async function initializeDemoPatient(onProgress?: ProgressCallback): Prom
     step: 'init',
     current: 0,
     total: 1,
-    message: 'Inicializando',
+    message: i18n.t('demo.loading.steps.init'),
   });
 
   await cleanDuplicateDemoPatients();
@@ -164,12 +156,11 @@ export async function initializeDemoPatient(onProgress?: ProgressCallback): Prom
   // Verificar si ya existe (después de limpiar duplicados)
   const exists = await demoPatientExists();
   if (exists) {
-    console.log('El paciente demo ya existe');
     onProgress?.({
       step: 'done',
       current: 1,
       total: 1,
-      message: 'Completado',
+      message: i18n.t('demo.loading.steps.done'),
     });
     return;
   }
@@ -183,7 +174,7 @@ export async function initializeDemoPatient(onProgress?: ProgressCallback): Prom
       step: 'patient',
       current: 0,
       total: 1,
-      message: 'Creando paciente demo',
+      message: i18n.t('demo.loading.steps.patient'),
     });
 
     await db.transaction('rw', [db.patients, db.sessions], async () => {
@@ -251,10 +242,6 @@ export async function initializeDemoPatient(onProgress?: ProgressCallback): Prom
     const session2Id = await db.sessions.add(session2Data as Session);
     DEMO_SESSION_PREVIEW_ID = session2Id;
 
-      console.log('✅ Paciente demo creado exitosamente');
-      console.log(`   Paciente ID: ${patientId}`);
-      console.log(`   Sesión finalizada ID: ${session1Id}`);
-      console.log(`   Sesión preview ID: ${session2Id}`);
     });
 
     // Cargar el modelo AI de detección
@@ -264,35 +251,28 @@ export async function initializeDemoPatient(onProgress?: ProgressCallback): Prom
           step: 'model',
           current: 0,
           total: 1,
-          message: 'Cargando modelo de IA',
+          message: i18n.t('demo.loading.steps.model'),
         });
 
-        console.log('🤖 Cargando modelo de detección AI...');
         await inferenceService.loadDetectionModel();
 
         onProgress?.({
           step: 'model',
           current: 1,
           total: 1,
-          message: 'Modelo de IA cargado',
+          message: i18n.t('demo.loading.steps.modelLoaded'),
         });
 
-        console.log('✅ Modelo de detección AI cargado exitosamente');
       } catch (error) {
-        console.warn('⚠️  No se pudo cargar el modelo AI:', error);
         // Continuar sin el modelo, no es crítico para la demo
       }
-    } else {
-      console.log('ℹ️  Modelo de detección AI ya está cargado');
     }
 
     // Cargar imágenes demo automáticamente
-    console.log('🚀 Cargando imágenes demo...');
     await loadAllDemoImages(onProgress);
 
     // Crear sesión combinada a partir de las sesiones 1 y 2
     try {
-      console.log('🔗 Creando sesión combinada demo...');
       if (DEMO_SESSION_FINAL_ID && DEMO_SESSION_PREVIEW_ID) {
         const demoPatient = await getDemoPatient();
         if (demoPatient) {
@@ -302,11 +282,10 @@ export async function initializeDemoPatient(onProgress?: ProgressCallback): Prom
             'Sesión Combinada Demo - Evolución Temporal'
           );
           DEMO_SESSION_COMPARISON_ID = combinedSessionId;
-          console.log(`✅ Sesión combinada demo creada con ID: ${combinedSessionId}`);
         }
       }
     } catch (error) {
-      console.warn('⚠️  No se pudo crear la sesión combinada demo:', error);
+      // Error handling without logging
     }
 
     // Intentar cargar los reportes demo si existen
@@ -315,21 +294,19 @@ export async function initializeDemoPatient(onProgress?: ProgressCallback): Prom
         step: 'report',
         current: 0,
         total: 2,
-        message: 'Cargando reportes',
+        message: i18n.t('demo.loading.steps.report'),
       });
-      console.log('📄 Intentando cargar reporte final de sesión 1...');
       await loadDemoReportAndLockSession();
 
       onProgress?.({
         step: 'report',
         current: 1,
         total: 2,
-        message: 'Cargando reportes',
+        message: i18n.t('demo.loading.steps.report'),
       });
-      console.log('📄 Intentando cargar reporte preview de sesión 2...');
       await loadDemoPreviewReport();
     } catch (error) {
-      console.warn('⚠️  Reportes demo no encontrados o error al cargar:', error);
+      // Error handling without logging
     }
 
     // Finalizar
@@ -337,14 +314,13 @@ export async function initializeDemoPatient(onProgress?: ProgressCallback): Prom
       step: 'done',
       current: 1,
       total: 1,
-      message: 'Completado',
+      message: i18n.t('demo.loading.steps.done'),
     });
 
     // Pequeño delay para que el usuario vea el mensaje "Completado"
     await new Promise(resolve => setTimeout(resolve, 500));
 
   } catch (error) {
-    console.error('❌ Error al inicializar paciente demo:', error);
     throw error;
   } finally {
     // Limpiar flags de inicialización
@@ -403,7 +379,6 @@ export async function loadDemoImage(
       .first();
 
     if (existingImage) {
-      console.log(`⚠️  Imagen ${filename} ya existe en sesión ${sessionNumber}, omitiendo...`);
       return;
     }
 
@@ -472,17 +447,15 @@ export async function loadDemoImage(
             createdAt: new Date(),
           });
         }
-        console.log(`✅ Cargada imagen ${filename} con ${exportedDetections.length} detecciones`);
       } else {
-        console.log(`⚠️  Cargada imagen ${filename} sin detecciones (JSON no encontrado)`);
+        // Image loaded without detections
       }
     } catch (detectionError) {
-      console.warn(`No se pudieron cargar las detecciones para ${filename}:`, detectionError);
-      console.log(`⚠️  Cargada imagen ${filename} sin detecciones`);
+      // Error handling without logging
     }
 
   } catch (error) {
-    console.error(`❌ Error al cargar imagen demo ${filename}:`, error);
+    // Error handling without logging
     // No hacer throw para permitir que continúe con las demás imágenes
   }
 }
@@ -491,7 +464,6 @@ export async function loadDemoImage(
  * Carga todas las imágenes demo para ambas sesiones
  */
 export async function loadAllDemoImages(onProgress?: ProgressCallback): Promise<void> {
-  console.log('🚀 Iniciando carga de imágenes demo...');
 
   const imagesToLoad = [
     // Sesión 1 - Finalizada
@@ -522,7 +494,7 @@ export async function loadAllDemoImages(onProgress?: ProgressCallback): Promise<
           step: 'images',
           current: currentIndex,
           total: imagesToLoad.length,
-          message: `Cargando imágenes (${currentIndex + 1}/${imagesToLoad.length})`,
+          message: `${i18n.t('demo.loading.steps.images')} (${currentIndex + 1}/${imagesToLoad.length})`,
         });
         await loadDemoImage(session, filename, eyeType);
         successCount++;
@@ -532,7 +504,7 @@ export async function loadAllDemoImages(onProgress?: ProgressCallback): Promise<
           step: 'images',
           current: currentIndex + 1,
           total: imagesToLoad.length,
-          message: `Cargando imágenes (${currentIndex + 1}/${imagesToLoad.length})`,
+          message: `${i18n.t('demo.loading.steps.images')} (${currentIndex + 1}/${imagesToLoad.length})`,
         });
       } catch (error) {
         console.error(`❌ Error al cargar ${filename}:`, error);
@@ -543,7 +515,6 @@ export async function loadAllDemoImages(onProgress?: ProgressCallback): Promise<
     await Promise.all(promises);
   }
 
-  console.log(`\n✨ Carga completada: ${successCount} exitosas, ${errorCount} fallidas`);
 }
 
 /**
@@ -568,7 +539,6 @@ export async function loadDemoPreviewReport(): Promise<void> {
   // Verificar si ya tiene reporte
   const existingReport = await db.reports.where('sessionId').equals(session2.id!).first();
   if (existingReport) {
-    console.log('⚠️  Sesión 2 ya tiene reporte preview cargado');
     return;
   }
 
@@ -628,9 +598,7 @@ NOTA: Este es un reporte PRELIMINAR generado para demostración. Permite visuali
       generatedAt: new Date(session2.date.getFullYear(), session2.date.getMonth(), session2.date.getDate() + 1),
     });
 
-    console.log('✅ Reporte preview demo cargado para sesión 2');
   } catch (error) {
-    console.error('❌ Error al cargar reporte preview demo:', error);
     throw error;
   }
 }
@@ -657,14 +625,12 @@ export async function loadDemoReportAndLockSession(): Promise<void> {
   // Verificar si ya tiene reporte
   const existingReport = await db.reports.where('sessionId').equals(session1.id!).first();
   if (existingReport) {
-    console.log('⚠️  Sesión 1 ya tiene reporte cargado');
     // Asegurar que esté bloqueada
     if (!session1.locked) {
       await db.sessions.update(session1.id!, {
         locked: true,
         lockedAt: new Date(),
       });
-      console.log('✅ Sesión 1 bloqueada');
     }
     return;
   }
@@ -698,9 +664,7 @@ export async function loadDemoReportAndLockSession(): Promise<void> {
       lockedAt: new Date(session1.date.getFullYear(), session1.date.getMonth(), session1.date.getDate() + 1),
     });
 
-    console.log('✅ Reporte demo cargado y sesión 1 bloqueada');
   } catch (error) {
-    console.error('❌ Error al cargar reporte demo:', error);
     throw error;
   }
 }
@@ -711,7 +675,6 @@ export async function loadDemoReportAndLockSession(): Promise<void> {
 export async function removeDemoPatient(): Promise<void> {
   const patient = await getDemoPatient();
   if (!patient) {
-    console.log('El paciente demo no existe');
     return;
   }
 
@@ -739,6 +702,5 @@ export async function removeDemoPatient(): Promise<void> {
     DEMO_SESSION_PREVIEW_ID = null;
     DEMO_SESSION_COMPARISON_ID = null;
 
-    console.log('Paciente demo eliminado');
   });
 }
