@@ -143,6 +143,14 @@ const SessionView: React.FC = () => {
         if (image.id) {
           const detections = await inferenceService.detectObjects(imgElement, image.id);
           totalDetections += detections.length;
+
+          // 🔍 TEMPORAL: Console.log para extraer JSON de detecciones para paciente demo
+          console.log('═══════════════════════════════════════════════════════');
+          console.log(`📸 Imagen: ${image.filename} (${image.eyeType})`);
+          console.log(`📊 Detecciones encontradas: ${detections.length}`);
+          console.log('📋 JSON de detecciones (copiar para demo):');
+          console.log(JSON.stringify(detections, null, 2));
+          console.log('═══════════════════════════════════════════════════════');
         }
         URL.revokeObjectURL(imageUrl);
       }

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import PDFViewerModal from './PDFViewerModal';
 import { regenerateSessionReportBlob } from '@/lib/pdf/report-generator';
 import { ReportGenerator } from '@/lib/pdf/report-generator';
+import { isDemoPreviewSession } from '@/lib/db/demoPatient';
 
 interface ReportsListProps {
   sessionId: number;
@@ -131,11 +132,14 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
         generatedAt: new Date(),
       });
 
-      // Lock the session
-      await db.sessions.update(sessionId, {
-        locked: true,
-        lockedAt: new Date(),
-      });
+      // Lock the session (unless it's the demo preview session)
+      const isDemoPreview = await isDemoPreviewSession(sessionId);
+      if (!isDemoPreview) {
+        await db.sessions.update(sessionId, {
+          locked: true,
+          lockedAt: new Date(),
+        });
+      }
 
       // Download the final report automatically
       const url = URL.createObjectURL(finalPdfBlob);
@@ -147,7 +151,10 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      alert('Informe finalizado y descargado correctamente. La sesión ha sido bloqueada.');
+      const message = isDemoPreview
+        ? 'Informe finalizado y descargado correctamente. Esta es la sesión demo y permanece abierta para demostración.'
+        : 'Informe finalizado y descargado correctamente. La sesión ha sido bloqueada.';
+      alert(message);
     } catch (error) {
       console.error('Error finalizing report:', error);
       alert('Error al finalizar el informe');
@@ -222,12 +229,6 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
                   <Calendar className="w-3.5 h-3.5" />
                   {new Date(report.generatedAt).toLocaleString()}
                 </span>
-                {report.evaluatorNotes && (
-                  <span className="flex items-center gap-1 truncate">
-                    <Tag className="w-3.5 h-3.5" />
-                    {report.evaluatorNotes}
-                  </span>
-                )}
               </div>
             </div>
           </div>

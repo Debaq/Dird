@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { db, type Image, type Detection } from '@/lib/db/schema';
 import { getClassColor } from '@/lib/ai/model-metadata';
+import { getClassName } from '@/lib/ai/class-translations';
+import i18n from '@/i18n/config';
 
 interface AnalysisViewProps {
   images: Image[];
@@ -147,7 +149,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
                       className="w-4 h-4 rounded-full mb-2"
                       style={{ backgroundColor: getClassColor(className) }}
                     />
-                    <p className="text-sm font-medium text-coal-800">{className}</p>
+                    <p className="text-sm font-medium text-coal-800">{getClassName(className, i18n.language)}</p>
                     <p className="text-2xl font-bold text-coal-900">{count}</p>
                     <p className="text-xs text-smoke-500">
                       {((count / totalDetections) * 100).toFixed(1)}%
@@ -212,7 +214,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
                           className="text-xs px-2 py-1 rounded-full text-white font-medium"
                           style={{ backgroundColor: getClassColor(className) }}
                         >
-                          {className}: {count}
+                          {getClassName(className, i18n.language)}: {count}
                         </span>
                       ))}
                     </div>

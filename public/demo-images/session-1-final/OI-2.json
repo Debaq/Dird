@@ -1,0 +1,41 @@
+[
+  {
+    "type": "ai",
+    "modelVersion": "DIRDv1r1",
+    "bbox": {
+      "x": 21.420989990234375,
+      "y": 305.62548828125,
+      "width": 108.61477661132812,
+      "height": 133.66021728515625
+    },
+    "class": "optic_disc",
+    "confidence": 0.9079900979995728,
+    "visible": true
+  },
+  {
+    "type": "ai",
+    "modelVersion": "DIRDv1r1",
+    "bbox": {
+      "x": 282.7971496582031,
+      "y": 374.2134094238281,
+      "width": 64.242431640625,
+      "height": 60.8896484375
+    },
+    "class": "fovea",
+    "confidence": 0.7609368562698364,
+    "visible": true
+  },
+  {
+    "type": "ai",
+    "modelVersion": "DIRDv1r1",
+    "bbox": {
+      "x": 208.68084716796875,
+      "y": 552.7254638671875,
+      "width": 39.200653076171875,
+      "height": 26.9232177734375
+    },
+    "class": "microhemorrhages",
+    "confidence": 0.7205499410629272,
+    "visible": true
+  }
+]

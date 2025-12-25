@@ -1,0 +1,54 @@
+[
+  {
+    "type": "ai",
+    "modelVersion": "DIRDv1r1",
+    "bbox": {
+      "x": 133.24212646484375,
+      "y": 252.11174774169922,
+      "width": 125.52548217773438,
+      "height": 136.82154846191406
+    },
+    "class": "optic_disc",
+    "confidence": 0.8517650365829468,
+    "visible": true
+  },
+  {
+    "type": "ai",
+    "modelVersion": "DIRDv1r1",
+    "bbox": {
+      "x": 405.10386657714844,
+      "y": 318.8532257080078,
+      "width": 70.15237426757812,
+      "height": 71.84457397460938
+    },
+    "class": "fovea",
+    "confidence": 0.8235918283462524,
+    "visible": true
+  },
+  {
+    "type": "ai",
+    "modelVersion": "DIRDv1r1",
+    "bbox": {
+      "x": 508.3354187011719,
+      "y": 413.4989013671875,
+      "width": 70.66436767578125,
+      "height": 80.03411865234375
+    },
+    "class": "hard_exudate",
+    "confidence": 0.7675439119338989,
+    "visible": true
+  },
+  {
+    "type": "ai",
+    "modelVersion": "DIRDv1r1",
+    "bbox": {
+      "x": 504.9947204589844,
+      "y": 272.6896514892578,
+      "width": 47.14825439453125,
+      "height": 51.091400146484375
+    },
+    "class": "hard_exudate",
+    "confidence": 0.6064895391464233,
+    "visible": true
+  }
+]

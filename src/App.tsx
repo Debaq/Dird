@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import PatientList from '@/components/patients/PatientList';
 import PatientDetails from '@/components/patients/PatientDetails';
@@ -9,12 +10,67 @@ import LanguageSync from '@/components/LanguageSync';
 import GlobalReportsList from '@/components/reports/GlobalReportsList';
 import SessionComparison from '@/components/patients/SessionComparison';
 import ContributionMenu from '@/components/contribution/ContributionMenu';
+import { initializeDemoPatient, demoPatientExists, type LoadingProgress } from '@/lib/db/demoPatient';
+import { DemoLoadingScreen } from '@/components/demo/DemoLoadingScreen';
 
 function App() {
   const basename = import.meta.env.PROD ? '/dird' : '/';
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState<LoadingProgress>({
+    step: 'init',
+    current: 0,
+    total: 1,
+    message: 'Inicializando',
+  });
+
+  // Inicializar paciente demo al cargar la aplicación
+  useEffect(() => {
+    let cancelled = false; // Para evitar race conditions
+
+    const setupDemoPatient = async () => {
+      console.log('🔍 Verificando si existe paciente demo...');
+      const exists = await demoPatientExists();
+      console.log('🔍 Paciente demo existe:', exists);
+
+      if (cancelled) return; // Si el componente se desmontó, salir
+
+      if (!exists) {
+        console.log('🚀 Iniciando creación de paciente demo...');
+        await initializeDemoPatient((progress) => {
+          if (!cancelled) {
+            console.log('📊 Progreso:', progress);
+            setLoadingProgress(progress);
+          }
+        });
+        console.log('✅ Paciente demo inicializado completamente');
+      }
+
+      if (!cancelled) {
+        console.log('🏁 Finalizando carga, ocultando pantalla...');
+        setIsInitializing(false);
+      }
+    };
+
+    setupDemoPatient().catch(error => {
+      console.error('❌ Error al inicializar paciente demo:', error);
+      if (!cancelled) {
+        setIsInitializing(false);
+      }
+    });
+
+    // Cleanup function para evitar actualizaciones en componente desmontado
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Mostrar pantalla de carga mientras se inicializa
+  if (isInitializing) {
+    return <DemoLoadingScreen progress={loadingProgress} />;
+  }
 
   return (
-    <BrowserRouter 
+    <BrowserRouter
       basename={basename}
       future={{
         v7_startTransition: true,

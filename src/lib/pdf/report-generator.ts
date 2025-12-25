@@ -6,6 +6,7 @@ import { db } from '@/lib/db/schema';
 import { useConfigStore, DEFAULT_CONFIG } from '@/stores/config-store';
 import { getAssetPath } from '@/utils/assets';
 import { classManager } from '@/lib/classes/class-manager';
+import { getClassName } from '@/lib/ai/class-translations';
 
 // Helper to convert hex to rgb
 const hexToRgb = (hex: string): [number, number, number] => {
@@ -357,7 +358,7 @@ export class ReportGenerator {
     });
 
     const summaryData = Array.from(classCounts.entries()).map(([className, count]) => [
-      i18n.t(`models.classes.${className}`),
+      getClassName(className, i18n.language),
       count.toString(),
     ]);
 
@@ -619,9 +620,10 @@ export class ReportGenerator {
           // Draw Box
           ctx.strokeRect(det.bbox.x, det.bbox.y, det.bbox.width, det.bbox.height);
 
-          // Draw Label
+          // Label
+          const translatedClass = getClassName(det.class, i18n.language);
           const conf = det.confidence ? ` ${Math.round(det.confidence * 100)}%` : '';
-          const text = `${det.class}${conf}`;
+          const text = `${translatedClass}${conf}`;
           const textMetrics = ctx.measureText(text);
           const textWidth = textMetrics.width;
           const textHeight = fontSize + 4;

@@ -1,0 +1,28 @@
+[
+  {
+    "type": "ai",
+    "modelVersion": "DIRDv1r1",
+    "bbox": {
+      "x": 397.1680908203125,
+      "y": 245.76632690429688,
+      "width": 110.3209228515625,
+      "height": 126.23199462890625
+    },
+    "class": "optic_disc",
+    "confidence": 0.8603072166442871,
+    "visible": true
+  },
+  {
+    "type": "ai",
+    "modelVersion": "DIRDv1r1",
+    "bbox": {
+      "x": 177.77593231201172,
+      "y": 303.8805694580078,
+      "width": 90.30024719238281,
+      "height": 73.80648803710938
+    },
+    "class": "fovea",
+    "confidence": 0.760256290435791,
+    "visible": true
+  }
+]

@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { regenerateSessionReportBlob } from '@/lib/pdf/report-generator';
 import { ReportGenerator } from '@/lib/pdf/report-generator';
+import { isDemoPreviewSession } from '@/lib/db/demoPatient';
 
 interface ReportItemProps {
   report: Report;
@@ -79,11 +80,14 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
         generatedAt: new Date(),
       });
 
-      // Lock the session
-      await db.sessions.update(report.sessionId, {
-        locked: true,
-        lockedAt: new Date(),
-      });
+      // Lock the session (unless it's the demo preview session)
+      const isDemoPreview = await isDemoPreviewSession(report.sessionId);
+      if (!isDemoPreview) {
+        await db.sessions.update(report.sessionId, {
+          locked: true,
+          lockedAt: new Date(),
+        });
+      }
 
       // Download the final report automatically
       const url = URL.createObjectURL(finalPdfBlob);
@@ -95,7 +99,10 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      alert('Informe finalizado y descargado correctamente. La sesión ha sido bloqueada.');
+      const message = isDemoPreview
+        ? 'Informe finalizado y descargado correctamente. Esta es la sesión demo y permanece abierta para demostración.'
+        : 'Informe finalizado y descargado correctamente. La sesión ha sido bloqueada.';
+      alert(message);
     } catch (error) {
       console.error('Error finalizing report:', error);
       alert('Error al finalizar el informe');
@@ -132,15 +139,6 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
               <span>
                 Sesión #{session.sessionNumber}
               </span>
-              {report.evaluatorNotes && (
-                <>
-                  <span className="hidden sm:inline">•</span>
-                  <span className="flex items-center gap-1 truncate max-w-[200px] sm:max-w-none" title={report.evaluatorNotes}>
-                    <Tag className="w-3.5 h-3.5" />
-                    {report.evaluatorNotes}
-                  </span>
-                </>
-              )}
             </div>
           </div>
         </div>

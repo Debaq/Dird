@@ -89,7 +89,8 @@
       "birthDate": "Fecha de Nacimiento",
       "gender": "Género",
       "medicalHistory": "Historial Médico",
-      "address": "Dirección"
+      "address": "Dirección",
+      "results": "Resultados"
     },
     "gender": {
       "male": "Masculino",
@@ -465,6 +466,21 @@
       "clickToUpload": "Haz clic para subir imágenes",
       "supportedFormats": "Formatos soportados: JPG, PNG, WEBP",
       "submit": "Enviar Comentario"
+    }
+  },
+  "demo": {
+    "loading": {
+      "title": "Preparando DIRD",
+      "subtitle": "Configurando el paciente demo por primera vez",
+      "imagesProgress": "Cargando imagen {{current}} de {{total}}",
+      "firstTimeInfo": "Esto solo ocurre la primera vez que abres la aplicación. Los datos se guardan localmente en tu dispositivo.",
+      "steps": {
+        "init": "Inicializando",
+        "patient": "Creando paciente demo",
+        "images": "Cargando imágenes",
+        "report": "Cargando reporte",
+        "done": "Finalizando"
+      }
     }
   }
 }

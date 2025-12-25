@@ -91,7 +91,17 @@ export function Settings() {
       try {
         const versionInfo = await getCurrentVersion(false);
         setCurrentVersion(versionInfo);
-        setLocalVersion(versionInfo);
+
+        // Obtener la versión local guardada en localStorage
+        const savedLocalVersion = localStorage.getItem('installedVersion');
+        if (savedLocalVersion) {
+          // Si existe una versión guardada, usarla como versión local
+          setLocalVersion(JSON.parse(savedLocalVersion));
+        } else {
+          // Si no existe, guardar la versión actual como instalada
+          setLocalVersion(versionInfo);
+          localStorage.setItem('installedVersion', JSON.stringify(versionInfo));
+        }
       } catch (error) {
         console.error('Error loading version info:', error);
       } finally {
@@ -131,6 +141,11 @@ export function Settings() {
 
   const forceUpdate = async () => {
     setIsReloading(true);
+
+    // Actualizar la versión local guardada antes de recargar
+    if (currentVersion) {
+      localStorage.setItem('installedVersion', JSON.stringify(currentVersion));
+    }
 
     // Limpiar el caché del navegador
     if ('caches' in window) {

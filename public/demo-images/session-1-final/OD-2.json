@@ -1,0 +1,67 @@
+[
+  {
+    "type": "ai",
+    "modelVersion": "DIRDv1r1",
+    "bbox": {
+      "x": 499.88232421875,
+      "y": 202.78274536132812,
+      "width": 107.2506103515625,
+      "height": 127.67950439453125
+    },
+    "class": "optic_disc",
+    "confidence": 0.9126766920089722,
+    "visible": true
+  },
+  {
+    "type": "ai",
+    "modelVersion": "DIRDv1r1",
+    "bbox": {
+      "x": 254.16881561279297,
+      "y": 55.206180572509766,
+      "width": 81.56056213378906,
+      "height": 86.94173431396484
+    },
+    "class": "hard_exudate",
+    "confidence": 0.848812460899353,
+    "visible": true
+  },
+  {
+    "type": "ai",
+    "modelVersion": "DIRDv1r1",
+    "bbox": {
+      "x": 192.05054473876953,
+      "y": 503.1447448730469,
+      "width": 63.69731140136719,
+      "height": 55.91461181640625
+    },
+    "class": "microhemorrhages",
+    "confidence": 0.6708974838256836,
+    "visible": true
+  },
+  {
+    "type": "ai",
+    "modelVersion": "DIRDv1r1",
+    "bbox": {
+      "x": 273.9792938232422,
+      "y": 244.9451904296875,
+      "width": 81.90628051757812,
+      "height": 71.12066650390625
+    },
+    "class": "fovea",
+    "confidence": 0.60772705078125,
+    "visible": true
+  },
+  {
+    "type": "ai",
+    "modelVersion": "DIRDv1r1",
+    "bbox": {
+      "x": 218.04537963867188,
+      "y": 373.4798278808594,
+      "width": 21.435150146484375,
+      "height": 24.04461669921875
+    },
+    "class": "microhemorrhages",
+    "confidence": 0.5621283650398254,
+    "visible": true
+  }
+]

@@ -14,6 +14,7 @@ import {
 import { generateSessionReport } from '@/lib/pdf/report-generator';
 import type { ReportType } from '@/lib/pdf/report-generator';
 import { db } from '@/lib/db/schema';
+import { isDemoPreviewSession } from '@/lib/db/demoPatient';
 
 interface ReportGeneratorProps {
   sessionId: number;
@@ -74,12 +75,15 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         URL.revokeObjectURL(url);
       }
 
-      // If final report, lock session
+      // If final report, lock session (unless it's the demo preview session)
       if (type === 'final') {
-        await db.sessions.update(sessionId, {
-          locked: true,
-          lockedAt: new Date(),
-        });
+        const isDemoPreview = await isDemoPreviewSession(sessionId);
+        if (!isDemoPreview) {
+          await db.sessions.update(sessionId, {
+            locked: true,
+            lockedAt: new Date(),
+          });
+        }
       }
 
       setShowDialog(false);
