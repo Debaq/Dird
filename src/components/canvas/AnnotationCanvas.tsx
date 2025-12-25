@@ -21,6 +21,13 @@ interface AnnotationCanvasProps {
   activeTool?: CanvasTool;
   layers?: CanvasLayer[];
   onAnnotationAdded?: () => void;
+  history?: {
+    entries: HistoryEntry[];
+    index: number;
+    onAdd: (entry: HistoryEntry) => void;
+    onUndo: () => void;
+    onRedo: () => void;
+  };
 }
 
 const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
@@ -30,6 +37,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   activeTool = 'select',
   layers = [],
   onAnnotationAdded,
+  history,
 }) => {
   const { i18n } = useTranslation();
   const { config } = useConfigStore();
@@ -62,6 +70,10 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // State for drag/move operations history optimization
+  const dragStartAnnotation = useRef<any>(null);
+  const isKeyboardMoving = useRef(false);
+
   // Update transformer when selection changes
   useEffect(() => {
     if (selectedAnnotationId && trRef.current && stageRef.current) {
@@ -77,6 +89,39 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       trRef.current.nodes([]);
     }
   }, [selectedAnnotationId, detections, manualAnnotations, isCanvasReady]);
+
+  // Capture initial state before drag/transform
+  const handleDragStart = (id: number) => {
+    const detection = detections.find(d => d.id === id) || manualAnnotations.find(d => d.id === id);
+    if (detection) {
+      dragStartAnnotation.current = JSON.parse(JSON.stringify(detection));
+    }
+  };
+
+  // Helper to record history after drag/transform
+  const recordMoveHistory = async (id: number) => {
+    if (!dragStartAnnotation.current || !history) return;
+
+    const currentDetection = await db.detections.get(id);
+    if (currentDetection) {
+      const startBbox = dragStartAnnotation.current.bbox;
+      const endBbox = currentDetection.bbox;
+      
+      if (
+        Math.abs(startBbox.x - endBbox.x) > 0.1 ||
+        Math.abs(startBbox.y - endBbox.y) > 0.1 ||
+        Math.abs(startBbox.width - endBbox.width) > 0.1 ||
+        Math.abs(startBbox.height - endBbox.height) > 0.1
+      ) {
+         history.onAdd({
+          type: 'update',
+          before: dragStartAnnotation.current,
+          after: currentDetection
+        });
+      }
+    }
+    dragStartAnnotation.current = null;
+  };
 
   // Handle updates (drag/resize)
   const handleAnnotationChange = async (id: number, newAttrs: any) => {
@@ -95,8 +140,6 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       }
 
       // Convert to image coordinates
-      // The shape in Konva is at (bbox.x * scale + imageOffset.x)
-      // We need to reverse this to get bbox.x
       const bbox = {
         x: (newAttrs.x - imageOffset.x) / scale,
         y: (newAttrs.y - imageOffset.y) / scale,
@@ -104,20 +147,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         height: newAttrs.height / scale,
       };
 
-      const newState = {
-        ...detection,
-        bbox,
-        type: detection.type === 'ai' ? 'manual' : detection.type
-      };
-
-      addToHistory({
-        type: 'update',
-        before: detection,
-        after: newState
-      });
-
       if (detection.type === 'ai') {
-        // Change to manual
         await db.detections.update(id, {
           bbox,
           type: 'manual'
@@ -379,22 +409,6 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     }
   }, [hoveredDetectionId]);
 
-  // Estado para el historial de deshacer/rehacer
-  type HistoryEntry = 
-    | { type: 'add'; detection: any }
-    | { type: 'delete'; detection: any }
-    | { type: 'update'; before: any; after: any };
-
-  const [detectionHistory, setDetectionHistory] = useState<HistoryEntry[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-
-  const addToHistory = (entry: HistoryEntry) => {
-    const newHistory = detectionHistory.slice(0, historyIndex + 1);
-    newHistory.push(entry);
-    setDetectionHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  };
-
   const handleClassSelected = async (className: string) => {
     if (!pendingAnnotation || !image.id) return;
 
@@ -418,7 +432,9 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       
       const savedDetection = { ...newDetectionData, id: newId };
       
-      addToHistory({ type: 'add', detection: savedDetection });
+      if (history) {
+        history.onAdd({ type: 'add', detection: savedDetection });
+      }
 
       // Agregar al estado local para visualización inmediata
       setAnnotations([
@@ -435,60 +451,6 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     } catch (error) {
       console.error('Error al guardar anotación:', error);
       alert('Error al guardar la anotación. Por favor intenta de nuevo.');
-    }
-  };
-
-  // Función para deshacer la última operación
-  const handleUndo = async () => {
-    if (historyIndex < 0) return;
-
-    const entry = detectionHistory[historyIndex];
-
-    try {
-      if (entry.type === 'add') {
-        // Deshacer agregar: eliminar
-        if (entry.detection.id) {
-          await db.detections.delete(entry.detection.id);
-        }
-      } else if (entry.type === 'delete') {
-        // Deshacer eliminar: volver a agregar (preservando ID)
-        await db.detections.add(entry.detection);
-      } else if (entry.type === 'update') {
-        // Deshacer actualizar: volver al estado anterior
-        await db.detections.put(entry.before);
-      }
-      
-      onAnnotationAdded?.();
-      setHistoryIndex(prev => prev - 1);
-    } catch (error) {
-      console.error('Error in undo:', error);
-    }
-  };
-
-  // Función para rehacer la última operación deshecha
-  const handleRedo = async () => {
-    if (historyIndex >= detectionHistory.length - 1) return;
-
-    const entry = detectionHistory[historyIndex + 1];
-
-    try {
-      if (entry.type === 'add') {
-        // Rehacer agregar: volver a agregar
-        await db.detections.add(entry.detection);
-      } else if (entry.type === 'delete') {
-        // Rehacer eliminar: volver a eliminar
-        if (entry.detection.id) {
-          await db.detections.delete(entry.detection.id);
-        }
-      } else if (entry.type === 'update') {
-        // Rehacer actualizar: volver al estado nuevo
-        await db.detections.put(entry.after);
-      }
-
-      onAnnotationAdded?.();
-      setHistoryIndex(prev => prev + 1);
-    } catch (error) {
-      console.error('Error in redo:', error);
     }
   };
 
@@ -535,12 +497,12 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 'z' || e.key === 'Z') {
           if (e.shiftKey) {
-            handleRedo();
+            history?.onRedo();
           } else {
-            handleUndo();
+            history?.onUndo();
           }
         } else if ((e.key === 'y' || e.key === 'Y') && !e.shiftKey) {
-          handleRedo();
+          history?.onRedo();
         }
       }
 
@@ -553,6 +515,12 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           manualAnnotations.find(d => String(d.id) === selectedAnnotationId);
 
         if (!detection) return;
+
+        // Capture start state on first move
+        if (!isKeyboardMoving.current) {
+            isKeyboardMoving.current = true;
+            dragStartAnnotation.current = JSON.parse(JSON.stringify(detection));
+        }
 
         // Move by 1 pixel relative to image resolution (finer control)
         // Adjust delta based on shift key for faster movement (e.g., 10 pixels)
@@ -584,9 +552,23 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       }
     };
 
+    // Key up listener to commit history for keyboard moves
+    const handleKeyUp = (e: KeyboardEvent) => {
+        if (isKeyboardMoving.current && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+             if (selectedAnnotationId) {
+                 recordMoveHistory(parseInt(selectedAnnotationId));
+             }
+             isKeyboardMoving.current = false;
+        }
+    };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [historyIndex, detectionHistory, selectedAnnotationId, detections, manualAnnotations, scale, imageOffset]);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [history, selectedAnnotationId, detections, manualAnnotations, scale, imageOffset]);
 
   // Handle modal close/cancel
   const handleModalClose = () => {
@@ -628,17 +610,17 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       <div className="relative w-full">
         <div className="absolute top-2 left-2 z-10 flex space-x-2">
           <button
-            onClick={handleUndo}
-            disabled={historyIndex < 0}
-            className={`p-2 rounded-lg ${historyIndex < 0 ? 'bg-gray-200 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-100 shadow'}`}
+            onClick={history?.onUndo}
+            disabled={!history || history.index < 0}
+            className={`p-2 rounded-lg ${!history || history.index < 0 ? 'bg-gray-200 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-100 shadow'}`}
             title="Deshacer (Ctrl+Z)"
           >
             <RotateCcw className="w-4 h-4" />
           </button>
           <button
-            onClick={handleRedo}
-            disabled={historyIndex >= detectionHistory.length - 1}
-            className={`p-2 rounded-lg ${historyIndex >= detectionHistory.length - 1 ? 'bg-gray-200 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-100 shadow'}`}
+            onClick={history?.onRedo}
+            disabled={!history || history.index >= history.entries.length - 1}
+            className={`p-2 rounded-lg ${!history || history.index >= history.entries.length - 1 ? 'bg-gray-200 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-100 shadow'}`}
             title="Rehacer (Ctrl+Y)"
           >
             <RotateCw className="w-4 h-4" />
@@ -758,10 +740,13 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                   onMouseLeave={() => {
                     setHoveredDetectionId(null);
                   }}
+                  onDragStart={() => detection.id && handleDragStart(detection.id)}
                   onClick={async (e) => {
                     if (activeTool === 'eraser' && detection.id) {
                       e.cancelBubble = true;
-                      addToHistory({ type: 'delete', detection: detection });
+                      if (history) {
+                          history.onAdd({ type: 'delete', detection: detection });
+                      }
                       await db.detections.delete(detection.id);
                       onAnnotationAdded?.();
                     } else if (activeTool === 'select' && detection.id) {
@@ -776,9 +761,10 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                         y: e.target.y(),
                         width: e.target.width() * e.target.scaleX(),
                         height: e.target.height() * e.target.scaleY()
-                      });
+                      }).then(() => recordMoveHistory(detection.id!));
                     }
                   }}
+                  onTransformStart={() => detection.id && handleDragStart(detection.id)}
                   onTransformEnd={(e) => {
                     if (detection.id) {
                       const node = e.target;
@@ -792,7 +778,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                         width: Math.max(5, node.width() * scaleX),
                         height: Math.max(5, node.height() * scaleY),
                         rotation: node.rotation()
-                      });
+                      }).then(() => recordMoveHistory(detection.id!));
                     }
                   }}
                 />
@@ -806,6 +792,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                     stroke="black"
                     strokeWidth={1}
                     draggable
+                    onDragStart={() => detection.id && handleDragStart(detection.id)}
                     onDragMove={(e) => {
                       const circle = e.target;
                       const rect = stageRef.current?.findOne('#det-' + detection.id);
@@ -824,7 +811,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                           y: rect.y(),
                           width: rect.width() * rect.scaleX(),
                           height: rect.height() * rect.scaleY()
-                        });
+                        }).then(() => recordMoveHistory(detection.id!));
                       }
                     }}
                   />
@@ -908,26 +895,31 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                     onMouseLeave={() => {
                       setHoveredDetectionId(null);
                     }}
+                    onDragStart={() => annotation.id && handleDragStart(annotation.id)}
                                       onClick={async (e) => {
                                         if (activeTool === 'eraser' && annotation.id) {
                                           e.cancelBubble = true;
-                                          addToHistory({ type: 'delete', detection: annotation });
+                                          if (history) {
+                                              history.onAdd({ type: 'delete', detection: annotation });
+                                          }
                                           await db.detections.delete(annotation.id);
                                           onAnnotationAdded?.();
                                         } else if (activeTool === 'select' && annotation.id) {
                                           setSelectedAnnotation(String(annotation.id));
                                           e.cancelBubble = true;
                                         }
-                                      }}                    onDragEnd={(e) => {
+                                      }}                    
+                    onDragEnd={(e) => {
                       if (annotation.id) {
                         handleAnnotationChange(annotation.id, {
                           x: e.target.x(),
                           y: e.target.y(),
                           width: e.target.width() * e.target.scaleX(),
                           height: e.target.height() * e.target.scaleY()
-                        });
+                        }).then(() => recordMoveHistory(annotation.id!));
                       }
                     }}
+                    onTransformStart={() => annotation.id && handleDragStart(annotation.id)}
                     onTransformEnd={(e) => {
                       if (annotation.id) {
                         const node = e.target;
@@ -941,7 +933,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                           width: Math.max(5, node.width() * scaleX),
                           height: Math.max(5, node.height() * scaleY),
                           rotation: node.rotation()
-                        });
+                        }).then(() => recordMoveHistory(annotation.id!));
                       }
                     }}
                   />
@@ -955,6 +947,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                       stroke="black"
                       strokeWidth={1}
                       draggable
+                      onDragStart={() => annotation.id && handleDragStart(annotation.id)}
                       onDragMove={(e) => {
                         const circle = e.target;
                         const rect = stageRef.current?.findOne('#det-' + annotation.id);
@@ -973,7 +966,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                             y: rect.y(),
                             width: rect.width() * rect.scaleX(),
                             height: rect.height() * rect.scaleY()
-                          });
+                          }).then(() => recordMoveHistory(annotation.id!));
                         }
                       }}
                     />

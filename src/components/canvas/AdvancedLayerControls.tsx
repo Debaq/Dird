@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { classManager } from '@/lib/classes/class-manager';
 import { getClassName } from '@/lib/ai/class-translations';
 import ClassSelectionModal from './ClassSelectionModal';
+import type { HistoryEntry } from '@/types/annotations';
 
 export interface CanvasLayer {
   id: string;
@@ -26,6 +27,7 @@ interface AdvancedLayerControlsProps {
   aiDetections: Detection[];
   manualDetections: Detection[];
   onDetectionsUpdate: () => void;
+  onAddToHistory?: (entry: HistoryEntry) => void;
 }
 
 const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
@@ -34,6 +36,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
   aiDetections,
   manualDetections,
   onDetectionsUpdate,
+  onAddToHistory,
 }) => {
   const { t, i18n } = useTranslation();
   const [expandedLayers, setExpandedLayers] = useState<Record<string, boolean>>({});
@@ -60,6 +63,23 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
 
   const handleEditDetectionClass = async (detection: Detection, newClass: string) => {
     try {
+      // Record history for update
+      if (onAddToHistory) {
+        const detectionBefore = await db.detections.get(detection.id!);
+        // We construct the "after" state
+        const detectionAfter = { ...detectionBefore, class: newClass, type: detection.type === 'ai' ? 'manual' : detection.type };
+        if (detection.type === 'ai') {
+             // @ts-ignore
+             detectionAfter.customLabel = detection.class;
+        }
+        
+        onAddToHistory({
+            type: 'update',
+            before: detectionBefore,
+            after: detectionAfter
+        });
+      }
+
       if (detection.type === 'ai') {
         // Convertir detección AI a manual con la nueva clase
         await db.detections.update(detection.id!, {
@@ -81,6 +101,12 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
 
   const handleDeleteDetection = async (detectionId: number) => {
     try {
+      if (onAddToHistory) {
+        const detection = await db.detections.get(detectionId);
+        if (detection) {
+          onAddToHistory({ type: 'delete', detection });
+        }
+      }
       await db.detections.delete(detectionId);
       onDetectionsUpdate();
     } catch (error) {
