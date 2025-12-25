@@ -1,0 +1,13 @@
+# Proteger directorio de uploads para que no se ejecuten scripts PHP
+<IfModule mod_php5.c>
+  php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+  php_flag engine off
+</IfModule>
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+
+# Evitar listado de directorio
+Options -Indexes
