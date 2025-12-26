@@ -8,6 +8,8 @@ import { db, type Image, type Detection } from '@/lib/db/schema';
 import { getClassColor } from '@/lib/ai/model-metadata';
 import { getClassName } from '@/lib/ai/class-translations';
 import i18n from '@/i18n/config';
+import { QuadrantAnalysisPanel } from '@/components/canvas/QuadrantAnalysisPanel';
+import { quadrantCalculator, type QuadrantAnalysis } from '@/lib/analysis/quadrant-calculator';
 
 interface AnalysisViewProps {
   images: Image[];
@@ -20,6 +22,7 @@ interface ImageWithDetections {
   image: Image;
   detections: Detection[];
   thumbnail: string;
+  quadrantAnalysis: QuadrantAnalysis;
 }
 
 const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientId, refreshKey }) => {
@@ -49,7 +52,14 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
 
         const thumbnail = URL.createObjectURL(image.originalBlob);
 
-        data.push({ image, detections, thumbnail });
+        // Calculate quadrant analysis
+        const quadrantAnalysis = quadrantCalculator.analyzeQuadrants(
+          detections,
+          image.width,
+          image.height
+        );
+
+        data.push({ image, detections, thumbnail, quadrantAnalysis });
 
         // Count by class
         detections.forEach(det => {
@@ -177,13 +187,13 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {imagesWithDetections.map(({ image, detections, thumbnail }) => (
+              {imagesWithDetections.map(({ image, detections, thumbnail, quadrantAnalysis }) => (
                 <div
                   key={image.id}
-                  className="group relative bg-white rounded-lg border border-coal-200 overflow-hidden hover:shadow-strong transition-all cursor-pointer"
+                  className="group relative bg-white rounded-lg border border-coal-200 overflow-hidden hover:shadow-strong transition-all cursor-pointer flex flex-col h-full"
                   onClick={() => navigate(`/patients/${patientId}/sessions/${sessionId}/images/${image.id}`)}
                 >
-                  <div className="aspect-video overflow-hidden bg-coal-50 relative">
+                  <div className="aspect-video overflow-hidden bg-coal-50 relative flex-shrink-0">
                     <img
                       src={thumbnail}
                       alt={image.filename}
@@ -200,29 +210,36 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
                       </div>
                     )}
                   </div>
-                  <div className="p-4">
-                    <p className="text-sm font-medium text-coal-800 truncate mb-2">
-                      {image.filename}
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {Object.entries(
-                        detections.reduce((acc, det) => {
-                          acc[det.class] = (acc[det.class] || 0) + 1;
-                          return acc;
-                        }, {} as Record<string, number>)
-                      ).map(([className, count]) => (
-                        <span
-                          key={className}
-                          className="text-xs px-2 py-1 rounded-full text-white font-medium"
-                          style={{ backgroundColor: getClassColor(className) }}
-                        >
-                          {getClassName(className, i18n.language)}: {count}
-                        </span>
-                      ))}
+                  <div className="p-4 flex-grow flex flex-col gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-coal-800 truncate mb-2">
+                        {image.filename}
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {Object.entries(
+                          detections.reduce((acc, det) => {
+                            acc[det.class] = (acc[det.class] || 0) + 1;
+                            return acc;
+                          }, {} as Record<string, number>)
+                        ).map(([className, count]) => (
+                          <span
+                            key={className}
+                            className="text-xs px-2 py-1 rounded-full text-white font-medium"
+                            style={{ backgroundColor: getClassColor(className) }}
+                          >
+                            {getClassName(className, i18n.language)}: {count}
+                          </span>
+                        ))}
+                      </div>
+                      {detections.length === 0 && (
+                        <p className="text-xs text-smoke-400">{t('analysis.view.noDetectionsLabel')}</p>
+                      )}
                     </div>
-                    {detections.length === 0 && (
-                      <p className="text-xs text-smoke-400">{t('analysis.view.noDetectionsLabel')}</p>
-                    )}
+                    
+                    {/* Quadrant Analysis Panel */}
+                    <div className="mt-auto pt-2 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+                       <QuadrantAnalysisPanel analysis={quadrantAnalysis} className="border-0 shadow-none p-0" />
+                    </div>
                   </div>
                   <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button

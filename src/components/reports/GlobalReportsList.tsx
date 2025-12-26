@@ -3,7 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { FileText, Download, Calendar, ShieldCheck, Eye, Search, FileSearch, ArrowRight, User, CheckCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { db, Report } from '@/lib/db/schema';
+import type { Report } from '@/lib/db/schema';
+import { db } from '@/lib/db/schema';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import PDFViewerModal from './PDFViewerModal';
@@ -60,6 +61,11 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
       );
       const segmentations = allSegmentations.flat();
 
+      const allMeasurements = await Promise.all(
+        images.map((img) => db.measurements.where('imageId').equals(img.id!).toArray())
+      );
+      const measurements = allMeasurements.flat();
+
       // Generate the final report PDF
       const reportData = {
         patient,
@@ -67,6 +73,7 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
         images,
         detections,
         segmentations,
+        measurements,
         evaluatorNotes: report.evaluatorNotes,
       };
 

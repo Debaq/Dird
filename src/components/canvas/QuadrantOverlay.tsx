@@ -1,4 +1,4 @@
-import { Line, Circle, Text, Group } from 'react-konva';
+import { Line, Text, Group } from 'react-konva';
 import type { Landmark } from '@/types/annotations';
 
 interface QuadrantOverlayProps {

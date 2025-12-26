@@ -101,7 +101,6 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const {
     landmarks,
     addOrUpdateLandmark,
-    updateLandmark,
   } = useLandmarksAndQuadrants({
     imageId: image.id!,
     imageWidth: konvaImage?.width || 0,

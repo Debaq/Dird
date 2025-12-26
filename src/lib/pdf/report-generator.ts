@@ -1,12 +1,13 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import i18n from '@/i18n/config';
-import type { Session, Patient, Image, Detection, Segmentation } from '@/lib/db/schema';
+import type { Session, Patient, Image, Detection, Segmentation, Measurement } from '@/lib/db/schema';
 import { db } from '@/lib/db/schema';
 import { useConfigStore, DEFAULT_CONFIG } from '@/stores/config-store';
 import { getAssetPath } from '@/utils/assets';
 import { classManager } from '@/lib/classes/class-manager';
 import { getClassName } from '@/lib/ai/class-translations';
+import { quadrantCalculator } from '@/lib/analysis/quadrant-calculator';
 
 // Helper to convert hex to rgb
 const hexToRgb = (hex: string): [number, number, number] => {
@@ -26,6 +27,7 @@ export interface ReportData {
   images: Image[];
   detections: Detection[];
   segmentations: Segmentation[];
+  measurements: Measurement[];
   evaluatorNotes?: string;
   areasOfInterest?: Array<{
     imageId: number;
@@ -41,6 +43,7 @@ export interface ComparativeReportData {
     images: Image[];
     detections: Detection[];
     segmentations: Segmentation[];
+    measurements: Measurement[];
   }[];
   evaluatorNotes?: string;
 }
@@ -81,14 +84,14 @@ export class ReportGenerator {
       this.addPatientAndSessionInfo(data.patient, data.session);
     }
 
-    // 3. Statistical Summary
+    // 3. Findings & Quadrant Analysis (Combined Section)
     if (this.config.sections.summary) {
-      this.addFindingsSummary(data.detections);
+      await this.addFindingsAndQuadrants(data.detections, data.images);
     }
 
     // 4. Visual Analysis
     if (this.config.sections.gallery) {
-      await this.addVisualAnalysis(data.images, data.detections, data.segmentations);
+      await this.addVisualAnalysis(data.images, data.detections, data.segmentations, data.measurements);
     }
 
     // 5. Conclusions & Notes
@@ -230,7 +233,7 @@ export class ReportGenerator {
         const historyText = historyParts.join(', ') || 'Sin antecedentes relevantes';
         body.push([
             { content: 'Antecedentes', styles: { fontStyle: 'bold', textColor: this.primaryColor } },
-            { content: historyText } // Removed colSpan as we only have 2 columns here
+            { content: historyText } 
         ]);
     }
 
@@ -345,42 +348,147 @@ export class ReportGenerator {
     }
   }
 
-  private addFindingsSummary(detections: Detection[]) {
+  private async addFindingsAndQuadrants(detections: Detection[], images: Image[]) {
+    this.checkPageBreak(80); // Ensure enough space
     this.doc.setFontSize(11);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(...this.primaryColor);
-    this.doc.text(i18n.t('analysis.detections'), this.margin, this.currentY);
-    this.currentY += 4;
+    this.doc.text('RESUMEN DE HALLAZGOS Y ANÁLISIS POR CUADRANTES', this.margin, this.currentY);
+    this.currentY += 6;
 
+    const startY = this.currentY;
+    const availableWidth = this.pageWidth - (this.margin * 2);
+    const colGap = 10;
+    const colWidth = (availableWidth - colGap) / 2;
+
+    // --- LEFT COLUMN: Findings Summary ---
     const classCounts = new Map<string, number>();
     detections.forEach((det) => {
       classCounts.set(det.class, (classCounts.get(det.class) || 0) + 1);
     });
 
-    const summaryData = Array.from(classCounts.entries()).map(([className, count]) => [
+    const findingsData = Array.from(classCounts.entries()).map(([className, count]) => [
       getClassName(className, i18n.language),
       count.toString(),
     ]);
 
-    if (summaryData.length === 0) {
-      this.doc.setFontSize(9);
-      this.doc.setFont('helvetica', 'italic');
-      this.doc.setTextColor(100, 100, 100);
-      this.doc.text('No se encontraron hallazgos significativos.', this.margin, this.currentY + 4);
-      this.currentY += 12;
-    } else {
-      autoTable(this.doc, {
-        startY: this.currentY,
-        head: [[i18n.t('sessions.fields.type'), i18n.t('patients.fields.results')]],
-        body: summaryData,
-        theme: 'striped',
-        headStyles: { fillColor: this.primaryColor, fontSize: 9, fontStyle: 'bold' },
-        styles: { fontSize: 9, cellPadding: 2 },
-        margin: { right: this.pageWidth / 2 }, // Keep table small (half width)
-      });
-      // Allow content on the right side if we wanted, but for now just move down
-      this.currentY = (this.doc as any).lastAutoTable.finalY + 8;
+    if (findingsData.length === 0) {
+        findingsData.push(['Sin hallazgos', '-']);
     }
+
+    autoTable(this.doc, {
+      startY: startY,
+      head: [['Hallazgo', 'Total']],
+      body: findingsData,
+      theme: 'striped',
+      headStyles: { fillColor: this.primaryColor, fontSize: 9, fontStyle: 'bold' },
+      styles: { fontSize: 9, cellPadding: 2 },
+      margin: { left: this.margin },
+      tableWidth: colWidth
+    });
+    
+    const findingsFinalY = (this.doc as any).lastAutoTable.finalY;
+
+    // --- RIGHT COLUMN: Quadrant Analysis (Aggregated) ---
+    // First, calculate quadrant stats for both eyes to use later in diagrams, and aggregate for table
+    const statsOI = { ST: 0, IT: 0, SN: 0, IN: 0 };
+    const statsOD = { ST: 0, IT: 0, SN: 0, IN: 0 };
+
+    for (const image of images) {
+        const imgDetections = detections.filter(d => d.imageId === image.id);
+        
+        // Get dimensions
+        let width = 640, height = 640;
+        try {
+            const img = await this.loadImage(URL.createObjectURL(image.originalBlob));
+            width = img.width; height = img.height;
+        } catch(e) {}
+
+        const analysis = quadrantCalculator.analyzeQuadrants(imgDetections, width, height);
+        
+        const targetStats = image.eyeType === 'OI' ? statsOI : statsOD;
+        targetStats.ST += analysis['superior-temporal'];
+        targetStats.IT += analysis['inferior-temporal'];
+        targetStats.SN += analysis['superior-nasal'];
+        targetStats.IN += analysis['inferior-nasal'];
+    }
+
+    const quadrantData = [
+        ['Superior Temporal (ST)', (statsOI.ST + statsOD.ST).toString()],
+        ['Inferior Temporal (IT)', (statsOI.IT + statsOD.IT).toString()],
+        ['Superior Nasal (SN)', (statsOI.SN + statsOD.SN).toString()],
+        ['Inferior Nasal (IN)', (statsOI.IN + statsOD.IN).toString()],
+    ];
+
+    autoTable(this.doc, {
+      startY: startY, // Align top
+      head: [['Cuadrante', 'Total']],
+      body: quadrantData,
+      theme: 'striped',
+      headStyles: { fillColor: this.accentColor, fontSize: 9, fontStyle: 'bold' },
+      styles: { fontSize: 9, cellPadding: 2 },
+      margin: { left: this.margin + colWidth + colGap },
+      tableWidth: colWidth
+    });
+
+    const quadrantFinalY = (this.doc as any).lastAutoTable.finalY;
+    this.currentY = Math.max(findingsFinalY, quadrantFinalY) + 10;
+
+    // --- BOTTOM: Eye Diagrams (OI and OD) ---
+    this.checkPageBreak(50);
+    
+    const diagramRadius = 25;
+    const diagramY = this.currentY + diagramRadius;
+    const quarterPage = this.pageWidth / 4;
+    
+    // Draw Diagram Helper
+    const drawEyeDiagram = (x: number, y: number, label: string, stats: typeof statsOI) => {
+        // Circle
+        this.doc.setDrawColor(150, 150, 150);
+        this.doc.setLineWidth(0.5);
+        this.doc.circle(x, y, diagramRadius);
+        
+        // Cross lines
+        this.doc.line(x, y - diagramRadius, x, y + diagramRadius);
+        this.doc.line(x - diagramRadius, y, x + diagramRadius, y);
+
+        // Label (Eye)
+        this.doc.setFontSize(10);
+        this.doc.setFont('helvetica', 'bold');
+        this.doc.setTextColor(...this.accentColor);
+        this.doc.text(label, x, y - diagramRadius - 5, { align: 'center' });
+
+        // Quadrant Counts
+        this.doc.setFontSize(12);
+        this.doc.setTextColor(50, 50, 50);
+        
+        // Top Right (ST)
+        this.doc.text(stats.ST.toString(), x + 10, y - 8, { align: 'center' });
+        this.doc.setFontSize(7); this.doc.text('ST', x + 10, y - 16, { align: 'center' });
+        
+        // Top Left (SN)
+        this.doc.setFontSize(12);
+        this.doc.text(stats.SN.toString(), x - 10, y - 8, { align: 'center' });
+        this.doc.setFontSize(7); this.doc.text('SN', x - 10, y - 16, { align: 'center' });
+
+        // Bottom Right (IT)
+        this.doc.setFontSize(12);
+        this.doc.text(stats.IT.toString(), x + 10, y + 16, { align: 'center' });
+        this.doc.setFontSize(7); this.doc.text('IT', x + 10, y + 24, { align: 'center' });
+
+        // Bottom Left (IN)
+        this.doc.setFontSize(12);
+        this.doc.text(stats.IN.toString(), x - 10, y + 16, { align: 'center' });
+        this.doc.setFontSize(7); this.doc.text('IN', x - 10, y + 24, { align: 'center' });
+    };
+
+    // Draw Left Eye (OI)
+    drawEyeDiagram(quarterPage, diagramY, i18n.t('upload.eye.left'), statsOI);
+
+    // Draw Right Eye (OD)
+    drawEyeDiagram(quarterPage * 3, diagramY, i18n.t('upload.eye.right'), statsOD);
+
+    this.currentY += (diagramRadius * 2) + 15;
   }
 
   private async addComparativeVisualAnalysis(sessions: ComparativeReportData['sessions']) {
@@ -434,9 +542,22 @@ export class ReportGenerator {
 
              if (images.length > 0) {
                 // Take the first image for this eye type for the session
-                // In reality there should be only one per eye per session usually, or we take the first.
                 const img = images[0];
-                const h = await this.drawImageInGrid(img, sessionData.detections, startX, rowStartY + 4, colWidth, false);
+                const h = await this.drawImageInGrid(
+                    img, 
+                    sessionData.detections, 
+                    sessionData.segmentations,
+                    sessionData.measurements,
+                    startX, 
+                    rowStartY + 4, 
+                    colWidth, 
+                    {
+                        forceOriginal: false,
+                        showQuadrantLines: false, // Cleaner for comparison
+                        showMeasurements: true,
+                        showOpticDiscArea: true
+                    }
+                );
                 maxRowHeight = Math.max(maxRowHeight, h);
             } else {
                  this.doc.setFontSize(8);
@@ -453,7 +574,7 @@ export class ReportGenerator {
     }
   }
 
-  private async addVisualAnalysis(images: Image[], detections: Detection[], _segmentations: Segmentation[]) {
+  private async addVisualAnalysis(images: Image[], detections: Detection[], _segmentations: Segmentation[], measurements: Measurement[]) {
     this.checkPageBreak(40);
     this.doc.setFontSize(11);
     this.doc.setFont('helvetica', 'bold');
@@ -468,8 +589,17 @@ export class ReportGenerator {
     // Calculate max pairs
     const maxCount = Math.max(oiImages.length, odImages.length);
     
-    // Grid Layout: 2 columns
-    const colWidth = (this.pageWidth - (this.margin * 2) - 10) / 2;
+    // Grid Layout
+    const imagesPerRow = this.config.gallery.imagesPerRow || 2;
+    const colGap = 10;
+    const colWidth = (this.pageWidth - (this.margin * 2) - (colGap * (imagesPerRow - 1))) / imagesPerRow;
+
+    // Flags
+    const renderOptions = {
+        showQuadrantLines: this.config.gallery.showQuadrantLines !== false,
+        showMeasurements: this.config.gallery.showMeasurements !== false,
+        showOpticDiscArea: this.config.gallery.showOpticDiscArea !== false,
+    };
 
     for (let i = 0; i < maxCount; i++) {
       const imgOI = oiImages[i];
@@ -481,49 +611,97 @@ export class ReportGenerator {
       if (this.config.gallery.includeOriginal) showTypes.push('original');
 
       for (const type of showTypes) {
-          this.checkPageBreak(70);
-          const rowStartY = this.currentY;
-          let maxRowHeight = 0;
           const isOriginal = type === 'original';
+          const options = { ...renderOptions, forceOriginal: isOriginal };
 
-          // Draw Left Eye (OI)
-          if (imgOI) {
-             // Label
-            this.doc.setFontSize(10);
-            this.doc.setFont('helvetica', 'bold');
-            this.doc.setTextColor(...this.accentColor);
-            let label = i18n.t('upload.eye.left');
-            if (showTypes.length > 1) {
-                label += isOriginal ? ' (Original)' : ' (IA)';
-            }
-            this.doc.text(label, this.margin, rowStartY);
-            
-            const h1 = await this.drawImageInGrid(imgOI, detections, this.margin, rowStartY + 5, colWidth, isOriginal);
-            maxRowHeight = Math.max(maxRowHeight, h1 + 5);
+          if (isOriginal) {
+              // Disable overlays for original
+              options.showQuadrantLines = false;
+              options.showMeasurements = false;
+              options.showOpticDiscArea = false;
           }
 
-          // Draw Right Eye (OD)
-          if (imgOD) {
-             // Label
-            this.doc.setFontSize(10);
-            this.doc.setFont('helvetica', 'bold');
-            this.doc.setTextColor(...this.accentColor);
-            let label = i18n.t('upload.eye.right');
-            if (showTypes.length > 1) {
-                label += isOriginal ? ' (Original)' : ' (IA)';
-            }
-            this.doc.text(label, this.margin + colWidth + 10, rowStartY);
-
-            const h2 = await this.drawImageInGrid(imgOD, detections, this.margin + colWidth + 10, rowStartY + 5, colWidth, isOriginal);
-            maxRowHeight = Math.max(maxRowHeight, h2 + 5);
-          }
+          // Render Row(s)
+          // If imagesPerRow is 2, we try to put OI and OD side by side
+          // If imagesPerRow is 1, we stack them
           
-           this.currentY += maxRowHeight + 10;
+          if (imagesPerRow === 2) {
+              this.checkPageBreak(70);
+              const rowStartY = this.currentY;
+              let maxRowHeight = 0;
+
+              // Draw Left Eye (OI)
+              if (imgOI) {
+                // Label
+                this.doc.setFontSize(10);
+                this.doc.setFont('helvetica', 'bold');
+                this.doc.setTextColor(...this.accentColor);
+                let label = i18n.t('upload.eye.left');
+                if (showTypes.length > 1) label += isOriginal ? ' (Original)' : ' (IA)';
+                this.doc.text(label, this.margin, rowStartY);
+                
+                const h1 = await this.drawImageInGrid(imgOI, detections, _segmentations, measurements, this.margin, rowStartY + 5, colWidth, options);
+                maxRowHeight = Math.max(maxRowHeight, h1 + 5);
+              }
+
+              // Draw Right Eye (OD)
+              if (imgOD) {
+                // Label
+                this.doc.setFontSize(10);
+                this.doc.setFont('helvetica', 'bold');
+                this.doc.setTextColor(...this.accentColor);
+                let label = i18n.t('upload.eye.right');
+                if (showTypes.length > 1) label += isOriginal ? ' (Original)' : ' (IA)';
+                this.doc.text(label, this.margin + colWidth + colGap, rowStartY);
+
+                const h2 = await this.drawImageInGrid(imgOD, detections, _segmentations, measurements, this.margin + colWidth + colGap, rowStartY + 5, colWidth, options);
+                maxRowHeight = Math.max(maxRowHeight, h2 + 5);
+              }
+              
+              this.currentY += maxRowHeight + 10;
+
+          } else {
+              // 1 Image Per Row (Stacking)
+              if (imgOI) {
+                  this.checkPageBreak(100);
+                  this.doc.setFontSize(10);
+                  this.doc.setFont('helvetica', 'bold');
+                  this.doc.setTextColor(...this.accentColor);
+                  let label = i18n.t('upload.eye.left');
+                  if (showTypes.length > 1) label += isOriginal ? ' (Original)' : ' (IA)';
+                  this.doc.text(label, this.margin, this.currentY);
+                  
+                  const h = await this.drawImageInGrid(imgOI, detections, _segmentations, measurements, this.margin, this.currentY + 5, colWidth, options);
+                  this.currentY += h + 10;
+              }
+
+              if (imgOD) {
+                  this.checkPageBreak(100);
+                  this.doc.setFontSize(10);
+                  this.doc.setFont('helvetica', 'bold');
+                  this.doc.setTextColor(...this.accentColor);
+                  let label = i18n.t('upload.eye.right');
+                  if (showTypes.length > 1) label += isOriginal ? ' (Original)' : ' (IA)';
+                  this.doc.text(label, this.margin, this.currentY);
+                  
+                  const h = await this.drawImageInGrid(imgOD, detections, _segmentations, measurements, this.margin, this.currentY + 5, colWidth, options);
+                  this.currentY += h + 10;
+              }
+          }
       }
     }
   }
 
-  private async drawImageInGrid(image: Image, detections: Detection[], x: number, y: number, width: number, forceOriginal: boolean = false): Promise<number> {
+  private async drawImageInGrid(
+      image: Image, 
+      detections: Detection[], 
+      segmentations: Segmentation[], 
+      measurements: Measurement[],
+      x: number, 
+      y: number, 
+      width: number, 
+      options: { forceOriginal: boolean; showQuadrantLines: boolean; showMeasurements: boolean; showOpticDiscArea: boolean }
+  ): Promise<number> {
     try {
       // Filename
       this.doc.setFontSize(8);
@@ -536,14 +714,10 @@ export class ReportGenerator {
       
       // Generate annotated image data URL OR original
       let imageUrl: string;
-      if (forceOriginal) {
+      if (options.forceOriginal) {
          imageUrl = URL.createObjectURL(image.originalBlob);
-         // Ensure we revoke this later? Or rely on GC. createObjectURL can leak if not revoked.
-         // Better to read it as dataURL maybe? existing `loadImage` does not handle Blob directly unless it is a URL.
-         // `generateAnnotatedImage` handles it.
-         // Let's assume loadImage handles blob urls.
       } else {
-         imageUrl = await this.generateAnnotatedImage(image, detections);
+         imageUrl = await this.generateAnnotatedImage(image, detections, segmentations, measurements, options);
       }
       
       const img = await this.loadImage(imageUrl);
@@ -553,15 +727,16 @@ export class ReportGenerator {
       let renderWidth = width;
       let renderHeight = width / aspectRatio;
 
-      // Max height constraint (e.g. 60mm)
-      if (renderHeight > 60) {
-        renderHeight = 60;
+      // Max height constraint to avoid taking up full page in 1-column mode if too tall
+      const maxHeight = 120; // 12cm
+      if (renderHeight > maxHeight) {
+        renderHeight = maxHeight;
         renderWidth = renderHeight * aspectRatio;
       }
 
       this.doc.addImage(img, 'JPEG', x, contentY, renderWidth, renderHeight);
       
-      if (!forceOriginal) {
+      if (!options.forceOriginal) {
           const imgDetections = detections.filter(d => d.imageId === image.id && d.visible);
           if (imgDetections.length > 0) {
             this.doc.setFontSize(7);
@@ -578,7 +753,13 @@ export class ReportGenerator {
     }
   }
 
-  private async generateAnnotatedImage(image: Image, detections: Detection[]): Promise<string> {
+  private async generateAnnotatedImage(
+      image: Image, 
+      detections: Detection[], 
+      segmentations: Segmentation[],
+      measurements: Measurement[],
+      options: { showQuadrantLines: boolean; showMeasurements: boolean; showOpticDiscArea: boolean }
+  ): Promise<string> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       const url = URL.createObjectURL(image.originalBlob);
@@ -597,58 +778,175 @@ export class ReportGenerator {
         // Draw original image
         ctx.drawImage(img, 0, 0);
 
-        // Draw detections
+        // Filter items for this image
         const imgDetections = detections.filter(d => d.imageId === image.id && d.visible);
-        
-        // Scale stroke and font based on image size
-        const scaleFactor = Math.max(img.width, img.height) / 1000;
-        const lineWidth = Math.max(2, 2 * scaleFactor);
-        const fontSize = Math.max(12, 14 * scaleFactor);
-        
-        ctx.font = `bold ${fontSize}px Helvetica`;
-        ctx.textBaseline = 'bottom';
+        const imgSegmentations = segmentations.filter(s => s.imageId === image.id && s.visible);
+        const imgMeasurements = measurements.filter(m => m.imageId === image.id && m.visible);
 
-        imgDetections.forEach(det => {
-          // Obtener color de la clase (respetando rainbow mode y settings)
-          const color = det.type === 'manual' 
-            ? classManager.getColorForClass(det.class) // Manual usa su propio color si hay, o fallback
-            : classManager.getColorForClass(det.class); // AI usa el color configurado
-          
-          ctx.strokeStyle = color;
-          ctx.lineWidth = lineWidth;
-          
-          // Draw Box
-          ctx.strokeRect(det.bbox.x, det.bbox.y, det.bbox.width, det.bbox.height);
+        // Use async IIFE to handle image loading for masks
+        (async () => {
+            // 1. Draw Optic Disc Area (Segmentation) if enabled
+            if (options.showOpticDiscArea) {
+                for (const seg of imgSegmentations) {
+                    if (seg.class === 'optic_disc' || seg.class === 'optic disc') {
+                        try {
+                            const maskImg = new Image();
+                            await new Promise((r, rj) => {
+                                maskImg.onload = r;
+                                maskImg.onerror = rj;
+                                maskImg.src = seg.maskData;
+                            });
+                            // Draw mask with opacity
+                            ctx.globalAlpha = 0.4;
+                            ctx.drawImage(maskImg, 0, 0, canvas.width, canvas.height);
+                            ctx.globalAlpha = 1.0;
+                        } catch (e) {
+                            console.warn("Failed to draw segmentation mask", e);
+                        }
+                    }
+                }
+            }
 
-          // Label
-          const translatedClass = getClassName(det.class, i18n.language);
-          const conf = det.confidence ? ` ${Math.round(det.confidence * 100)}%` : '';
-          const text = `${translatedClass}${conf}`;
-          const textMetrics = ctx.measureText(text);
-          const textWidth = textMetrics.width;
-          const textHeight = fontSize + 4;
-          const padding = 4 * scaleFactor;
+            // 2. Draw Quadrant Lines if enabled
+            if (options.showQuadrantLines) {
+                // Find landmarks
+                const opticDisc = imgDetections.find(d => d.class === 'optic_disc' || d.class === 'optic disc');
+                const fovea = imgDetections.find(d => d.class === 'fovea');
+                
+                ctx.strokeStyle = 'rgba(100, 180, 255, 0.6)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([10, 10]);
 
-          // Label Background
-          ctx.fillStyle = color;
-          ctx.fillRect(
-            det.bbox.x, 
-            det.bbox.y - textHeight - padding, 
-            textWidth + (padding * 2), 
-            textHeight + padding
-          );
+                if (opticDisc && fovea) {
+                    // Anatomical Logic
+                    const odX = opticDisc.bbox.x + opticDisc.bbox.width / 2;
+                    const odY = opticDisc.bbox.y + opticDisc.bbox.height / 2;
+                    const foveaX = fovea.bbox.x + fovea.bbox.width / 2;
+                    const foveaY = fovea.bbox.y + fovea.bbox.height / 2;
 
-          // Label Text
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillText(
-            text, 
-            det.bbox.x + padding, 
-            det.bbox.y - (padding/2)
-          );
-        });
+                    const dx = foveaX - odX;
+                    const dy = foveaY - odY;
+                    const angle = Math.atan2(dy, dx);
+                    const superiorInferiorAngle = angle + Math.PI / 2;
+                    const lineLength = Math.max(img.width, img.height) * 1.5;
 
-        URL.revokeObjectURL(url);
-        resolve(canvas.toDataURL('image/jpeg', 0.85));
+                    // TN Line
+                    ctx.beginPath();
+                    ctx.moveTo(odX - Math.cos(angle) * lineLength, odY - Math.sin(angle) * lineLength);
+                    ctx.lineTo(odX + Math.cos(angle) * lineLength, odY + Math.sin(angle) * lineLength);
+                    ctx.stroke();
+
+                    // SI Line
+                    ctx.beginPath();
+                    ctx.moveTo(odX - Math.cos(superiorInferiorAngle) * lineLength, odY - Math.sin(superiorInferiorAngle) * lineLength);
+                    ctx.lineTo(odX + Math.cos(superiorInferiorAngle) * lineLength, odY + Math.sin(superiorInferiorAngle) * lineLength);
+                    ctx.stroke();
+                } else {
+                    // Fallback Logic
+                    const cx = img.width / 2;
+                    const cy = img.height / 2;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, 0); ctx.lineTo(cx, img.height);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(0, cy); ctx.lineTo(img.width, cy);
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]); // Reset
+            }
+
+            // 3. Draw Detections (Boxes)
+            // Scale stroke and font based on image size
+            const scaleFactor = Math.max(img.width, img.height) / 1000;
+            const lineWidth = Math.max(2, 2 * scaleFactor);
+            const fontSize = Math.max(12, 14 * scaleFactor);
+            
+            ctx.font = `bold ${fontSize}px Helvetica`;
+            ctx.textBaseline = 'bottom';
+
+            imgDetections.forEach(det => {
+              // Obtener color de la clase
+              const color = det.type === 'manual' 
+                ? classManager.getColorForClass(det.class)
+                : classManager.getColorForClass(det.class);
+              
+              ctx.strokeStyle = color;
+              ctx.lineWidth = lineWidth;
+              
+              // Draw Box
+              ctx.strokeRect(det.bbox.x, det.bbox.y, det.bbox.width, det.bbox.height);
+
+              // Label
+              const translatedClass = getClassName(det.class, i18n.language);
+              const conf = det.confidence ? ` ${Math.round(det.confidence * 100)}%` : '';
+              const text = `${translatedClass}${conf}`;
+              const textMetrics = ctx.measureText(text);
+              const textWidth = textMetrics.width;
+              const textHeight = fontSize + 4;
+              const padding = 4 * scaleFactor;
+
+              // Label Background
+              ctx.fillStyle = color;
+              ctx.fillRect(
+                det.bbox.x, 
+                det.bbox.y - textHeight - padding, 
+                textWidth + (padding * 2), 
+                textHeight + padding
+              );
+
+              // Label Text
+              ctx.fillStyle = '#FFFFFF';
+              ctx.fillText(
+                text, 
+                det.bbox.x + padding, 
+                det.bbox.y - (padding/2)
+              );
+            });
+
+            // 4. Draw Measurements if enabled
+            if (options.showMeasurements) {
+                imgMeasurements.forEach(m => {
+                    const color = "#3b82f6"; // Blue
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = lineWidth;
+                    ctx.setLineDash([5 * scaleFactor, 5 * scaleFactor]);
+
+                    // Line
+                    ctx.beginPath();
+                    ctx.moveTo(m.originX, m.originY);
+                    ctx.lineTo(m.destinationX, m.destinationY);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // Endpoints
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(m.originX, m.originY, 3 * scaleFactor, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(m.destinationX, m.destinationY, 3 * scaleFactor, 0, 2 * Math.PI);
+                    ctx.fill();
+
+                    // Text
+                    const distText = m.distanceDD 
+                        ? `${m.distanceDD.toFixed(2)} DD`
+                        : `${m.distancePixels.toFixed(1)} px`;
+                    
+                    const midX = (m.originX + m.destinationX) / 2;
+                    const midY = (m.originY + m.destinationY) / 2;
+
+                    ctx.font = `bold ${Math.max(14, 16 * scaleFactor)}px Helvetica`;
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.strokeStyle = "#000000";
+                    ctx.lineWidth = lineWidth / 2;
+                    ctx.strokeText(distText, midX, midY);
+                    ctx.fillText(distText, midX, midY);
+                });
+            }
+
+            URL.revokeObjectURL(url);
+            resolve(canvas.toDataURL('image/jpeg', 0.85));
+        })();
       };
 
       img.onerror = (e) => {
@@ -786,12 +1084,18 @@ export async function generateSessionReport(
   );
   const segmentations = allSegmentations.flat();
 
+  const allMeasurements = await Promise.all(
+    images.map((img) => db.measurements.where('imageId').equals(img.id!).toArray())
+  );
+  const measurements = allMeasurements.flat();
+
   const reportData: ReportData = {
     patient,
     session,
     images,
     detections,
     segmentations,
+    measurements,
     evaluatorNotes,
   };
 
@@ -839,11 +1143,17 @@ export async function generateCombinedReport(
       );
       const segmentations = allSegmentations.flat();
 
+      const allMeasurements = await Promise.all(
+        images.map((img) => db.measurements.where('imageId').equals(img.id!).toArray())
+      );
+      const measurements = allMeasurements.flat();
+
       return {
           session,
           images,
           detections,
-          segmentations
+          segmentations,
+          measurements
       };
   }));
 
@@ -895,12 +1205,18 @@ export async function regenerateSessionReportBlob(
   );
   const segmentations = allSegmentations.flat();
 
+  const allMeasurements = await Promise.all(
+    images.map((img) => db.measurements.where('imageId').equals(img.id!).toArray())
+  );
+  const measurements = allMeasurements.flat();
+
   const reportData: ReportData = {
     patient,
     session,
     images,
     detections,
     segmentations,
+    measurements,
     evaluatorNotes,
   };
 

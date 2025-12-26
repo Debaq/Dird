@@ -1,4 +1,15 @@
-import type { Detection } from '../ai/onnx-manager';
+/**
+ * Generic Detection interface compatible with both DB schema and ONNX manager
+ */
+export interface Detection {
+  bbox: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  class: string;
+}
 
 /**
  * Quadrant types based on retinal anatomy

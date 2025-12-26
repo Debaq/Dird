@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { Select } from '@/components/ui/select';
 import { useConfigStore, DEFAULT_CONFIG } from '@/stores/config-store';
 import { FileText, Image as ImageIcon, Layout, PenTool, Palette } from 'lucide-react';
 
@@ -14,6 +15,10 @@ export default function ReportSettings() {
   const report = {
     ...DEFAULT_CONFIG.report,
     ...(config.report || {}),
+    gallery: {
+      ...DEFAULT_CONFIG.report.gallery,
+      ...(config.report?.gallery || {})
+    },
     patientInfoFields: {
       ...DEFAULT_CONFIG.report.patientInfoFields,
       ...(config.report?.patientInfoFields || {})
@@ -346,30 +351,79 @@ export default function ReportSettings() {
             <ImageIcon className="h-5 w-5" />
             {t('settings.report.gallery.title')}
           </h2>
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2">
+          <div className="space-y-4">
+            <div className="flex flex-col space-y-2">
+              <Label htmlFor="images-per-row" className="dark:text-dark-text">Images per Row</Label>
+              <Select
+                value={report.gallery.imagesPerRow?.toString() || '2'}
+                onValueChange={(value) => updateReportConfig({
+                  gallery: { ...report.gallery, imagesPerRow: parseInt(value) }
+                })}
+                options={[
+                  { label: "1 Image (Large)", value: "1" },
+                  { label: "2 Images (Grid)", value: "2" }
+                ]}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-quadrants" className="dark:text-dark-text">Show Quadrant Lines</Label>
               <Switch
-                id="gallery-annotated"
-                checked={report.gallery.includeAnnotated}
+                id="show-quadrants"
+                checked={report.gallery.showQuadrantLines !== false}
                 onCheckedChange={(checked) => updateReportConfig({ 
-                  gallery: { ...report.gallery, includeAnnotated: checked } 
+                  gallery: { ...report.gallery, showQuadrantLines: checked } 
                 })}
               />
-              <Label htmlFor="gallery-annotated" className="dark:text-dark-text">{t('settings.report.gallery.includeAnnotated')}</Label>
             </div>
-            <div className="flex items-center space-x-2">
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-measurements" className="dark:text-dark-text">Show Measurements</Label>
               <Switch
-                id="gallery-original"
-                checked={report.gallery.includeOriginal}
+                id="show-measurements"
+                checked={report.gallery.showMeasurements !== false}
                 onCheckedChange={(checked) => updateReportConfig({ 
-                  gallery: { ...report.gallery, includeOriginal: checked } 
+                  gallery: { ...report.gallery, showMeasurements: checked } 
                 })}
               />
-              <Label htmlFor="gallery-original" className="dark:text-dark-text">{t('settings.report.gallery.includeOriginal')}</Label>
             </div>
-            {!report.gallery.includeAnnotated && !report.gallery.includeOriginal && (
-              <p className="text-sm text-red-500 mt-2">{t('settings.report.gallery.warning')}</p>
-            )}
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-optic-disc" className="dark:text-dark-text">Show Optic Disc Area</Label>
+              <Switch
+                id="show-optic-disc"
+                checked={report.gallery.showOpticDiscArea !== false}
+                onCheckedChange={(checked) => updateReportConfig({ 
+                  gallery: { ...report.gallery, showOpticDiscArea: checked } 
+                })}
+              />
+            </div>
+
+            <div className="pt-4 border-t border-coal-200 dark:border-coal-600">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="gallery-annotated"
+                  checked={report.gallery.includeAnnotated}
+                  onCheckedChange={(checked) => updateReportConfig({ 
+                    gallery: { ...report.gallery, includeAnnotated: checked } 
+                  })}
+                />
+                <Label htmlFor="gallery-annotated" className="dark:text-dark-text">{t('settings.report.gallery.includeAnnotated')}</Label>
+              </div>
+              <div className="flex items-center space-x-2 mt-2">
+                <Switch
+                  id="gallery-original"
+                  checked={report.gallery.includeOriginal}
+                  onCheckedChange={(checked) => updateReportConfig({ 
+                    gallery: { ...report.gallery, includeOriginal: checked } 
+                  })}
+                />
+                <Label htmlFor="gallery-original" className="dark:text-dark-text">{t('settings.report.gallery.includeOriginal')}</Label>
+              </div>
+              {!report.gallery.includeAnnotated && !report.gallery.includeOriginal && (
+                <p className="text-sm text-red-500 mt-2">{t('settings.report.gallery.warning')}</p>
+              )}
+            </div>
           </div>
         </Card>
       )}
