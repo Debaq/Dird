@@ -7,6 +7,7 @@ import { useConfigStore } from '@/stores/config-store';
 import { classManager } from '@/lib/classes/class-manager';
 import { generateOpticDiscMask, isOpenCVReady } from './optic-disc-refiner';
 import { quadrantCalculator } from '@/lib/analysis/quadrant-calculator';
+import { classifyAndSaveImage } from '@/lib/analysis/image-classification-service';
 
 export class InferenceService {
   private detectionModel: ONNXModelManager | null = null;
@@ -108,6 +109,13 @@ export class InferenceService {
     const config = useConfigStore.getState().config;
     if (config.processing.opticDiscRefinement) {
       await this.generateOpticDiscSegmentations(imageElement, imageId, detections, modelVersion);
+    }
+
+    // Auto-classify DR after AI processing
+    try {
+      await classifyAndSaveImage(imageId);
+    } catch (error) {
+      console.error('Error auto-classifying image after AI processing:', error);
     }
 
     return detections;

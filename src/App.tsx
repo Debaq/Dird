@@ -12,6 +12,7 @@ import DocumentTitleSync from '@/components/DocumentTitleSync';
 import GlobalReportsList from '@/components/reports/GlobalReportsList';
 import SessionComparison from '@/components/patients/SessionComparison';
 import ContributionMenu from '@/components/contribution/ContributionMenu';
+import AcademyView from '@/components/academy/AcademyView';
 import { initializeDemoPatient, demoPatientExists, type LoadingProgress } from '@/lib/db/demoPatient';
 import { DemoLoadingScreen } from '@/components/demo/DemoLoadingScreen';
 
@@ -156,6 +157,16 @@ function App() {
           element={
             <MainLayout>
               <ContributionMenu />
+            </MainLayout>
+          }
+        />
+
+        {/* Academy */}
+        <Route
+          path="/academy"
+          element={
+            <MainLayout>
+              <AcademyView />
             </MainLayout>
           }
         />

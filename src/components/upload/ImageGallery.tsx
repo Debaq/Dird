@@ -176,7 +176,10 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
               variant="secondary"
               onClick={handleReprocessAI}
               disabled={isReprocessing}
-              className="w-8 h-8 bg-white hover:bg-primary-50 text-primary-600 shadow-sm"
+              className={cn(
+                "w-8 h-8 bg-white hover:bg-primary-50 text-primary-600 shadow-sm transition-transform",
+                detectionCount === 0 && !isReprocessing && "animate-pulse-soft"
+              )}
               title={t('upload.gallery.reprocessAI')}
             >
               {isReprocessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
@@ -377,11 +380,11 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, patientId, sessionI
       collisionDetection={closestCenter}
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SortableContext items={oiImages.map(i => i.id!)} strategy={rectSortingStrategy}>
-          <DroppableColumn id="OI" title={t('upload.eye.leftLabel')} imageList={oiImages} className="bg-primary-50 border-primary-200 text-primary-700" />
-        </SortableContext>
         <SortableContext items={odImages.map(i => i.id!)} strategy={rectSortingStrategy}>
           <DroppableColumn id="OD" title={t('upload.eye.rightLabel')} imageList={odImages} className="bg-teal-50 border-teal-200 text-teal-700" />
+        </SortableContext>
+        <SortableContext items={oiImages.map(i => i.id!)} strategy={rectSortingStrategy}>
+          <DroppableColumn id="OI" title={t('upload.eye.leftLabel')} imageList={oiImages} className="bg-primary-50 border-primary-200 text-primary-700" />
         </SortableContext>
       </div>
       {createPortal(

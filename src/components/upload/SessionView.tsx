@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 import ImageDropzone from './ImageDropzone';
 import ImageGallery from './ImageGallery';
 import ReportGenerator from '../reports/ReportGenerator';
@@ -153,8 +155,10 @@ const SessionView: React.FC = () => {
         },
       });
 
-      alert(`${t('processing.complete')}\n\n${t('processing.detectionsFound')}${totalDetections}`);
       setRefreshKey((prev) => prev + 1);
+
+      // Cambiar automáticamente a la pestaña de análisis
+      setSessionViewTab('analysis');
     } catch (error) {
       alert(t('errors.processingImages', { error: (error as Error).message }));
     } finally {
@@ -302,6 +306,35 @@ const SessionView: React.FC = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Modal de progreso de procesamiento AI */}
+      <Dialog open={isProcessing} modal={true}>
+        <DialogContent className="sm:max-w-md" onPointerDown={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle className="text-center">{t('processing.title')}</DialogTitle>
+            <DialogDescription className="text-center">
+              {t('processing.description')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-primary-600">
+                {processingProgress.current} / {processingProgress.total}
+              </p>
+              <p className="text-sm text-smoke-500 mt-1">
+                {t('processing.imagesProcessed')}
+              </p>
+            </div>
+            <Progress
+              value={(processingProgress.current / processingProgress.total) * 100}
+              className="h-2"
+            />
+            <p className="text-xs text-center text-smoke-500">
+              {t('processing.pleaseWait')}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

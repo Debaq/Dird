@@ -218,6 +218,93 @@
       "segmentationsAI": "AI Segmentations",
       "detectionsAI": "AI Detections",
       "manualAnnotations": "Manual Annotations"
+    },
+    "view": {
+      "noImages": "No images to analyze",
+      "stats": {
+        "totalImages": "Total Images",
+        "totalDetections": "Total Detections",
+        "avgPerImage": "Average per Image",
+        "processedImages": "Processed Images"
+      },
+      "detectionsPerClass": "Detections by Class",
+      "analyzedImages": "Analyzed Images",
+      "noDetections": "No detections found. Process images with AI first.",
+      "viewDetails": "View details",
+      "detectionsCount": "detections",
+      "noDetectionsLabel": "No detections",
+      "rightEye": "Right Eye",
+      "leftEye": "Left Eye",
+      "noImagesForEye": "No images for this eye"
+    },
+    "drClassification": {
+      "title": "Diabetic Retinopathy Classification",
+      "generate": "Generate Classification",
+      "analyzing": "Analyzing...",
+      "notGenerated": "Process images with AI first to generate classification",
+      "overallSeverity": "Overall Severity",
+      "rightEye": "Right Eye (OD)",
+      "leftEye": "Left Eye (OS)",
+      "confidence": "Confidence",
+      "confidenceLevels": {
+        "high": "High",
+        "moderate": "Moderate",
+        "low": "Low",
+        "highShort": "High",
+        "moderateShort": "Mod.",
+        "lowShort": "Low"
+      },
+      "showDetails": "Show Full Details",
+      "hideDetails": "Hide Details",
+      "recommendations": "Recommendations",
+      "warnings": "Warnings",
+      "consoleHint": "Full data available in browser console",
+      "imagesAvailable": "{{count}} images available",
+      "imageSelected": "Image {{id}} selected ({{total}} available)",
+      "singleImage": "1 image",
+      "note": "Note:",
+      "noteText": "Classification based on ICDR/ETDRS protocols.",
+      "noteMultipleImages": "You can select which image to use for analysis by clicking \"images available\".",
+      "noteSingleImage": "Showing analysis of the image for each eye.",
+      "detailsModal": {
+        "title": "Algorithm Details - {{eye}}",
+        "titleOD": "Right Eye",
+        "titleOI": "Left Eye",
+        "description": "Detailed explanation of how the classification was determined",
+        "finalClassification": "Final Classification",
+        "lesionsDetected": "Lesions Detected",
+        "lesionTypes": {
+          "microaneurysms": "Microaneurysms",
+          "hemorrhages": "Hemorrhages",
+          "hardExudates": "Hard exudates",
+          "softExudates": "Soft exudates",
+          "neovascularization": "Neovascularization"
+        },
+        "critical": "⚠️ CRITICAL",
+        "criteriaApplied": "Applied Criteria (ICDR/ETDRS)",
+        "quadrantAnalysis": "Quadrant Analysis Applied",
+        "quadrantAnalysisDesc": "The quadrant system based on optic disc and fovea was used to apply the 4-2-1 rule for NPDR severity.",
+        "quadrantNames": {
+          "superior-temporal": "Superior Temporal",
+          "inferior-temporal": "Inferior Temporal",
+          "superior-nasal": "Superior Nasal",
+          "inferior-nasal": "Inferior Nasal"
+        },
+        "quadrantAbbreviations": {
+          "ma": "MA",
+          "he": "HE"
+        },
+        "algorithmSummary": "Algorithm Summary",
+        "algorithmSteps": {
+          "step1": "1. Lesion detection:",
+          "step1Desc": "The YOLO model identifies and counts microaneurysms, hemorrhages, exudates, and neovascularization.",
+          "step2": "2. Quadrant analysis:",
+          "step2Desc": "If optic disc and fovea are detected, the 4-2-1 rule is applied by anatomical quadrants.",
+          "step3": "3. ICDR classification:",
+          "step3Desc": "Severity level is determined according to international criteria (ICDR/ETDRS).",
+          "disclaimer": "This is a diagnostic assistance system. Clinical correlation and specialist review are required."
+        }
+      }
     }
   },
   "reports": {
@@ -442,9 +529,14 @@
     }
   },
   "processing": {
+    "title": "Processing Images",
+    "description": "Running AI analysis on session images",
     "complete": "Processing completed successfully",
     "inProgress": "Processing {{current}}/{{total}}...",
-    "start": "Process with AI"
+    "start": "Process with AI",
+    "detectionsFound": "Detections found: ",
+    "imagesProcessed": "Images processed",
+    "pleaseWait": "Please wait, this process may take a few moments..."
   },
   "contribution": {
     "title": "Contribute",
@@ -472,6 +564,115 @@
       "clickToUpload": "Click to upload images",
       "supportedFormats": "Supported formats: JPG, PNG, WEBP",
       "submit": "Submit Comment"
+    }
+  },
+  "academy": {
+    "title": "Academy",
+    "description": "Learn how DIRD works and makes clinical decisions",
+    "tutorial": {
+      "title": "Interactive Tutorial",
+      "description": "A guided tour through the application and demo patient to learn how to use all DIRD features.",
+      "startButton": "Start Tutorial (Coming Soon)"
+    },
+    "howItWorks": {
+      "title": "How DIRD Works?",
+      "privacy": {
+        "title": "Total Privacy",
+        "description": "DIRD runs entirely in your browser. AI models execute locally using WebAssembly, ensuring your patient images never leave your device."
+      },
+      "ai": {
+        "title": "Edge-Computing Artificial Intelligence",
+        "description": "We use deep learning models specifically trained to detect diabetic retinopathy lesions. Models are downloaded once and available offline."
+      },
+      "workflow": {
+        "title": "Workflow",
+        "step1": "Create a patient and analysis session",
+        "step2": "Upload fundus images (OD and OS)",
+        "step3": "Run automatic AI analysis",
+        "step4": "Review, edit and validate detections on interactive canvas",
+        "step5": "Generate professional reports with severity classification"
+      }
+    },
+    "drClassification": {
+      "title": "Diabetic Retinopathy Classification System",
+      "protocols": {
+        "title": "Medical Protocols",
+        "icdr": "International Clinical Diabetic Retinopathy Disease Severity Scale",
+        "etdrs": "Early Treatment Diabetic Retinopathy Study - Gold standard for grading"
+      },
+      "severityLevels": {
+        "title": "Severity Levels",
+        "noDR": {
+          "name": "No Diabetic Retinopathy",
+          "criteria": "No microaneurysms or other lesions"
+        },
+        "mildNPDR": {
+          "name": "Mild NPDR",
+          "criteria": "Only microaneurysms present"
+        },
+        "moderateNPDR": {
+          "name": "Moderate NPDR",
+          "criteria": "More than microaneurysms, but less than severe"
+        },
+        "severeNPDR": {
+          "name": "Severe NPDR",
+          "criteria": "Meets 4-2-1 rule (Hemorrhages in 4Q, Venous beading in 2Q, or IRMA in 1Q)"
+        },
+        "pdr": {
+          "name": "Proliferative DR",
+          "criteria": "Neovascularization present"
+        }
+      },
+      "decisionMaking": {
+        "title": "How Does the System Make Decisions?",
+        "step1": {
+          "title": "Lesion Detection",
+          "description": "The AI model identifies microaneurysms, hemorrhages, exudates and neovascularization in each image"
+        },
+        "step2": {
+          "title": "Quadrant Analysis",
+          "description": "Lesions are grouped by retinal quadrants (superior, inferior, nasal, temporal) based on optic disc location"
+        },
+        "step3": {
+          "title": "Severity Classification",
+          "description": "ICDR criteria are applied considering lesion type and distribution, patient risk factors, and bilateral analysis"
+        }
+      }
+    },
+    "classes": {
+      "title": "Model Detected Classes",
+      "current": {
+        "title": "Currently Detected",
+        "microaneurysms": "Microaneurysms",
+        "microaneurysmsDesc": "First manifestation of diabetic retinopathy",
+        "hemorrhages": "Hemorrhages",
+        "hemorrhagesDesc": "Intraretinal bleeding from vascular damage",
+        "hardExudates": "Hard Exudates",
+        "hardExudatesDesc": "Lipid deposits, indicators of edema",
+        "softExudates": "Soft Exudates",
+        "softExudatesDesc": "Cotton wool spots - indicate retinal ischemia",
+        "neovascularization": "Neovascularization",
+        "neovascularizationDesc": "Abnormal new vessels - proliferative DR criterion"
+      },
+      "future": {
+        "title": "In Development",
+        "irma": "IRMA",
+        "irmaDesc": "Intraretinal microvascular abnormalities - criterion for severe NPDR",
+        "venousBeading": "Venous Beading",
+        "venousBeadingDesc": "Segmental venous dilations - criterion for severe NPDR",
+        "macularEdema": "Macular Edema",
+        "macularEdemaDesc": "Fluid accumulation in macula - main cause of vision loss"
+      }
+    },
+    "disclaimer": {
+      "title": "Important Medical Notice",
+      "paragraph1": "DIRD is an AI-powered diagnostic assistance tool. Classifications and suggestions generated by the system do NOT constitute a definitive medical diagnosis.",
+      "paragraph2": "Validation and clinical judgment by a certified ophthalmologist is always required. This system is designed to support, not replace, professional medical judgment."
+    },
+    "technicalDocs": {
+      "description": "Detailed technical documentation about the classification system",
+      "reviewButton": "Technical Review",
+      "improvementsButton": "Planned Improvements"
     }
   }
 }
