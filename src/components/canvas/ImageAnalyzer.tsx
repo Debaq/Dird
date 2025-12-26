@@ -48,6 +48,14 @@ const DEFAULT_LAYERS: CanvasLayer[] = [
     locked: false,
     zIndex: 3,
   },
+  {
+    id: 'quadrants',
+    name: 'canvas.layers.quadrants',
+    visible: true,
+    opacity: 0.5,
+    locked: false,
+    zIndex: 4,
+  },
 ];
 
 const ImageAnalyzer: React.FC = () => {
@@ -60,6 +68,7 @@ const ImageAnalyzer: React.FC = () => {
   const { t } = useTranslation();
   const [layers, setLayers] = useState<CanvasLayer[]>(DEFAULT_LAYERS);
   const [activeTool, setActiveTool] = useState<CanvasTool>('select');
+  const [selectedLandmarkType, setSelectedLandmarkType] = useState<'optic_disc' | 'fovea'>('optic_disc');
 
   // History State
   const [detectionHistory, setDetectionHistory] = useState<HistoryEntry[]>([]);
@@ -342,6 +351,8 @@ const ImageAnalyzer: React.FC = () => {
                   setActiveTool(tool);
                 }}
                 disabled={session?.locked}
+                selectedLandmarkType={selectedLandmarkType}
+                onLandmarkTypeChange={setSelectedLandmarkType}
               />
            </div>
          )}
@@ -420,6 +431,8 @@ const ImageAnalyzer: React.FC = () => {
             activeTool={activeTool}
             onToolChange={setActiveTool}
             disabled={session?.locked}
+            selectedLandmarkType={selectedLandmarkType}
+            onLandmarkTypeChange={setSelectedLandmarkType}
           />
 
           <AdvancedLayerControls

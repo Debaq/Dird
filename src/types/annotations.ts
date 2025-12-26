@@ -1,4 +1,4 @@
-export type LayerType = 'original' | 'detections-ai' | 'segmentations-ai' | 'manual-annotations';
+export type LayerType = 'original' | 'detections-ai' | 'segmentations-ai' | 'manual-annotations' | 'quadrants';
 
 export interface CanvasLayer {
   id: LayerType;
@@ -9,7 +9,20 @@ export interface CanvasLayer {
   zIndex: number;
 }
 
-export type ToolType = 'select' | 'bbox' | 'segment' | 'eraser' | 'pan' | 'zoom';
+export type ToolType = 'select' | 'bbox' | 'segment' | 'eraser' | 'pan' | 'zoom' | 'landmark' | 'measure';
+
+export type LandmarkType = 'optic_disc' | 'fovea';
+
+export interface Landmark {
+  id: string;
+  type: LandmarkType;
+  x: number;
+  y: number;
+  radius: number;
+  source: 'ai' | 'manual';
+  confidence?: number;
+  visible: boolean;
+}
 
 export interface BoundingBox {
   id: string;

@@ -224,10 +224,12 @@
       "eraser": "Borrador",
       "circle": "Círculo",
       "ruler": "Regla",
+      "landmark": "Landmarks",
       "pan": "Desplazar",
       "zoom": "Zoom",
       "bboxInstruction": "Haz clic y arrastra para dibujar una caja de detección",
-      "rulerInstruction": "Haz clic en el punto de origen, luego en el destino para medir la distancia en Diámetros de Disco (DD)"
+      "rulerInstruction": "Haz clic en el punto de origen, luego en el destino para medir la distancia en Diámetros de Disco (DD)",
+      "landmarkInstruction": "Haz clic para colocar referencias anatómicas (disco óptico o fóvea). Arrastra para reposicionar."
     },
     "layers": {
       "title": "Capas",
@@ -237,6 +239,7 @@
       "ai_segmentations": "Segmentaciones IA",
       "manual": "Anotaciones Manuales",
       "measurements": "Medidas",
+      "quadrants": "Cuadrantes",
       "show": "Mostrar capa",
       "hide": "Ocultar capa",
       "showLabels": "Mostrar etiquetas",
