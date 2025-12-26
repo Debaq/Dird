@@ -112,6 +112,11 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
       );
       const segmentations = allSegmentations.flat();
 
+      const allMeasurements = await Promise.all(
+        images.map((img) => db.measurements.where('imageId').equals(img.id!).toArray())
+      );
+      const measurements = allMeasurements.flat();
+
       // Generate the final report PDF
       const reportData = {
         patient,
@@ -119,6 +124,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
         images,
         detections,
         segmentations,
+        measurements,
         evaluatorNotes: notes,
       };
 

@@ -97,22 +97,8 @@ export class InferenceService {
       imageElement.height
     );
 
-    // Log quadrant analysis results
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('📊 QUADRANT ANALYSIS RESULTS');
-    console.log('═══════════════════════════════════════════════════════');
-    console.log(quadrantCalculator.formatAnalysis(quadrantAnalysis));
-    console.log('───────────────────────────────────────────────────────');
-    console.log('Distribution by quadrant:');
-    console.log(`  🔴 Superior Temporal (ST): ${quadrantAnalysis['superior-temporal']} lesions`);
-    console.log(`  🟠 Inferior Temporal (IT): ${quadrantAnalysis['inferior-temporal']} lesions`);
-    console.log(`  🟢 Superior Nasal (SN):    ${quadrantAnalysis['superior-nasal']} lesions`);
-    console.log(`  🔵 Inferior Nasal (IN):    ${quadrantAnalysis['inferior-nasal']} lesions`);
-    console.log('───────────────────────────────────────────────────────');
-    console.log(`Method: ${quadrantAnalysis.usedFallback ? 'Center-based fallback' : 'Anatomical reference (OD-Fovea)'}`);
-    console.log(`Optic Disc: ${quadrantAnalysis.opticDiscFound ? '✓ Detected' : '✗ Not detected'}`);
-    console.log(`Fovea: ${quadrantAnalysis.foveaFound ? '✓ Detected' : '✗ Not detected'}`);
-    console.log('═══════════════════════════════════════════════════════\n');
+    // Log analysis for debugging
+    console.log('Quadrant Analysis:', quadrantCalculator.formatAnalysis(quadrantAnalysis));
 
     // Save detections to database
     const modelVersion = metadata.model_info?.version || metadata.model_version || 'unknown';
@@ -168,11 +154,6 @@ export class InferenceService {
               visible: true,
               createdAt: now
             });
-
-            console.log(
-              `Generated optic disc mask: center=(${segmentation.circle.x.toFixed(1)}, ${segmentation.circle.y.toFixed(1)}), ` +
-              `radius=${segmentation.circle.radius.toFixed(1)}`
-            );
           }
 
         } catch (error) {

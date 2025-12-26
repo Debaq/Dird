@@ -60,6 +60,10 @@ export interface ReportConfig {
   gallery: {
     includeOriginal: boolean;
     includeAnnotated: boolean;
+    imagesPerRow: number;
+    showQuadrantLines: boolean;
+    showMeasurements: boolean;
+    showOpticDiscArea: boolean;
   };
   patientInfoFields: {
     name: boolean;
@@ -159,7 +163,11 @@ export const DEFAULT_CONFIG: AppConfig = {
     },
     gallery: {
       includeOriginal: false,
-      includeAnnotated: true
+      includeAnnotated: true,
+      imagesPerRow: 2,
+      showQuadrantLines: true,
+      showMeasurements: true,
+      showOpticDiscArea: true
     },
     patientInfoFields: {
       name: true,
