@@ -5,7 +5,8 @@ const DEFAULT_LAYERS: CanvasLayer[] = [
   { id: 'original', name: 'Original Image', visible: true, opacity: 1, locked: true, zIndex: 0 },
   { id: 'segmentations-ai', name: 'AI Segmentations', visible: true, opacity: 0.6, locked: false, zIndex: 1 },
   { id: 'detections-ai', name: 'AI Detections', visible: true, opacity: 1, locked: false, zIndex: 2 },
-  { id: 'manual-annotations', name: 'Manual Annotations', visible: true, opacity: 1, locked: false, zIndex: 3 }
+  { id: 'manual-annotations', name: 'Manual Annotations', visible: true, opacity: 1, locked: false, zIndex: 3 },
+  { id: 'quadrants', name: 'Quadrant Grid', visible: true, opacity: 0.5, locked: false, zIndex: 4 }
 ];
 
 interface CanvasStore {

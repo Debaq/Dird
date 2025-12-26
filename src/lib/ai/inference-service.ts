@@ -6,6 +6,7 @@ import { modelDownloader } from './model-downloader';
 import { useConfigStore } from '@/stores/config-store';
 import { classManager } from '@/lib/classes/class-manager';
 import { generateOpticDiscMask, isOpenCVReady } from './optic-disc-refiner';
+import { quadrantCalculator } from '@/lib/analysis/quadrant-calculator';
 
 export class InferenceService {
   private detectionModel: ONNXModelManager | null = null;
@@ -88,6 +89,30 @@ export class InferenceService {
     // Apply NMS
     const iouThreshold = metadata.iou_threshold || 0.45;
     detections = applyNMS(detections, iouThreshold);
+
+    // Perform quadrant analysis
+    const quadrantAnalysis = quadrantCalculator.analyzeQuadrants(
+      detections,
+      imageElement.width,
+      imageElement.height
+    );
+
+    // Log quadrant analysis results
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('📊 QUADRANT ANALYSIS RESULTS');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log(quadrantCalculator.formatAnalysis(quadrantAnalysis));
+    console.log('───────────────────────────────────────────────────────');
+    console.log('Distribution by quadrant:');
+    console.log(`  🔴 Superior Temporal (ST): ${quadrantAnalysis['superior-temporal']} lesions`);
+    console.log(`  🟠 Inferior Temporal (IT): ${quadrantAnalysis['inferior-temporal']} lesions`);
+    console.log(`  🟢 Superior Nasal (SN):    ${quadrantAnalysis['superior-nasal']} lesions`);
+    console.log(`  🔵 Inferior Nasal (IN):    ${quadrantAnalysis['inferior-nasal']} lesions`);
+    console.log('───────────────────────────────────────────────────────');
+    console.log(`Method: ${quadrantAnalysis.usedFallback ? 'Center-based fallback' : 'Anatomical reference (OD-Fovea)'}`);
+    console.log(`Optic Disc: ${quadrantAnalysis.opticDiscFound ? '✓ Detected' : '✗ Not detected'}`);
+    console.log(`Fovea: ${quadrantAnalysis.foveaFound ? '✓ Detected' : '✗ Not detected'}`);
+    console.log('═══════════════════════════════════════════════════════\n');
 
     // Save detections to database
     const modelVersion = metadata.model_info?.version || metadata.model_version || 'unknown';

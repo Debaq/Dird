@@ -14,6 +14,8 @@ import { useConfigStore } from '@/stores/config-store';
 import { useCanvasStore } from '@/stores/canvas-store';
 import { inferenceService } from '@/lib/ai/inference-service';
 import { updateOpticDiscSegmentation, deleteOpticDiscSegmentation } from '@/lib/ai/optic-disc-updater';
+import { QuadrantOverlay } from './QuadrantOverlay';
+import { useLandmarksAndQuadrants } from '@/hooks/useLandmarksAndQuadrants';
 
 interface AnnotationCanvasProps {
   image: ImageType;
@@ -61,6 +63,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const aiDetectionsLayer = layers.find(l => l.id === 'detections-ai');
   const manualAnnotationsLayer = layers.find(l => l.id === 'manual-annotations');
   const measurementsLayer = layers.find(l => l.id === 'measurements');
+  const quadrantsLayer = layers.find(l => l.id === 'quadrants');
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
   const trRef = useRef<any>(null);
@@ -91,6 +94,20 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   // State for drag/move operations history optimization
   const dragStartAnnotation = useRef<any>(null);
   const isKeyboardMoving = useRef(false);
+
+  // Landmarks and quadrant analysis (selectedLandmarkType from ToolPanel)
+  const [selectedLandmarkType] = useState<'optic_disc' | 'fovea'>('optic_disc');
+
+  const {
+    landmarks,
+    addOrUpdateLandmark,
+    updateLandmark,
+  } = useLandmarksAndQuadrants({
+    imageId: image.id!,
+    imageWidth: konvaImage?.width || 0,
+    imageHeight: konvaImage?.height || 0,
+    detections,
+  });
 
   // Update transformer when selection changes
   useEffect(() => {
@@ -350,6 +367,32 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
     if (activeTool === 'pan' || activeTool === 'zoom') {
       setIsPanning(true);
+      return;
+    }
+
+    // Handle landmark tool
+    if (activeTool === 'landmark') {
+      const targetName = e.target.getClassName();
+      if (targetName !== 'Image' && targetName !== 'Stage') {
+        return;
+      }
+
+      const stage = stageRef.current;
+      if (!stage) return;
+
+      const pos = stage.getPointerPosition();
+      if (!pos) return;
+
+      // Calculate image coordinates
+      const relativeX = pos.x - stagePos.x;
+      const relativeY = pos.y - stagePos.y;
+      const canvasX = relativeX / stageScale;
+      const canvasY = relativeY / stageScale;
+      const x = (canvasX - imageOffset.x) / scale;
+      const y = (canvasY - imageOffset.y) / scale;
+
+      // Add or update landmark
+      addOrUpdateLandmark(selectedLandmarkType, x, y, 30);
       return;
     }
 
@@ -1572,6 +1615,24 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
             )}
           </Layer>
         )}
+
+        {/* Quadrant Grid Overlay */}
+        <Layer>
+          <Group
+            x={imageOffset.x}
+            y={imageOffset.y}
+            scaleX={scale}
+            scaleY={scale}
+          >
+            <QuadrantOverlay
+              visible={quadrantsLayer?.visible ?? true}
+              opacity={quadrantsLayer?.opacity ?? 0.5}
+              landmarks={landmarks}
+              imageWidth={konvaImage?.width || 0}
+              imageHeight={konvaImage?.height || 0}
+            />
+          </Group>
+        </Layer>
 
         {/* Transformer Layer */}
         <Layer>
