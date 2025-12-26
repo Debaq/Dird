@@ -10,6 +10,7 @@ import { getClassName } from '@/lib/ai/class-translations';
 import i18n from '@/i18n/config';
 import { QuadrantAnalysisPanel } from '@/components/canvas/QuadrantAnalysisPanel';
 import { quadrantCalculator, type QuadrantAnalysis } from '@/lib/analysis/quadrant-calculator';
+import { DRClassificationCard } from '@/components/analysis/DRClassificationCard';
 
 interface AnalysisViewProps {
   images: Image[];
@@ -141,53 +142,26 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
         </Card>
       </div>
 
-      {/* Detection Classes */}
-      {Object.keys(detectionStats).length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('analysis.view.detectionsPerClass')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {Object.entries(detectionStats)
-                .sort(([, a], [, b]) => b - a)
-                .map(([className, count]) => (
-                  <div
-                    key={className}
-                    className="p-4 rounded-lg border-2 transition-all hover:shadow-md"
-                    style={{ borderColor: getClassColor(className) }}
-                  >
-                    <div
-                      className="w-4 h-4 rounded-full mb-2"
-                      style={{ backgroundColor: getClassColor(className) }}
-                    />
-                    <p className="text-sm font-medium text-coal-800">{getClassName(className, i18n.language)}</p>
-                    <p className="text-2xl font-bold text-coal-900">{count}</p>
-                    <p className="text-xs text-smoke-500">
-                      {((count / totalDetections) * 100).toFixed(1)}%
-                    </p>
-                  </div>
-                ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* DR Classification */}
+      <DRClassificationCard sessionId={sessionId} refreshKey={refreshKey} />
 
-      {/* Images Grid */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('analysis.view.analyzedImages')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {totalDetections === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-smoke-500">
-                {t('analysis.view.noDetections')}
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {imagesWithDetections.map(({ image, detections, thumbnail, quadrantAnalysis }) => (
+      {/* Images Grid - Separated by Eye (OD left, OI right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* OJO DERECHO (OD) - Left side */}
+        <Card>
+          <CardHeader className="bg-primary-50">
+            <CardTitle className="text-center">
+              {t('analysis.view.rightEye')} (OD)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {imagesWithDetections.filter(item => item.image.eyeType === 'OD').length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-smoke-500">{t('analysis.view.noImagesForEye')}</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {imagesWithDetections.filter(item => item.image.eyeType === 'OD').map(({ image, detections, thumbnail, quadrantAnalysis }) => (
                 <div
                   key={image.id}
                   className="group relative bg-white rounded-lg border border-coal-200 overflow-hidden hover:shadow-strong transition-all cursor-pointer flex flex-col h-full"
@@ -235,10 +209,10 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
                         <p className="text-xs text-smoke-400">{t('analysis.view.noDetectionsLabel')}</p>
                       )}
                     </div>
-                    
+
                     {/* Quadrant Analysis Panel */}
                     <div className="mt-auto pt-2 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
-                       <QuadrantAnalysisPanel analysis={quadrantAnalysis} className="border-0 shadow-none p-0" />
+                       <QuadrantAnalysisPanel analysis={quadrantAnalysis} className="border-0 shadow-none p-0" eyeType="OD" />
                     </div>
                   </div>
                   <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -256,10 +230,99 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
                   </div>
                 </div>
               ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* OJO IZQUIERDO (OI) - Right side */}
+        <Card>
+          <CardHeader className="bg-accent-50">
+            <CardTitle className="text-center">
+              {t('analysis.view.leftEye')} (OI)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {imagesWithDetections.filter(item => item.image.eyeType === 'OI').length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-smoke-500">{t('analysis.view.noImagesForEye')}</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {imagesWithDetections.filter(item => item.image.eyeType === 'OI').map(({ image, detections, thumbnail, quadrantAnalysis }) => (
+                <div
+                  key={image.id}
+                  className="group relative bg-white rounded-lg border border-coal-200 overflow-hidden hover:shadow-strong transition-all cursor-pointer flex flex-col h-full"
+                  onClick={() => navigate(`/patients/${patientId}/sessions/${sessionId}/images/${image.id}`)}
+                >
+                  <div className="aspect-video overflow-hidden bg-coal-50 relative flex-shrink-0">
+                    <img
+                      src={thumbnail}
+                      alt={image.filename}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full px-4 py-2 shadow-lg">
+                        <p className="text-sm font-bold text-primary-600">{t('analysis.view.viewDetails')}</p>
+                      </div>
+                    </div>
+                    {detections.length > 0 && (
+                      <div className="absolute top-2 right-2 bg-primary-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                        {detections.length} {t('analysis.view.detectionsCount')}
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4 flex-grow flex flex-col gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-coal-800 truncate mb-2">
+                        {image.filename}
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {Object.entries(
+                          detections.reduce((acc, det) => {
+                            acc[det.class] = (acc[det.class] || 0) + 1;
+                            return acc;
+                          }, {} as Record<string, number>)
+                        ).map(([className, count]) => (
+                          <span
+                            key={className}
+                            className="text-xs px-2 py-1 rounded-full text-white font-medium"
+                            style={{ backgroundColor: getClassColor(className) }}
+                          >
+                            {getClassName(className, i18n.language)}: {count}
+                          </span>
+                        ))}
+                      </div>
+                      {detections.length === 0 && (
+                        <p className="text-xs text-smoke-400">{t('analysis.view.noDetectionsLabel')}</p>
+                      )}
+                    </div>
+
+                    {/* Quadrant Analysis Panel */}
+                    <div className="mt-auto pt-2 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+                       <QuadrantAnalysisPanel analysis={quadrantAnalysis} className="border-0 shadow-none p-0" eyeType="OI" />
+                    </div>
+                  </div>
+                  <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="bg-white hover:bg-coal-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/patients/${patientId}/sessions/${sessionId}/images/${image.id}`);
+                      }}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

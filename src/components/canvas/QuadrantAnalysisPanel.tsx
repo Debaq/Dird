@@ -6,6 +6,7 @@ import { Eye, AlertTriangle, CheckCircle2 } from 'lucide-react';
 interface QuadrantAnalysisPanelProps {
   analysis: QuadrantAnalysis | null;
   className?: string;
+  eyeType?: 'OD' | 'OI';
 }
 
 /**
@@ -13,7 +14,7 @@ interface QuadrantAnalysisPanelProps {
  *
  * Displays quadrant analysis results in a structured, visual format
  */
-export function QuadrantAnalysisPanel({ analysis, className = '' }: QuadrantAnalysisPanelProps) {
+export function QuadrantAnalysisPanel({ analysis, className = '', eyeType = 'OD' }: QuadrantAnalysisPanelProps) {
   if (!analysis) {
     return (
       <Card className={`p-4 ${className}`}>
@@ -60,35 +61,7 @@ export function QuadrantAnalysisPanel({ analysis, className = '' }: QuadrantAnal
 
       {/* Quadrant Grid Visualization */}
       <div className="mb-3">
-        <QuadrantGrid analysis={analysis} />
-      </div>
-
-      {/* Detailed Counts */}
-      <div className="space-y-2">
-        <QuadrantRow
-          label="Superior Temporal (ST)"
-          count={analysis['superior-temporal']}
-          total={analysis.total}
-          color="bg-red-500"
-        />
-        <QuadrantRow
-          label="Inferior Temporal (IT)"
-          count={analysis['inferior-temporal']}
-          total={analysis.total}
-          color="bg-orange-500"
-        />
-        <QuadrantRow
-          label="Superior Nasal (SN)"
-          count={analysis['superior-nasal']}
-          total={analysis.total}
-          color="bg-green-500"
-        />
-        <QuadrantRow
-          label="Inferior Nasal (IN)"
-          count={analysis['inferior-nasal']}
-          total={analysis.total}
-          color="bg-blue-500"
-        />
+        <QuadrantGrid analysis={analysis} eyeType={eyeType} />
       </div>
 
       {/* Total */}
@@ -111,7 +84,7 @@ export function QuadrantAnalysisPanel({ analysis, className = '' }: QuadrantAnal
 /**
  * Visual grid showing quadrant distribution
  */
-function QuadrantGrid({ analysis }: { analysis: QuadrantAnalysis }) {
+function QuadrantGrid({ analysis, eyeType = 'OD' }: { analysis: QuadrantAnalysis; eyeType?: 'OD' | 'OI' }) {
   const maxCount = Math.max(
     analysis['superior-temporal'],
     analysis['inferior-temporal'],
@@ -130,91 +103,121 @@ function QuadrantGrid({ analysis }: { analysis: QuadrantAnalysis }) {
   const snIntensity = getIntensity(analysis['superior-nasal']);
   const inIntensity = getIntensity(analysis['inferior-nasal']);
 
-  return (
-    <div className="grid grid-cols-2 gap-1 aspect-square max-w-[200px] mx-auto">
-      {/* Superior Nasal */}
-      <div
-        className="border-2 border-gray-300 rounded-tl flex items-center justify-center font-bold"
-        style={{
-          backgroundColor: `rgba(34, 197, 94, ${snIntensity})`,
-        }}
-      >
-        <div className="text-center">
-          <div className="text-xs text-gray-600">SN</div>
-          <div className="text-lg">{analysis['superior-nasal']}</div>
-        </div>
-      </div>
-
-      {/* Superior Temporal */}
-      <div
-        className="border-2 border-gray-300 rounded-tr flex items-center justify-center font-bold"
-        style={{
-          backgroundColor: `rgba(239, 68, 68, ${stIntensity})`,
-        }}
-      >
-        <div className="text-center">
-          <div className="text-xs text-gray-600">ST</div>
-          <div className="text-lg">{analysis['superior-temporal']}</div>
-        </div>
-      </div>
-
-      {/* Inferior Nasal */}
-      <div
-        className="border-2 border-gray-300 rounded-bl flex items-center justify-center font-bold"
-        style={{
-          backgroundColor: `rgba(59, 130, 246, ${inIntensity})`,
-        }}
-      >
-        <div className="text-center">
-          <div className="text-xs text-gray-600">IN</div>
-          <div className="text-lg">{analysis['inferior-nasal']}</div>
-        </div>
-      </div>
-
-      {/* Inferior Temporal */}
-      <div
-        className="border-2 border-gray-300 rounded-br flex items-center justify-center font-bold"
-        style={{
-          backgroundColor: `rgba(249, 115, 22, ${itIntensity})`,
-        }}
-      >
-        <div className="text-center">
-          <div className="text-xs text-gray-600">IT</div>
-          <div className="text-lg">{analysis['inferior-temporal']}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Individual quadrant row with progress bar
- */
-function QuadrantRow({
-  label,
-  count,
-  total,
-  color,
-}: {
-  label: string;
-  count: number;
-  total: number;
-  color: string;
-}) {
-  const percentage = total > 0 ? (count / total) * 100 : 0;
-
-  return (
-    <div>
-      <div className="flex items-center justify-between text-xs mb-1">
-        <span className="text-gray-700">{label}</span>
-        <span className="font-semibold">{count}</span>
-      </div>
-      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+  // For OD (Right Eye): ST-IT on left, SN-IN on right
+  // For OI (Left Eye): SN-IN on left, ST-IT on right (mirrored)
+  if (eyeType === 'OD') {
+    return (
+      <div className="grid grid-cols-2 gap-1 aspect-square max-w-[200px] mx-auto">
+        {/* Superior Temporal */}
         <div
-          className={`h-full ${color} transition-all duration-300`}
-          style={{ width: `${percentage}%` }}
-        />
+          className="border-2 border-gray-300 rounded-tl flex items-center justify-center font-bold"
+          style={{
+            backgroundColor: `rgba(239, 68, 68, ${stIntensity})`,
+          }}
+        >
+          <div className="text-center">
+            <div className="text-xs text-gray-600">ST</div>
+            <div className="text-lg">{analysis['superior-temporal']}</div>
+          </div>
+        </div>
+
+        {/* Superior Nasal */}
+        <div
+          className="border-2 border-gray-300 rounded-tr flex items-center justify-center font-bold"
+          style={{
+            backgroundColor: `rgba(34, 197, 94, ${snIntensity})`,
+          }}
+        >
+          <div className="text-center">
+            <div className="text-xs text-gray-600">SN</div>
+            <div className="text-lg">{analysis['superior-nasal']}</div>
+          </div>
+        </div>
+
+        {/* Inferior Temporal */}
+        <div
+          className="border-2 border-gray-300 rounded-bl flex items-center justify-center font-bold"
+          style={{
+            backgroundColor: `rgba(249, 115, 22, ${itIntensity})`,
+          }}
+        >
+          <div className="text-center">
+            <div className="text-xs text-gray-600">IT</div>
+            <div className="text-lg">{analysis['inferior-temporal']}</div>
+          </div>
+        </div>
+
+        {/* Inferior Nasal */}
+        <div
+          className="border-2 border-gray-300 rounded-br flex items-center justify-center font-bold"
+          style={{
+            backgroundColor: `rgba(59, 130, 246, ${inIntensity})`,
+          }}
+        >
+          <div className="text-center">
+            <div className="text-xs text-gray-600">IN</div>
+            <div className="text-lg">{analysis['inferior-nasal']}</div>
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  } else {
+    // OI (Left Eye) - Mirrored layout
+    return (
+      <div className="grid grid-cols-2 gap-1 aspect-square max-w-[200px] mx-auto">
+        {/* Superior Nasal */}
+        <div
+          className="border-2 border-gray-300 rounded-tl flex items-center justify-center font-bold"
+          style={{
+            backgroundColor: `rgba(34, 197, 94, ${snIntensity})`,
+          }}
+        >
+          <div className="text-center">
+            <div className="text-xs text-gray-600">SN</div>
+            <div className="text-lg">{analysis['superior-nasal']}</div>
+          </div>
+        </div>
+
+        {/* Superior Temporal */}
+        <div
+          className="border-2 border-gray-300 rounded-tr flex items-center justify-center font-bold"
+          style={{
+            backgroundColor: `rgba(239, 68, 68, ${stIntensity})`,
+          }}
+        >
+          <div className="text-center">
+            <div className="text-xs text-gray-600">ST</div>
+            <div className="text-lg">{analysis['superior-temporal']}</div>
+          </div>
+        </div>
+
+        {/* Inferior Nasal */}
+        <div
+          className="border-2 border-gray-300 rounded-bl flex items-center justify-center font-bold"
+          style={{
+            backgroundColor: `rgba(59, 130, 246, ${inIntensity})`,
+          }}
+        >
+          <div className="text-center">
+            <div className="text-xs text-gray-600">IN</div>
+            <div className="text-lg">{analysis['inferior-nasal']}</div>
+          </div>
+        </div>
+
+        {/* Inferior Temporal */}
+        <div
+          className="border-2 border-gray-300 rounded-br flex items-center justify-center font-bold"
+          style={{
+            backgroundColor: `rgba(249, 115, 22, ${itIntensity})`,
+          }}
+        >
+          <div className="text-center">
+            <div className="text-xs text-gray-600">IT</div>
+            <div className="text-lg">{analysis['inferior-temporal']}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
+

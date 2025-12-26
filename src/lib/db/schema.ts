@@ -110,6 +110,29 @@ export interface Measurement {
   createdAt: Date;
 }
 
+export interface ImageClassification {
+  id?: number;
+  imageId: number;
+  eyeType: 'OD' | 'OI' | 'unknown';
+  eyeTypeDetectionMethod: 'manual' | 'auto' | 'unknown';
+  severity: 'no_dr' | 'mild_npdr' | 'moderate_npdr' | 'severe_npdr' | 'pdr';
+  confidence: 'low' | 'moderate' | 'high';
+  lesions: {
+    microaneurysms: number;
+    hemorrhages: number;
+    hardExudates: number;
+    softExudates: number;
+    neovascularization: number;
+  };
+  quadrantAnalysisData: string; // JSON stringified QuadrantAnalysis
+  quadrantLesionsData: string; // JSON stringified QuadrantLesionCounts
+  criteria: string[]; // Array of criteria strings
+  usedQuadrantAnalysis: boolean;
+  warnings: string[]; // Array of warning strings
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export class DirdDatabase extends Dexie {
   patients!: Table<Patient>;
   sessions!: Table<Session>;
@@ -118,6 +141,7 @@ export class DirdDatabase extends Dexie {
   segmentations!: Table<Segmentation>;
   reports!: Table<Report>;
   measurements!: Table<Measurement>;
+  imageClassifications!: Table<ImageClassification>;
 
   constructor() {
     super('DirdDatabase');
@@ -230,6 +254,16 @@ export class DirdDatabase extends Dexie {
       segmentations: '++id, imageId, type, class, visible',
       reports: '++id, sessionId, type, reportCategory, generatedAt',
       measurements: '++id, imageId, visible, createdAt' // Added measurements table
+    });
+    this.version(10).stores({
+      patients: '++id, patientId, name, status, createdAt',
+      sessions: '++id, patientId, name, sessionNumber, date, locked, type',
+      images: '++id, sessionId, eyeType, uploadedAt, contributionStatus',
+      detections: '++id, imageId, type, class, visible',
+      segmentations: '++id, imageId, type, class, visible',
+      reports: '++id, sessionId, type, reportCategory, generatedAt',
+      measurements: '++id, imageId, visible, createdAt',
+      imageClassifications: '++id, imageId, eyeType, severity, createdAt, updatedAt' // Added DR classifications
     });
   }
 }

@@ -16,6 +16,7 @@ import { inferenceService } from '@/lib/ai/inference-service';
 import { updateOpticDiscSegmentation, deleteOpticDiscSegmentation } from '@/lib/ai/optic-disc-updater';
 import { QuadrantOverlay } from './QuadrantOverlay';
 import { useLandmarksAndQuadrants } from '@/hooks/useLandmarksAndQuadrants';
+import { classifyAndSaveImage } from '@/lib/analysis/image-classification-service';
 
 interface AnnotationCanvasProps {
   image: ImageType;
@@ -205,6 +206,15 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         const updated = await updateOpticDiscSegmentation(imageElementRef.current, id, bbox);
         if (updated) {
           console.log('Optic disc segmentation updated after bbox modification');
+        }
+      }
+
+      // Re-classify DR after manual bbox modification
+      if (image.id) {
+        try {
+          await classifyAndSaveImage(image.id);
+        } catch (error) {
+          console.error('Error re-classifying after manual bbox update:', error);
         }
       }
 
@@ -724,6 +734,15 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       setPendingAnnotation(null);
       setIsClassModalOpen(false);
 
+      // Re-classify DR after adding manual detection
+      if (image.id) {
+        try {
+          await classifyAndSaveImage(image.id);
+        } catch (error) {
+          console.error('Error re-classifying after adding manual detection:', error);
+        }
+      }
+
       // Callback opcional para refrescar detecciones desde BD
       onAnnotationAdded?.();
     } catch (error) {
@@ -1051,6 +1070,16 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                       // Delete associated optic disc segmentation first
                       await deleteOpticDiscSegmentation(detection.id);
                       await db.detections.delete(detection.id);
+
+                      // Re-classify DR after deleting detection
+                      if (image.id) {
+                        try {
+                          await classifyAndSaveImage(image.id);
+                        } catch (error) {
+                          console.error('Error re-classifying after deleting detection:', error);
+                        }
+                      }
+
                       onAnnotationAdded?.();
                     } else if (activeTool === 'select' && detection.id) {
                       setSelectedAnnotation(String(detection.id));
@@ -1228,6 +1257,16 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                                           // Delete associated optic disc segmentation first
                                           await deleteOpticDiscSegmentation(annotation.id);
                                           await db.detections.delete(annotation.id);
+
+                                          // Re-classify DR after deleting detection
+                                          if (image.id) {
+                                            try {
+                                              await classifyAndSaveImage(image.id);
+                                            } catch (error) {
+                                              console.error('Error re-classifying after deleting detection:', error);
+                                            }
+                                          }
+
                                           onAnnotationAdded?.();
                                         } else if (activeTool === 'select' && annotation.id) {
                                           setSelectedAnnotation(String(annotation.id));
