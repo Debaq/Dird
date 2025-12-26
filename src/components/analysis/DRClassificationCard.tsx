@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { getSessionClassifications } from '@/lib/analysis/image-classification-service';
 import type { ImageDRClassification } from '@/lib/analysis/image-dr-classifier';
-import { db } from '@/lib/db/schema';
+// import { db } from '@/lib/db/schema';
 
 interface DRClassificationCardProps {
   sessionId: number;
@@ -136,10 +136,10 @@ export const DRClassificationCard: React.FC<DRClassificationCardProps> = ({ sess
   };
 
   // Get image filename
-  const getImageFilename = async (imageId: number): Promise<string> => {
-    const image = await db.images.get(imageId);
-    return image?.filename || `Image ${imageId}`;
-  };
+  // const getImageFilename = async (imageId: number): Promise<string> => {
+  //   const image = await db.images.get(imageId);
+  //   return image?.filename || `Image ${imageId}`;
+  // };
 
   // Render image selector for an eye
   const renderImageSelector = (classifs: ImageDRClassification[], eye: 'OD' | 'OI', expanded: boolean, setExpanded: (value: boolean) => void) => {

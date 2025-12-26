@@ -308,7 +308,7 @@ const SessionView: React.FC = () => {
       </Tabs>
 
       {/* Modal de progreso de procesamiento AI */}
-      <Dialog open={isProcessing} modal={true}>
+      <Dialog open={isProcessing} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-md" onPointerDown={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle className="text-center">{t('processing.title')}</DialogTitle>
