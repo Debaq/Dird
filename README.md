@@ -15,10 +15,16 @@ DIRD is a privacy-first, edge-computing web application for ophthalmological ima
     * [APP INSTALLATION](#app-installation)
     * [DEVELOPER SETUP](https://github.com/Debaq/Dird/wiki/Installation)
 * [USAGE](#usage)
-    * [PATIENTS]
-    * [SESSIONS]
-    * [REPORTS]
-    * [EXPORTS AND IMPORTS]
+    * [CREATING AND MANAGING PATIENTS](#creating-and-managing-patients)
+    * [CREATING AND MANAGING SESSIONS](#creating-and-managing-sessions)
+
+    * [WORKING INSIDE A SESSION](#working-inside-a-session)
+        * [ANALYZE AN IMAGE](#analyze-images)
+        * [MOVING AND MANAGING IMAGES](#moving-and-managing-images)
+        * [VIEW SESSION AND IMAGE STATISTICS](#view-session-and-image-statistics)
+        
+    * [CREATE REPORTS]
+    * [EXPORT AND IMPORTS]
 * [CONFIGURATION]
     * []
 * [CONTRIBUTIONS]
@@ -26,57 +32,61 @@ DIRD is a privacy-first, edge-computing web application for ophthalmological ima
     * [DONATIONS (KO-FI)]
     
 
-## Usage
+# Usage
 
-### Patients
-When first entering the page, we are automatically set into the **patients** tab, here we can create patients, edit, delete, or archive already existing patients.
+## Creating and managing patients
+When opening the app, you are taken to the Patients view. This is the main page of the system.
 
-#### Editing & Creating
+Here you can **create, edit or archive** patients.
 
-We can create patients by pressing the coloured button that says **Create Patient**. Similarly, to edit, archive or delete a patient (in that order), we can hover over the right bottom corner of the patient card and press the symbol for it.
+Press **Create a patient** to create a patient, and fill up the necessary fields.
 
-While creating or editing, we have the next fields:
-```
-Patient ID # Can only be sent during creation, also can be whatever we want it to be
-Name # Editable
-Birth Date # Editable
+To modify a patient, press the **pencil button** on the bottom right of the patient card. Every field that was made on creation can be edited, except the ID.
 
-Medical History # Diabetes (Type 1, Type 2, Gestational, other), Arterial Hypertension and Dyslipidemia
+To **Search** an existing patient, click the top left search box, and enter the name of the patient, or the ID of the patient.
 
-Medication # Separate by coma
-Other background # Mention what is considered important
-```
+Patients can be **archived** to remove them from the main list, to archive an existing patient, click the box button on the bottom right of the patient card you want to archive. To later see these archived patients, toggle the **Show archived** buttton.
 
 
-#### Searching
-We are able to search by ID or name, by pressing the box on the top left right below the "Patients" label. We can also filter by patients with no open sessions, and patients with at least one open session. 
+## Creating and managing sessions
+Each patient can have one or more **sessions**, these represent a clinical visit or examination.
 
-Those archived patients can also be displayed by toggling the "Show archived" button
+After selecting a patient, their information will be displayed, along with a list of every session they've had.
 
-### Sessions
-Once we click on a patient we'll be directed to it's own tab, which displays all of the information set earlier, as well as a session section on the bottom.
+To **create** a session, press the **New session** button, and fill up the necessary fields. (NOTE: the session notes will appear in the reports created)
 
-#### Editing & Creating
-We can create a session by pressing the coloured button **Create Session**. Similarly, we can duplicate, edit, or delete a session (in that order) by pressing one of the buttons on the right side of the session card.
+Sessions can be **duplicated** to preserve previous work and reprocess images without overwriting earlier results. To do this, press the copy button on the session card.
 
-While creating or editing a session, we have the next fields:
-```
-Session Name
-Date
-Session Notes
-```
+Sessions can be **edited**, and every space of the session can be edited. To edit, press the pencil button on the right of the session card.
+Sessions can be **deleted**, to do this press the trash bin button on the right of the session card.
 
-#### In the Session
-While inside the newly created session, we can upload images from our computer or drag images into the upload box. We have a Left Eye (LE) section, and a Right Eye (RE) section, whichever section is currently selected, the image will be uploaded into that section. 
+Multiple sessions can be compared to review differences in statistics, images, and reports over time. To do this press the **Session comparison** button and select two or more sessions.
 
-Below we have 3 tabs. Image, AI Analysis and Report. 
-In the image tab, once we upload an image, the upload section will disappear, and it will be replaced by an **Add Image** button, the LE and RE buttons determine which eye that image will be uploaded to.
+## Working inside a Session
 
-If you accidentally uploaded the image of an eye into the wrong eye section, you can move it to the other by hovering to the bottom of the eye card and pressing the button "To X eye"
+### Analyze image(s)
 
-To process the images with the AI detection, press **Process with AI**, we can then visualize the AI detections by pressing the image. We can "redetect" the detections by pressing the "brain" symbol on the top right
+To analyze an image inside a session, images must be first uploaded. Images are assigned to either the **Left Eye (LE)** or **Right Eye (RE)**, select the appropiate eye before uploading. If there's no image currently in the session, an upload box will be seen. Images can be uploaded by either uploading files from our computer by clicking on the box, or dragging images to it. 
 
+Once images are uploaded, the upload method will change. To upload more images, click the **Add Image** button and select files from your computer to upload. 
 
+After uploading all required images, press **Process with AI** to process all images. The detections will then be displayed when clicking on an image.
 
+If you wish to only analyze a **select image**, press the brain icon on the top right of the image card.
+
+### Moving and Managing Images
+Images can be reassigned to the opposite eye if they were uploaded incorrectly by clicking **"To x eye"** on the bottom right of the image card.
+
+The order of images can be **rearranged** by clicking and holding the top left button on the image card. Images **cannot** be moved to another eye section this way.
+
+Images that are not required can be removed from the session at any time by clicking the trash bin button on the top right of the image card.
+
+### View session and image statistics
+Statistics from images and the session itself such as:
+* Total images
+* Total detections
+* Average detections per image
+* Individual image statistics
+can be viewed by pressing the **AI ANALYSIS** button which will redirect to the statistics tab.
 
 
