@@ -161,7 +161,7 @@ export function countLesions(detections: Detection[]): LesionCounts {
  */
 export function countLesionsByQuadrant(
   detections: Detection[],
-  quadrantAnalysis: QuadrantAnalysis
+  _quadrantAnalysis: QuadrantAnalysis
 ): QuadrantLesionCounts {
   const quadrantLesions: QuadrantLesionCounts = {
     'superior-temporal': { microaneurysms: 0, hemorrhages: 0, hardExudates: 0, softExudates: 0, neovascularization: 0 },
@@ -250,7 +250,7 @@ export function countLesionsByQuadrant(
  */
 function checkSevereNPDR_421Rule(
   quadrantLesions: QuadrantLesionCounts,
-  quadrantAnalysis: QuadrantAnalysis
+  _quadrantAnalysis: QuadrantAnalysis
 ): { isSevere: boolean; criteria: string[] } {
   const criteria: string[] = [];
 
@@ -294,7 +294,6 @@ export function classifySeverity(
   usedQuadrantAnalysis: boolean;
 } {
   const criteria: string[] = [];
-  let confidence: 'low' | 'moderate' | 'high' = 'moderate';
   let usedQuadrantAnalysis = false;
 
   // PDR - Highest priority

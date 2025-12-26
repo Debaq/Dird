@@ -39,7 +39,7 @@ export async function saveImageClassification(
 
   if (existing) {
     // Update
-    await db.imageClassifications.update(existing.id!, record);
+    await db.imageClassifications.put({ ...record, id: existing.id });
     return existing.id!;
   } else {
     // Create

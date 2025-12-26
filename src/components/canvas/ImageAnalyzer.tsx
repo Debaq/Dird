@@ -256,7 +256,7 @@ const ImageAnalyzer: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-[100vh] relative bg-ice dark:bg-gray-900">
+    <div className="flex flex-col h-[100vh] lg:h-[calc(100vh-11rem)] relative bg-ice dark:bg-gray-900">
       {/* Header - Visible on Mobile (Portrait & Landscape) and Desktop */}
       <div className={cn(
         "flex items-center justify-between mb-2 flex-shrink-0",
@@ -426,7 +426,7 @@ const ImageAnalyzer: React.FC = () => {
         </div>
 
         {/* Desktop Side Panel */}
-        <div className="hidden lg:block space-y-4">
+        <div className="hidden lg:block space-y-4 h-full overflow-y-auto pr-2">
           <ToolPanel
             activeTool={activeTool}
             onToolChange={setActiveTool}

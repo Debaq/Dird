@@ -166,7 +166,6 @@ export function classifySeverity(lesions: LesionCounts): {
   confidence: 'low' | 'moderate' | 'high';
 } {
   const criteria: string[] = [];
-  let confidence: 'low' | 'moderate' | 'high' = 'moderate';
 
   // Proliferative DR - highest priority
   if (lesions.neovascularization > 0) {

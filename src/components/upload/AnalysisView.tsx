@@ -30,7 +30,6 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [imagesWithDetections, setImagesWithDetections] = useState<ImageWithDetections[]>([]);
-  const [detectionStats, setDetectionStats] = useState<Record<string, number>>({});
   const [totalDetections, setTotalDetections] = useState(0);
 
 
@@ -40,7 +39,6 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
   useEffect(() => {
     const loadData = async () => {
       const data: ImageWithDetections[] = [];
-      const stats: Record<string, number> = {};
       let total = 0;
 
       for (const image of images) {
@@ -62,15 +60,11 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
 
         data.push({ image, detections, thumbnail, quadrantAnalysis });
 
-        // Count by class
-        detections.forEach(det => {
-          stats[det.class] = (stats[det.class] || 0) + 1;
-          total++;
-        });
+        // Count total detections
+        total += detections.length;
       }
 
       setImagesWithDetections(data);
-      setDetectionStats(stats);
       setTotalDetections(total);
     };
 
