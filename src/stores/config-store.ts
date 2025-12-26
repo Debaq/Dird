@@ -38,6 +38,7 @@ export interface ProcessingConfig {
   maxImageSize: number; // MB
   compressionQuality: number; // 0-1
   batchSize: number;
+  opticDiscRefinement: boolean; // Refinar detección de disco óptico con OpenCV
 }
 
 export interface ReportConfig {
@@ -137,7 +138,8 @@ export const DEFAULT_CONFIG: AppConfig = {
     autoProcess: true,
     maxImageSize: 10,
     compressionQuality: 0.8,
-    batchSize: 5
+    batchSize: 5,
+    opticDiscRefinement: true
   },
   report: {
     title: 'DIRD',
@@ -240,7 +242,7 @@ export const useConfigStore = create<ConfigStore>()(
     }),
     {
       name: 'dird-config',
-      version: 3,
+      version: 4,
       migrate: (persistedState: any, version) => {
         let state = persistedState;
 
@@ -250,7 +252,7 @@ export const useConfigStore = create<ConfigStore>()(
             report: DEFAULT_CONFIG.report,
           };
         }
-        
+
         if (version < 2) {
           state = {
             ...state,
@@ -267,6 +269,16 @@ export const useConfigStore = create<ConfigStore>()(
              appearance: {
                ...state.appearance,
                rainbowMode: true
+             }
+           };
+        }
+
+        if (version < 4) {
+           state = {
+             ...state,
+             processing: {
+               ...state.processing,
+               opticDiscRefinement: true
              }
            };
         }

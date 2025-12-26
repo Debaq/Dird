@@ -1,9 +1,9 @@
 import React from 'react';
-import { Square, Circle, Eraser, Move, ZoomIn, Hand } from 'lucide-react';
+import { Square, Circle, Eraser, Move, ZoomIn, Hand, Ruler } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
-export type CanvasTool = 'select' | 'bbox' | 'circle' | 'eraser' | 'pan' | 'zoom';
+export type CanvasTool = 'select' | 'bbox' | 'circle' | 'eraser' | 'pan' | 'zoom' | 'ruler';
 
 interface ToolPanelProps {
   activeTool: CanvasTool;
@@ -18,6 +18,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ activeTool, onToolChange, disable
     { id: 'select' as CanvasTool, icon: Hand, label: t('canvas.tools.select') },
     { id: 'bbox' as CanvasTool, icon: Square, label: t('canvas.tools.bbox') },
     { id: 'circle' as CanvasTool, icon: Circle, label: t('canvas.tools.circle') },
+    { id: 'ruler' as CanvasTool, icon: Ruler, label: t('canvas.tools.ruler') },
     { id: 'eraser' as CanvasTool, icon: Eraser, label: t('canvas.tools.eraser') },
     { id: 'pan' as CanvasTool, icon: Move, label: t('canvas.tools.pan') },
     { id: 'zoom' as CanvasTool, icon: ZoomIn, label: t('canvas.tools.zoom') },
@@ -55,6 +56,14 @@ const ToolPanel: React.FC<ToolPanelProps> = ({ activeTool, onToolChange, disable
         <div className="mt-4 p-3 bg-primary-50 rounded-lg">
           <p className="text-xs text-primary-800">
             {t('canvas.tools.bboxInstruction')}
+          </p>
+        </div>
+      )}
+
+      {activeTool === 'ruler' && (
+        <div className="mt-4 p-3 bg-primary-50 rounded-lg">
+          <p className="text-xs text-primary-800">
+            {t('canvas.tools.rulerInstruction')}
           </p>
         </div>
       )}

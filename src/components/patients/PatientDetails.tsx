@@ -54,7 +54,7 @@ const PatientDetails: React.FC = () => {
   const handleDeleteSession = async (sessionId: number) => {
     if (window.confirm(t('confirmations.deleteSession'))) {
       try {
-        await db.transaction('rw', db.sessions, db.images, db.detections, db.segmentations, async () => {
+        await db.transaction('rw', [db.sessions, db.images, db.detections, db.segmentations, db.reports], async () => {
           const imagesToDelete = await db.images.where('sessionId').equals(sessionId).toArray();
           const imageIds = imagesToDelete.map(img => img.id!);
 

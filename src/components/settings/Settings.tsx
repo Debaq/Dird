@@ -643,6 +643,22 @@ export function Settings() {
                 />
               </div>
 
+              {/* Optic Disc Refinement */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="font-semibold dark:text-dark-text">
+                    {t('settings.processing.opticDiscRefinement')}
+                  </Label>
+                  <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
+                    {t('settings.processing.opticDiscRefinementDescription')}
+                  </p>
+                </div>
+                <Switch
+                  checked={config.processing.opticDiscRefinement}
+                  onCheckedChange={(checked) => updateProcessing({ opticDiscRefinement: checked })}
+                />
+              </div>
+
               {/* Max Image Size */}
               <div>
                 <Label htmlFor="maxImageSize" className="dark:text-dark-text">

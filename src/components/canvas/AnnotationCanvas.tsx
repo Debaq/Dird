@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Stage, Layer, Image as KonvaImage, Rect, Group, Text, Transformer, Circle } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Rect, Group, Text, Transformer, Circle, Line } from 'react-konva';
 import { RotateCcw, RotateCw, Brain, Loader2 } from 'lucide-react';
 import type { Image as ImageType, Detection } from '@/lib/db/schema';
 import type { HistoryEntry } from '@/types/annotations';
@@ -13,11 +13,15 @@ import { getClassName } from '@/lib/ai/class-translations';
 import { useConfigStore } from '@/stores/config-store';
 import { useCanvasStore } from '@/stores/canvas-store';
 import { inferenceService } from '@/lib/ai/inference-service';
+import { updateOpticDiscSegmentation, deleteOpticDiscSegmentation } from '@/lib/ai/optic-disc-updater';
 
 interface AnnotationCanvasProps {
   image: ImageType;
   detections?: any[];
   manualAnnotations?: any[];
+  segmentations?: any[];
+  manualSegmentations?: any[];
+  measurements?: any[];
   activeTool?: CanvasTool;
   layers?: CanvasLayer[];
   onAnnotationAdded?: () => void;
@@ -34,6 +38,9 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   image,
   detections = [],
   manualAnnotations = [],
+  segmentations = [],
+  manualSegmentations = [],
+  measurements = [],
   activeTool = 'select',
   layers = [],
   onAnnotationAdded,
@@ -53,10 +60,13 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   // Obtener configuración de capas
   const aiDetectionsLayer = layers.find(l => l.id === 'detections-ai');
   const manualAnnotationsLayer = layers.find(l => l.id === 'manual-annotations');
+  const measurementsLayer = layers.find(l => l.id === 'measurements');
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
   const trRef = useRef<any>(null);
+  const imageElementRef = useRef<HTMLImageElement | null>(null);
   const [konvaImage, setKonvaImage] = useState<HTMLImageElement | null>(null);
+  const [segmentationImages, setSegmentationImages] = useState<Map<number, HTMLImageElement>>(new Map());
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
   const [scale, setScale] = useState(1);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
@@ -69,6 +79,15 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const [pendingAnnotation, setPendingAnnotation] = useState<any>(null);
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // State for ruler tool
+  const [rulerOrigin, setRulerOrigin] = useState<{ x: number; y: number } | null>(null);
+  const [rulerDestination, setRulerDestination] = useState<{ x: number; y: number } | null>(null);
+  const [selectedMeasurementId, setSelectedMeasurementId] = useState<number | null>(null);
+  const [draggedMeasurementPart, setDraggedMeasurementPart] = useState<'origin' | 'destination' | 'line' | null>(null);
+
+  // Temporary state for live measurement updates during drag
+  const [tempMeasurementUpdates, setTempMeasurementUpdates] = useState<Map<number, { originX: number; originY: number; destinationX: number; destinationY: number }>>(new Map());
 
   // State for drag/move operations history optimization
   const dragStartAnnotation = useRef<any>(null);
@@ -89,6 +108,14 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       trRef.current.nodes([]);
     }
   }, [selectedAnnotationId, detections, manualAnnotations, isCanvasReady]);
+
+  // Reset ruler when tool changes
+  useEffect(() => {
+    if (activeTool !== 'ruler') {
+      setRulerOrigin(null);
+      setRulerDestination(null);
+    }
+  }, [activeTool]);
 
   // Capture initial state before drag/transform
   const handleDragStart = (id: number) => {
@@ -157,6 +184,15 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           bbox
         });
       }
+
+      // Regenerate optic disc segmentation if bbox was modified
+      if ((detection.class === 'optic_disc' || detection.class === 'optic disc') && imageElementRef.current) {
+        const updated = await updateOpticDiscSegmentation(imageElementRef.current, id, bbox);
+        if (updated) {
+          console.log('Optic disc segmentation updated after bbox modification');
+        }
+      }
+
       onAnnotationAdded?.();
     } catch (error) {
       console.error('Error updating annotation:', error);
@@ -182,6 +218,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
     img.onload = () => {
       setKonvaImage(img);
+      imageElementRef.current = img;
       calculateScale(img.width, img.height);
       URL.revokeObjectURL(url);
 
@@ -193,6 +230,30 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
     img.src = url;
   }, [image]);
+
+  // Load segmentation masks (both AI and manual)
+  useEffect(() => {
+    const newImages = new Map<number, HTMLImageElement>();
+    const allSegs = [...segmentations, ...manualSegmentations];
+
+    allSegs.forEach((seg) => {
+      if (seg.maskData && seg.visible) {
+        const img = new window.Image();
+        img.onload = () => {
+          newImages.set(seg.id!, img);
+          setSegmentationImages(new Map(newImages));
+        };
+        img.src = seg.maskData; // maskData is already base64
+      }
+    });
+
+    // Cleanup
+    return () => {
+      newImages.forEach(img => {
+        img.src = '';
+      });
+    };
+  }, [segmentations, manualSegmentations]);
 
   // Calculate scale to COVER canvas - image fills 100% of container (cover behavior)
   const calculateScale = (imgWidth: number, imgHeight: number) => {
@@ -329,7 +390,65 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         height: 0,
       });
     }
+
+    if (activeTool === 'ruler') {
+      const stage = stageRef.current;
+      if (!stage) return;
+
+      const pos = stage.getPointerPosition();
+      if (!pos) return;
+
+      // Calculate image coordinates (same as bbox)
+      const relativeX = pos.x - stagePos.x;
+      const relativeY = pos.y - stagePos.y;
+      const canvasX = relativeX / stageScale;
+      const canvasY = relativeY / stageScale;
+      const x = (canvasX - imageOffset.x) / scale;
+      const y = (canvasY - imageOffset.y) / scale;
+
+      if (!rulerOrigin) {
+        // First click - set origin
+        setRulerOrigin({ x, y });
+      } else {
+        // Second click - set destination and save measurement
+        const dx = x - rulerOrigin.x;
+        const dy = y - rulerOrigin.y;
+        const distancePixels = Math.sqrt(dx * dx + dy * dy);
+
+        // Calculate DD if optic disc exists
+        const opticDisc = detections.find(
+          d => d.class === 'optic_disc' || d.class === 'optic disc'
+        );
+
+        let distanceDD: number | undefined;
+        if (opticDisc) {
+          const discDiameter = (opticDisc.bbox.width + opticDisc.bbox.height) / 2;
+          distanceDD = distancePixels / discDiameter;
+        }
+
+        // Save to database
+        db.measurements.add({
+          imageId: image.id!,
+          originX: rulerOrigin.x,
+          originY: rulerOrigin.y,
+          destinationX: x,
+          destinationY: y,
+          distancePixels,
+          distanceDD,
+          visible: true,
+          createdAt: new Date()
+        }).then(() => {
+          // Trigger parent update to reload measurements
+          onAnnotationAdded?.();
+        });
+
+        // Reset for next measurement
+        setRulerOrigin(null);
+        setRulerDestination(null);
+      }
+    }
   };
+
 
   const handleMouseMove = (_e: any) => {
     if (!isDrawing || !newAnnotation) return;
@@ -390,6 +509,124 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     }
     setIsDrawing(false);
     setIsPanning(false);
+  };
+
+  // Delete measurement
+  const handleDeleteMeasurement = async (measurementId: number) => {
+    await db.measurements.update(measurementId, { visible: false });
+    onAnnotationAdded?.();
+    setSelectedMeasurementId(null);
+  };
+
+  // Helper to get effective measurement (with temp updates if dragging)
+  const getEffectiveMeasurement = (measurement: any) => {
+    const tempUpdate = tempMeasurementUpdates.get(measurement.id);
+    if (tempUpdate) {
+      return { ...measurement, ...tempUpdate };
+    }
+    return measurement;
+  };
+
+  // Helper to calculate measurement distance and DD
+  const calculateMeasurementMetrics = (originX: number, originY: number, destX: number, destY: number) => {
+    const dx = destX - originX;
+    const dy = destY - originY;
+    const distancePixels = Math.sqrt(dx * dx + dy * dy);
+
+    let distanceDD: number | undefined;
+    const opticDisc = detections.find(
+      d => d.class === 'optic_disc' || d.class === 'optic disc'
+    );
+    if (opticDisc) {
+      const discDiameter = (opticDisc.bbox.width + opticDisc.bbox.height) / 2;
+      distanceDD = distancePixels / discDiameter;
+    }
+
+    return { distancePixels, distanceDD };
+  };
+
+  // Update measurement position during drag (temporary, visual only)
+  const handleMeasurementDragMove = (
+    measurementId: number,
+    part: 'origin' | 'destination' | 'line',
+    newPos: { x: number; y: number },
+    dragDelta?: { x: number; y: number }
+  ) => {
+    const measurement = measurements.find(m => m.id === measurementId);
+    if (!measurement) return;
+
+    let originX = measurement.originX;
+    let originY = measurement.originY;
+    let destinationX = measurement.destinationX;
+    let destinationY = measurement.destinationY;
+
+    if (part === 'origin') {
+      originX = newPos.x;
+      originY = newPos.y;
+    } else if (part === 'destination') {
+      destinationX = newPos.x;
+      destinationY = newPos.y;
+    } else if (part === 'line' && dragDelta) {
+      originX = measurement.originX + dragDelta.x;
+      originY = measurement.originY + dragDelta.y;
+      destinationX = measurement.destinationX + dragDelta.x;
+      destinationY = measurement.destinationY + dragDelta.y;
+    }
+
+    setTempMeasurementUpdates(prev => {
+      const newMap = new Map(prev);
+      newMap.set(measurementId, { originX, originY, destinationX, destinationY });
+      return newMap;
+    });
+  };
+
+  // Update measurement position permanently (on drag end)
+  const handleMeasurementDrag = async (
+    measurementId: number,
+    part: 'origin' | 'destination' | 'line',
+    newPos: { x: number; y: number },
+    dragDelta?: { x: number; y: number }
+  ) => {
+    const measurement = measurements.find(m => m.id === measurementId);
+    if (!measurement) return;
+
+    let updates: any = {};
+
+    if (part === 'origin') {
+      updates.originX = newPos.x;
+      updates.originY = newPos.y;
+    } else if (part === 'destination') {
+      updates.destinationX = newPos.x;
+      updates.destinationY = newPos.y;
+    } else if (part === 'line' && dragDelta) {
+      // Move entire line using drag delta
+      updates.originX = measurement.originX + dragDelta.x;
+      updates.originY = measurement.originY + dragDelta.y;
+      updates.destinationX = measurement.destinationX + dragDelta.x;
+      updates.destinationY = measurement.destinationY + dragDelta.y;
+    }
+
+    // Recalculate distance
+    const originX = updates.originX ?? measurement.originX;
+    const originY = updates.originY ?? measurement.originY;
+    const destX = updates.destinationX ?? measurement.destinationX;
+    const destY = updates.destinationY ?? measurement.destinationY;
+
+    const { distancePixels, distanceDD } = calculateMeasurementMetrics(originX, originY, destX, destY);
+    updates.distancePixels = distancePixels;
+    if (distanceDD !== undefined) {
+      updates.distanceDD = distanceDD;
+    }
+
+    // Clear temp updates
+    setTempMeasurementUpdates(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(measurementId);
+      return newMap;
+    });
+
+    await db.measurements.update(measurementId, updates);
+    onAnnotationAdded?.();
   };
 
   // Estado para rastrear la detección sobre la que está el mouse
@@ -586,6 +823,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         return 'zoom-in';
       case 'bbox':
       case 'circle':
+      case 'ruler':
         return 'crosshair';
       case 'eraser':
         return 'not-allowed';
@@ -673,7 +911,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           />
         </Layer>
 
-        {/* AI Detections Layer */}
+        {/* AI Detections Layer (includes AI segmentations) */}
         <Layer
           name="ai-detections-layer"
           opacity={aiDetectionsLayer?.opacity ?? 1}
@@ -702,6 +940,28 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
               listening={false}
             />
           )}
+
+          {/* AI Segmentations (optic disc masks) - rendered BEFORE detections */}
+          {segmentations.map((seg) => {
+            const segImage = segmentationImages.get(seg.id!);
+            if (!segImage || !seg.visible) return null;
+
+            return (
+              <KonvaImage
+                key={`ai-seg-${seg.id}`}
+                image={segImage}
+                x={imageOffset.x}
+                y={imageOffset.y}
+                width={konvaImage?.width || 0}
+                height={konvaImage?.height || 0}
+                scaleX={scale}
+                scaleY={scale}
+                listening={false}
+              />
+            );
+          })}
+
+          {/* AI Detections */}
           {isCanvasReady && detections.map((detection, idx) => {
             // Calcular ancho del label basado en el texto
             const translatedClass = getClassName(detection.class, i18n.language);
@@ -747,6 +1007,8 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                       if (history) {
                           history.onAdd({ type: 'delete', detection: detection });
                       }
+                      // Delete associated optic disc segmentation first
+                      await deleteOpticDiscSegmentation(detection.id);
                       await db.detections.delete(detection.id);
                       onAnnotationAdded?.();
                     } else if (activeTool === 'select' && detection.id) {
@@ -842,13 +1104,33 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           })}
         </Layer>
 
-        {/* Manual Annotations Layer */}
+        {/* Manual Annotations Layer (includes manual segmentations) */}
         <Layer
           name="manual-annotations-layer"
           opacity={manualAnnotationsLayer?.opacity ?? 1}
           visible={manualAnnotationsLayer?.visible ?? true}
           listening={true}
         >
+          {/* Manual Segmentations (optic disc masks) - rendered BEFORE annotations */}
+          {manualSegmentations.map((seg) => {
+            const segImage = segmentationImages.get(seg.id!);
+            if (!segImage || !seg.visible) return null;
+
+            return (
+              <KonvaImage
+                key={`manual-seg-${seg.id}`}
+                image={segImage}
+                x={imageOffset.x}
+                y={imageOffset.y}
+                width={konvaImage?.width || 0}
+                height={konvaImage?.height || 0}
+                scaleX={scale}
+                scaleY={scale}
+                listening={false}
+              />
+            );
+          })}
+
           {/* Saved annotations from database */}
           {isCanvasReady && manualAnnotations?.map((annotation, idx) => {
             // Para detecciones manuales de la base de datos, usamos bbox
@@ -902,6 +1184,8 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                                           if (history) {
                                               history.onAdd({ type: 'delete', detection: annotation });
                                           }
+                                          // Delete associated optic disc segmentation first
+                                          await deleteOpticDiscSegmentation(annotation.id);
                                           await db.detections.delete(annotation.id);
                                           onAnnotationAdded?.();
                                         } else if (activeTool === 'select' && annotation.id) {
@@ -1040,6 +1324,255 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
             />
           )}
         </Layer>
+
+        {/* Ruler Measurements Layer */}
+        {(measurementsLayer?.visible ?? true) && (measurements.length > 0 || (activeTool === 'ruler' && rulerOrigin)) && (
+          <Layer
+            opacity={measurementsLayer?.opacity ?? 1}
+          >
+            {/* Saved measurements */}
+            {measurements.map((measurement) => {
+              // Use effective measurement (with temp updates if dragging)
+              const effectiveMeasurement = getEffectiveMeasurement(measurement);
+              const { distancePixels, distanceDD } = calculateMeasurementMetrics(
+                effectiveMeasurement.originX,
+                effectiveMeasurement.originY,
+                effectiveMeasurement.destinationX,
+                effectiveMeasurement.destinationY
+              );
+              const measurementText = distanceDD
+                ? `${distanceDD.toFixed(2)} DD`
+                : `${distancePixels.toFixed(1)} px`;
+              const midX = (effectiveMeasurement.originX + effectiveMeasurement.destinationX) / 2 * scale + imageOffset.x;
+              const midY = (effectiveMeasurement.originY + effectiveMeasurement.destinationY) / 2 * scale + imageOffset.y;
+              const isSelected = selectedMeasurementId === measurement.id;
+              const color = isSelected ? "#f59e0b" : "#10b981";
+
+              return (
+                <Group key={`measurement-${measurement.id}`}>
+                  {/* Origin marker */}
+                  <Circle
+                    x={effectiveMeasurement.originX * scale + imageOffset.x}
+                    y={effectiveMeasurement.originY * scale + imageOffset.y}
+                    radius={6 / stageScale}
+                    fill={color}
+                    stroke="#ffffff"
+                    strokeWidth={2 / stageScale}
+                    draggable={activeTool === 'select'}
+                    onDragMove={(e) => {
+                      const x = (e.target.x() - imageOffset.x) / scale;
+                      const y = (e.target.y() - imageOffset.y) / scale;
+                      handleMeasurementDragMove(measurement.id!, 'origin', { x, y });
+                    }}
+                    onDragEnd={(e) => {
+                      const x = (e.target.x() - imageOffset.x) / scale;
+                      const y = (e.target.y() - imageOffset.y) / scale;
+                      handleMeasurementDrag(measurement.id!, 'origin', { x, y });
+                    }}
+                    onClick={(e) => {
+                      e.cancelBubble = true;
+                      if (activeTool === 'eraser') {
+                        handleDeleteMeasurement(measurement.id!);
+                      } else if (activeTool === 'select') {
+                        setSelectedMeasurementId(measurement.id!);
+                      }
+                    }}
+                    hitStrokeWidth={10}
+                  />
+
+                  {/* Line */}
+                  <Line
+                    points={[
+                      effectiveMeasurement.originX * scale + imageOffset.x,
+                      effectiveMeasurement.originY * scale + imageOffset.y,
+                      effectiveMeasurement.destinationX * scale + imageOffset.x,
+                      effectiveMeasurement.destinationY * scale + imageOffset.y,
+                    ]}
+                    stroke={color}
+                    strokeWidth={3 / stageScale}
+                    dash={[10 / stageScale, 5 / stageScale]}
+                    draggable={activeTool === 'select'}
+                    onDragMove={(e) => {
+                      const dragDelta = {
+                        x: e.target.x() / scale,
+                        y: e.target.y() / scale
+                      };
+                      handleMeasurementDragMove(measurement.id!, 'line', { x: 0, y: 0 }, dragDelta);
+                    }}
+                    onDragEnd={(e) => {
+                      // Get drag delta in image coordinates
+                      const dragDelta = {
+                        x: e.target.x() / scale,
+                        y: e.target.y() / scale
+                      };
+                      handleMeasurementDrag(measurement.id!, 'line', { x: 0, y: 0 }, dragDelta);
+                      e.target.position({ x: 0, y: 0 });
+                    }}
+                    onClick={(e) => {
+                      e.cancelBubble = true;
+                      if (activeTool === 'eraser') {
+                        handleDeleteMeasurement(measurement.id!);
+                      } else if (activeTool === 'select') {
+                        setSelectedMeasurementId(measurement.id!);
+                      }
+                    }}
+                    hitStrokeWidth={15}
+                  />
+
+                  {/* Destination marker */}
+                  <Circle
+                    x={effectiveMeasurement.destinationX * scale + imageOffset.x}
+                    y={effectiveMeasurement.destinationY * scale + imageOffset.y}
+                    radius={6 / stageScale}
+                    fill={color}
+                    stroke="#ffffff"
+                    strokeWidth={2 / stageScale}
+                    draggable={activeTool === 'select'}
+                    onDragMove={(e) => {
+                      const x = (e.target.x() - imageOffset.x) / scale;
+                      const y = (e.target.y() - imageOffset.y) / scale;
+                      handleMeasurementDragMove(measurement.id!, 'destination', { x, y });
+                    }}
+                    onDragEnd={(e) => {
+                      const x = (e.target.x() - imageOffset.x) / scale;
+                      const y = (e.target.y() - imageOffset.y) / scale;
+                      handleMeasurementDrag(measurement.id!, 'destination', { x, y });
+                    }}
+                    onClick={(e) => {
+                      e.cancelBubble = true;
+                      if (activeTool === 'eraser') {
+                        handleDeleteMeasurement(measurement.id!);
+                      } else if (activeTool === 'select') {
+                        setSelectedMeasurementId(measurement.id!);
+                      }
+                    }}
+                    hitStrokeWidth={10}
+                  />
+
+                  {/* Measurement text background */}
+                  <Text
+                    x={midX}
+                    y={midY - 10 / stageScale}
+                    text={measurementText}
+                    fontSize={14 / stageScale}
+                    fontStyle="bold"
+                    fill="#ffffff"
+                    stroke="#000000"
+                    strokeWidth={3 / stageScale}
+                    offsetX={measurementText.length * 4 / stageScale}
+                    listening={false}
+                  />
+                  {/* Measurement text foreground */}
+                  <Text
+                    x={midX}
+                    y={midY - 10 / stageScale}
+                    text={measurementText}
+                    fontSize={14 / stageScale}
+                    fontStyle="bold"
+                    fill={color}
+                    offsetX={measurementText.length * 4 / stageScale}
+                    listening={false}
+                  />
+                </Group>
+              );
+            })}
+
+            {/* Current measurement in progress */}
+            {activeTool === 'ruler' && rulerOrigin && (
+              <>
+                {/* Origin point marker */}
+                <Circle
+                  x={rulerOrigin.x * scale + imageOffset.x}
+                  y={rulerOrigin.y * scale + imageOffset.y}
+                  radius={4 / stageScale}
+                  fill="#3b82f6"
+                  stroke="#ffffff"
+                  strokeWidth={2 / stageScale}
+                />
+
+                {/* Measurement line (only if destination is set) */}
+                {rulerDestination && (
+              <>
+                <Line
+                  points={[
+                    rulerOrigin.x * scale + imageOffset.x,
+                    rulerOrigin.y * scale + imageOffset.y,
+                    rulerDestination.x * scale + imageOffset.x,
+                    rulerDestination.y * scale + imageOffset.y,
+                  ]}
+                  stroke="#3b82f6"
+                  strokeWidth={2 / stageScale}
+                  dash={[10 / stageScale, 5 / stageScale]}
+                />
+
+                {/* Destination point marker */}
+                <Circle
+                  x={rulerDestination.x * scale + imageOffset.x}
+                  y={rulerDestination.y * scale + imageOffset.y}
+                  radius={4 / stageScale}
+                  fill="#3b82f6"
+                  stroke="#ffffff"
+                  strokeWidth={2 / stageScale}
+                />
+
+                {/* Measurement text */}
+                {(() => {
+                  // Calculate distance in pixels
+                  const dx = rulerDestination.x - rulerOrigin.x;
+                  const dy = rulerDestination.y - rulerOrigin.y;
+                  const distanceInPixels = Math.sqrt(dx * dx + dy * dy);
+
+                  // Find optic disc detection to get DD reference
+                  const opticDisc = detections.find(
+                    d => d.class === 'optic_disc' || d.class === 'optic disc'
+                  );
+
+                  let measurementText = `${distanceInPixels.toFixed(1)} px`;
+
+                  if (opticDisc) {
+                    // Calculate optic disc diameter (average of width and height for more accuracy)
+                    const discDiameter = (opticDisc.bbox.width + opticDisc.bbox.height) / 2;
+                    const distanceInDD = distanceInPixels / discDiameter;
+                    measurementText = `${distanceInDD.toFixed(2)} DD`;
+                  }
+
+                  // Position text at midpoint of line
+                  const midX = (rulerOrigin.x + rulerDestination.x) / 2 * scale + imageOffset.x;
+                  const midY = (rulerOrigin.y + rulerDestination.y) / 2 * scale + imageOffset.y;
+
+                  return (
+                    <>
+                      {/* Background for text */}
+                      <Text
+                        x={midX}
+                        y={midY - 10 / stageScale}
+                        text={measurementText}
+                        fontSize={14 / stageScale}
+                        fontStyle="bold"
+                        fill="#ffffff"
+                        stroke="#000000"
+                        strokeWidth={3 / stageScale}
+                        offsetX={measurementText.length * 4 / stageScale}
+                      />
+                      {/* Foreground text */}
+                      <Text
+                        x={midX}
+                        y={midY - 10 / stageScale}
+                        text={measurementText}
+                        fontSize={14 / stageScale}
+                        fontStyle="bold"
+                        fill="#3b82f6"
+                        offsetX={measurementText.length * 4 / stageScale}
+                      />
+                    </>
+                  );
+                })()}
+              </>
+                )}
+              </>
+            )}
+          </Layer>
+        )}
 
         {/* Transformer Layer */}
         <Layer>

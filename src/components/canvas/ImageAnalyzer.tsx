@@ -23,20 +23,12 @@ import type { HistoryEntry } from '@/types/annotations';
 const DEFAULT_LAYERS: CanvasLayer[] = [
   { id: 'original', name: 'canvas.layers.original', visible: true, opacity: 1, locked: true, zIndex: 0 },
   {
-    id: 'segmentations-ai',
-    name: 'canvas.layers.ai_segmentations',
-    visible: true,
-    opacity: 0.6,
-    locked: false,
-    zIndex: 1,
-  },
-  {
     id: 'detections-ai',
     name: 'canvas.layers.ai_detections',
     visible: true,
     opacity: 1,
     locked: false,
-    zIndex: 2,
+    zIndex: 1,
     showLabels: true,
   },
   {
@@ -45,8 +37,16 @@ const DEFAULT_LAYERS: CanvasLayer[] = [
     visible: true,
     opacity: 1,
     locked: false,
-    zIndex: 3,
+    zIndex: 2,
     showLabels: true,
+  },
+  {
+    id: 'measurements',
+    name: 'canvas.layers.measurements',
+    visible: true,
+    opacity: 1,
+    locked: false,
+    zIndex: 3,
   },
 ];
 
@@ -193,9 +193,23 @@ const ImageAnalyzer: React.FC = () => {
     [imageId]
   );
 
+  const allSegmentations = useLiveQuery(
+    () => (imageId ? db.segmentations.where('imageId').equals(parseInt(imageId)).toArray() : []),
+    [imageId]
+  );
+
+  const allMeasurements = useLiveQuery(
+    () => (imageId ? db.measurements.where('imageId').equals(parseInt(imageId)).and(m => m.visible === true).toArray() : []),
+    [imageId]
+  );
+
   // Separar detecciones por tipo
   const aiDetections = allDetections?.filter((d) => d.type === 'ai') || [];
   const manualDetections = allDetections?.filter((d) => d.type === 'manual') || [];
+
+  // Separar segmentaciones por tipo
+  const aiSegmentations = allSegmentations?.filter((s) => s.type === 'ai') || [];
+  const manualSegmentations = allSegmentations?.filter((s) => s.type === 'manual') || [];
 
   const handleLayerUpdate = (layerId: string, updates: Partial<CanvasLayer>) => {
     setLayers((prev) =>
@@ -339,7 +353,9 @@ const ImageAnalyzer: React.FC = () => {
                onLayerUpdate={handleLayerUpdate}
                aiDetections={aiDetections}
                manualDetections={manualDetections}
+               measurements={allMeasurements || []}
                onDetectionsUpdate={handleAnnotationAdded}
+               onMeasurementsUpdate={handleAnnotationAdded}
                onAddToHistory={addToHistory}
              />
            </div>
@@ -356,6 +372,9 @@ const ImageAnalyzer: React.FC = () => {
                 image={image}
                 detections={aiDetections.filter((d) => d.visible)}
                 manualAnnotations={manualDetections.filter((d) => d.visible)}
+                segmentations={aiSegmentations.filter((s) => s.visible)}
+                manualSegmentations={manualSegmentations.filter((s) => s.visible)}
+                measurements={allMeasurements || []}
                 activeTool={activeTool}
                 layers={layers}
                 onAnnotationAdded={handleAnnotationAdded}
@@ -408,7 +427,9 @@ const ImageAnalyzer: React.FC = () => {
             onLayerUpdate={handleLayerUpdate}
             aiDetections={aiDetections}
             manualDetections={manualDetections}
+            measurements={allMeasurements || []}
             onDetectionsUpdate={handleAnnotationAdded}
+            onMeasurementsUpdate={handleAnnotationAdded}
             onAddToHistory={addToHistory}
           />
         </div>
