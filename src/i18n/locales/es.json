@@ -223,9 +223,11 @@
       "segment": "Segmentación",
       "eraser": "Borrador",
       "circle": "Círculo",
+      "ruler": "Regla",
       "pan": "Desplazar",
       "zoom": "Zoom",
-      "bboxInstruction": "Haz clic y arrastra para dibujar una caja de detección"
+      "bboxInstruction": "Haz clic y arrastra para dibujar una caja de detección",
+      "rulerInstruction": "Haz clic en el punto de origen, luego en el destino para medir la distancia en Diámetros de Disco (DD)"
     },
     "layers": {
       "title": "Capas",
@@ -234,6 +236,7 @@
       "ai_detections": "Detecciones IA",
       "ai_segmentations": "Segmentaciones IA",
       "manual": "Anotaciones Manuales",
+      "measurements": "Medidas",
       "show": "Mostrar capa",
       "hide": "Ocultar capa",
       "showLabels": "Mostrar etiquetas",
@@ -590,6 +593,8 @@
       "title": "Configuración de Procesamiento",
       "autoProcess": "Procesamiento Automático",
       "autoProcessDescription": "Ejecuta automáticamente el modelo al subir imágenes",
+      "opticDiscRefinement": "Segmentación de Disco Óptico",
+      "opticDiscRefinementDescription": "Genera máscara circular del disco óptico dentro del área detectada por YOLO",
       "maxImageSize": "Tamaño Máximo de Imagen",
       "maxImageSizeWithUnit": "Tamaño Máximo de Imagen ({{size}} MB)",
       "compressionQuality": "Calidad de Compresión",

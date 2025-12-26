@@ -8,6 +8,7 @@ import SessionView from '@/components/upload/SessionView';
 import ImageAnalyzer from '@/components/canvas/ImageAnalyzer';
 import { Settings } from '@/components/settings/Settings';
 import LanguageSync from '@/components/LanguageSync';
+import DocumentTitleSync from '@/components/DocumentTitleSync';
 import GlobalReportsList from '@/components/reports/GlobalReportsList';
 import SessionComparison from '@/components/patients/SessionComparison';
 import ContributionMenu from '@/components/contribution/ContributionMenu';
@@ -74,6 +75,7 @@ function App() {
       }}
     >
       <LanguageSync />
+      <DocumentTitleSync />
       <Routes>
         {/* Redirect root to patients */}
         <Route path="/" element={<Navigate to="/patients" replace />} />

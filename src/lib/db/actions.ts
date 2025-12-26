@@ -108,7 +108,7 @@ export async function deletePatient(patientId: number): Promise<void> {
     throw new Error('El paciente demo no puede ser eliminado. Solo puede ser archivado.');
   }
 
-  await db.transaction('rw', [db.patients, db.sessions, db.images], async () => {
+  await db.transaction('rw', [db.patients, db.sessions, db.images, db.detections, db.segmentations, db.reports], async () => {
     // 1. Get all sessions for the patient
     const sessionsToDelete = await db.sessions.where('patientId').equals(patientId).toArray();
     const sessionIds = sessionsToDelete.map(s => s.id!);
@@ -126,6 +126,9 @@ export async function deletePatient(patientId: number): Promise<void> {
 
       // 4. Delete all images
       await db.images.where('sessionId').anyOf(sessionIds).delete();
+
+      // 5. Delete all reports for these sessions
+      await db.reports.where('sessionId').anyOf(sessionIds).delete();
     }
 
     // 6. Delete all sessions

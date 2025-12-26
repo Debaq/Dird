@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { 
-  Eye, EyeOff, Lock, Unlock, Tag, Edit3, Trash2, ArrowUpDown
+import {
+  Eye, EyeOff, Lock, Unlock, Tag, Edit3, Trash2, ArrowUpDown, Ruler
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
-import { db, type Detection } from '@/lib/db/schema';
+import { db, type Detection, type Measurement } from '@/lib/db/schema';
 import { Button } from '@/components/ui/button';
 import { classManager } from '@/lib/classes/class-manager';
 import { getClassName } from '@/lib/ai/class-translations';
@@ -26,7 +26,9 @@ interface AdvancedLayerControlsProps {
   onLayerUpdate: (layerId: string, updates: Partial<CanvasLayer>) => void;
   aiDetections: Detection[];
   manualDetections: Detection[];
+  measurements: Measurement[];
   onDetectionsUpdate: () => void;
+  onMeasurementsUpdate?: () => void;
   onAddToHistory?: (entry: HistoryEntry) => void;
 }
 
@@ -35,7 +37,9 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
   onLayerUpdate,
   aiDetections,
   manualDetections,
+  measurements,
   onDetectionsUpdate,
+  onMeasurementsUpdate,
   onAddToHistory,
 }) => {
   const { t, i18n } = useTranslation();
@@ -58,6 +62,22 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
         return manualDetections;
       default:
         return [];
+    }
+  };
+
+  const getLayerMeasurements = (layerId: string) => {
+    if (layerId === 'measurements') {
+      return measurements;
+    }
+    return [];
+  };
+
+  const handleDeleteMeasurement = async (measurementId: number) => {
+    try {
+      await db.measurements.update(measurementId, { visible: false });
+      onMeasurementsUpdate?.();
+    } catch (error) {
+      console.error('Error deleting measurement:', error);
     }
   };
 
@@ -135,6 +155,8 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
           .sort((a, b) => b.zIndex - a.zIndex)
           .map((layer) => {
             const layerDetections = getLayerDetections(layer.id);
+            const layerMeasurements = getLayerMeasurements(layer.id);
+            const itemCount = layerDetections.length + layerMeasurements.length;
             const isExpanded = expandedLayers[layer.id] || false;
 
             return (
@@ -156,9 +178,9 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                     )}
                   >
                     {t(layer.name)}
-                    {layerDetections.length > 0 && (
+                    {itemCount > 0 && (
                       <span className="ml-2 bg-coal-100 text-coal-600 text-xs px-2 py-0.5 rounded-full">
-                        {layerDetections.length}
+                        {itemCount}
                       </span>
                     )}
                   </span>
@@ -242,7 +264,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                   </div>
                 )}
 
-                {isExpanded && layerDetections.length > 0 && (
+                {isExpanded && itemCount > 0 && (
                   <div className="mt-3 pt-3 border-t border-coal-100">
                     <div className="space-y-2 max-h-60 overflow-y-auto">
                       {layerDetections.map((detection) => (
@@ -277,6 +299,33 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                               size="sm"
                               variant="destructive"
                               onClick={() => handleDeleteDetection(detection.id!)}
+                              title={t('canvas.layers.deleteAnnotation')}
+                              className="h-8 lg:h-6 px-2"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      {layerMeasurements.map((measurement) => (
+                        <div
+                          key={`measurement-${measurement.id}`}
+                          className="p-2 bg-coal-50 rounded text-xs flex items-center justify-between group"
+                        >
+                          <div className="flex items-center">
+                            <Ruler className="w-3 h-3 mr-2 text-emerald-600" />
+                            <span className="font-medium">
+                              {measurement.distanceDD
+                                ? `${measurement.distanceDD.toFixed(2)} DD`
+                                : `${measurement.distancePixels.toFixed(1)} px`}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center space-x-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteMeasurement(measurement.id!)}
                               title={t('canvas.layers.deleteAnnotation')}
                               className="h-8 lg:h-6 px-2"
                             >

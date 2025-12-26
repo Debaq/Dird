@@ -169,9 +169,11 @@
       "segment": "Segmentation",
       "eraser": "Eraser",
       "circle": "Circle",
+      "ruler": "Ruler",
       "pan": "Pan",
       "zoom": "Zoom",
-      "bboxInstruction": "Click and drag to draw a detection box"
+      "bboxInstruction": "Click and drag to draw a detection box",
+      "rulerInstruction": "Click origin point, then click destination to measure distance in Disc Diameters (DD)"
     },
     "layers": {
       "title": "Layers",
@@ -179,7 +181,8 @@
       "original": "Original Image",
       "ai_detections": "AI Detections",
       "ai_segmentations": "AI Segmentations",
-      "manual": "Manual Annotations"
+      "manual": "Manual Annotations",
+      "measurements": "Measurements"
     }
   },
   "analysis": {
@@ -394,6 +397,8 @@
       "title": "Processing Settings",
       "autoProcess": "Automatic Processing",
       "autoProcessDescription": "Automatically run model when uploading images",
+      "opticDiscRefinement": "Optic Disc Segmentation",
+      "opticDiscRefinementDescription": "Generate circular mask of the optic disc within the YOLO detected area",
       "maxImageSize": "Max Image Size",
       "maxImageSizeWithUnit": "Max Image Size ({{size}} MB)",
       "compressionQuality": "Compression Quality",

@@ -5,6 +5,7 @@ import { db } from '@/lib/db/schema';
 import { modelDownloader } from './model-downloader';
 import { useConfigStore } from '@/stores/config-store';
 import { classManager } from '@/lib/classes/class-manager';
+import { generateOpticDiscMask, isOpenCVReady } from './optic-disc-refiner';
 
 export class InferenceService {
   private detectionModel: ONNXModelManager | null = null;
@@ -92,7 +93,68 @@ export class InferenceService {
     const modelVersion = metadata.model_info?.version || metadata.model_version || 'unknown';
     await this.saveDetections(imageId, detections, modelVersion);
 
+    // Generate optic disc segmentation masks if enabled
+    const config = useConfigStore.getState().config;
+    if (config.processing.opticDiscRefinement) {
+      await this.generateOpticDiscSegmentations(imageElement, imageId, detections, modelVersion);
+    }
+
     return detections;
+  }
+
+  /**
+   * Generate optic disc segmentation masks and save to database
+   */
+  private async generateOpticDiscSegmentations(
+    imageElement: HTMLImageElement,
+    imageId: number,
+    detections: Detection[],
+    modelVersion: string
+  ): Promise<void> {
+    // Check if OpenCV is available
+    if (!isOpenCVReady()) {
+      console.warn('OpenCV not ready, skipping optic disc segmentation');
+      return;
+    }
+
+    const now = new Date();
+
+    for (const detection of detections) {
+      // Only process optic_disc detections
+      if (detection.class === 'optic_disc' || detection.class === 'optic disc') {
+        try {
+          // Generate circular mask
+          const segmentation = await generateOpticDiscMask(
+            imageElement,
+            detection.bbox,
+            detection.confidence
+          );
+
+          if (segmentation) {
+            // Save segmentation to database
+            await db.segmentations.add({
+              imageId,
+              type: 'ai',
+              modelVersion,
+              maskData: segmentation.maskData,
+              class: 'optic_disc',
+              confidence: segmentation.circle.confidence,
+              opacity: 0.4,
+              visible: true,
+              createdAt: now
+            });
+
+            console.log(
+              `Generated optic disc mask: center=(${segmentation.circle.x.toFixed(1)}, ${segmentation.circle.y.toFixed(1)}), ` +
+              `radius=${segmentation.circle.radius.toFixed(1)}`
+            );
+          }
+
+        } catch (error) {
+          console.error('Error generating optic disc segmentation:', error);
+        }
+      }
+    }
   }
 
   private async saveDetections(

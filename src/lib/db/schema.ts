@@ -97,6 +97,19 @@ export interface Report {
   generatedAt: Date;
 }
 
+export interface Measurement {
+  id?: number;
+  imageId: number;
+  originX: number;
+  originY: number;
+  destinationX: number;
+  destinationY: number;
+  distancePixels: number;
+  distanceDD?: number;
+  visible: boolean;
+  createdAt: Date;
+}
+
 export class DirdDatabase extends Dexie {
   patients!: Table<Patient>;
   sessions!: Table<Session>;
@@ -104,6 +117,7 @@ export class DirdDatabase extends Dexie {
   detections!: Table<Detection>;
   segmentations!: Table<Segmentation>;
   reports!: Table<Report>;
+  measurements!: Table<Measurement>;
 
   constructor() {
     super('DirdDatabase');
@@ -207,6 +221,15 @@ export class DirdDatabase extends Dexie {
           session.type = 'normal';
         }
       });
+    });
+    this.version(9).stores({
+      patients: '++id, patientId, name, status, createdAt',
+      sessions: '++id, patientId, name, sessionNumber, date, locked, type',
+      images: '++id, sessionId, eyeType, uploadedAt, contributionStatus',
+      detections: '++id, imageId, type, class, visible',
+      segmentations: '++id, imageId, type, class, visible',
+      reports: '++id, sessionId, type, reportCategory, generatedAt',
+      measurements: '++id, imageId, visible, createdAt' // Added measurements table
     });
   }
 }
