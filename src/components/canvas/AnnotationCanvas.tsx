@@ -84,7 +84,6 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const [rulerOrigin, setRulerOrigin] = useState<{ x: number; y: number } | null>(null);
   const [rulerDestination, setRulerDestination] = useState<{ x: number; y: number } | null>(null);
   const [selectedMeasurementId, setSelectedMeasurementId] = useState<number | null>(null);
-  const [draggedMeasurementPart, setDraggedMeasurementPart] = useState<'origin' | 'destination' | 'line' | null>(null);
 
   // Temporary state for live measurement updates during drag
   const [tempMeasurementUpdates, setTempMeasurementUpdates] = useState<Map<number, { originX: number; originY: number; destinationX: number; destinationY: number }>>(new Map());
