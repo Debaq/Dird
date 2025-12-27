@@ -18,6 +18,9 @@ import { initializeDemoPatient, demoPatientExists, type LoadingProgress } from '
 import { DemoLoadingScreen } from '@/components/demo/DemoLoadingScreen';
 import { useTokenStore } from '@/stores/token-store';
 import { fetchTokens } from '@/lib/api/token-service';
+import AdminDashboard from '@/pages/AdminDashboard';
+import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
+import { useMessagePolling } from '@/hooks/useMessagePolling';
 
 function App() {
   const { t } = useTranslation();
@@ -30,6 +33,12 @@ function App() {
     message: t('demo.loading.steps.init'),
   });
   const setTokens = useTokenStore((state) => state.setTokens);
+
+  // Message polling hook for admin broadcast messages
+  const { ConfirmDialogComponent } = useMessagePolling({
+    intervalMs: 120000, // 2 minutes
+    enabled: !isInitializing, // Only start polling after initialization
+  });
 
   // Inicializar paciente demo y cargar tokens al inicio
   useEffect(() => {
@@ -194,8 +203,21 @@ function App() {
           }
         />
 
+        {/* Admin Dashboard */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="*" element={<Navigate to="/patients" replace />} />
       </Routes>
+
+      {/* Message Polling Confirm Dialog */}
+      {ConfirmDialogComponent}
     </BrowserRouter>
   );
 }

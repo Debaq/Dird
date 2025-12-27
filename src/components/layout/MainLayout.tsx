@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Users, Settings, FileText, Coffee, Star, GraduationCap } from 'lucide-react';
@@ -9,6 +9,7 @@ import { useTokenStore } from '@/stores/token-store';
 import { db } from '@/lib/db/schema';
 import { getAssetPath } from '@/utils/assets';
 import TokenCounter from '@/components/tokens/TokenCounter';
+import { TokenInfoModal } from '@/components/tokens/TokenInfoModal';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
   const { t } = useTranslation();
   const location = useLocation();
   const tokens = useTokenStore((state) => state.tokens);
+  const [showTokenInfo, setShowTokenInfo] = useState(false);
 
   const pendingContributions = useLiveQuery(
     () => db.images.where('contributionStatus').equals('pending').count()
@@ -60,7 +62,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
             </Link>
 
             {/* Token Counter */}
-            <TokenCounter tokens={tokens} />
+            <div
+              onClick={() => setShowTokenInfo(true)}
+              className="cursor-pointer transition-transform hover:scale-105"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  setShowTokenInfo(true);
+                }
+              }}
+            >
+              <TokenCounter tokens={tokens} />
+            </div>
           </div>
         </div>
       </header>
@@ -110,16 +124,22 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
       </nav>
 
       {/* Main Content */}
-      <main 
+      <main
         className={cn(
           "flex-grow dark:bg-gray-900",
-          fullScreenOnMobile 
-            ? "lg:container lg:mx-auto lg:px-4 lg:py-6" 
+          fullScreenOnMobile
+            ? "lg:container lg:mx-auto lg:px-4 lg:py-6"
             : "container mx-auto px-4 py-6"
         )}
       >
         {children}
       </main>
+
+      {/* Token Info Modal */}
+      <TokenInfoModal
+        open={showTokenInfo}
+        onOpenChange={setShowTokenInfo}
+      />
     </div>
   );
 };
