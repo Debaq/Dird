@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { db, type Image } from '@/lib/db/schema';
+import { API_ENDPOINTS } from '@/config/api';
 
 const ImageThumbnail: React.FC<{ image: Image }> = ({ image }) => {
   const [src, setSrc] = useState<string>('');
@@ -82,12 +83,7 @@ const ContributionMenu: React.FC = () => {
             formData.append('json', jsonBlob, `${img.filename.split('.')[0]}.json`);
 
             // Determine API URL based on environment
-            const baseUrl = import.meta.env.BASE_URL || '/';
-            // Ensure baseUrl starts and ends with /
-            const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-            const apiUrl = `${normalizedBase}backend/receive_contribution.php`;
-
-            const response = await fetch(apiUrl, {
+            const response = await fetch(API_ENDPOINTS.CONTRIBUTE, {
                 method: 'POST',
                 body: formData
             });

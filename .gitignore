@@ -10,8 +10,16 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-dird    
+dird
 *.local
+
+# Environment variables (solo archivos locales personales)
+.env.local
+.env.development.local
+.env.production.local
+
+# Backend data (generado dinámicamente)
+backend/tokens.json
 
 # Editor directories and files
 .vscode/*
