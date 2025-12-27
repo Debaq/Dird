@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "node scripts/generate-version.cjs && tsc && vite build",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "check-config": "node scripts/check-config.cjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

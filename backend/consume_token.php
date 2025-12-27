@@ -1,9 +1,8 @@
 <?php
 /**
- * Consume Token API - Decrements token count when generating a report
- *
- * For now, simulates token consumption
- * Future versions will implement user authentication and database storage
+ * Process Conclusion API - Processes conclusion data and returns enhanced JSON
+ * This endpoint receives the report data, processes it, and returns the same JSON
+ * with a "processed" comment for verification
  */
 
 header('Content-Type: application/json');
@@ -30,12 +29,75 @@ try {
     // Get request body
     $input = json_decode(file_get_contents('php://input'), true);
 
-    // For now, just return success
-    // In the future, this will decrement the token count in the database
+    if (!$input) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Invalid JSON'
+        ]);
+        exit();
+    }
+
+    // Validate required fields
+    if (!isset($input['installation_token'])) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Missing installation_token'
+        ]);
+        exit();
+    }
+
+    if (!isset($input['report_data'])) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Missing report_data'
+        ]);
+        exit();
+    }
+
+    // Extract data
+    $installationToken = $input['installation_token'];
+    $reportData = $input['report_data'];
+
+    // Process the data (for now, just add a processing comment)
+    // In the future, this could:
+    // - Analyze the data with AI
+    // - Generate insights
+    // - Validate the data
+    // - etc.
+
+    $processedData = $reportData;
+
+    // Add processing metadata
+    $processedData['_processing'] = [
+        'status' => 'processed',
+        'comment' => 'Datos procesados exitosamente por el backend',
+        'timestamp' => date('Y-m-d H:i:s'),
+        'server_version' => '1.0.0',
+        'suggestions' => [
+            'El reporte contiene información válida',
+            'Los datos están bien estructurados',
+            'Procesamiento completado correctamente'
+        ]
+    ];
+
+    // Count detections for additional info
+    $detectionCount = isset($reportData['detections']) ? count($reportData['detections']) : 0;
+    $imageCount = isset($reportData['images']) ? count($reportData['images']) : 0;
+
+    $processedData['_processing']['stats'] = [
+        'total_images' => $imageCount,
+        'total_detections' => $detectionCount,
+        'patient_name' => $reportData['patient']['name'] ?? 'Unknown'
+    ];
+
+    // Return processed data
     $response = [
         'success' => true,
-        'message' => 'Token consumed successfully',
-        'remainingTokens' => 4, // Simulated remaining tokens
+        'message' => 'Conclusion processed successfully',
+        'processed_data' => $processedData,
         'timestamp' => time()
     ];
 

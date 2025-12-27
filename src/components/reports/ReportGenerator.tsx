@@ -18,7 +18,7 @@ import type { ReportType } from '@/lib/pdf/report-generator';
 import { db } from '@/lib/db/schema';
 import { isDemoPreviewSession } from '@/lib/db/demoPatient';
 import { useTokenStore } from '@/stores/token-store';
-import { fetchTokens } from '@/lib/api/token-service';
+import { processConclusion, confirmProcessing } from '@/lib/api/token-service';
 
 interface ReportGeneratorProps {
   sessionId: number;
@@ -35,7 +35,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
   const [evaluatorNotes, setEvaluatorNotes] = useState('');
   const [generating, setGenerating] = useState(false);
   const [reportType, setReportType] = useState<ReportType>('preview');
-  const { tokens, setTokens, decrementTokens } = useTokenStore();
+  const { tokens, setTokens } = useTokenStore();
 
   const handleGenerateReport = async (type: ReportType) => {
     // Check if user has tokens before generating
@@ -47,6 +47,94 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
     setGenerating(true);
     setReportType(type);
     try {
+      // 1. Gather report data for backend processing
+      const session = await db.sessions.get(sessionId);
+      if (!session) throw new Error('Session not found');
+
+      const patient = await db.patients.get(session.patientId);
+      if (!patient) throw new Error('Patient not found');
+
+      const images = await db.images.where('sessionId').equals(sessionId).toArray();
+      const allDetections = await Promise.all(
+        images.map((img) => db.detections.where('imageId').equals(img.id!).toArray())
+      );
+      const detections = allDetections.flat();
+
+      const allSegmentations = await Promise.all(
+        images.map((img) => db.segmentations.where('imageId').equals(img.id!).toArray())
+      );
+      const segmentations = allSegmentations.flat();
+
+      const allMeasurements = await Promise.all(
+        images.map((img) => db.measurements.where('imageId').equals(img.id!).toArray())
+      );
+      const measurements = allMeasurements.flat();
+
+      // Prepare report data for backend (remove Blobs for JSON serialization)
+      const reportDataForBackend = {
+        patient: {
+          id: patient.id,
+          patientId: patient.patientId,
+          name: patient.name,
+          dateOfBirth: patient.dateOfBirth,
+        },
+        session: {
+          id: session.id,
+          sessionNumber: session.sessionNumber,
+          date: session.date,
+          notes: session.notes,
+        },
+        images: images.map(img => ({
+          id: img.id,
+          filename: img.filename,
+          width: img.width,
+          height: img.height,
+        })),
+        detections: detections.map(d => ({
+          id: d.id,
+          imageId: d.imageId,
+          type: d.type,
+          bbox: d.bbox,
+          class: d.class,
+          confidence: d.confidence,
+        })),
+        segmentations: segmentations.map(s => ({
+          id: s.id,
+          imageId: s.imageId,
+          type: s.type,
+          class: s.class,
+          confidence: s.confidence,
+        })),
+        measurements: measurements.map(m => ({
+          id: m.id,
+          imageId: m.imageId,
+          distancePixels: m.distancePixels,
+          distanceDD: m.distanceDD,
+        })),
+        evaluatorNotes,
+        reportType: type,
+      };
+
+      // 2. Send to backend for processing
+      console.log('📤 Sending report data to backend for processing...');
+      const processedData = await processConclusion(reportDataForBackend);
+
+      // 3. Validate processed data
+      if (!processedData || !processedData._processing) {
+        throw new Error('Invalid processed data received from server');
+      }
+
+      console.log('✅ Processed data received:', processedData._processing.comment);
+      console.log('📊 Stats:', processedData._processing.stats);
+
+      // Show processing results to user
+      if (processedData._processing.suggestions && processedData._processing.suggestions.length > 0) {
+        processedData._processing.suggestions.forEach((suggestion: string) => {
+          console.log('💡', suggestion);
+        });
+      }
+
+      // 4. Generate PDF with the original data
       const pdfBlob = await generateSessionReport(sessionId, type, evaluatorNotes);
 
       // Check if a report of the same type already exists for this session
@@ -98,18 +186,16 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         }
       }
 
-      // Consume token and refresh token count from server
-      decrementTokens();
-      try {
-        const updatedTokens = await fetchTokens();
-        setTokens(updatedTokens);
-      } catch (error) {
-        console.error('Error refreshing tokens:', error);
-      }
+      // 5. Confirm successful processing to backend (this consumes the token)
+      console.log('✅ Confirming successful processing...');
+      const remainingTokens = await confirmProcessing();
+
+      // 6. Update local token count
+      setTokens(remainingTokens);
 
       setShowDialog(false);
       onReportGenerated?.();
-      toast.success(t('reports.generated'));
+      toast.success(t('reports.generated') + ` (Tokens restantes: ${remainingTokens})`);
     } catch (error) {
       console.error('Error generating report:', error);
       toast.error(t('errors.unknown'));
