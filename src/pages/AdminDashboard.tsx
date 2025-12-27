@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, LogOut, Image, Users, MessageSquare, Radio, Settings, Bot } from 'lucide-react';
+import { Shield, LogOut, Image, Users, MessageSquare, Radio, Settings, Bot, FileText } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { InstallationsList } from '@/components/admin/InstallationsList';
@@ -9,6 +9,7 @@ import { BeaconMonitor } from '@/components/admin/BeaconMonitor';
 import { ContributionsList } from '@/components/admin/ContributionsList';
 import { ChangePasswordForm } from '@/components/admin/ChangePasswordForm';
 import { AIConfiguration } from '@/components/admin/AIConfiguration';
+import { LogsViewer } from '@/components/admin/LogsViewer';
 import { logoutAdmin } from '@/lib/api/admin-service';
 import { toast } from 'sonner';
 
@@ -57,7 +58,7 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-grid">
             <TabsTrigger value="installations" className="gap-2">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Instalaciones</span>
@@ -77,6 +78,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="ai" className="gap-2">
               <Bot className="w-4 h-4" />
               <span className="hidden sm:inline">IA / Groq</span>
+            </TabsTrigger>
+            <TabsTrigger value="logs" className="gap-2">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Logs</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="w-4 h-4" />
@@ -102,6 +107,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="ai" className="space-y-4">
             <AIConfiguration />
+          </TabsContent>
+
+          <TabsContent value="logs" className="space-y-4">
+            <LogsViewer />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4">
