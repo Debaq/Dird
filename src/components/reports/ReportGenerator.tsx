@@ -36,7 +36,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
   const [showDialog, setShowDialog] = useState(false);
   const [evaluatorNotes, setEvaluatorNotes] = useState('');
   const [generating, setGenerating] = useState(false);
-  const [reportType, setReportType] = useState<ReportType>('preview');
+  const [previewGenerated, setPreviewGenerated] = useState(false);
   const { tokens, setTokens } = useTokenStore();
 
   const handleGenerateReport = async (type: ReportType) => {
@@ -48,7 +48,6 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
     }
 
     setGenerating(true);
-    setReportType(type);
     try {
       // 1. Gather report data
       const session = await db.sessions.get(sessionId);
@@ -231,16 +230,33 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         }
       }
 
-      setShowDialog(false);
-      onReportGenerated?.();
-      
-      if (noTokensMode) {
-        toast.warning(t('reports.generatedOffline', { defaultValue: 'Informe generado en modo offline.' }));
-      } else if (tokensConsumed) {
-        toast.success(t('reports.generated') + ` (Tokens restantes: ${tokens - 1})`);
+      // Close dialog only if final report
+      if (type === 'final') {
+        setShowDialog(false);
+        onReportGenerated?.();
+
+        if (noTokensMode) {
+          toast.success(t('reports.generated') + ' ' + t('reports.generatedOffline'));
+        } else if (tokensConsumed) {
+          toast.success(t('reports.generated') + ` (Tokens restantes: ${tokens - 1})`);
+        } else {
+          toast.success(t('reports.generated'));
+        }
       } else {
-        // Tokens available but not consumed (e.g. AI quota limit reached)
-        toast.success(t('reports.generated'));
+        // Preview generated successfully
+        setPreviewGenerated(true);
+
+        if (noTokensMode) {
+          toast.success(t('reports.previewGenerated') + ' (' + t('reports.generatedOffline') + ')');
+        } else if (tokensConsumed) {
+          toast.success(t('reports.previewGenerated') + ` (Tokens restantes: ${tokens - 1})`);
+        } else {
+          toast.success(t('reports.previewGenerated'));
+        }
+
+        // Close dialog and refresh to show the preview in the list
+        setShowDialog(false);
+        onReportGenerated?.();
       }
       
     } catch (error) {
@@ -251,10 +267,45 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
     }
   };
 
+  const handleOpenDialog = async () => {
+    setShowDialog(true);
+
+    // Check if a preview report already exists for this session
+    const existingPreview = await db.reports
+      .where({ sessionId: sessionId, type: 'preview' })
+      .first();
+
+    if (existingPreview) {
+      // Preview already exists, show options to regenerate or finalize
+      setPreviewGenerated(true);
+    } else {
+      // No preview yet, show only generate preview option
+      setPreviewGenerated(false);
+    }
+  };
+
+  const handleDeletePreview = async () => {
+    try {
+      const existingPreview = await db.reports
+        .where({ sessionId: sessionId, type: 'preview' })
+        .first();
+
+      if (existingPreview) {
+        await db.reports.delete(existingPreview.id!);
+        setPreviewGenerated(false);
+        toast.success('Vista previa eliminada');
+        onReportGenerated?.(); // Refresh reports list
+      }
+    } catch (error) {
+      console.error('Error deleting preview:', error);
+      toast.error('Error al eliminar la vista previa');
+    }
+  };
+
   return (
     <>
-      <Button 
-        onClick={() => setShowDialog(true)} 
+      <Button
+        onClick={handleOpenDialog}
         className="flex items-center justify-center gap-2 h-auto min-h-[40px] py-2 whitespace-normal text-center leading-tight w-full sm:w-auto"
       >
         <FileText className="w-4 h-4 flex-shrink-0" />
@@ -285,90 +336,170 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                 placeholder={t('reports.evaluatorNotesPlaceholder')}
                 rows={5}
                 className="resize-none"
+                disabled={generating || previewGenerated}
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Preview Report Card */}
-              <div className="flex flex-col p-4 rounded-xl border border-coal-200 bg-coal-50/50 hover:border-primary-300 transition-all group">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 rounded-lg bg-white border border-coal-200 group-hover:border-primary-200">
-                    <FileText className="w-4 h-4 text-primary-500" />
+            {!previewGenerated ? (
+              <>
+                {/* No preview exists - Show only generate preview option */}
+                <div className="flex flex-col p-5 rounded-xl border-2 border-primary-200 bg-gradient-to-br from-primary-50/50 to-white">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 rounded-lg bg-primary-500 text-white">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-coal-800 text-base">
+                        {t('reports.preview')}
+                      </h4>
+                      <p className="text-xs text-smoke-600">
+                        Con procesamiento IA de conclusión
+                      </p>
+                    </div>
                   </div>
-                  <h4 className="font-bold text-coal-800 text-sm">
-                    {t('reports.preview')}
-                  </h4>
+                  <p className="text-sm text-smoke-700 mb-4 leading-relaxed">
+                    {t('reports.previewDescription')}
+                  </p>
+                  <Button
+                    size="lg"
+                    className="w-full bg-primary-600 hover:bg-primary-700 text-white"
+                    onClick={() => handleGenerateReport('preview')}
+                    disabled={generating}
+                  >
+                    {generating ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        {t('reports.processingWithAI')}
+                      </>
+                    ) : (
+                      <>
+                        <FileText className="w-4 h-4 mr-2" />
+                        {t('reports.previewButton')}
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <p className="text-xs text-smoke-600 mb-4 flex-grow">
-                  {t('reports.previewDescription')}
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full bg-white"
-                  onClick={() => handleGenerateReport('preview')}
-                  disabled={generating}
-                >
-                  {generating && reportType === 'preview' ? (
-                    t('ui.loading')
-                  ) : (
-                    <>
-                      <FileText className="w-3.5 h-3.5 mr-2" />
-                      {t('reports.previewButton')}
-                    </>
-                  )}
-                </Button>
-              </div>
 
-              {/* Final Report Card */}
-              <div className="flex flex-col p-4 rounded-xl border border-accent-100 bg-accent-50/30 hover:border-accent-400 transition-all group">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 rounded-lg bg-white border border-accent-100 group-hover:border-accent-200">
-                    <Lock className="w-4 h-4 text-accent-500" />
+                {/* Important Note */}
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 border border-blue-100">
+                  <AlertCircle className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
+                  <p className="text-[11px] text-blue-800 leading-tight">
+                    <strong>{t('reports.importantNoteTitle')}</strong> {t('reports.importantNoteBody')}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Preview exists - Show options */}
+                <div className="flex items-start gap-3 p-4 rounded-lg bg-green-50 border-2 border-green-200">
+                  <CheckCircle className="w-6 h-6 text-green-500 mt-0.5 shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-green-800 mb-1">
+                      ✓ Ya existe una vista previa para esta sesión
+                    </p>
+                    <p className="text-xs text-green-700 leading-relaxed">
+                      Puede revisar la vista previa en la lista de informes. Elija una opción a continuación:
+                    </p>
                   </div>
-                  <h4 className="font-bold text-coal-800 text-sm">
-                    {t('reports.finalize')}
-                  </h4>
                 </div>
-                <p className="text-xs text-smoke-600 mb-4 flex-grow">
-                  {t('reports.finalizeDescription')}
-                </p>
-                <Button
-                  size="sm"
-                  className="w-full bg-accent-500 hover:bg-accent-600 text-white"
-                  onClick={async () => {
-                    const confirmed = await confirm({
-                      title: t('confirmations.finalizeReportTitle') || t('reports.finalize'),
-                      description: t('reports.finalWarning'),
-                      confirmText: t('common.confirm'),
-                      cancelText: t('common.cancel'),
-                      variant: 'warning',
-                    });
 
-                    if (confirmed) {
-                      handleGenerateReport('final');
-                    }
-                  }}
-                  disabled={generating}
-                >
-                  {generating && reportType === 'final' ? (
-                    t('ui.loading')
-                  ) : (
-                    <>
-                      <CheckCircle className="w-3.5 h-3.5 mr-2" />
-                      {t('reports.finalize')}
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Option 1: Regenerate Preview */}
+                  <div className="flex flex-col p-4 rounded-xl border-2 border-amber-200 bg-amber-50/50 hover:border-amber-300 transition-all">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="p-1.5 rounded-lg bg-amber-500 text-white">
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      <h4 className="font-bold text-coal-800 text-sm">
+                        Regenerar Preview
+                      </h4>
+                    </div>
+                    <p className="text-xs text-smoke-600 mb-4 flex-grow">
+                      Elimina la vista previa actual y genera una nueva con las notas actualizadas.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-amber-300 hover:bg-amber-100"
+                      onClick={async () => {
+                        const confirmed = await confirm({
+                          title: '¿Regenerar vista previa?',
+                          description: 'Se eliminará la vista previa actual y se generará una nueva. ¿Desea continuar?',
+                          confirmText: t('common.confirm'),
+                          cancelText: t('common.cancel'),
+                          variant: 'warning',
+                        });
 
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-100">
-              <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
-              <p className="text-[11px] text-amber-800 leading-tight">
-                <strong>{t('reports.importantNoteTitle')}</strong> {t('reports.importantNoteBody')}
-              </p>
-            </div>
+                        if (confirmed) {
+                          await handleDeletePreview();
+                          await handleGenerateReport('preview');
+                        }
+                      }}
+                      disabled={generating}
+                    >
+                      {generating ? (
+                        t('ui.loading')
+                      ) : (
+                        <>
+                          <FileText className="w-3.5 h-3.5 mr-2" />
+                          Regenerar
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Option 2: Finalize Report */}
+                  <div className="flex flex-col p-4 rounded-xl border-2 border-accent-200 bg-accent-50/50 hover:border-accent-300 transition-all">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="p-1.5 rounded-lg bg-accent-500 text-white">
+                        <Lock className="w-4 h-4" />
+                      </div>
+                      <h4 className="font-bold text-coal-800 text-sm">
+                        {t('reports.finalize')}
+                      </h4>
+                    </div>
+                    <p className="text-xs text-smoke-600 mb-4 flex-grow">
+                      Genera el informe final y bloquea la sesión permanentemente. No podrá realizar más cambios.
+                    </p>
+                    <Button
+                      size="sm"
+                      className="w-full bg-accent-500 hover:bg-accent-600 text-white"
+                      onClick={async () => {
+                        const confirmed = await confirm({
+                          title: t('confirmations.finalizeReportTitle') || t('reports.finalize'),
+                          description: t('reports.finalWarning'),
+                          confirmText: t('common.confirm'),
+                          cancelText: t('common.cancel'),
+                          variant: 'warning',
+                        });
+
+                        if (confirmed) {
+                          handleGenerateReport('final');
+                        }
+                      }}
+                      disabled={generating}
+                    >
+                      {generating ? (
+                        t('ui.loading')
+                      ) : (
+                        <>
+                          <CheckCircle className="w-3.5 h-3.5 mr-2" />
+                          Finalizar
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Warning Note */}
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-100">
+                  <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+                  <p className="text-[11px] text-amber-800 leading-tight">
+                    <strong>⚠️ Advertencia:</strong> Al finalizar el informe, la sesión quedará bloqueada y no podrá realizar más modificaciones.
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>

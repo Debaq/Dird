@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { 
-  Save, Key, Cpu, MessageSquare, Play, RefreshCw, Trash2, Edit2, Check 
+import {
+  Save, Key, Cpu, MessageSquare, Play, RefreshCw, Trash2, Edit2, Check, BarChart2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -33,8 +33,10 @@ import {
   getAIConfig, 
   saveAIConfig, 
   testAIConfig, 
+  getAIStats,
   type AIConfig, 
-  type AIModel 
+  type AIModel,
+  type AIStats
 } from '@/lib/api/ai-config-service';
 
 export function AIConfiguration() {
@@ -50,6 +52,10 @@ export function AIConfiguration() {
 
   // Test State
   const [testResult, setTestResult] = useState<any>(null);
+
+  // Stats State
+  const [stats, setStats] = useState<AIStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
 
   // Model Editing State
   const [isEditingModel, setIsEditingModel] = useState(false);
@@ -107,6 +113,19 @@ export function AIConfiguration() {
       toast.error(error.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+        setLoadingStats(true);
+        const data = await getAIStats();
+        setStats(data);
+    } catch (error) {
+        console.error('Failed to load stats', error);
+        toast.error('No se pudieron cargar las estadísticas');
+    } finally {
+        setLoadingStats(false);
     }
   };
 
@@ -332,13 +351,19 @@ export function AIConfiguration() {
         </Card>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={(val) => {
+        setActiveTab(val);
+        if (val === 'stats') loadStats();
+      }} className="w-full">
         <TabsList>
             <TabsTrigger value="prompt" className="gap-2">
                 <MessageSquare className="w-4 h-4" /> System Prompt
             </TabsTrigger>
             <TabsTrigger value="test" className="gap-2">
                 <Play className="w-4 h-4" /> Probador / Playground
+            </TabsTrigger>
+            <TabsTrigger value="stats" className="gap-2">
+                <BarChart2 className="w-4 h-4" /> Estadísticas
             </TabsTrigger>
         </TabsList>
         
@@ -385,6 +410,90 @@ export function AIConfiguration() {
                     )}
                 </CardContent>
             </Card>
+        </TabsContent>
+
+        <TabsContent value="stats">
+            <div className="grid gap-6">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-2xl font-bold">{stats?.summary.total_requests ?? 0}</div>
+                            <p className="text-xs text-muted-foreground">Peticiones Totales</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-2xl font-bold">{stats?.summary.total_tokens.toLocaleString() ?? 0}</div>
+                            <p className="text-xs text-muted-foreground">Tokens Totales</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-2xl font-bold text-blue-600">{stats?.summary.total_prompt_tokens.toLocaleString() ?? 0}</div>
+                            <p className="text-xs text-muted-foreground">Input Tokens</p>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="text-2xl font-bold text-green-600">{stats?.summary.total_completion_tokens.toLocaleString() ?? 0}</div>
+                            <p className="text-xs text-muted-foreground">Output Tokens</p>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* History Table */}
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Historial Reciente</CardTitle>
+                            <CardDescription>Últimas 100 interacciones con la API</CardDescription>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={loadStats} disabled={loadingStats}>
+                            <RefreshCw className={`w-4 h-4 ${loadingStats ? 'animate-spin' : ''}`} />
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="rounded-md border">
+                            <div className="grid grid-cols-6 gap-4 p-4 border-b font-medium text-sm bg-slate-50 dark:bg-slate-900">
+                                <div className="col-span-2">Fecha</div>
+                                <div>Contexto</div>
+                                <div>Modelo</div>
+                                <div className="text-right">Tokens</div>
+                                <div className="text-right">Costo Est.</div>
+                            </div>
+                            <div className="max-h-[400px] overflow-y-auto">
+                                {loadingStats ? (
+                                    <div className="p-8 text-center text-muted-foreground">Cargando...</div>
+                                ) : stats?.history.length === 0 ? (
+                                    <div className="p-8 text-center text-muted-foreground">No hay registros aún</div>
+                                ) : (
+                                    stats?.history.map((item) => (
+                                        <div key={item.id} className="grid grid-cols-6 gap-4 p-3 border-b last:border-0 text-sm hover:bg-slate-50 dark:hover:bg-slate-800">
+                                            <div className="col-span-2 text-xs text-muted-foreground">{item.date}</div>
+                                            <div>
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+                                                    item.context === 'production_report' 
+                                                        ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                                                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                                                }`}>
+                                                    {item.context === 'production_report' ? 'Reporte' : 'Test'}
+                                                </span>
+                                            </div>
+                                            <div className="text-xs truncate" title={item.model}>{item.model}</div>
+                                            <div className="text-right font-mono">{item.tokens.total_tokens}</div>
+                                            <div className="text-right font-mono text-muted-foreground text-xs">
+                                                {/* Rough estimate based on mixed pricing, purely visual */}
+                                                ${((item.tokens.total_tokens / 1000) * 0.001).toFixed(5)}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
         </TabsContent>
       </Tabs>
 

@@ -44,6 +44,11 @@
     "save": "Guardar",
     "cancel": "Cancelar"
   },
+  "common": {
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar"
+  },
   "errors": {
     "savePatient": "Error al guardar el paciente",
     "saveSession": "Error al guardar la sesión",
@@ -56,14 +61,17 @@
     "duplicateSession": "Error al duplicar la sesión.",
     "import": "Error de Importación",
     "deletePatient": "Error al eliminar el paciente.",
-    "archivePatient": "Error al {{action}} el paciente."
+    "archivePatient": "Error al {{action}} el paciente.",
+    "processingImages": "Error procesando imágenes: {{error}}"
   },
   "confirmations": {
     "deleteImage": "¿Estás seguro de que quieres eliminar esta imagen y todos sus análisis asociados?",
     "deleteSession": "¿Estás seguro de que quieres eliminar esta sesión y todos sus datos? Esta acción es irreversible.",
     "duplicateSession": "¿Estás seguro de que deseas duplicar esta sesión? Esta acción creará una copia con los mismos elementos pero desbloqueada.",
     "deletePatient": "¿Estás seguro de que quieres eliminar este paciente y todos sus datos? Esta acción es irreversible.",
-    "archivePatient": "¿Estás seguro de que quieres {{action}} este paciente?"
+    "archivePatient": "¿Estás seguro de que quieres {{action}} este paciente?",
+    "deleteReportTitle": "Eliminar Informe",
+    "finalizeReportTitle": "Finalizar Informe"
   },
   "patients": {
     "title": "Pacientes",
@@ -188,7 +196,10 @@
     "reportHistory": {
         "title": "Historial de Informes",
         "description": "Todos los informes generados para esta sesión"
-    }
+    },
+    "duplicate": "Duplicar Sesión",
+    "duplicateSuccess": "Sesión duplicada exitosamente",
+    "compareSuccess": "Sesión combinada creada exitosamente"
   },
   "upload": {
     "selectEye": "Seleccionar ojo:",
@@ -219,6 +230,7 @@
       "processingAI": "Procesando IA...",
       "detectedCount": "detectadas",
       "deleteImage": "Eliminar imagen",
+      "deleteImageSuccess": "Imagen eliminada exitosamente",
       "reprocessAI": "Reprocesar con IA",
       "moveToRight": "A Ojo Derecho",
       "moveToLeft": "A Ojo Izquierdo"
@@ -413,6 +425,10 @@
     "finalizeDescription": "Genera el informe clínico oficial. Bloquea la sesión permanentemente para garantizar la integridad de los datos.",
     "importantNoteTitle": "Importante:",
     "importantNoteBody": "Los informes generados se guardan localmente en la base de datos del navegador. Puede acceder a ellos desde la pestaña \"Reporte\" de esta sesión en cualquier momento.",
+    "generated": "Informe generado exitosamente",
+    "processingWithAI": "Procesando con IA...",
+    "previewGenerated": "Vista preliminar generada",
+    "approveAndFinalize": "Aprobar y Finalizar",
     "status": {
       "preliminary": "VERSIÓN PRELIMINAR",
       "final": "INFORME FINAL"
@@ -445,7 +461,8 @@
         "all": "Todas las categorías",
         "single": "Sesiones únicas",
         "combined": "Sesiones combinadas"
-      }
+      },
+      "deleteSuccess": "Informe eliminado exitosamente"
     }
   },
   "models": {
@@ -469,7 +486,9 @@
     "exporting": "Exportando...",
     "dragAndDrop": "O arrastra y suelta aquí",
     "errorPatient": "Error al exportar el paciente",
-    "errorData": "Error al exportar los datos"
+    "errorData": "Error al exportar los datos",
+    "patientSuccess": "Paciente exportado exitosamente",
+    "sessionSuccess": "Sesión exportada exitosamente"
   },
   "import": {
     "title": "Importar .dird",
@@ -759,7 +778,7 @@
       "success": "¡Gracias! Se enviaron {{count}} imágenes exitosamente.",
       "failedCount": " ({{count}} fallaron)",
       "error": "Hubo un error al enviar las imágenes. Por favor revisa la consola o intenta más tarde.",
-      "generalError": "Error general al enviar la contribución",
+      "generalError": "Error general al enviar la contribación",
       "submit": "Enviar {{count}} Imágenes"
     },
     "feedback": {
