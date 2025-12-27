@@ -179,6 +179,12 @@
     "eye": {
       "left": "Ojo Izquierdo (OI)",
       "right": "Ojo Derecho (OD)"
+    },
+    "gallery": {
+      "imageLoadError": "Error al cargar imagen",
+      "viewImage": "Ver imagen",
+      "viewDetections": "Ver detecciones ({{count}})",
+      "processingAI": "Procesando..."
     }
   },
   "ui": {

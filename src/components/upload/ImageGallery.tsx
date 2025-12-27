@@ -56,6 +56,7 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
     const navigate = useNavigate();
     const [detectionCount, setDetectionCount] = React.useState(0);
     const [isReprocessing, setIsReprocessing] = React.useState(false);
+    const [imageError, setImageError] = React.useState(false);
     const { t } = useTranslation();
 
     React.useEffect(() => {
@@ -63,6 +64,10 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
         db.detections.where('imageId').equals(image.id!).count().then(setDetectionCount);
       }
     }, [image.id, refreshKey, isReprocessing]);
+
+    React.useEffect(() => {
+      setImageError(false);
+    }, [thumbnail]);
 
     const handleViewImage = (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -126,14 +131,25 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
           className="aspect-square overflow-hidden bg-coal-50 cursor-pointer relative"
           onClick={handleViewImage}
         >
-          {thumbnail ? (
+          {thumbnail && !imageError ? (
             <img
               src={thumbnail}
               alt={image.filename}
               className="w-full h-full object-cover"
               loading="lazy"
               decoding="async"
+              onError={(e) => {
+                console.error(`Image load error for ${image.filename}:`, e);
+                setImageError(true);
+              }}
             />
+          ) : imageError ? (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-coal-100 text-smoke-500 p-4">
+              <svg className="w-12 h-12 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="text-xs text-center">{t('upload.gallery.imageLoadError')}</span>
+            </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-coal-100">
               <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
@@ -299,16 +315,46 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, patientId, sessionI
     const createThumbnails = async () => {
       for (const image of images) {
         if (cancelled) break;
-        if (image.id) {
+        if (image.id && image.originalBlob) {
           try {
+            // Verify blob is valid before creating URL
+            if (!(image.originalBlob instanceof Blob) || image.originalBlob.size === 0) {
+              console.warn(`Invalid blob for image ${image.id}`);
+              continue;
+            }
+
             const url = URL.createObjectURL(image.originalBlob);
-            newThumbnails.set(image.id, url);
-            // Update state progressively for better UX
-            setThumbnails(new Map(newThumbnails));
+
+            // Test if URL is accessible (important for mobile Safari)
+            await new Promise<void>((resolve, reject) => {
+              const testImg = new Image();
+              const timeout = setTimeout(() => {
+                testImg.src = '';
+                reject(new Error('Image load timeout'));
+              }, 3000);
+
+              testImg.onload = () => {
+                clearTimeout(timeout);
+                newThumbnails.set(image.id!, url);
+                // Update state progressively for better UX
+                setThumbnails(new Map(newThumbnails));
+                resolve();
+              };
+
+              testImg.onerror = () => {
+                clearTimeout(timeout);
+                URL.revokeObjectURL(url);
+                console.error(`Failed to load thumbnail for image ${image.id}`);
+                reject(new Error('Image load failed'));
+              };
+
+              testImg.src = url;
+            });
+
             // Small delay to prevent blocking the main thread
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await new Promise(resolve => setTimeout(resolve, 10));
           } catch (error) {
-            console.error('Error creating thumbnail:', error);
+            console.error(`Error creating thumbnail for image ${image.id}:`, error);
           }
         }
       }
@@ -318,7 +364,13 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, patientId, sessionI
 
     return () => {
       cancelled = true;
-      newThumbnails.forEach(url => URL.revokeObjectURL(url));
+      newThumbnails.forEach(url => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch (e) {
+          // Ignore revoke errors
+        }
+      });
     };
   }, [images]);
 
