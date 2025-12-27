@@ -83,6 +83,32 @@ try {
         throw new Exception('Error al guardar el JSON.');
     }
 
+    // Save metadata to contributions_metadata.json
+    $metadataFile = __DIR__ . '/data/contributions_metadata.json';
+    $metadata = ['contributions' => []];
+
+    if (file_exists($metadataFile)) {
+        $metadata = json_decode(file_get_contents($metadataFile), true);
+    }
+
+    // Get installation_token from POST data if available
+    $installationToken = $_POST['installation_token'] ?? 'unknown';
+
+    // Add contribution metadata
+    $contributionMeta = [
+        'id' => $uniqueId,
+        'filename' => 'image.' . $imageExt,
+        'original_filename' => $imageFile['name'],
+        'size' => filesize($targetImage),
+        'installation_token' => $installationToken,
+        'uploaded_at' => date('Y-m-d H:i:s'),
+        'json_file' => 'annotations.json',
+        'folder_path' => $uniqueId
+    ];
+
+    $metadata['contributions'][] = $contributionMeta;
+    file_put_contents($metadataFile, json_encode($metadata, JSON_PRETTY_PRINT));
+
     $response['success'] = true;
     $response['message'] = 'Contribución recibida correctamente.';
     $response['data'] = [

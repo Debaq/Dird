@@ -38,10 +38,24 @@ export const API_BASE_URL = getApiBaseUrl();
  * API Endpoints
  */
 export const API_ENDPOINTS = {
+  // Existing endpoints
   GET_TOKENS: `${API_BASE_URL}/get_tokens.php`,
   PROCESS_CONCLUSION: `${API_BASE_URL}/consume_token.php`,
   CONFIRM_PROCESSING: `${API_BASE_URL}/confirm_processing.php`,
   CONTRIBUTE: `${API_BASE_URL}/receive_contribution.php`,
+
+  // Admin endpoints
+  ADMIN_LOGIN: `${API_BASE_URL}/admin/login_admin.php`,
+  ADMIN_GET_CONTRIBUTIONS: `${API_BASE_URL}/admin/get_contributions.php`,
+  ADMIN_GET_INSTALLATIONS: `${API_BASE_URL}/admin/get_installations.php`,
+  ADMIN_UPDATE_TOKENS: `${API_BASE_URL}/admin/update_tokens.php`,
+  ADMIN_SEND_MESSAGE: `${API_BASE_URL}/admin/send_message.php`,
+  ADMIN_GET_BEACONS: `${API_BASE_URL}/admin/get_beacons.php`,
+
+  // Client endpoints for messages and beacons
+  GET_MESSAGES: `${API_BASE_URL}/admin/get_messages.php`,
+  MARK_MESSAGE_READ: `${API_BASE_URL}/admin/mark_message_read.php`,
+  ACTIVATE_BEACON: `${API_BASE_URL}/admin/activate_beacon.php`,
 } as const;
 
 /**

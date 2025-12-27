@@ -12,7 +12,8 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
-  FileText
+  FileText,
+  Lock
 } from 'lucide-react';
 import { useConfigStore, type ModelSource } from '@/stores/config-store';
 import { apiInferenceService } from '@/lib/ai/api-inference-service';
@@ -30,6 +31,7 @@ import ReportSettings from './ReportSettings';
 import { getCurrentVersion, type VersionInfo } from '@/utils/version';
 import { changeLanguage } from '@/i18n/config';
 import { getAssetPath } from '@/utils/assets';
+import { AdminLogin } from '@/components/admin/AdminLogin';
 
 export function Settings() {
   const { t } = useTranslation();
@@ -55,6 +57,7 @@ export function Settings() {
   const [hasUpdate, setHasUpdate] = useState(false);
   const [updateCheckMessage, setUpdateCheckMessage] = useState<string | null>(null);
   const [isReloading, setIsReloading] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
 
   // Tabs scroll logic
   const tabsListRef = useRef<HTMLDivElement>(null);
@@ -823,10 +826,29 @@ export function Settings() {
                   {t('settings.about.reset')}
                 </Button>
               </div>
+
+              {/* Admin Access Button */}
+              <div className="pt-4 border-t border-smoke-200 dark:border-coal-700">
+                <Button
+                  onClick={() => setShowAdminLogin(true)}
+                  variant="ghost"
+                  size="sm"
+                  className="w-full gap-2 text-smoke-600 dark:text-dark-textSecondary hover:text-coal-800 dark:hover:text-dark-text"
+                >
+                  <Lock className="w-4 h-4" />
+                  Acceso Administrativo
+                </Button>
+              </div>
             </div>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Admin Login Modal */}
+      <AdminLogin
+        open={showAdminLogin}
+        onOpenChange={setShowAdminLogin}
+      />
     </div>
   );
 }

@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit();
 }
 
-$TOKENS_FILE = __DIR__ . '/tokens.json';
+$TOKENS_FILE = __DIR__ . '/data/tokens.json';
 
 /**
  * Load tokens database from JSON file

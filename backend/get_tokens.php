@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-$TOKENS_FILE = __DIR__ . '/tokens.json';
+$TOKENS_FILE = __DIR__ . '/data/tokens.json';
 $INITIAL_TOKENS = 5;
 
 /**
