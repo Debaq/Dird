@@ -265,6 +265,16 @@ export class DirdDatabase extends Dexie {
       measurements: '++id, imageId, visible, createdAt',
       imageClassifications: '++id, imageId, eyeType, severity, createdAt, updatedAt' // Added DR classifications
     });
+    this.version(11).stores({
+      patients: '++id, patientId, name, status, createdAt',
+      sessions: '++id, patientId, name, sessionNumber, date, locked, type',
+      images: '++id, sessionId, eyeType, uploadedAt, contributionStatus',
+      detections: '++id, imageId, type, class, visible',
+      segmentations: '++id, imageId, type, class, visible',
+      reports: '++id, [sessionId+type], sessionId, type, reportCategory, generatedAt', // Added compound index
+      measurements: '++id, imageId, visible, createdAt',
+      imageClassifications: '++id, imageId, eyeType, severity, createdAt, updatedAt'
+    });
   }
 }
 
