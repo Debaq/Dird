@@ -388,6 +388,7 @@ const ImageAnalyzer: React.FC = () => {
                 measurements={allMeasurements || []}
                 activeTool={activeTool}
                 layers={layers}
+                selectedLandmarkType={selectedLandmarkType}
                 onAnnotationAdded={handleAnnotationAdded}
                 history={{
                   entries: detectionHistory,

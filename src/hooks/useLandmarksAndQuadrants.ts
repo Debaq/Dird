@@ -106,17 +106,18 @@ export function useLandmarksAndQuadrants({
     y: number,
     radius: number = 30
   ) => {
-    // Check if landmark of this type already exists
-    const existingLandmark = landmarks.find(
-      (l) => l.type === type && l.source === 'manual'
-    );
+    // Check if landmark of this type already exists (AI or manual)
+    const existingLandmark = landmarks.find((l) => l.type === type);
 
     if (existingLandmark) {
-      // Update existing landmark
-      await updateLandmark(existingLandmark.id, x, y, radius);
+      // Get the existing radius to maintain size
+      const existingRadius = existingLandmark.radius;
+
+      // Update existing landmark (will convert to manual if it was AI)
+      await updateLandmark(existingLandmark.id, x, y, existingRadius);
     } else {
       // Create new landmark
-      const landmarkDetection = await db.detections.add({
+      await db.detections.add({
         imageId,
         type: 'manual',
         bbox: {
@@ -130,26 +131,18 @@ export function useLandmarksAndQuadrants({
         createdAt: new Date(),
       });
 
-      // Add to local state
-      setLandmarks((prev) => [
-        ...prev,
-        {
-          id: `manual-${type}-${landmarkDetection}`,
-          type,
-          x,
-          y,
-          radius,
-          source: 'manual',
-          visible: true,
-        },
-      ]);
+      // Reload landmarks to get the new one from database
+      await loadLandmarks();
     }
   };
 
   // Update landmark position
   const updateLandmark = async (landmarkId: string, x: number, y: number, radius?: number) => {
-    // Extract database ID from landmark ID
-    const match = landmarkId.match(/manual-.*-(\d+)/);
+    // Extract database ID from landmark ID (can be AI or manual)
+    const manualMatch = landmarkId.match(/manual-.*-(\d+)/);
+    const aiMatch = landmarkId.match(/ai-.*-(\d+)/);
+    const match = manualMatch || aiMatch;
+
     if (!match) return;
 
     const dbId = parseInt(match[1]);
@@ -158,8 +151,9 @@ export function useLandmarksAndQuadrants({
 
     const newRadius = radius || landmark.radius;
 
-    // Update in database
+    // Update in database - convert to manual type if it was AI
     await db.detections.update(dbId, {
+      type: 'manual',
       bbox: {
         x: x - newRadius,
         y: y - newRadius,
@@ -168,18 +162,17 @@ export function useLandmarksAndQuadrants({
       },
     });
 
-    // Update local state
-    setLandmarks((prev) =>
-      prev.map((l) =>
-        l.id === landmarkId ? { ...l, x, y, radius: newRadius } : l
-      )
-    );
+    // Reload landmarks to reflect the changes from database
+    await loadLandmarks();
   };
 
   // Delete a landmark
   const deleteLandmark = async (landmarkId: string) => {
-    // Extract database ID
-    const match = landmarkId.match(/manual-.*-(\d+)/);
+    // Extract database ID (can be AI or manual)
+    const manualMatch = landmarkId.match(/manual-.*-(\d+)/);
+    const aiMatch = landmarkId.match(/ai-.*-(\d+)/);
+    const match = manualMatch || aiMatch;
+
     if (!match) return;
 
     const dbId = parseInt(match[1]);
@@ -187,8 +180,8 @@ export function useLandmarksAndQuadrants({
     // Delete from database
     await db.detections.delete(dbId);
 
-    // Update local state
-    setLandmarks((prev) => prev.filter((l) => l.id !== landmarkId));
+    // Reload landmarks to reflect the deletion
+    await loadLandmarks();
   };
 
   return {

@@ -34,7 +34,6 @@ export interface AppearanceConfig {
 }
 
 export interface ProcessingConfig {
-  autoProcess: boolean;
   maxImageSize: number; // MB
   compressionQuality: number; // 0-1
   batchSize: number;
@@ -139,7 +138,6 @@ export const DEFAULT_CONFIG: AppConfig = {
     modelName: ''
   },
   processing: {
-    autoProcess: true,
     maxImageSize: 10,
     compressionQuality: 0.8,
     batchSize: 5,

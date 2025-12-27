@@ -28,6 +28,7 @@ interface AnnotationCanvasProps {
   activeTool?: CanvasTool;
   layers?: CanvasLayer[];
   onAnnotationAdded?: () => void;
+  selectedLandmarkType?: 'optic_disc' | 'fovea';
   history?: {
     entries: HistoryEntry[];
     index: number;
@@ -47,6 +48,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   activeTool = 'select',
   layers = [],
   onAnnotationAdded,
+  selectedLandmarkType = 'optic_disc',
   history,
 }) => {
   const { i18n } = useTranslation();
@@ -96,9 +98,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const dragStartAnnotation = useRef<any>(null);
   const isKeyboardMoving = useRef(false);
 
-  // Landmarks and quadrant analysis (selectedLandmarkType from ToolPanel)
-  const [selectedLandmarkType] = useState<'optic_disc' | 'fovea'>('optic_disc');
-
+  // Landmarks and quadrant analysis
   const {
     landmarks,
     addOrUpdateLandmark,
@@ -1023,6 +1023,10 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
           {/* AI Detections */}
           {isCanvasReady && detections.map((detection, idx) => {
+            // Check if this is a landmark class (optic_disc or fovea)
+            const className = detection.class.toLowerCase().trim();
+            const isLandmarkClass = className === 'optic_disc' || className === 'optic disc' || className === 'fovea';
+
             // Calcular ancho del label basado en el texto
             const translatedClass = getClassName(detection.class, i18n.language);
             const labelText = `${translatedClass} ${Math.round((detection.confidence || 0) * 100)}%`;
@@ -1034,7 +1038,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
             // Verificar si esta detección está siendo hover
             const isHovered = detection.id === hoveredDetectionId;
-            
+
             // Obtener color efectivo (respetando rainbow mode y configuraciones)
             const detectionColor = classManager.getColorForClass(detection.class);
             const isSelected = selectedAnnotationId === String(detection.id);
@@ -1047,18 +1051,20 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                   y={detection.bbox.y * scale + imageOffset.y}
                   width={detection.bbox.width * scale}
                   height={detection.bbox.height * scale}
-                  fill={`${detectionColor}1A`} // 10% opacity
+                  fill={`${detectionColor}1A`}
                   stroke={isHovered ? "#FFD700" : detectionColor}
                   strokeWidth={isHovered ? 3 : 1.5}
                   dash={isHovered ? [] : [8, 4]}
                   hitStrokeWidth={10}
                   perfectDrawEnabled={false}
+                  listening={true}
+                  opacity={isLandmarkClass && !isSelected ? 0 : 1} // Invisible but interactive for landmarks
                   draggable={activeTool === 'select' && isSelected}
                   onMouseEnter={() => {
-                    if (detection.id) setHoveredDetectionId(detection.id);
+                    if (detection.id && !isLandmarkClass) setHoveredDetectionId(detection.id);
                   }}
                   onMouseLeave={() => {
-                    setHoveredDetectionId(null);
+                    if (!isLandmarkClass) setHoveredDetectionId(null);
                   }}
                   onDragStart={() => detection.id && handleDragStart(detection.id)}
                   onClick={async (e) => {
@@ -1114,8 +1120,8 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                     }
                   }}
                 />
-                
-                {isSelected && (
+
+                {isSelected && !isLandmarkClass && (
                   <Circle
                     x={(detection.bbox.x * scale + imageOffset.x) + (detection.bbox.width * scale) / 2}
                     y={(detection.bbox.y * scale + imageOffset.y) + (detection.bbox.height * scale) / 2}
@@ -1149,7 +1155,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                   />
                 )}
 
-                {showLabels && (
+                {showLabels && !isLandmarkClass && (
                   <Group listening={false}>
                     <Rect
                       x={detection.bbox.x * scale + imageOffset.x}
@@ -1169,6 +1175,58 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                     />
                   </Group>
                 )}
+
+                {/* Render landmark circle if this is a landmark class */}
+                {isLandmarkClass && (() => {
+                  const landmark = landmarks.find(l => {
+                    const match = l.id.match(/ai-.*-(\d+)/);
+                    return match && parseInt(match[1]) === detection.id;
+                  });
+
+                  if (!landmark) return null;
+
+                  const centerX = (detection.bbox.x + detection.bbox.width / 2) * scale + imageOffset.x;
+                  const centerY = (detection.bbox.y + detection.bbox.height / 2) * scale + imageOffset.y;
+                  const radius = landmark.radius * scale;
+                  const isOpticDisc = landmark.type === 'optic_disc';
+                  const color = isOpticDisc ? '#FF6B6B' : '#4ECDC4';
+                  const strokeColor = isOpticDisc ? '#E63946' : '#2A9D8F';
+
+                  return (
+                    <Group>
+                      {/* Outer ring */}
+                      <Circle
+                        x={centerX}
+                        y={centerY}
+                        radius={radius + 3}
+                        stroke={strokeColor}
+                        strokeWidth={2}
+                        opacity={0.8}
+                        listening={false}
+                      />
+                      {/* Main circle */}
+                      <Circle
+                        x={centerX}
+                        y={centerY}
+                        radius={radius}
+                        fill={isOpticDisc ? 'transparent' : color}
+                        opacity={0.3}
+                        stroke={strokeColor}
+                        strokeWidth={2}
+                        listening={false}
+                      />
+                      {/* Center dot */}
+                      <Circle
+                        x={centerX}
+                        y={centerY}
+                        radius={3}
+                        fill={strokeColor}
+                        opacity={1}
+                        listening={false}
+                      />
+                    </Group>
+                  );
+                })()}
               </Group>
             );
           })}
@@ -1203,6 +1261,10 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
           {/* Saved annotations from database */}
           {isCanvasReady && manualAnnotations?.map((annotation, idx) => {
+            // Check if this is a landmark class (optic_disc or fovea)
+            const className = annotation.class?.toLowerCase().trim() || '';
+            const isLandmarkClass = className === 'optic_disc' || className === 'optic disc' || className === 'fovea';
+
             // Para detecciones manuales de la base de datos, usamos bbox
             const color = annotation.class
               ? classManager.getColorForClass(annotation.class)
@@ -1240,12 +1302,14 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                     strokeDash={isHovered ? [] : [4, 2]}
                     hitStrokeWidth={10}
                     perfectDrawEnabled={false}
+                    listening={true}
+                    opacity={isLandmarkClass && !isSelected ? 0 : 1} // Invisible but interactive for landmarks
                     draggable={activeTool === 'select' && isSelected}
                     onMouseEnter={() => {
-                      if (annotation.id) setHoveredDetectionId(annotation.id);
+                      if (annotation.id && !isLandmarkClass) setHoveredDetectionId(annotation.id);
                     }}
                     onMouseLeave={() => {
-                      setHoveredDetectionId(null);
+                      if (!isLandmarkClass) setHoveredDetectionId(null);
                     }}
                     onDragStart={() => annotation.id && handleDragStart(annotation.id)}
                                       onClick={async (e) => {
@@ -1301,8 +1365,8 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                       }
                     }}
                   />
-                  
-                  {isSelected && (
+
+                  {isSelected && !isLandmarkClass && (
                     <Circle
                       x={(annotation.bbox.x * scale + imageOffset.x) + (annotation.bbox.width * scale) / 2}
                       y={(annotation.bbox.y * scale + imageOffset.y) + (annotation.bbox.height * scale) / 2}
@@ -1337,7 +1401,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                   )}
 
                   {/* Label con nombre de clase */}
-                  {annotation.class && showLabels && (
+                  {annotation.class && showLabels && !isLandmarkClass && (
                     <Group listening={false}>
                       <Rect
                         x={annotation.bbox.x * scale + imageOffset.x}
@@ -1357,6 +1421,58 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                       />
                     </Group>
                   )}
+
+                  {/* Render landmark circle if this is a landmark class */}
+                  {isLandmarkClass && (() => {
+                    const landmark = landmarks.find(l => {
+                      const match = l.id.match(/manual-.*-(\d+)/);
+                      return match && parseInt(match[1]) === annotation.id;
+                    });
+
+                    if (!landmark) return null;
+
+                    const centerX = (annotation.bbox.x + annotation.bbox.width / 2) * scale + imageOffset.x;
+                    const centerY = (annotation.bbox.y + annotation.bbox.height / 2) * scale + imageOffset.y;
+                    const radius = landmark.radius * scale;
+                    const isOpticDisc = landmark.type === 'optic_disc';
+                    const color = isOpticDisc ? '#FF6B6B' : '#4ECDC4';
+                    const strokeColor = isOpticDisc ? '#E63946' : '#2A9D8F';
+
+                    return (
+                      <Group>
+                        {/* Outer ring */}
+                        <Circle
+                          x={centerX}
+                          y={centerY}
+                          radius={radius + 3}
+                          stroke={strokeColor}
+                          strokeWidth={2}
+                          opacity={0.8}
+                          listening={false}
+                        />
+                        {/* Main circle */}
+                        <Circle
+                          x={centerX}
+                          y={centerY}
+                          radius={radius}
+                          fill={isOpticDisc ? 'transparent' : color}
+                          opacity={0.5}
+                          stroke={strokeColor}
+                          strokeWidth={2}
+                          listening={false}
+                        />
+                        {/* Center dot */}
+                        <Circle
+                          x={centerX}
+                          y={centerY}
+                          radius={3}
+                          fill={strokeColor}
+                          opacity={1}
+                          listening={false}
+                        />
+                      </Group>
+                    );
+                  })()}
                 </Group>
               );
             }
@@ -1662,6 +1778,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
             scaleX={scale}
             scaleY={scale}
           >
+            {/* Quadrant overlay */}
             <QuadrantOverlay
               visible={quadrantsLayer?.visible ?? true}
               opacity={quadrantsLayer?.opacity ?? 0.5}
