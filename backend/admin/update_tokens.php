@@ -83,12 +83,12 @@ try {
 
     $currentTokens = $installations[$installationToken]['tokens'];
 
-    // Validate: Cannot reduce tokens
-    if ($newTotal < $currentTokens) {
+    // Validate: Tokens cannot be negative
+    if ($newTotal < 0) {
         http_response_code(400);
         echo json_encode([
             'success' => false,
-            'error' => "No se pueden eliminar tokens. El nuevo total ({$newTotal}) debe ser mayor o igual al actual ({$currentTokens})."
+            'error' => "La cantidad de tokens no puede ser negativa."
         ]);
         exit();
     }
@@ -103,7 +103,7 @@ try {
         exit();
     }
 
-    $tokensAdded = $newTotal - $currentTokens;
+    $tokensDiff = $newTotal - $currentTokens;
 
     // Update tokens
     $installations[$installationToken]['tokens'] = $newTotal;
@@ -118,7 +118,7 @@ try {
         'message' => 'Tokens actualizados correctamente',
         'data' => [
             'new_total' => $newTotal,
-            'tokens_added' => $tokensAdded,
+            'tokens_diff' => $tokensDiff,
             'installation_token' => $installationToken
         ]
     ];

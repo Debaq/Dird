@@ -31,3 +31,4 @@ backend/tokens.json
 *.njsproj
 *.sln
 *.sw?
+backend/data/api_keys.json

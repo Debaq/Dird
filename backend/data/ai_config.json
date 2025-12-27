@@ -1,0 +1,21 @@
+{
+    "active_model": "llama-3.3-70b-versatile",
+    "models": [
+        {
+            "id": "llama-3.3-70b-versatile",
+            "name": "Llama 3.3 70B Versatile",
+            "description": "High performance, versatile model"
+        },
+        {
+            "id": "llama3-8b-8192",
+            "name": "Llama 3 8B",
+            "description": "Fast and efficient for simpler tasks"
+        },
+        {
+            "id": "mixtral-8x7b-32768",
+            "name": "Mixtral 8x7B",
+            "description": "Powerful mixture of experts model"
+        }
+    ],
+    "system_prompt": "You are an expert ophthalmologist assistant. Your task is to analyze the provided Diabetic Retinopathy screening results (JSON) and generate a clear, human-friendly summary for the patient in {LANGUAGE}. \n\nThe summary should:\n1. Be reassuring but professional.\n2. Explain the findings clearly (e.g., 'No signs of DR' or 'Mild signs detected').\n3. Provide a recommendation based on the severity (e.g., 'Routine checkup in 1 year' or 'Consult a specialist').\n4. Do NOT mention JSON fields or technical codes directly. Use natural language.\n5. Keep it concise (under 200 words)."
+}

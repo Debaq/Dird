@@ -16,7 +16,14 @@ interface ProcessConclusionResponse {
   success: boolean;
   message: string;
   processed_data: any;
+  ai_processed?: boolean;
   timestamp: number;
+}
+
+interface ProcessConclusionResult {
+  processed_data: any;
+  ai_processed: boolean;
+  message?: string;
 }
 
 interface ConfirmProcessingResponse {
@@ -70,7 +77,7 @@ export async function fetchTokens(): Promise<number> {
  * Process conclusion data with the backend
  * Sends report data and receives processed result
  */
-export async function processConclusion(reportData: any): Promise<any> {
+export async function processConclusion(reportData: any, language: string): Promise<ProcessConclusionResult> {
   try {
     const installationToken = getInstallationToken();
 
@@ -82,6 +89,7 @@ export async function processConclusion(reportData: any): Promise<any> {
       body: JSON.stringify({
         installation_token: installationToken,
         report_data: reportData,
+        language: language,
       }),
     });
 
@@ -95,7 +103,11 @@ export async function processConclusion(reportData: any): Promise<any> {
       throw new Error(data.message || 'Failed to process conclusion');
     }
 
-    return data.processed_data;
+    return {
+      processed_data: data.processed_data,
+      ai_processed: data.ai_processed ?? false,
+      message: data.message
+    };
   } catch (error) {
     console.error('Error processing conclusion:', error);
     throw error;
