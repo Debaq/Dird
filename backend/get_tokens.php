@@ -4,6 +4,9 @@
  * Manages tokens per installation using installation_token
  */
 
+// Include logger
+require_once __DIR__ . '/includes/logger.php';
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST');
@@ -37,6 +40,9 @@ function saveTokensDB($file, $data) {
 }
 
 try {
+    logDebug("=== GET TOKENS REQUEST START ===");
+    logDebug("Request Method: " . ($_SERVER['REQUEST_METHOD'] ?? 'UNDEFINED'));
+
     // Get installation token from request
     $installationToken = null;
 
@@ -47,7 +53,13 @@ try {
         $installationToken = $_GET['installation_token'] ?? null;
     }
 
+    logDebug("Installation Token Received", [
+        'has_token' => !empty($installationToken),
+        'token_prefix' => $installationToken ? substr($installationToken, 0, 8) . '...' : 'none'
+    ]);
+
     if (!$installationToken) {
+        logError("Missing installation_token");
         http_response_code(400);
         echo json_encode([
             'success' => false,
@@ -62,6 +74,8 @@ try {
     // Check if installation exists
     if (!isset($db['installations'][$installationToken])) {
         // New installation - assign initial tokens
+        logDebug("New Installation Detected", ['initial_tokens' => $INITIAL_TOKENS]);
+
         $db['installations'][$installationToken] = [
             'tokens' => $INITIAL_TOKENS,
             'created_at' => date('Y-m-d H:i:s'),
@@ -79,6 +93,11 @@ try {
         // Existing installation - return current tokens
         $installation = $db['installations'][$installationToken];
 
+        logDebug("Existing Installation Found", [
+            'current_tokens' => $installation['tokens'],
+            'created_at' => $installation['created_at'] ?? 'unknown'
+        ]);
+
         // Update last access
         $db['installations'][$installationToken]['last_access'] = date('Y-m-d H:i:s');
         saveTokensDB($TOKENS_FILE, $db);
@@ -91,10 +110,21 @@ try {
         ];
     }
 
+    logDebug("Response Prepared", $response);
+    logDebug("=== GET TOKENS REQUEST END (SUCCESS) ===");
+
     http_response_code(200);
     echo json_encode($response);
 
 } catch (Exception $e) {
+    logError("Exception caught", [
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+        'trace' => substr($e->getTraceAsString(), 0, 500)
+    ]);
+    logDebug("=== GET TOKENS REQUEST END (ERROR) ===");
+
     http_response_code(500);
     echo json_encode([
         'success' => false,

@@ -1,10 +1,17 @@
 <?php
+// Start output buffering IMMEDIATELY
+ob_start();
+
+// Suppress warnings that could break JSON output
+error_reporting(E_ERROR | E_PARSE);
+ini_set('display_errors', '0');
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+if (($_SERVER['REQUEST_METHOD'] ?? 'POST') === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
@@ -52,15 +59,19 @@ try {
 
     file_put_contents($AI_CONFIG_FILE, json_encode($currentConfig, JSON_PRETTY_PRINT));
 
+    ob_clean();
     echo json_encode([
         'success' => true,
         'message' => 'Configuration saved successfully'
     ]);
+    ob_end_flush();
 
 } catch (Exception $e) {
     http_response_code(500);
+    ob_clean();
     echo json_encode([
         'success' => false,
         'error' => $e->getMessage()
     ]);
+    ob_end_flush();
 }

@@ -4,6 +4,9 @@
  * This is called after the frontend validates the processed data
  */
 
+// Include logger
+require_once __DIR__ . '/includes/logger.php';
+
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
@@ -15,7 +18,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
+logDebug("=== CONFIRM PROCESSING REQUEST START ===");
+logDebug("Request Method: " . ($_SERVER['REQUEST_METHOD'] ?? 'UNDEFINED'));
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    logError("Invalid method", ['method' => $_SERVER['REQUEST_METHOD'] ?? 'UNDEFINED']);
     http_response_code(405);
     echo json_encode([
         'success' => false,
@@ -46,9 +53,13 @@ function saveTokensDB($file, $data) {
 
 try {
     // Get request body
-    $input = json_decode(file_get_contents('php://input'), true);
+    $rawInput = file_get_contents('php://input');
+    logDebug("Raw Input", substr($rawInput, 0, 500));
+
+    $input = json_decode($rawInput, true);
 
     if (!$input) {
+        logError("Invalid JSON input");
         http_response_code(400);
         echo json_encode([
             'success' => false,
@@ -57,8 +68,11 @@ try {
         exit();
     }
 
+    logDebug("Decoded Input", array_keys($input));
+
     // Validate required fields
     if (!isset($input['installation_token'])) {
+        logError("Missing installation_token");
         http_response_code(400);
         echo json_encode([
             'success' => false,
@@ -68,12 +82,16 @@ try {
     }
 
     $installationToken = $input['installation_token'];
+    logDebug("Installation Token Received", [
+        'token_prefix' => substr($installationToken, 0, 8) . '...'
+    ]);
 
     // Load tokens database
     $db = loadTokensDB($TOKENS_FILE);
 
     // Check if installation exists
     if (!isset($db['installations'][$installationToken])) {
+        logError("Installation not found", ['token' => substr($installationToken, 0, 8) . '...']);
         http_response_code(404);
         echo json_encode([
             'success' => false,
@@ -82,8 +100,12 @@ try {
         exit();
     }
 
+    $currentTokens = $db['installations'][$installationToken]['tokens'];
+    logDebug("Installation Found", ['current_tokens' => $currentTokens]);
+
     // Check if installation has tokens
-    if ($db['installations'][$installationToken]['tokens'] <= 0) {
+    if ($currentTokens <= 0) {
+        logError("No tokens available", ['current_tokens' => $currentTokens]);
         http_response_code(400);
         echo json_encode([
             'success' => false,
@@ -101,6 +123,11 @@ try {
 
     $remainingTokens = $db['installations'][$installationToken]['tokens'];
 
+    logDebug("Token Consumed", [
+        'previous_tokens' => $currentTokens,
+        'remaining_tokens' => $remainingTokens
+    ]);
+
     // Return success response
     $response = [
         'success' => true,
@@ -109,10 +136,21 @@ try {
         'timestamp' => time()
     ];
 
+    logDebug("Response Prepared", $response);
+    logDebug("=== CONFIRM PROCESSING REQUEST END (SUCCESS) ===");
+
     http_response_code(200);
     echo json_encode($response);
 
 } catch (Exception $e) {
+    logError("Exception caught", [
+        'message' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+        'trace' => substr($e->getTraceAsString(), 0, 500)
+    ]);
+    logDebug("=== CONFIRM PROCESSING REQUEST END (ERROR) ===");
+
     http_response_code(500);
     echo json_encode([
         'success' => false,
