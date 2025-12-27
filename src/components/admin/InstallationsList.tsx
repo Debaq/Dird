@@ -42,13 +42,8 @@ export function InstallationsList() {
     if (!selectedInstallation) return;
 
     const newTotal = parseInt(newTotalTokens);
-    if (isNaN(newTotal)) {
+    if (isNaN(newTotal) || newTotal < 0) {
       toast.error('Ingresa una cantidad válida');
-      return;
-    }
-
-    if (newTotal < selectedInstallation.tokens) {
-      toast.error('No puedes reducir la cantidad de tokens');
       return;
     }
 
@@ -257,11 +252,7 @@ export function InstallationsList() {
                 </div>
                 <div>
                   <p className="text-smoke-600 dark:text-dark-textSecondary">Nuevo Total</p>
-                  <p className={`text-lg font-semibold ${
-                    parseInt(newTotalTokens) < selectedInstallation.tokens
-                      ? 'text-red-500'
-                      : 'text-green-600 dark:text-green-400'
-                  }`}>
+                  <p className="text-lg font-semibold text-primary-600 dark:text-primary-400">
                     {parseInt(newTotalTokens) || 0}
                   </p>
                 </div>
@@ -272,7 +263,7 @@ export function InstallationsList() {
                 <Input
                   id="tokens-amount"
                   type="number"
-                  min={selectedInstallation.tokens}
+                  min="0"
                   max="9999"
                   value={newTotalTokens}
                   onChange={(e) => setNewTotalTokens(e.target.value)}
@@ -280,7 +271,7 @@ export function InstallationsList() {
                   disabled={isUpdating}
                 />
                 <p className="text-xs text-smoke-600 dark:text-dark-textSecondary">
-                  Mínimo: {selectedInstallation.tokens} | Máximo: 9999
+                  Rango permitido: 0 - 9999
                 </p>
               </div>
             </div>
@@ -299,7 +290,7 @@ export function InstallationsList() {
             </Button>
             <Button
               onClick={handleUpdateTokens}
-              disabled={isUpdating || !newTotalTokens || parseInt(newTotalTokens) < (selectedInstallation?.tokens || 0)}
+              disabled={isUpdating || !newTotalTokens || parseInt(newTotalTokens) < 0}
             >
               {isUpdating ? 'Actualizando...' : 'Guardar Cambios'}
             </Button>

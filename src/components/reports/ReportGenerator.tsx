@@ -31,7 +31,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
   sessionId,
   onReportGenerated,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { confirm, ConfirmDialogComponent } = useConfirm();
   const [showDialog, setShowDialog] = useState(false);
   const [evaluatorNotes, setEvaluatorNotes] = useState('');
@@ -77,6 +77,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
       const classifications = await getSessionClassifications(sessionId);
 
       let systemComment = '';
+      let tokensConsumed = false;
 
       if (!noTokensMode) {
         // --- ONLINE MODE ---
@@ -132,17 +133,23 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         };
 
         // Send to backend
-        const processedData = await processConclusion(reportDataForBackend);
+        const { processed_data: processedData, ai_processed, message } = await processConclusion(reportDataForBackend, i18n.language);
 
         if (!processedData || !processedData._processing) {
           throw new Error('Invalid processed data received from server');
         }
 
-        systemComment = processedData._processing.comment || '';
+        systemComment = processedData.ai_analysis || processedData._processing.comment || '';
         
-        // Confirm processing (consumes token)
-        const remainingTokens = await confirmProcessing();
-        setTokens(remainingTokens);
+        if (ai_processed) {
+          // Confirm processing (consumes token) ONLY if AI actually processed it
+          const remainingTokens = await confirmProcessing();
+          setTokens(remainingTokens);
+          tokensConsumed = true;
+        } else if (message) {
+          // AI failed (e.g. quota limit), show warning but continue with report generation
+          toast.warning(message, { duration: 6000 });
+        }
         
       } else {
         // --- OFFLINE MODE ---
@@ -168,8 +175,8 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
       let finalNotes = evaluatorNotes;
       if (systemComment) {
         finalNotes = finalNotes 
-          ? `${finalNotes}\n\n[Sistema]: ${systemComment}`
-          : `[Sistema]: ${systemComment}`;
+          ? `${finalNotes}\n\n[IA]: ${systemComment}`
+          : `[IA]: ${systemComment}`;
       }
 
       // 4. Generate PDF with the processed notes
@@ -229,8 +236,11 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
       
       if (noTokensMode) {
         toast.warning(t('reports.generatedOffline', { defaultValue: 'Informe generado en modo offline.' }));
-      } else {
+      } else if (tokensConsumed) {
         toast.success(t('reports.generated') + ` (Tokens restantes: ${tokens - 1})`);
+      } else {
+        // Tokens available but not consumed (e.g. AI quota limit reached)
+        toast.success(t('reports.generated'));
       }
       
     } catch (error) {
