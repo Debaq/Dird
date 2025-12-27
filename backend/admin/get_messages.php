@@ -74,8 +74,10 @@ try {
 
     $response = [
         'success' => true,
-        'messages' => $unreadMessages,
-        'count' => count($unreadMessages)
+        'data' => [
+            'messages' => $unreadMessages,
+            'count' => count($unreadMessages)
+        ]
     ];
 
     http_response_code(200);

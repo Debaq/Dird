@@ -116,9 +116,11 @@ try {
     $response = [
         'success' => true,
         'message' => 'Tokens actualizados correctamente',
-        'new_total' => $newTotal,
-        'tokens_added' => $tokensToAdd,
-        'installation_token' => $installationToken
+        'data' => [
+            'new_total' => $newTotal,
+            'tokens_added' => $tokensToAdd,
+            'installation_token' => $installationToken
+        ]
     ];
 
     http_response_code(200);

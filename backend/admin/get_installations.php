@@ -83,8 +83,10 @@ try {
 
     $response = [
         'success' => true,
-        'installations' => $result,
-        'total' => count($result)
+        'data' => [
+            'installations' => $result,
+            'total' => count($result)
+        ]
     ];
 
     http_response_code(200);

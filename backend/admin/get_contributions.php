@@ -73,8 +73,10 @@ try {
 
     $response = [
         'success' => true,
-        'contributions' => $contributions,
-        'total' => count($contributions)
+        'data' => [
+            'contributions' => $contributions,
+            'total' => count($contributions)
+        ]
     ];
 
     http_response_code(200);

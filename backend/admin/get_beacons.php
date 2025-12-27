@@ -72,8 +72,10 @@ try {
 
     $response = [
         'success' => true,
-        'beacons' => $activeBeacons,
-        'count' => count($activeBeacons)
+        'data' => [
+            'beacons' => $activeBeacons,
+            'count' => count($activeBeacons)
+        ]
     ];
 
     http_response_code(200);

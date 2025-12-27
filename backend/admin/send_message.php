@@ -127,9 +127,11 @@ try {
 
     $response = [
         'success' => true,
-        'message_id' => $messageId,
         'message' => 'Mensaje enviado correctamente',
-        'expires_at' => $expiresAt
+        'data' => [
+            'message_id' => $messageId,
+            'expires_at' => $expiresAt
+        ]
     ];
 
     http_response_code(200);
