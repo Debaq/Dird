@@ -19,6 +19,8 @@ import { db } from '@/lib/db/schema';
 import { isDemoPreviewSession } from '@/lib/db/demoPatient';
 import { useTokenStore } from '@/stores/token-store';
 import { processConclusion, confirmProcessing } from '@/lib/api/token-service';
+import { getSessionClassifications } from '@/lib/analysis/image-classification-service';
+import { classifyDiabeticRetinopathy, formatClassificationText } from '@/lib/analysis/dr-classifier';
 
 interface ReportGeneratorProps {
   sessionId: number;
@@ -39,15 +41,16 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
 
   const handleGenerateReport = async (type: ReportType) => {
     // Check if user has tokens before generating
-    if (tokens <= 0) {
-      toast.error(t('errors.noTokens', { defaultValue: 'No tienes tokens disponibles para generar informes' }));
-      return;
+    const noTokensMode = tokens <= 0;
+    
+    if (noTokensMode) {
+      toast.warning(t('reports.offlineModeWarning', { defaultValue: 'Sin tokens: Generando informe en modo offline (sin validación externa).' }));
     }
 
     setGenerating(true);
     setReportType(type);
     try {
-      // 1. Gather report data for backend processing
+      // 1. Gather report data
       const session = await db.sessions.get(sessionId);
       if (!session) throw new Error('Session not found');
 
@@ -70,72 +73,107 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
       );
       const measurements = allMeasurements.flat();
 
-      // Prepare report data for backend (remove Blobs for JSON serialization)
-      const reportDataForBackend = {
-        patient: {
-          id: patient.id,
-          patientId: patient.patientId,
-          name: patient.name,
-          dateOfBirth: patient.dateOfBirth,
-        },
-        session: {
-          id: session.id,
-          sessionNumber: session.sessionNumber,
-          date: session.date,
-          notes: session.notes,
-        },
-        images: images.map(img => ({
-          id: img.id,
-          filename: img.filename,
-          width: img.width,
-          height: img.height,
-        })),
-        detections: detections.map(d => ({
-          id: d.id,
-          imageId: d.imageId,
-          type: d.type,
-          bbox: d.bbox,
-          class: d.class,
-          confidence: d.confidence,
-        })),
-        segmentations: segmentations.map(s => ({
-          id: s.id,
-          imageId: s.imageId,
-          type: s.type,
-          class: s.class,
-          confidence: s.confidence,
-        })),
-        measurements: measurements.map(m => ({
-          id: m.id,
-          imageId: m.imageId,
-          distancePixels: m.distancePixels,
-          distanceDD: m.distanceDD,
-        })),
-        evaluatorNotes,
-        reportType: type,
-      };
+      // Fetch AI Classifications
+      const classifications = await getSessionClassifications(sessionId);
 
-      // 2. Send to backend for processing
-      console.log('📤 Sending report data to backend for processing...');
-      const processedData = await processConclusion(reportDataForBackend);
+      let systemComment = '';
 
-      // 3. Validate processed data
-      if (!processedData || !processedData._processing) {
-        throw new Error('Invalid processed data received from server');
+      if (!noTokensMode) {
+        // --- ONLINE MODE ---
+        // Prepare report data for backend
+        const reportDataForBackend = {
+          patient: {
+            id: patient.id,
+            // Removed personal identifiers for privacy
+          },
+          session: {
+            id: session.id,
+            sessionNumber: session.sessionNumber,
+            date: session.date,
+            notes: session.notes,
+          },
+          images: images.map(img => ({
+            id: img.id,
+            filename: img.filename,
+            width: img.width,
+            height: img.height,
+          })),
+          detections: detections.map(d => ({
+            id: d.id,
+            imageId: d.imageId,
+            type: d.type,
+            bbox: d.bbox,
+            class: d.class,
+            confidence: d.confidence,
+          })),
+          classifications: classifications.map(c => ({
+            eyeType: c.eyeType,
+            severity: c.severity,
+            confidence: c.confidence,
+            criteria: c.criteria,
+            lesions: c.lesions,
+            warnings: c.warnings
+          })),
+          segmentations: segmentations.map(s => ({
+            id: s.id,
+            imageId: s.imageId,
+            type: s.type,
+            class: s.class,
+            confidence: s.confidence,
+          })),
+          measurements: measurements.map(m => ({
+            id: m.id,
+            imageId: m.imageId,
+            distancePixels: m.distancePixels,
+            distanceDD: m.distanceDD,
+          })),
+          evaluatorNotes,
+          reportType: type,
+        };
+
+        // Send to backend
+        const processedData = await processConclusion(reportDataForBackend);
+
+        if (!processedData || !processedData._processing) {
+          throw new Error('Invalid processed data received from server');
+        }
+
+        systemComment = processedData._processing.comment || '';
+        
+        // Confirm processing (consumes token)
+        const remainingTokens = await confirmProcessing();
+        setTokens(remainingTokens);
+        
+      } else {
+        // --- OFFLINE MODE ---
+        // Generate classification text locally
+        const detectionsByEye = new Map<'OD' | 'OI', any[]>();
+        
+        // Group detections by eye (using image eyeType)
+        for (const img of images) {
+          const imgDetections = detections.filter(d => d.imageId === img.id);
+          if (imgDetections.length > 0) {
+            const current = detectionsByEye.get(img.eyeType) || [];
+            detectionsByEye.set(img.eyeType, [...current, ...imgDetections]);
+          }
+        }
+
+        const localClassification = classifyDiabeticRetinopathy(detectionsByEye, patient);
+        const formattedText = formatClassificationText(localClassification);
+        
+        systemComment = `[OFFLINE GENERATION]\n${formattedText}`;
       }
 
-      console.log('✅ Processed data received:', processedData._processing.comment);
-      console.log('📊 Stats:', processedData._processing.stats);
-
-      // Show processing results to user
-      if (processedData._processing.suggestions && processedData._processing.suggestions.length > 0) {
-        processedData._processing.suggestions.forEach((suggestion: string) => {
-          console.log('💡', suggestion);
-        });
+      // Append system comment to notes
+      let finalNotes = evaluatorNotes;
+      if (systemComment) {
+        finalNotes = finalNotes 
+          ? `${finalNotes}\n\n[Sistema]: ${systemComment}`
+          : `[Sistema]: ${systemComment}`;
       }
 
-      // 4. Generate PDF with the original data
-      const pdfBlob = await generateSessionReport(sessionId, type, evaluatorNotes);
+      // 4. Generate PDF with the processed notes
+      const pdfBlob = await generateSessionReport(sessionId, type, finalNotes);
 
       // Check if a report of the same type already exists for this session
       const existingReport = await db.reports
@@ -146,7 +184,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         // Update the existing report instead of creating a duplicate
         await db.reports.update(existingReport.id, {
           pdfBlob: pdfBlob,
-          evaluatorNotes: evaluatorNotes,
+          evaluatorNotes: finalNotes,
           generatedAt: new Date(),
         });
       } else {
@@ -156,7 +194,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
           type: type,
           reportCategory: 'single',
           pdfBlob: pdfBlob,
-          evaluatorNotes: evaluatorNotes,
+          evaluatorNotes: finalNotes,
           areasOfInterest: [], // Initialize empty
           generatedAt: new Date(),
         });
@@ -186,16 +224,15 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         }
       }
 
-      // 5. Confirm successful processing to backend (this consumes the token)
-      console.log('✅ Confirming successful processing...');
-      const remainingTokens = await confirmProcessing();
-
-      // 6. Update local token count
-      setTokens(remainingTokens);
-
       setShowDialog(false);
       onReportGenerated?.();
-      toast.success(t('reports.generated') + ` (Tokens restantes: ${remainingTokens})`);
+      
+      if (noTokensMode) {
+        toast.warning(t('reports.generatedOffline', { defaultValue: 'Informe generado en modo offline.' }));
+      } else {
+        toast.success(t('reports.generated') + ` (Tokens restantes: ${tokens - 1})`);
+      }
+      
     } catch (error) {
       console.error('Error generating report:', error);
       toast.error(t('errors.unknown'));

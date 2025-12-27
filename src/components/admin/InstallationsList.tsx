@@ -14,7 +14,7 @@ export function InstallationsList() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedInstallation, setSelectedInstallation] = useState<Installation | null>(null);
-  const [tokensToAdd, setTokensToAdd] = useState('');
+  const [newTotalTokens, setNewTotalTokens] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
   const loadInstallations = async (showToast = false) => {
@@ -41,15 +41,24 @@ export function InstallationsList() {
   const handleUpdateTokens = async () => {
     if (!selectedInstallation) return;
 
-    const amount = parseInt(tokensToAdd);
-    if (isNaN(amount) || amount <= 0) {
+    const newTotal = parseInt(newTotalTokens);
+    if (isNaN(newTotal)) {
       toast.error('Ingresa una cantidad válida');
       return;
     }
 
-    const newTotal = selectedInstallation.tokens + amount;
+    if (newTotal < selectedInstallation.tokens) {
+      toast.error('No puedes reducir la cantidad de tokens');
+      return;
+    }
+
     if (newTotal > 9999) {
-      toast.error(`El total no puede exceder 9999 (actual: ${selectedInstallation.tokens})`);
+      toast.error('El total no puede exceder 9999');
+      return;
+    }
+
+    if (newTotal === selectedInstallation.tokens) {
+      toast.info('No hay cambios en la cantidad de tokens');
       return;
     }
 
@@ -58,12 +67,12 @@ export function InstallationsList() {
     try {
       const newTokens = await updateTokens({
         installation_token: selectedInstallation.installation_token,
-        tokens_to_add: amount,
+        new_total: newTotal,
       });
 
-      toast.success(`Tokens actualizados: ${newTokens}`);
+      toast.success(`Tokens actualizados a: ${newTokens}`);
       setSelectedInstallation(null);
-      setTokensToAdd('');
+      setNewTotalTokens('');
       loadInstallations();
     } catch (error) {
       toast.error('Error al actualizar tokens');
@@ -195,11 +204,14 @@ export function InstallationsList() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setSelectedInstallation(installation)}
+                        onClick={() => {
+                          setSelectedInstallation(installation);
+                          setNewTotalTokens(installation.tokens.toString());
+                        }}
                         className="gap-1"
                       >
                         <Plus className="w-3 h-3" />
-                        Agregar
+                        Editar Tokens
                       </Button>
                     </td>
                   </tr>
@@ -210,19 +222,19 @@ export function InstallationsList() {
         )}
       </Card>
 
-      {/* Add Tokens Dialog */}
+      {/* Update Tokens Dialog */}
       <Dialog
         open={!!selectedInstallation}
         onOpenChange={(open) => {
           if (!open) {
             setSelectedInstallation(null);
-            setTokensToAdd('');
+            setNewTotalTokens('');
           }
         }}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Agregar Tokens</DialogTitle>
+            <DialogTitle>Actualizar Tokens</DialogTitle>
           </DialogHeader>
 
           {selectedInstallation && (
@@ -245,26 +257,30 @@ export function InstallationsList() {
                 </div>
                 <div>
                   <p className="text-smoke-600 dark:text-dark-textSecondary">Nuevo Total</p>
-                  <p className="text-lg font-semibold text-coal-800 dark:text-dark-text">
-                    {selectedInstallation.tokens + (parseInt(tokensToAdd) || 0)}
+                  <p className={`text-lg font-semibold ${
+                    parseInt(newTotalTokens) < selectedInstallation.tokens
+                      ? 'text-red-500'
+                      : 'text-green-600 dark:text-green-400'
+                  }`}>
+                    {parseInt(newTotalTokens) || 0}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tokens-amount">Cantidad a Agregar</Label>
+                <Label htmlFor="tokens-amount">Nuevo Total de Tokens</Label>
                 <Input
                   id="tokens-amount"
                   type="number"
-                  min="1"
-                  max={9999 - selectedInstallation.tokens}
-                  value={tokensToAdd}
-                  onChange={(e) => setTokensToAdd(e.target.value)}
-                  placeholder="Ej: 10"
+                  min={selectedInstallation.tokens}
+                  max="9999"
+                  value={newTotalTokens}
+                  onChange={(e) => setNewTotalTokens(e.target.value)}
+                  placeholder="Ej: 50"
                   disabled={isUpdating}
                 />
                 <p className="text-xs text-smoke-600 dark:text-dark-textSecondary">
-                  Máximo permitido: {9999 - selectedInstallation.tokens} (límite total: 9999)
+                  Mínimo: {selectedInstallation.tokens} | Máximo: 9999
                 </p>
               </div>
             </div>
@@ -275,7 +291,7 @@ export function InstallationsList() {
               variant="outline"
               onClick={() => {
                 setSelectedInstallation(null);
-                setTokensToAdd('');
+                setNewTotalTokens('');
               }}
               disabled={isUpdating}
             >
@@ -283,9 +299,9 @@ export function InstallationsList() {
             </Button>
             <Button
               onClick={handleUpdateTokens}
-              disabled={isUpdating || !tokensToAdd}
+              disabled={isUpdating || !newTotalTokens || parseInt(newTotalTokens) < (selectedInstallation?.tokens || 0)}
             >
-              {isUpdating ? 'Actualizando...' : 'Confirmar'}
+              {isUpdating ? 'Actualizando...' : 'Guardar Cambios'}
             </Button>
           </DialogFooter>
         </DialogContent>

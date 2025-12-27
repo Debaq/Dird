@@ -75,7 +75,7 @@ export interface ChangePasswordResponse {
 
 export interface UpdateTokensRequest {
   installation_token: string;
-  tokens_to_add: number;
+  new_total: number;
 }
 
 export interface SendMessageRequest {
