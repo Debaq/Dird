@@ -204,6 +204,15 @@
     "accepted": "Formatos soportados: JPG, PNG",
     "maxSize": "Tamaño máximo: 1MB",
     "noImage": "Sin imagen",
+    "modal": {
+      "title": "Subiendo Imágenes",
+      "completed": "Subida Completada",
+      "description": "Comprimiendo y guardando imágenes en tu dispositivo",
+      "descriptionComplete": "{{completed}} de {{total}} imágenes subidas exitosamente",
+      "imagesUploaded": "Imágenes subidas",
+      "imagesFailed": "{{count}} imagen(es) con error",
+      "pleaseWait": "Por favor espera, este proceso puede tardar unos momentos..."
+    },
     "gallery": {
       "viewDetections": "Ver {{count}} detecciones",
       "viewImage": "Ver imagen",
@@ -666,8 +675,6 @@
     },
     "processing": {
       "title": "Configuración de Procesamiento",
-      "autoProcess": "Procesamiento Automático",
-      "autoProcessDescription": "Ejecuta automáticamente el modelo al subir imágenes",
       "opticDiscRefinement": "Segmentación de Disco Óptico",
       "opticDiscRefinementDescription": "Genera máscara circular del disco óptico dentro del área detectada por YOLO",
       "maxImageSize": "Tamaño Máximo de Imagen",

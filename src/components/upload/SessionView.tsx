@@ -13,6 +13,7 @@ import ImageGallery from './ImageGallery';
 import ReportGenerator from '../reports/ReportGenerator';
 import ReportsList from '../reports/ReportsList';
 import AnalysisView from './AnalysisView';
+import UploadProgressModal from './UploadProgressModal';
 import { db } from '@/lib/db/schema';
 import { exportSession, downloadDirdFile } from '@/lib/export/dird-exporter';
 import { inferenceService } from '@/lib/ai/inference-service';
@@ -20,27 +21,36 @@ import { useImageUploader } from '@/hooks/useImageUploader';
 import { usePatientStore } from '@/stores/patient-store';
 
 
-const CompactUploader: React.FC<{ sessionId: number; onUploadComplete: () => void }> = ({ sessionId, onUploadComplete }) => {
+const CompactUploader: React.FC<{ sessionId: number; onUploadComplete: () => void; onUploadStart: () => void }> = ({ sessionId, onUploadComplete, onUploadStart }) => {
     const {
         selectedEye,
         setSelectedEye,
+        uploadingFiles,
+        clearUploadState,
         triggerFileDialog,
         getHiddenInput,
-    } = useImageUploader({ sessionId, onUploadComplete });
+    } = useImageUploader({ sessionId, onUploadComplete, onUploadStart });
     const { t } = useTranslation();
 
     return (
-        <div className="flex items-center gap-2">
-            {getHiddenInput()}
-            <div className="flex items-center gap-1 bg-coal-100 p-1 rounded-lg">
-                <Button size="sm" variant={selectedEye === 'OI' ? 'default' : 'ghost'} onClick={() => setSelectedEye('OI')} className="text-xs">OI</Button>
-                <Button size="sm" variant={selectedEye === 'OD' ? 'default' : 'ghost'} onClick={() => setSelectedEye('OD')} className="text-xs">OD</Button>
+        <>
+            <div className="flex items-center gap-2">
+                {getHiddenInput()}
+                <div className="flex items-center gap-1 bg-coal-100 p-1 rounded-lg">
+                    <Button size="sm" variant={selectedEye === 'OI' ? 'default' : 'ghost'} onClick={() => setSelectedEye('OI')} className="text-xs">OI</Button>
+                    <Button size="sm" variant={selectedEye === 'OD' ? 'default' : 'ghost'} onClick={() => setSelectedEye('OD')} className="text-xs">OD</Button>
+                </div>
+                <Button size="sm" onClick={triggerFileDialog}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    {t('upload.addImage')}
+                </Button>
             </div>
-            <Button size="sm" onClick={triggerFileDialog}>
-                <Plus className="w-4 h-4 mr-2" />
-                {t('upload.addImage')}
-            </Button>
-        </div>
+            <UploadProgressModal
+                uploadingFiles={uploadingFiles}
+                onClose={clearUploadState}
+                onComplete={onUploadComplete}
+            />
+        </>
     );
 };
 
@@ -53,6 +63,7 @@ const SessionView: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState({ current: 0, total: 0 });
+  const [isUploading, setIsUploading] = useState(false);
 
   const session = useLiveQuery(
     () => (sessionId ? db.sessions.get(parseInt(sessionId)) : undefined),
@@ -99,7 +110,12 @@ const SessionView: React.FC = () => {
   };
 
   const handleUploadComplete = () => {
+    setIsUploading(false);
     setRefreshKey((prev) => prev + 1);
+  };
+
+  const handleUploadStart = () => {
+    setIsUploading(true);
   };
 
   const handleProcessWithAI = async () => {
@@ -175,7 +191,7 @@ const SessionView: React.FC = () => {
     return new Date(date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  const showLargeDropzone = images.length === 0 && !session.locked;
+  const showLargeDropzone = (images.length === 0 || isUploading) && !session.locked;
 
   return (
     <div className="space-y-6">
@@ -222,7 +238,11 @@ const SessionView: React.FC = () => {
       )}
 
       {showLargeDropzone && (
-          <ImageDropzone sessionId={parseInt(sessionId!)} onUploadComplete={handleUploadComplete} />
+          <ImageDropzone
+            sessionId={parseInt(sessionId!)}
+            onUploadComplete={handleUploadComplete}
+            onUploadStart={handleUploadStart}
+          />
       )}
 
       <Tabs value={sessionViewTab} onValueChange={setSessionViewTab} className="w-full">
@@ -239,7 +259,11 @@ const SessionView: React.FC = () => {
                 <CardTitle>{t('sessions.galleryTitle')}</CardTitle>
                 <div className="flex flex-wrap items-center gap-2">
                     {images.length > 0 && !session.locked && (
-                        <CompactUploader sessionId={parseInt(sessionId!)} onUploadComplete={handleUploadComplete} />
+                        <CompactUploader
+                          sessionId={parseInt(sessionId!)}
+                          onUploadComplete={handleUploadComplete}
+                          onUploadStart={handleUploadStart}
+                        />
                     )}
                     {images.length > 0 && !session.locked && (
                         <Button

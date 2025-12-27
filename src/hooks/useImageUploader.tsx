@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'; // Added this line
 interface UseImageUploaderProps {
   sessionId: number;
   onUploadComplete?: () => void;
+  onUploadStart?: () => void;
 }
 
 interface UploadingFile {
@@ -16,7 +17,7 @@ interface UploadingFile {
   error?: string;
 }
 
-export const useImageUploader = ({ sessionId, onUploadComplete }: UseImageUploaderProps) => {
+export const useImageUploader = ({ sessionId, onUploadComplete: _onUploadComplete, onUploadStart }: UseImageUploaderProps) => {
   const { t } = useTranslation(); // Added this line
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [selectedEye, setSelectedEye] = useState<'OI' | 'OD'>('OI');
@@ -27,6 +28,10 @@ export const useImageUploader = ({ sessionId, onUploadComplete }: UseImageUpload
       if (!files || files.length === 0) return;
 
       const imageFiles = Array.from(files).filter((file) => file.type.startsWith('image/'));
+      if (imageFiles.length === 0) return;
+
+      // Notify parent that upload is starting
+      onUploadStart?.();
 
       const newUploadingFiles: UploadingFile[] = imageFiles.map((file) => ({
         id: `${file.name}-${file.lastModified}`,
@@ -37,10 +42,29 @@ export const useImageUploader = ({ sessionId, onUploadComplete }: UseImageUpload
 
       setUploadingFiles((prev) => [...prev, ...newUploadingFiles]);
 
-      for (const newFile of newUploadingFiles) {
+      // Process single image function
+      const processImage = async (newFile: UploadingFile) => {
         try {
-          const options = { maxSizeMB: 1, maxWidthOrHeight: 2048, useWebWorker: true };
+          // Start compression - update to 10%
+          setUploadingFiles((prev) =>
+            prev.map((uf) =>
+              uf.id === newFile.id ? { ...uf, progress: 10 } : uf
+            )
+          );
+
+          const options = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 2048,
+            useWebWorker: true
+          };
           const compressedFile = await imageCompression(newFile.file, options);
+
+          // Update progress to 50% after compression
+          setUploadingFiles((prev) =>
+            prev.map((uf) =>
+              uf.id === newFile.id ? { ...uf, progress: 50 } : uf
+            )
+          );
 
           const img = new Image();
           const imageUrl = URL.createObjectURL(compressedFile);
@@ -49,6 +73,13 @@ export const useImageUploader = ({ sessionId, onUploadComplete }: UseImageUpload
             img.onerror = reject;
             img.src = imageUrl;
           });
+
+          // Update progress to 70% after image load
+          setUploadingFiles((prev) =>
+            prev.map((uf) =>
+              uf.id === newFile.id ? { ...uf, progress: 70 } : uf
+            )
+          );
 
           await db.images.add({
             sessionId,
@@ -62,6 +93,7 @@ export const useImageUploader = ({ sessionId, onUploadComplete }: UseImageUpload
 
           URL.revokeObjectURL(imageUrl);
 
+          // Update to 100% after successful save
           setUploadingFiles((prev) =>
             prev.map((uf) =>
               uf.id === newFile.id ? { ...uf, progress: 100, status: 'success' } : uf
@@ -77,19 +109,27 @@ export const useImageUploader = ({ sessionId, onUploadComplete }: UseImageUpload
             )
           );
         }
-      }
+      };
 
-      setTimeout(() => {
-        onUploadComplete?.();
-        setUploadingFiles([]);
-      }, 1500);
+      // Process images with concurrency limit (2 at a time)
+      const CONCURRENCY_LIMIT = 2;
+
+      // Simple approach: split into batches and process each batch in parallel
+      for (let i = 0; i < newUploadingFiles.length; i += CONCURRENCY_LIMIT) {
+        const batch = newUploadingFiles.slice(i, i + CONCURRENCY_LIMIT);
+        await Promise.all(batch.map(file => processImage(file)));
+      }
     },
-    [sessionId, selectedEye, onUploadComplete, t]
+    [sessionId, selectedEye, onUploadStart, t]
   );
   
   const triggerFileDialog = () => {
     fileInputRef.current?.click();
   };
+
+  const clearUploadState = useCallback(() => {
+    setUploadingFiles([]);
+  }, []);
 
   const getRootProps = () => ({
     onDragOver: (e: React.DragEvent) => {
@@ -119,6 +159,7 @@ export const useImageUploader = ({ sessionId, onUploadComplete }: UseImageUpload
     setSelectedEye,
     uploadingFiles,
     triggerFileDialog,
+    clearUploadState,
     getRootProps,
     getHiddenInput,
   };

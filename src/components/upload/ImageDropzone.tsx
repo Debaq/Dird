@@ -1,26 +1,29 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useImageUploader } from '@/hooks/useImageUploader';
 import { Button } from '../ui/button';
+import UploadProgressModal from './UploadProgressModal';
 
 interface ImageDropzoneProps {
   sessionId: number;
   onUploadComplete?: () => void;
+  onUploadStart?: () => void;
 }
 
-const ImageDropzone: React.FC<ImageDropzoneProps> = ({ sessionId, onUploadComplete }) => {
+const ImageDropzone: React.FC<ImageDropzoneProps> = ({ sessionId, onUploadComplete, onUploadStart }) => {
   const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const {
     selectedEye,
     setSelectedEye,
     uploadingFiles,
+    clearUploadState,
     getRootProps,
     getHiddenInput,
     triggerFileDialog
-  } = useImageUploader({ sessionId, onUploadComplete });
+  } = useImageUploader({ sessionId, onUploadComplete, onUploadStart });
 
   const { onDragOver, onDrop } = getRootProps();
 
@@ -78,30 +81,11 @@ const ImageDropzone: React.FC<ImageDropzoneProps> = ({ sessionId, onUploadComple
         <p className="text-xs text-smoke-400 mt-1">{t('upload.maxSize')}</p>
       </div>
 
-      {uploadingFiles.length > 0 && (
-        <div className="space-y-2 mt-4">
-          {uploadingFiles.map((uf) => (
-            <div
-              key={uf.id}
-              className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-coal-200"
-            >
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-coal-800 truncate">{uf.file.name}</span>
-                  {uf.status === 'success' && <CheckCircle className="w-4 h-4 text-green-500" />}
-                  {uf.status === 'error' && <AlertCircle className="w-4 h-4 text-red-500" />}
-                </div>
-                {uf.status === 'uploading' && (
-                  <div className="h-1.5 bg-coal-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-primary-500 transition-all" style={{ width: `${uf.progress}%` }} />
-                  </div>
-                )}
-                {uf.status === 'error' && <p className="text-xs text-red-500">{uf.error}</p>}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <UploadProgressModal
+        uploadingFiles={uploadingFiles}
+        onClose={clearUploadState}
+        onComplete={onUploadComplete}
+      />
     </div>
   );
 };

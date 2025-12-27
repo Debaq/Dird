@@ -560,7 +560,6 @@ interface AppConfig {
     detection: boolean;
     segmentation: boolean;
   };
-  autoProcess: boolean;
 }
 
 interface ConfigStore {
@@ -578,8 +577,7 @@ export const useConfigStore = create<ConfigStore>()(
         modelsEnabled: {
           detection: true,
           segmentation: false // Beta
-        },
-        autoProcess: true
+        }
       },
       updateConfig: (updates) =>
         set((state) => ({

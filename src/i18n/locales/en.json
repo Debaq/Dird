@@ -159,7 +159,16 @@
     "dropzone": "Drag files here or click to select",
     "accepted": "Supported formats: JPG, PNG",
     "maxSize": "Max size: 1MB",
-    "noImage": "No image"
+    "noImage": "No image",
+    "modal": {
+      "title": "Uploading Images",
+      "completed": "Upload Completed",
+      "description": "Compressing and saving images to your device",
+      "descriptionComplete": "{{completed}} of {{total}} images uploaded successfully",
+      "imagesUploaded": "Images uploaded",
+      "imagesFailed": "{{count}} image(s) failed",
+      "pleaseWait": "Please wait, this process may take a few moments..."
+    }
   },
   "canvas": {
     "tools": {
@@ -482,8 +491,6 @@
     },
     "processing": {
       "title": "Processing Settings",
-      "autoProcess": "Automatic Processing",
-      "autoProcessDescription": "Automatically run model when uploading images",
       "opticDiscRefinement": "Optic Disc Segmentation",
       "opticDiscRefinementDescription": "Generate circular mask of the optic disc within the YOLO detected area",
       "maxImageSize": "Max Image Size",

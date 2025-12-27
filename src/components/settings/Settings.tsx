@@ -627,22 +627,6 @@ export function Settings() {
             </h2>
 
             <div className="space-y-6">
-              {/* Auto Process */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="font-semibold dark:text-dark-text">
-                    {t('settings.processing.autoProcess')}
-                  </Label>
-                  <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-                    {t('settings.processing.autoProcessDescription')}
-                  </p>
-                </div>
-                <Switch
-                  checked={config.processing.autoProcess}
-                  onCheckedChange={(checked) => updateProcessing({ autoProcess: checked })}
-                />
-              </div>
-
               {/* Optic Disc Refinement */}
               <div className="flex items-center justify-between">
                 <div>
