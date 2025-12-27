@@ -46,27 +46,17 @@ try {
     }
 
     // Validate required fields
-    if (!isset($input['installation_token']) || !isset($input['tokens_to_add'])) {
+    if (!isset($input['installation_token']) || !isset($input['new_total'])) {
         http_response_code(400);
         echo json_encode([
             'success' => false,
-            'error' => 'installation_token y tokens_to_add requeridos'
+            'error' => 'installation_token y new_total requeridos'
         ]);
         exit();
     }
 
     $installationToken = $input['installation_token'];
-    $tokensToAdd = (int)$input['tokens_to_add'];
-
-    // Validate tokens_to_add
-    if ($tokensToAdd <= 0) {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false,
-            'error' => 'tokens_to_add debe ser mayor a 0'
-        ]);
-        exit();
-    }
+    $newTotal = (int)$input['new_total'];
 
     // Load tokens database
     if (!file_exists($TOKENS_FILE)) {
@@ -91,19 +81,29 @@ try {
         exit();
     }
 
-    // Calculate new total
     $currentTokens = $installations[$installationToken]['tokens'];
-    $newTotal = $currentTokens + $tokensToAdd;
+
+    // Validate: Cannot reduce tokens
+    if ($newTotal < $currentTokens) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'error' => "No se pueden eliminar tokens. El nuevo total ({$newTotal}) debe ser mayor o igual al actual ({$currentTokens})."
+        ]);
+        exit();
+    }
 
     // Validate max limit
     if ($newTotal > $MAX_TOKENS) {
         http_response_code(400);
         echo json_encode([
             'success' => false,
-            'error' => "El total de tokens no puede exceder {$MAX_TOKENS}. Actual: {$currentTokens}, Intentando agregar: {$tokensToAdd}"
+            'error' => "El total de tokens no puede exceder {$MAX_TOKENS}."
         ]);
         exit();
     }
+
+    $tokensAdded = $newTotal - $currentTokens;
 
     // Update tokens
     $installations[$installationToken]['tokens'] = $newTotal;
@@ -118,7 +118,7 @@ try {
         'message' => 'Tokens actualizados correctamente',
         'data' => [
             'new_total' => $newTotal,
-            'tokens_added' => $tokensToAdd,
+            'tokens_added' => $tokensAdded,
             'installation_token' => $installationToken
         ]
     ];
