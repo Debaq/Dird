@@ -112,13 +112,71 @@ export default defineConfig(({ mode }) => ({
     target: 'esnext',
     rollupOptions: {
       output: {
-        manualChunks: {
-          'ai-libs': ['onnxruntime-web'],
-          'canvas': ['konva', 'react-konva'],
-          'pdf': ['jspdf', 'jspdf-autotable']
+        manualChunks: (id) => {
+          // React core libraries
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+            return 'react-vendor';
+          }
+
+          // Router
+          if (id.includes('node_modules/react-router-dom') || id.includes('node_modules/@remix-run')) {
+            return 'router';
+          }
+
+          // Database
+          if (id.includes('node_modules/dexie')) {
+            return 'database';
+          }
+
+          // State management
+          if (id.includes('node_modules/zustand')) {
+            return 'state';
+          }
+
+          // i18n
+          if (id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next')) {
+            return 'i18n';
+          }
+
+          // UI Components (Radix UI)
+          if (id.includes('node_modules/@radix-ui')) {
+            return 'ui-components';
+          }
+
+          // Icons
+          if (id.includes('node_modules/lucide-react')) {
+            return 'icons';
+          }
+
+          // Animations
+          if (id.includes('node_modules/framer-motion')) {
+            return 'animations';
+          }
+
+          // AI libs (ONNX)
+          if (id.includes('node_modules/onnxruntime-web')) {
+            return 'ai-libs';
+          }
+
+          // Canvas
+          if (id.includes('node_modules/konva') || id.includes('node_modules/react-konva')) {
+            return 'canvas';
+          }
+
+          // PDF
+          if (id.includes('node_modules/jspdf') || id.includes('node_modules/html2canvas')) {
+            return 'pdf';
+          }
+
+          // Other vendor code
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         }
       }
-    }
+    },
+    // Increase chunk size warning limit since we're now properly splitting
+    chunkSizeWarningLimit: 600
   },
   server: {
     headers: {
