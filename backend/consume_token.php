@@ -13,6 +13,7 @@ ini_set('display_errors', '0');
 
 // Include logger
 require_once __DIR__ . '/includes/logger.php';
+require_once __DIR__ . '/includes/ai_stats.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -184,6 +185,11 @@ function callGroqAPI($apiKey, $reportData, $language, $model, $promptTemplate) {
         'has_content' => isset($result['choices'][0]['message']['content']),
         'content_length' => strlen($result['choices'][0]['message']['content'] ?? '')
     ]);
+
+    // Save AI Usage Stats
+    if (isset($result['usage'])) {
+        saveAIUsage($model, $result['usage'], 'production_report');
+    }
 
     $content = $result['choices'][0]['message']['content'] ?? null;
 

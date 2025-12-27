@@ -8,6 +8,7 @@ ini_set('display_errors', '0');
 
 // Include logger
 require_once __DIR__ . '/../includes/logger.php';
+require_once __DIR__ . '/../includes/ai_stats.php';
 
 logDebug("=== TEST AI CONFIG REQUEST START ===");
 logDebug("Request Method: " . ($_SERVER['REQUEST_METHOD'] ?? 'UNDEFINED'));
@@ -149,6 +150,10 @@ try {
 
     $result = json_decode($response, true);
     logDebug("Decoded Groq Response", ['success' => ($result !== null), 'keys' => array_keys($result ?? [])]);
+
+    if (isset($result['usage'])) {
+        saveAIUsage($model, $result['usage'], 'test_connection');
+    }
 
     $output = [
         'success' => $httpCode === 200,
