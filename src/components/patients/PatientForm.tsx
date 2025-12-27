@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { db } from '@/lib/db/schema';
 import type { Patient } from '@/lib/db/schema';
 import {
@@ -123,7 +124,7 @@ const PatientForm: React.FC<PatientFormProps> = ({
       });
     } catch (error) {
       console.error('Error saving patient:', error);
-      alert(t('errors.savePatient'));
+      toast.error(t('errors.savePatient'));
     } finally {
       setLoading(false);
     }

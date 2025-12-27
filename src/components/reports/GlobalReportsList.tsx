@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { FileText, Download, Calendar, ShieldCheck, Eye, Search, FileSearch, ArrowRight, User, CheckCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { useConfirm } from '@/hooks/useConfirm';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import type { Report } from '@/lib/db/schema';
@@ -22,6 +24,7 @@ interface ReportItemProps {
 
 const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) => {
   const { t } = useTranslation();
+  const { confirm, ConfirmDialogComponent } = useConfirm();
   const navigate = useNavigate();
   const [isFinalizing, setIsFinalizing] = useState(false);
 
@@ -33,7 +36,15 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
   const handleFinalizeReport = async () => {
     if (!report.id) return;
 
-    if (!confirm(t('reports.list.finalizeConfirm'))) {
+    const confirmed = await confirm({
+      title: t('confirmations.finalizeReportTitle') || t('reports.list.finalize'),
+      description: t('reports.list.finalizeConfirm'),
+      confirmText: t('common.confirm'),
+      cancelText: t('common.cancel'),
+      variant: 'warning',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -109,99 +120,102 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
       const message = isDemoPreview
         ? t('reports.list.finalizeSuccessDemo')
         : t('reports.list.finalizeSuccess');
-      alert(message);
+      toast.success(message);
     } catch (error) {
       console.error('Error finalizing report:', error);
-      alert(t('errors.unknown'));
+      toast.error(t('errors.unknown'));
     } finally {
       setIsFinalizing(false);
     }
   };
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-coal-200 rounded-xl hover:shadow-md transition-all group">
-      <div className="flex-1 mb-3 sm:mb-0">
-        <div className="flex items-center gap-4">
-          <div className={`p-2 rounded-lg ${
-            report.type === 'final' ? 'bg-accent-50 text-accent-600' : 'bg-primary-50 text-primary-600'
-          }`}>
-            {report.type === 'final' ? <ShieldCheck className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
-          </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <span className="font-bold text-coal-800 flex items-center gap-2">
-                <User className="w-4 h-4 text-coal-400" />
-                {patient.name}
-              </span>
-              <Badge variant={report.type === 'final' ? 'default' : 'secondary'} className="text-[10px] uppercase">
-                {report.type === 'final' ? t('reports.status.final') : t('reports.status.preliminary')}
-              </Badge>
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-coal-200 rounded-xl hover:shadow-md transition-all group">
+        <div className="flex-1 mb-3 sm:mb-0">
+          <div className="flex items-center gap-4">
+            <div className={`p-2 rounded-lg ${
+              report.type === 'final' ? 'bg-accent-50 text-accent-600' : 'bg-primary-50 text-primary-600'
+            }`}>
+              {report.type === 'final' ? <ShieldCheck className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs text-smoke-500">
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" />
-                {new Date(session.date).toLocaleDateString()}
-              </span>
-              <span className="hidden sm:inline">•</span>
-              <span>
-                {t('reports.list.sessionPrefix')}{session.sessionNumber}
-              </span>
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <span className="font-bold text-coal-800 flex items-center gap-2">
+                  <User className="w-4 h-4 text-coal-400" />
+                  {patient.name}
+                </span>
+                <Badge variant={report.type === 'final' ? 'default' : 'secondary'} className="text-[10px] uppercase">
+                  {report.type === 'final' ? t('reports.status.final') : t('reports.status.preliminary')}
+                </Badge>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs text-smoke-500">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5" />
+                  {new Date(session.date).toLocaleDateString()}
+                </span>
+                <span className="hidden sm:inline">•</span>
+                <span>
+                  {t('reports.list.sessionPrefix')}{session.sessionNumber}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex gap-2 flex-wrap sm:flex-nowrap">
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full sm:w-auto hover:bg-coal-50 hover:text-coal-900 border-coal-200"
-          onClick={() => navigate(`/patients/${patient.id}/sessions/${session.id}`)}
-        >
-          <ArrowRight className="w-4 h-4 mr-2" />
-          {t('reports.list.goToAnalysis')}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto"
-          onClick={() => onView(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
-        >
-          <Eye className="w-4 h-4 mr-2" />
-          {t('reports.list.viewPDF')}
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto"
-          onClick={() => onDownload(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
-        >
-          <Download className="w-4 h-4 mr-2" />
-          {t('reports.list.download')}
-        </Button>
-        {report.type === 'preview' && !session.locked && (
+        <div className="flex gap-2 flex-wrap sm:flex-nowrap">
           <Button
-            variant="default"
+            variant="outline"
             size="sm"
-            className="hover:bg-accent-600 hover:text-white w-full sm:w-auto bg-accent-500 text-white"
-            onClick={handleFinalizeReport}
-            disabled={isFinalizing}
+            className="w-full sm:w-auto hover:bg-coal-50 hover:text-coal-900 border-coal-200"
+            onClick={() => navigate(`/patients/${patient.id}/sessions/${session.id}`)}
           >
-            {isFinalizing ? (
-              <>
-                <CheckCircle className="w-4 h-4 mr-2 animate-spin" />
-                {t('reports.list.finalizing')}
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-4 h-4 mr-2" />
-                {t('reports.list.finalize')}
-              </>
-            )}
+            <ArrowRight className="w-4 h-4 mr-2" />
+            {t('reports.list.goToAnalysis')}
           </Button>
-        )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto"
+            onClick={() => onView(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            {t('reports.list.viewPDF')}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto"
+            onClick={() => onDownload(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            {t('reports.list.download')}
+          </Button>
+          {report.type === 'preview' && !session.locked && (
+            <Button
+              variant="default"
+              size="sm"
+              className="hover:bg-accent-600 hover:text-white w-full sm:w-auto bg-accent-500 text-white"
+              onClick={handleFinalizeReport}
+              disabled={isFinalizing}
+            >
+              {isFinalizing ? (
+                <>
+                  <CheckCircle className="w-4 h-4 mr-2 animate-spin" />
+                  {t('reports.list.finalizing')}
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  {t('reports.list.finalize')}
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
-    </div>
+      {ConfirmDialogComponent}
+    </>
   );
 };
 

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { useConfirm } from '@/hooks/useConfirm';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { ArrowLeft, Plus, Calendar, Lock, Unlock, Download, Pencil, Trash2, Copy, ArrowRightLeft, CheckSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +18,7 @@ const PatientDetails: React.FC = () => {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { confirm, ConfirmDialogComponent } = useConfirm();
   const [showSessionForm, setShowSessionForm] = useState(false);
   const [showPatientForm, setShowPatientForm] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -43,16 +46,25 @@ const PatientDetails: React.FC = () => {
     try {
       const blob = await exportPatient(patient.id!);
       downloadDirdFile(blob, `dird_export_patient_${patient.patientId}`);
+      toast.success(t('export.patientSuccess'));
     } catch (error) {
       console.error('Error exporting patient:', error);
-      alert(t('errors.exportPatient'));
+      toast.error(t('errors.exportPatient'));
     } finally {
       setIsExporting(false);
     }
   };
 
   const handleDeleteSession = async (sessionId: number) => {
-    if (window.confirm(t('confirmations.deleteSession'))) {
+    const confirmed = await confirm({
+      title: t('confirmations.deleteSessionTitle') || t('sessions.delete'),
+      description: t('confirmations.deleteSession'),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      variant: 'destructive',
+    });
+
+    if (confirmed) {
       try {
         await db.transaction('rw', [db.sessions, db.images, db.detections, db.segmentations, db.reports], async () => {
           const imagesToDelete = await db.images.where('sessionId').equals(sessionId).toArray();
@@ -67,9 +79,10 @@ const PatientDetails: React.FC = () => {
           await db.reports.where('sessionId').equals(sessionId).delete();
           await db.sessions.delete(sessionId);
         });
+        toast.success(t('sessions.deleteSuccess'));
       } catch (error) {
         console.error('Error deleting session:', error);
-        alert(t('errors.deleteSession'));
+        toast.error(t('errors.deleteSession'));
       }
     }
   };
@@ -80,13 +93,22 @@ const PatientDetails: React.FC = () => {
   };
 
   const handleDuplicateSession = async (sessionId: number) => {
-    if (window.confirm(t('confirmations.duplicateSession'))) {
+    const confirmed = await confirm({
+      title: t('confirmations.duplicateSessionTitle') || t('sessions.duplicate'),
+      description: t('confirmations.duplicateSession'),
+      confirmText: t('common.confirm'),
+      cancelText: t('common.cancel'),
+      variant: 'default',
+    });
+
+    if (confirmed) {
       setIsDuplicating(sessionId);
       try {
         await duplicateSession(sessionId);
+        toast.success(t('sessions.duplicateSuccess'));
       } catch (error) {
         console.error('Error duplicating session:', error);
-        alert(t('errors.duplicateSession'));
+        toast.error(t('errors.duplicateSession'));
       } finally {
         setIsDuplicating(null);
       }
@@ -117,9 +139,10 @@ const PatientDetails: React.FC = () => {
 
       // Navegar a la nueva sesión combinada
       navigate(`/patients/${patientId}/sessions/${combinedSessionId}`);
+      toast.success(t('sessions.compareSuccess'));
     } catch (error) {
       console.error('Error al crear sesión combinada:', error);
-      alert(t('errors.sessionCreation'));
+      toast.error(t('errors.sessionCreation'));
     }
   };
 
@@ -409,6 +432,7 @@ const PatientDetails: React.FC = () => {
           setPatientToEdit(undefined);
         }}
       />
+      {ConfirmDialogComponent}
     </div>
   );
 };

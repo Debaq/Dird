@@ -5,8 +5,10 @@ import { Users, Settings, FileText, Coffee, Star, GraduationCap } from 'lucide-r
 import { useLiveQuery } from 'dexie-react-hooks';
 import { cn } from '@/lib/utils';
 import { useConfigStore } from '@/stores/config-store';
+import { useTokenStore } from '@/stores/token-store';
 import { db } from '@/lib/db/schema';
 import { getAssetPath } from '@/utils/assets';
+import TokenCounter from '@/components/tokens/TokenCounter';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -16,6 +18,7 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = false }) => {
   const { t } = useTranslation();
   const location = useLocation();
+  const tokens = useTokenStore((state) => state.tokens);
 
   const pendingContributions = useLiveQuery(
     () => db.images.where('contributionStatus').equals('pending').count()
@@ -41,6 +44,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
       >
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
+            {/* Logo and title */}
             <Link to="/" className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center dark:bg-gray-700">
                 <img
@@ -54,6 +58,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
                 <p className="text-xs text-primary-100 dark:text-gray-300">{t('app.tagline')}</p>
               </div>
             </Link>
+
+            {/* Token Counter */}
+            <TokenCounter tokens={tokens} />
           </div>
         </div>
       </header>

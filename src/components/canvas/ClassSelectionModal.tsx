@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectOption } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -82,7 +83,7 @@ const ClassSelectionModal: React.FC<ClassSelectionModalProps> = ({
 
     // Validar que no esté vacío
     if (!finalClassName || finalClassName.length === 0) {
-      alert(t('canvas.classSelection.alert'));
+      toast.error(t('canvas.classSelection.alert'));
       return;
     }
 

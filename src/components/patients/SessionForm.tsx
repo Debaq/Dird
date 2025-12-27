@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -104,7 +105,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
       onOpenChange(false);
     } catch (error) {
       console.error('Error saving session:', error);
-      alert(t('errors.saveSession'));
+      toast.error(t('errors.saveSession'));
     } finally {
       setLoading(false);
     }

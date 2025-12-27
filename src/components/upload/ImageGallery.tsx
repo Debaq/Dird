@@ -15,6 +15,7 @@ import {
 import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Trash2, Brain, GripVertical, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import type { Image as ImageType } from '@/lib/db/schema';
 import { updateImageEyeType } from '@/lib/db/actions';
@@ -102,7 +103,7 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
         URL.revokeObjectURL(imageUrl);
       } catch (error) {
         console.error('Error reprocessing AI:', error);
-        alert(t('errors.processingImages', { error: (error as Error).message }));
+        toast.error(t('errors.processingImages', { error: (error as Error).message }));
       } finally {
         setIsReprocessing(false);
       }
@@ -125,7 +126,19 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
           className="aspect-square overflow-hidden bg-coal-50 cursor-pointer relative"
           onClick={handleViewImage}
         >
-          {thumbnail && <img src={thumbnail} alt={image.filename} className="w-full h-full object-cover" />}
+          {thumbnail ? (
+            <img
+              src={thumbnail}
+              alt={image.filename}
+              className="w-full h-full object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-coal-100">
+              <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+            </div>
+          )}
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center">
             <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full px-4 py-2 shadow-lg text-center">
               <p className="text-sm font-bold text-primary-600">
@@ -280,15 +293,31 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, patientId, sessionI
 
   useEffect(() => {
     const newThumbnails = new Map<number, string>();
-    for (const image of images) {
-      if (image.id) {
-        const url = URL.createObjectURL(image.originalBlob);
-        newThumbnails.set(image.id, url);
+    let cancelled = false;
+
+    // Create thumbnails progressively to avoid memory issues on mobile
+    const createThumbnails = async () => {
+      for (const image of images) {
+        if (cancelled) break;
+        if (image.id) {
+          try {
+            const url = URL.createObjectURL(image.originalBlob);
+            newThumbnails.set(image.id, url);
+            // Update state progressively for better UX
+            setThumbnails(new Map(newThumbnails));
+            // Small delay to prevent blocking the main thread
+            await new Promise(resolve => setTimeout(resolve, 0));
+          } catch (error) {
+            console.error('Error creating thumbnail:', error);
+          }
+        }
       }
-    }
-    setThumbnails(newThumbnails);
+    };
+
+    createThumbnails();
 
     return () => {
+      cancelled = true;
       newThumbnails.forEach(url => URL.revokeObjectURL(url));
     };
   }, [images]);

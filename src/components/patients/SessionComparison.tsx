@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -104,7 +105,7 @@ const SessionComparison: React.FC = () => {
         setShowReportPreview(true);
     } catch (e) {
         console.error("Error generating report", e);
-        alert(t('errors.imageProcessing'));
+        toast.error(t('errors.imageProcessing'));
     }
   };
 
@@ -130,7 +131,7 @@ const SessionComparison: React.FC = () => {
          setShowReportPreview(false);
      } catch (e) {
          console.error("Error downloading final report", e);
-         alert(t('errors.imageProcessing'));
+         toast.error(t('errors.imageProcessing'));
      }
   };
 

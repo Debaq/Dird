@@ -37,11 +37,15 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
 
 
   useEffect(() => {
+    let cancelled = false;
+    const createdUrls: string[] = [];
+
     const loadData = async () => {
       const data: ImageWithDetections[] = [];
       let total = 0;
 
       for (const image of images) {
+        if (cancelled) break;
         if (!image.id) continue;
 
         const detections = await db.detections
@@ -49,7 +53,13 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
           .equals(image.id)
           .toArray();
 
-        const thumbnail = URL.createObjectURL(image.originalBlob);
+        let thumbnail = '';
+        try {
+          thumbnail = URL.createObjectURL(image.originalBlob);
+          createdUrls.push(thumbnail);
+        } catch (error) {
+          console.error('Error creating thumbnail:', error);
+        }
 
         // Calculate quadrant analysis
         const quadrantAnalysis = quadrantCalculator.analyzeQuadrants(
@@ -62,16 +72,27 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
 
         // Count total detections
         total += detections.length;
-      }
 
-      setImagesWithDetections(data);
-      setTotalDetections(total);
+        // Update state progressively for better UX on mobile
+        setImagesWithDetections([...data]);
+        setTotalDetections(total);
+
+        // Small delay to prevent blocking the main thread
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
     };
 
     loadData();
 
     return () => {
-      imagesWithDetections.forEach(item => URL.revokeObjectURL(item.thumbnail));
+      cancelled = true;
+      createdUrls.forEach(url => {
+        try {
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          // URL already revoked or invalid
+        }
+      });
     };
   }, [images, refreshKey]);
 
@@ -162,11 +183,19 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
                   onClick={() => navigate(`/patients/${patientId}/sessions/${sessionId}/images/${image.id}`)}
                 >
                   <div className="aspect-video overflow-hidden bg-coal-50 relative flex-shrink-0">
-                    <img
-                      src={thumbnail}
-                      alt={image.filename}
-                      className="w-full h-full object-cover"
-                    />
+                    {thumbnail ? (
+                      <img
+                        src={thumbnail}
+                        alt={image.filename}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-coal-100">
+                        <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center">
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full px-4 py-2 shadow-lg">
                         <p className="text-sm font-bold text-primary-600">{t('analysis.view.viewDetails')}</p>
@@ -250,11 +279,19 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
                   onClick={() => navigate(`/patients/${patientId}/sessions/${sessionId}/images/${image.id}`)}
                 >
                   <div className="aspect-video overflow-hidden bg-coal-50 relative flex-shrink-0">
-                    <img
-                      src={thumbnail}
-                      alt={image.filename}
-                      className="w-full h-full object-cover"
-                    />
+                    {thumbnail ? (
+                      <img
+                        src={thumbnail}
+                        alt={image.filename}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-coal-100">
+                        <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center">
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white rounded-full px-4 py-2 shadow-lg">
                         <p className="text-sm font-bold text-primary-600">{t('analysis.view.viewDetails')}</p>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Plus, Search, Filter } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Button } from '@/components/ui/button';
@@ -11,9 +12,11 @@ import PatientForm from './PatientForm';
 import ExportImportControls from './ExportImportControls';
 import { db, Patient } from '@/lib/db/schema';
 import { deletePatient } from '@/lib/db/actions';
+import { useConfirm } from '@/hooks/useConfirm';
 
 const PatientList: React.FC = () => {
   const { t } = useTranslation();
+  const { confirm, ConfirmDialogComponent } = useConfirm();
   const [showForm, setShowForm] = useState(false);
   const [patientToEdit, setPatientToEdit] = useState<Patient | undefined>();
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,26 +64,45 @@ const PatientList: React.FC = () => {
   });
 
   const handleDeletePatient = async (patientId: number) => {
-    if (window.confirm(t('confirmations.deletePatient'))) {
-      try {
-        await deletePatient(patientId);
-      } catch (error) {
-        console.error('Error deleting patient:', error);
-        alert(t('errors.deletePatient'));
-      }
+    const confirmed = await confirm({
+      title: t('confirmations.deletePatientTitle'),
+      description: t('confirmations.deletePatient'),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      variant: 'destructive',
+    });
+
+    if (!confirmed) return;
+
+    try {
+      await deletePatient(patientId);
+      toast.success(t('success.deletePatient'));
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+      toast.error(t('errors.deletePatient'));
     }
   };
 
   const handleArchivePatient = async (patient: Patient) => {
     const isArchiving = (patient.status || 'active') === 'active';
     const action = isArchiving ? 'archivar' : 'desarchivar';
-    if (window.confirm(t('confirmations.archivePatient', { action }))) {
-      try {
-        await db.patients.update(patient.id!, { status: isArchiving ? 'archived' : 'active' });
-      } catch (error) {
-        console.error(`Error ${action}ing patient:`, error);
-        alert(t('errors.archivePatient', { action }));
-      }
+
+    const confirmed = await confirm({
+      title: isArchiving ? t('confirmations.archivePatientTitle') : t('confirmations.unarchivePatientTitle'),
+      description: t('confirmations.archivePatient', { action }),
+      confirmText: t('common.confirm'),
+      cancelText: t('common.cancel'),
+      variant: 'warning',
+    });
+
+    if (!confirmed) return;
+
+    try {
+      await db.patients.update(patient.id!, { status: isArchiving ? 'archived' : 'active' });
+      toast.success(isArchiving ? t('success.archivePatient') : t('success.unarchivePatient'));
+    } catch (error) {
+      console.error(`Error ${action}ing patient:`, error);
+      toast.error(t('errors.archivePatient', { action }));
     }
   };
   
@@ -186,6 +208,9 @@ const PatientList: React.FC = () => {
           setPatientToEdit(undefined);
         }}
       />
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </div>
   );
 };

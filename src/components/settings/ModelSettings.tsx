@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -12,9 +13,11 @@ import { useConfigStore } from '@/stores/config-store';
 import type { ModelMetadata } from '@/lib/ai/model-metadata';
 import ModelInfoModal from './ModelInfoModal';
 import ClassManagementModal from './ClassManagementModal';
+import { useConfirm } from '@/hooks/useConfirm';
 
 const ModelSettings: React.FC = () => {
   const { t } = useTranslation();
+  const { confirm, ConfirmDialogComponent } = useConfirm();
   const [cacheSize, setCacheSize] = useState<number>(0);
   const [isDetectionCached, setIsDetectionCached] = useState(false);
   const [isSegmentationCached, setIsSegmentationCached] = useState(false);
@@ -103,29 +106,39 @@ const ModelSettings: React.FC = () => {
     setIsLoading(true);
     try {
       await inferenceService.loadDetectionModel();
-      alert(`✅ ${t('settings.models.downloadSuccess')}`);
+      toast.success(t('settings.models.downloadSuccess'));
       await loadCacheStatus();
     } catch (error) {
       console.error('Error downloading detection model:', error);
       const errorMessage = error instanceof Error ? error.message : t('errors.unknown');
-      alert(`❌ ${t('settings.models.downloadError')}:\n\n` + errorMessage);
+      toast.error(t('settings.models.downloadError'), {
+        description: errorMessage,
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleClearCache = async () => {
-    if (!confirm(t('settings.models.clearCacheConfirm'))) return;
+    const confirmed = await confirm({
+      title: t('settings.models.clearCache'),
+      description: t('settings.models.clearCacheConfirm'),
+      confirmText: t('common.confirm'),
+      cancelText: t('common.cancel'),
+      variant: 'warning',
+    });
+
+    if (!confirmed) return;
 
     setIsLoading(true);
     try {
       await modelDownloader.clearCache();
       await inferenceService.dispose();
-      alert(t('settings.models.clearCacheSuccess'));
+      toast.success(t('settings.models.clearCacheSuccess'));
       await loadCacheStatus();
     } catch (error) {
       console.error('Error clearing cache:', error);
-      alert(t('settings.models.clearCacheError'));
+      toast.error(t('settings.models.clearCacheError'));
     } finally {
       setIsLoading(false);
     }
@@ -462,6 +475,9 @@ const ModelSettings: React.FC = () => {
         open={showClassManager}
         onOpenChange={setShowClassManager}
       />
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </div>
   );
 };
