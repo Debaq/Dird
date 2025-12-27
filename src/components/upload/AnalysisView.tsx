@@ -54,11 +54,15 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
           .toArray();
 
         let thumbnail = '';
-        try {
-          thumbnail = URL.createObjectURL(image.originalBlob);
-          createdUrls.push(thumbnail);
-        } catch (error) {
-          console.error('Error creating thumbnail:', error);
+        if (image.originalBlob && image.originalBlob instanceof Blob && image.originalBlob.size > 0) {
+          try {
+            thumbnail = URL.createObjectURL(image.originalBlob);
+            createdUrls.push(thumbnail);
+          } catch (error) {
+            console.error('Error creating thumbnail:', error);
+          }
+        } else {
+          console.warn(`Invalid blob for image ${image.id}`);
         }
 
         // Calculate quadrant analysis
