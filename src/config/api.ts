@@ -46,6 +46,7 @@ export const API_ENDPOINTS = {
 
   // Admin endpoints
   ADMIN_LOGIN: `${API_BASE_URL}/admin/login_admin.php`,
+  ADMIN_CHANGE_PASSWORD: `${API_BASE_URL}/admin/change_password.php`,
   ADMIN_GET_CONTRIBUTIONS: `${API_BASE_URL}/admin/get_contributions.php`,
   ADMIN_GET_INSTALLATIONS: `${API_BASE_URL}/admin/get_installations.php`,
   ADMIN_UPDATE_TOKENS: `${API_BASE_URL}/admin/update_tokens.php`,

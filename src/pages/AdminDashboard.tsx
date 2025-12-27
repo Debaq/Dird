@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, LogOut, Image, Users, MessageSquare, Radio } from 'lucide-react';
+import { Shield, LogOut, Image, Users, MessageSquare, Radio, Settings } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { InstallationsList } from '@/components/admin/InstallationsList';
 import { MessageBroadcast } from '@/components/admin/MessageBroadcast';
 import { BeaconMonitor } from '@/components/admin/BeaconMonitor';
 import { ContributionsList } from '@/components/admin/ContributionsList';
+import { ChangePasswordForm } from '@/components/admin/ChangePasswordForm';
 import { logoutAdmin } from '@/lib/api/admin-service';
 import { toast } from 'sonner';
 
@@ -55,7 +56,7 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
             <TabsTrigger value="installations" className="gap-2">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Instalaciones</span>
@@ -71,6 +72,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="beacons" className="gap-2">
               <Radio className="w-4 h-4" />
               <span className="hidden sm:inline">Balizas</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2">
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">Configuración</span>
             </TabsTrigger>
           </TabsList>
 
@@ -88,6 +93,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="beacons" className="space-y-4">
             <BeaconMonitor />
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-4">
+            <ChangePasswordForm />
           </TabsContent>
         </Tabs>
       </main>

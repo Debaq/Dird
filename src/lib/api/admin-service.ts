@@ -7,6 +7,8 @@ import { API_ENDPOINTS } from '@/config/api';
 import type {
   AdminLoginRequest,
   AdminLoginResponse,
+  ChangePasswordRequest,
+  ChangePasswordResponse,
   Installation,
   Contribution,
   UpdateTokensRequest,
@@ -95,6 +97,37 @@ export function logoutAdmin(): void {
  */
 export function isAdminAuthenticated(): boolean {
   return !!getAdminToken();
+}
+
+/**
+ * Change admin password
+ */
+export async function changeAdminPassword(
+  request: ChangePasswordRequest
+): Promise<ChangePasswordResponse> {
+  try {
+    const response = await fetch(API_ENDPOINTS.ADMIN_CHANGE_PASSWORD, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(request),
+    });
+
+    const data: ChangePasswordResponse = await response.json();
+
+    // If password was changed successfully, clear local token
+    // User will need to login again
+    if (data.success) {
+      clearAdminToken();
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Change password error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error de conexión',
+    };
+  }
 }
 
 /**

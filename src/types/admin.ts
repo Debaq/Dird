@@ -61,6 +61,18 @@ export interface AdminLoginResponse {
   error?: string;
 }
 
+export interface ChangePasswordRequest {
+  current_password: string;
+  new_password: string;
+  confirm_password: string;
+}
+
+export interface ChangePasswordResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
 export interface UpdateTokensRequest {
   installation_token: string;
   tokens_to_add: number;
