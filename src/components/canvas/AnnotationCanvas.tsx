@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Stage, Layer, Image as KonvaImage, Rect, Group, Text, Transformer, Circle, Line } from 'react-konva';
 import { RotateCcw, RotateCw, Brain, Loader2 } from 'lucide-react';
 import type { Image as ImageType, Detection } from '@/lib/db/schema';
@@ -52,6 +54,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   history,
 }) => {
   const { i18n } = useTranslation();
+  const { confirm, ConfirmDialogComponent } = useConfirm();
   const { config } = useConfigStore();
   const { selectedAnnotationId, setSelectedAnnotation } = useCanvasStore();
   const rainbowMode = config.appearance.rainbowMode; // Subscribe to rainbow mode changes
@@ -747,14 +750,22 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       onAnnotationAdded?.();
     } catch (error) {
       console.error('Error al guardar anotación:', error);
-      alert('Error al guardar la anotación. Por favor intenta de nuevo.');
+      toast.error('Error al guardar la anotación. Por favor intenta de nuevo.');
     }
   };
 
   const handleReDetect = async () => {
     if (!image.id || isProcessing) return;
 
-    if (!confirm('Esto eliminará todas las detecciones de IA actuales para esta imagen y volverá a ejecutar el análisis. ¿Continuar?')) {
+    const confirmed = await confirm({
+      title: 'Re-detección de IA',
+      description: 'Esto eliminará todas las detecciones de IA actuales para esta imagen y volverá a ejecutar el análisis. ¿Continuar?',
+      confirmText: 'Continuar',
+      cancelText: 'Cancelar',
+      variant: 'warning',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -781,7 +792,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       onAnnotationAdded?.();
     } catch (error) {
       console.error('Error en re-detección:', error);
-      alert('Error al ejecutar la re-detección.');
+      toast.error('Error al ejecutar la re-detección.');
     } finally {
       setIsProcessing(false);
     }
@@ -1813,6 +1824,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       onCancel={handleModalClose}
       imageId={image.id!}
     />
+    {ConfirmDialogComponent}
   </>
   );
 };

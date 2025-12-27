@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { FileText, Download, Calendar, ShieldCheck, Eye, Trash2, Edit3, CheckCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { useConfirm } from '@/hooks/useConfirm';
 import { useTranslation } from 'react-i18next';
 import { db } from '@/lib/db/schema';
 import { Button } from '@/components/ui/button';
@@ -17,6 +19,7 @@ interface ReportsListProps {
 
 const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
   const { t } = useTranslation();
+  const { confirm, ConfirmDialogComponent } = useConfirm();
   const [selectedReport, setSelectedReport] = useState<{ blob: Blob; title: string } | null>(null);
 
   const reports = useLiveQuery(
@@ -67,16 +70,25 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
 
   const handleDeleteReport = async (reportId: number, type: string) => {
     if (type === 'final') {
-      alert(t('reports.list.deleteFinalError'));
+      toast.error(t('reports.list.deleteFinalError'));
       return;
     }
 
-    if (confirm(t('reports.list.deleteConfirm'))) {
+    const confirmed = await confirm({
+      title: t('confirmations.deleteReportTitle') || t('reports.list.delete'),
+      description: t('reports.list.deleteConfirm'),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      variant: 'destructive',
+    });
+
+    if (confirmed) {
       try {
         await db.reports.delete(reportId);
+        toast.success(t('reports.list.deleteSuccess'));
       } catch (error) {
         console.error('Error deleting report:', error);
-        alert(t('errors.unknown'));
+        toast.error(t('errors.unknown'));
       }
     }
   };
@@ -84,7 +96,15 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
   const handleFinalizeReport = async (reportId: number, sessionId: number, notes: string) => {
     if (!reportId) return;
 
-    if (!confirm(t('reports.list.finalizeConfirm'))) {
+    const confirmed = await confirm({
+      title: t('confirmations.finalizeReportTitle') || t('reports.list.finalize'),
+      description: t('reports.list.finalizeConfirm'),
+      confirmText: t('common.confirm'),
+      cancelText: t('common.cancel'),
+      variant: 'warning',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -160,10 +180,10 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
       const message = isDemoPreview
         ? t('reports.list.finalizeSuccessDemo')
         : t('reports.list.finalizeSuccess');
-      alert(message);
+      toast.success(message);
     } catch (error) {
       console.error('Error finalizing report:', error);
-      alert(t('errors.unknown'));
+      toast.error(t('errors.unknown'));
     } finally {
       setFinalizingReport(null);
     }
@@ -186,7 +206,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
       setEditingReport(null);
     } catch (error) {
       console.error('Error updating report notes:', error);
-      alert('Error al actualizar las conclusiones');
+      toast.error('Error al actualizar las conclusiones');
     }
   };
 
@@ -209,148 +229,151 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
   }
 
   return (
-    <div className="space-y-4">
-      {reports.map((report) => (
-        <div
-          key={report.id}
-          className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-coal-200 rounded-xl hover:shadow-md transition-all group gap-4"
-        >
-          <div className="flex items-center gap-4">
-            <div className={`p-3 rounded-lg flex-shrink-0 ${
-              report.type === 'final' ? 'bg-accent-50 text-accent-600' : 'bg-primary-50 text-primary-600'
-            }`}>
-              {report.type === 'final' ? <ShieldCheck className="w-6 h-6" /> : <FileText className="w-6 h-6" />}
-            </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className="font-bold text-coal-800">
-                  {report.type === 'final' ? t('reports.status.final') : t('reports.status.preliminary')}
-                </span>
-                <Badge variant={report.type === 'final' ? 'default' : 'secondary'} className="text-[10px] uppercase">
-                  {report.type}
-                </Badge>
+    <>
+      <div className="space-y-4">
+        {reports.map((report) => (
+          <div
+            key={report.id}
+            className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-coal-200 rounded-xl hover:shadow-md transition-all group gap-4"
+          >
+            <div className="flex items-center gap-4">
+              <div className={`p-3 rounded-lg flex-shrink-0 ${
+                report.type === 'final' ? 'bg-accent-50 text-accent-600' : 'bg-primary-50 text-primary-600'
+              }`}>
+                {report.type === 'final' ? <ShieldCheck className="w-6 h-6" /> : <FileText className="w-6 h-6" />}
               </div>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-smoke-500">
-                <span className="flex items-center gap-1 whitespace-nowrap">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {new Date(report.generatedAt).toLocaleString()}
-                </span>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <span className="font-bold text-coal-800">
+                    {report.type === 'final' ? t('reports.status.final') : t('reports.status.preliminary')}
+                  </span>
+                  <Badge variant={report.type === 'final' ? 'default' : 'secondary'} className="text-[10px] uppercase">
+                    {report.type}
+                  </Badge>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-smoke-500">
+                  <span className="flex items-center gap-1 whitespace-nowrap">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {new Date(report.generatedAt).toLocaleString()}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 sm:flex-shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto justify-center"
-              onClick={() => handleViewPDF(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              {t('reports.list.viewPDF')}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto justify-center"
-              onClick={() => handleDownload(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              {t('reports.list.downloadPDF')}
-            </Button>
-            {report.type === 'preview' && (
+            <div className="flex flex-col sm:flex-row gap-2 sm:flex-shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
-                className="hover:bg-amber-50 hover:text-amber-700 w-full sm:w-auto justify-center"
-                onClick={() => report.id && startEditing(report.id, report.evaluatorNotes || '')}
+                className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto justify-center"
+                onClick={() => handleViewPDF(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
               >
-                <Edit3 className="w-4 h-4 mr-2" />
-                {t('reports.list.edit')}
+                <Eye className="w-4 h-4 mr-2" />
+                {t('reports.list.viewPDF')}
               </Button>
-            )}
-            {report.type === 'preview' && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="hover:bg-red-50 hover:text-red-700 w-full sm:w-auto justify-center"
-                onClick={() => report.id && handleDeleteReport(report.id, report.type)}
+                className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto justify-center"
+                onClick={() => handleDownload(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
               >
-                <Trash2 className="w-4 h-4 mr-2" />
-                {t('reports.list.delete')}
+                <Download className="w-4 h-4 mr-2" />
+                {t('reports.list.downloadPDF')}
               </Button>
-            )}
-            {report.type === 'preview' && session && !session.locked && (
-              <Button
-                variant="default"
-                size="sm"
-                className="hover:bg-accent-600 hover:text-white w-full sm:w-auto bg-accent-500 text-white"
-                onClick={() => report.id && handleFinalizeReport(report.id, report.sessionId, report.evaluatorNotes || '')}
-                disabled={finalizingReport === report.id}
-              >
-                {finalizingReport === report.id ? (
-                  <>
-                    <CheckCircle className="w-4 h-4 mr-2 animate-spin" />
-                    {t('reports.list.finalizing')}
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    {t('reports.list.finalize')}
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        </div>
-      ))}
-
-      {selectedReport && (
-        <PDFViewerModal
-          isOpen={!!selectedReport}
-          onClose={handleCloseModal}
-          pdfBlob={selectedReport.blob}
-          title={selectedReport.title}
-          onDownload={() => {
-            const url = URL.createObjectURL(selectedReport.blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = selectedReport.title;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-          }}
-        />
-      )}
-
-      {editingReport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold mb-4">{t('reports.list.editModalTitle')}</h3>
-            <textarea
-              value={editingReport.notes}
-              onChange={(e) => setEditingReport({...editingReport, notes: e.target.value})}
-              className="w-full h-32 p-3 border border-coal-200 rounded-lg resize-none"
-              placeholder={t('reports.list.editModalPlaceholder')}
-            />
-            <div className="flex justify-end gap-2 mt-4">
-              <Button
-                variant="outline"
-                onClick={cancelEditing}
-              >
-                {t('ui.cancel')}
-              </Button>
-              <Button
-                onClick={saveEditedNotes}
-              >
-                {t('ui.save')}
-              </Button>
+              {report.type === 'preview' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-amber-50 hover:text-amber-700 w-full sm:w-auto justify-center"
+                  onClick={() => report.id && startEditing(report.id, report.evaluatorNotes || '')}
+                >
+                  <Edit3 className="w-4 h-4 mr-2" />
+                  {t('reports.list.edit')}
+                </Button>
+              )}
+              {report.type === 'preview' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-red-50 hover:text-red-700 w-full sm:w-auto justify-center"
+                  onClick={() => report.id && handleDeleteReport(report.id, report.type)}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {t('reports.list.delete')}
+                </Button>
+              )}
+              {report.type === 'preview' && session && !session.locked && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="hover:bg-accent-600 hover:text-white w-full sm:w-auto bg-accent-500 text-white"
+                  onClick={() => report.id && handleFinalizeReport(report.id, report.sessionId, report.evaluatorNotes || '')}
+                  disabled={finalizingReport === report.id}
+                >
+                  {finalizingReport === report.id ? (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2 animate-spin" />
+                      {t('reports.list.finalizing')}
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      {t('reports.list.finalize')}
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        ))}
+
+        {selectedReport && (
+          <PDFViewerModal
+            isOpen={!!selectedReport}
+            onClose={handleCloseModal}
+            pdfBlob={selectedReport.blob}
+            title={selectedReport.title}
+            onDownload={() => {
+              const url = URL.createObjectURL(selectedReport.blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = selectedReport.title;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }}
+          />
+        )}
+
+        {editingReport && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl w-full max-w-md p-6">
+              <h3 className="text-lg font-semibold mb-4">{t('reports.list.editModalTitle')}</h3>
+              <textarea
+                value={editingReport.notes}
+                onChange={(e) => setEditingReport({...editingReport, notes: e.target.value})}
+                className="w-full h-32 p-3 border border-coal-200 rounded-lg resize-none"
+                placeholder={t('reports.list.editModalPlaceholder')}
+              />
+              <div className="flex justify-end gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={cancelEditing}
+                >
+                  {t('ui.cancel')}
+                </Button>
+                <Button
+                  onClick={saveEditedNotes}
+                >
+                  {t('ui.save')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      {ConfirmDialogComponent}
+    </>
   );
 };
 

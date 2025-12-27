@@ -39,6 +39,7 @@
     "react-i18next": "^15.2.0",
     "react-konva": "^18.2.14",
     "react-router-dom": "^6.26.2",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^2.6.0",
     "zustand": "^5.0.1"
   },

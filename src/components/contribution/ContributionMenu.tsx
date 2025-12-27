@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Github, Coffee, Send, Image as ImageIcon, MessageSquare } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
@@ -53,7 +54,7 @@ const ContributionMenu: React.FC = () => {
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Logic for submitting comments
-    alert(t('contribution.feedback.success'));
+    toast.success(t('contribution.feedback.success'));
     setComment('');
   };
 
@@ -110,14 +111,14 @@ const ContributionMenu: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       if (successCount > 0) {
-          alert(t('contribution.images.success', { count: successCount }) + (errorCount > 0 ? t('contribution.images.failedCount', { count: errorCount }) : ''));
+          toast.success(t('contribution.images.success', { count: successCount }) + (errorCount > 0 ? t('contribution.images.failedCount', { count: errorCount }) : ''));
           setAcceptedTerms(false);
       } else if (errorCount > 0) {
-          alert(t('contribution.images.error'));
+          toast.error(t('contribution.images.error'));
       }
 
     } catch (error) {
-        alert(t('contribution.images.generalError'));
+        toast.error(t('contribution.images.generalError'));
     } finally {
         setIsSubmittingImages(false);
         setUploadProgress(0);

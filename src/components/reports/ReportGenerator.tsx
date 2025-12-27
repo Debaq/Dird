@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { FileText, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -15,6 +17,8 @@ import { generateSessionReport } from '@/lib/pdf/report-generator';
 import type { ReportType } from '@/lib/pdf/report-generator';
 import { db } from '@/lib/db/schema';
 import { isDemoPreviewSession } from '@/lib/db/demoPatient';
+import { useTokenStore } from '@/stores/token-store';
+import { fetchTokens } from '@/lib/api/token-service';
 
 interface ReportGeneratorProps {
   sessionId: number;
@@ -26,12 +30,20 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
   onReportGenerated,
 }) => {
   const { t } = useTranslation();
+  const { confirm, ConfirmDialogComponent } = useConfirm();
   const [showDialog, setShowDialog] = useState(false);
   const [evaluatorNotes, setEvaluatorNotes] = useState('');
   const [generating, setGenerating] = useState(false);
   const [reportType, setReportType] = useState<ReportType>('preview');
+  const { tokens, setTokens, decrementTokens } = useTokenStore();
 
   const handleGenerateReport = async (type: ReportType) => {
+    // Check if user has tokens before generating
+    if (tokens <= 0) {
+      toast.error(t('errors.noTokens', { defaultValue: 'No tienes tokens disponibles para generar informes' }));
+      return;
+    }
+
     setGenerating(true);
     setReportType(type);
     try {
@@ -86,11 +98,21 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         }
       }
 
+      // Consume token and refresh token count from server
+      decrementTokens();
+      try {
+        const updatedTokens = await fetchTokens();
+        setTokens(updatedTokens);
+      } catch (error) {
+        console.error('Error refreshing tokens:', error);
+      }
+
       setShowDialog(false);
       onReportGenerated?.();
+      toast.success(t('reports.generated'));
     } catch (error) {
       console.error('Error generating report:', error);
-      alert(t('errors.unknown'));
+      toast.error(t('errors.unknown'));
     } finally {
       setGenerating(false);
     }
@@ -181,8 +203,16 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                 <Button
                   size="sm"
                   className="w-full bg-accent-500 hover:bg-accent-600 text-white"
-                  onClick={() => {
-                    if (confirm(t('reports.finalWarning'))) {
+                  onClick={async () => {
+                    const confirmed = await confirm({
+                      title: t('confirmations.finalizeReportTitle') || t('reports.finalize'),
+                      description: t('reports.finalWarning'),
+                      confirmText: t('common.confirm'),
+                      cancelText: t('common.cancel'),
+                      variant: 'warning',
+                    });
+
+                    if (confirmed) {
                       handleGenerateReport('final');
                     }
                   }}
@@ -209,6 +239,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
           </div>
         </DialogContent>
       </Dialog>
+      {ConfirmDialogComponent}
     </>
   );
 };

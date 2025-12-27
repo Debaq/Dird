@@ -52,10 +52,15 @@ export const useImageUploader = ({ sessionId, onUploadComplete: _onUploadComplet
             )
           );
 
+          // Detect if mobile device for more aggressive compression
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
           const options = {
-            maxSizeMB: 1,
-            maxWidthOrHeight: 2048,
-            useWebWorker: true
+            maxSizeMB: isMobile ? 0.5 : 1,
+            maxWidthOrHeight: isMobile ? 1536 : 2048,
+            useWebWorker: true,
+            // Use lower quality on mobile to reduce memory usage
+            ...(isMobile && { initialQuality: 0.8 })
           };
           const compressedFile = await imageCompression(newFile.file, options);
 

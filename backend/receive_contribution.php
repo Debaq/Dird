@@ -49,9 +49,15 @@ try {
         throw new Exception('Tipo de archivo no válido. Solo JPG, PNG o WebP.');
     }
 
-    // Generar nombre único para ambos archivos
+    // Generar nombre único para la sesión (carpeta)
     // Formato: YYYY-MM-DD_His_RandomID
     $uniqueId = date('Y-m-d_H-i-s') . '_' . bin2hex(random_bytes(4));
+    
+    // Crear directorio para este envío específico
+    $sessionDir = $uploadDir . $uniqueId . '/';
+    if (!mkdir($sessionDir, 0755, true)) {
+        throw new Exception('No se pudo crear el directorio para la sesión.');
+    }
     
     // Extensiones
     $imageExt = pathinfo($imageFile['name'], PATHINFO_EXTENSION);
@@ -60,18 +66,20 @@ try {
         $imageExt = 'jpg'; // Fallback seguro
     }
 
-    $targetImage = $uploadDir . $uniqueId . '.' . $imageExt;
-    $targetJson = $uploadDir . $uniqueId . '.json';
+    // Guardar archivos dentro de la carpeta creada con nombres estandarizados
+    $targetImage = $sessionDir . 'image.' . $imageExt;
+    $targetJson = $sessionDir . 'annotations.json';
 
     // Mover imagen
     if (!move_uploaded_file($imageFile['tmp_name'], $targetImage)) {
         throw new Exception('Error al guardar la imagen.');
     }
 
-    // Mover JSON (o leer y guardar si se envió como string, pero aquí asumimos File)
+    // Mover JSON
     if (!move_uploaded_file($jsonFile['tmp_name'], $targetJson)) {
-        // Si falla el json, intentamos borrar la imagen para no dejar basura
+        // Si falla el json, intentamos borrar la imagen y la carpeta
         @unlink($targetImage); 
+        @rmdir($sessionDir);
         throw new Exception('Error al guardar el JSON.');
     }
 
@@ -79,8 +87,9 @@ try {
     $response['message'] = 'Contribución recibida correctamente.';
     $response['data'] = [
         'id' => $uniqueId,
-        'image_path' => $uniqueId . '.' . $imageExt,
-        'json_path' => $uniqueId . '.json'
+        'folder' => $uniqueId,
+        'image_path' => $uniqueId . '/image.' . $imageExt,
+        'json_path' => $uniqueId . '/annotations.json'
     ];
 
 } catch (Exception $e) {

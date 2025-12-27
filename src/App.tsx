@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Toaster } from 'sonner';
 import MainLayout from '@/components/layout/MainLayout';
 import PatientList from '@/components/patients/PatientList';
 import PatientDetails from '@/components/patients/PatientDetails';
@@ -15,6 +16,8 @@ import ContributionMenu from '@/components/contribution/ContributionMenu';
 import AcademyView from '@/components/academy/AcademyView';
 import { initializeDemoPatient, demoPatientExists, type LoadingProgress } from '@/lib/db/demoPatient';
 import { DemoLoadingScreen } from '@/components/demo/DemoLoadingScreen';
+import { useTokenStore } from '@/stores/token-store';
+import { fetchTokens } from '@/lib/api/token-service';
 
 function App() {
   const { t } = useTranslation();
@@ -26,8 +29,9 @@ function App() {
     total: 1,
     message: t('demo.loading.steps.init'),
   });
+  const setTokens = useTokenStore((state) => state.setTokens);
 
-  // Inicializar paciente demo al cargar la aplicación
+  // Inicializar paciente demo y cargar tokens al inicio
   useEffect(() => {
     let cancelled = false; // Para evitar race conditions
 
@@ -49,8 +53,20 @@ function App() {
       }
     };
 
-    setupDemoPatient().catch(() => {
-      console.error('❌ Error al inicializar paciente demo');
+    const loadTokens = async () => {
+      try {
+        const tokenCount = await fetchTokens();
+        if (!cancelled) {
+          setTokens(tokenCount);
+        }
+      } catch (error) {
+        console.error('❌ Error al cargar tokens:', error);
+      }
+    };
+
+    // Ejecutar en paralelo
+    Promise.all([setupDemoPatient(), loadTokens()]).catch(() => {
+      console.error('❌ Error al inicializar aplicación');
       if (!cancelled) {
         setIsInitializing(false);
       }
@@ -60,7 +76,7 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [setTokens]);
 
   // Mostrar pantalla de carga mientras se inicializa
   if (isInitializing) {
@@ -75,6 +91,13 @@ function App() {
         v7_relativeSplatPath: true,
       }}
     >
+      <Toaster
+        position="top-right"
+        expand={false}
+        richColors
+        closeButton
+        duration={4000}
+      />
       <LanguageSync />
       <DocumentTitleSync />
       <Routes>
