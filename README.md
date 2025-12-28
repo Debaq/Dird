@@ -17,14 +17,12 @@ DIRD is a privacy-first, edge-computing web application for ophthalmological ima
 * [USAGE](#usage)
     * [CREATING AND MANAGING PATIENTS](#creating-and-managing-patients)
     * [CREATING AND MANAGING SESSIONS](#creating-and-managing-sessions)
-
     * [WORKING INSIDE A SESSION](#working-inside-a-session)
         * [ANALYZE AN IMAGE](#analyze-images)
         * [MOVING AND MANAGING IMAGES](#moving-and-managing-images)
         * [VIEW SESSION AND IMAGE STATISTICS](#view-session-and-image-statistics)
-        
-    * [CREATE REPORTS]
-    * [EXPORT AND IMPORTS]
+    * [CREATING AND MANAGING REPORTS](#creating-and-managing-reports)
+    * [EXPORT AND IMPORT](#exports-and-imports)
 * [CONFIGURATION]
     * []
 * [CONTRIBUTIONS]
@@ -62,6 +60,8 @@ Sessions can be **deleted**, to do this press the trash bin button on the right 
 
 Multiple sessions can be compared to review differences in statistics, images, and reports over time. To do this press the **Session comparison** button and select two or more sessions.
 
+A session can be **CLOSED** if a finished report is **generated**, or an already generated report is **finished**. Once a session is closed, no further changes to it can be made, it can only be duplicated.
+
 ## Working inside a Session
 
 ### Analyze image(s)
@@ -87,6 +87,38 @@ Statistics from images and the session itself such as:
 * Total detections
 * Average detections per image
 * Individual image statistics
-can be viewed by pressing the **AI ANALYSIS** button which will redirect to the statistics tab.
 
+can be viewed by pressing the **AI ANALYSIS** tab which will redirect to the statistics tab.    
+
+
+## Creating and managing reports
+Reports are generated for one session, and are pdf's. They can be generated while inside a session, on the **reports** tab, by pressing the **Generate Report** button.
+After pressing the button, we'll see a survey with "Additional Notes", and the button to generate the report. After adding any notes deeemed necessary, press **Generate Preview** to generate a preview report.
+
+Reports can be **regenerated** by pressing the "Generate Report" again, and then pressing the left button **regenerate preview report**. Report notes can be edited this way as well.
+
+Reports can be **closed/finished** by pressing the **Finish** button on the report card, or by clicking the right button inside the regeneration window. This action will permanently close the session.
+
+Reports can be **deleted**, **edited**, **viewed** and are **downloadable**. These actions can be done by clicking their respective buttons on the report card. 
+
+To edit the **report conclusion**, refer to the edit button.
+To edit the **report notes**, refer to the regeneration window.
+
+To **view every report** ever done in all sessions, refer to the reports tab on top of the screen. Reports can be searched by recommendations or conclusions given in said report. These can also be filtered by reports in unique sessions, or ones in shared sessions.
+
+Some information like:
+* Visible Sections (patient information, image gallery, etc.)
+* Patient details (name, age, ID, etc.)
+
+can be hidden by going to the **configuration** tab on top of the screen, then going to the **reports** section. This information, along with many other settings, can be configured in this section.
+
+
+## Exports and imports
+**Patients** and individual **Patient Sessions** can be imported and exported. All exports and imports use a **.dird file**.
+Patient files contain every information used on a patient instance, such as images, sessions, etc.
+Session files contain information specific to the session, like session images, session reports, etc.
+
+To export a **patient**, click on a patient and click on **Export Patient**. This will download a **.dird file** which can then be used to **import a patient** on the patient page by clicking **import .dird**.
+
+To export a **session**, click on one of the sessions inside a patient, then click on **Export Session**. This will download a **.dird file**, which can then be used to **import a session** inside a patient page by clicking **Import Session**.
 
