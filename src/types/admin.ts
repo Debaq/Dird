@@ -13,17 +13,23 @@ export interface Installation {
 
 export interface Contribution {
   id: string;
+  type?: 'image' | 'guideline' | 'conclusion';
   filename: string;
   original_filename: string;
   size: number;
   size_formatted: string;
   installation_token: string;
   uploaded_at: string;
-  folder_path: string;
-  image_exists: boolean;
-  json_exists: boolean;
-  download_url_image: string;
-  download_url_json: string;
+  folder_path?: string;
+  image_exists?: boolean;
+  json_exists?: boolean;
+  download_url_image?: string;
+  download_url_json?: string;
+  // New fields
+  exists?: boolean;
+  download_url?: string;
+  guideline_name?: string;
+  guideline_version?: string;
 }
 
 export interface BroadcastMessage {

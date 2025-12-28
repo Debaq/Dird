@@ -1,0 +1,377 @@
+{
+  "guideline_id": "minsal_chile_2017",
+  "metadata": {
+    "name": "MINSAL Chile 2017",
+    "full_name": "Guía Clínica de Retinopatía Diabética - Ministerio de Salud de Chile",
+    "version": "1.0.0",
+    "country": "Chile",
+    "language": "es",
+    "status": "official",
+    "date_published": "2017-06-01",
+    "organization": "Ministerio de Salud de Chile (MINSAL)",
+    "description": "Clasificación de severidad de retinopatía diabética según normativa chilena con 8 niveles de severidad"
+  },
+  "severity_levels": [
+    {
+      "id": "no_dr",
+      "name": "Sin RD Aparente",
+      "name_en": "No Apparent DR",
+      "order": 0,
+      "color": "#22c55e",
+      "description": "Sin lesiones de retinopatía diabética detectadas"
+    },
+    {
+      "id": "mild_npdr",
+      "name": "RDNP Leve",
+      "name_en": "Mild NPDR",
+      "order": 1,
+      "color": "#84cc16",
+      "description": "Solo microaneurismas (1-15 microaneurismas)"
+    },
+    {
+      "id": "moderate_npdr",
+      "name": "RDNP Moderada",
+      "name_en": "Moderate NPDR",
+      "order": 2,
+      "color": "#eab308",
+      "description": "Más que microaneurismas leves pero menos que RDNP severa. Hemorragias y/o exudados presentes."
+    },
+    {
+      "id": "severe_npdr",
+      "name": "RDNP Severa",
+      "name_en": "Severe NPDR",
+      "order": 3,
+      "color": "#f97316",
+      "description": "Cumple 1 criterio de regla 4-2-1: Hemorragias severas en 4 cuadrantes, arrosariamiento venoso en 2+ cuadrantes, o IRMA en 1+ cuadrante"
+    },
+    {
+      "id": "very_severe_npdr",
+      "name": "RDNP Muy Severa",
+      "name_en": "Very Severe NPDR",
+      "order": 4,
+      "color": "#ea580c",
+      "description": "Cumple 2 o más criterios de regla 4-2-1. Alto riesgo de progresión a RDP."
+    },
+    {
+      "id": "pdr_mild",
+      "name": "RDP Leve",
+      "name_en": "Mild PDR",
+      "order": 5,
+      "color": "#dc2626",
+      "description": "Neovascularización inicial sin hemorragia vítrea o prerretiniana"
+    },
+    {
+      "id": "pdr_moderate",
+      "name": "RDP Moderada",
+      "name_en": "Moderate PDR",
+      "order": 6,
+      "color": "#b91c1c",
+      "description": "Neovascularización con hemorragia prerretiniana o hemorragia vítrea leve"
+    },
+    {
+      "id": "pdr_high_risk",
+      "name": "RDP Alto Riesgo",
+      "name_en": "High Risk PDR",
+      "order": 7,
+      "color": "#7f1d1d",
+      "description": "Neovascularización extensa, hemorragia vítrea significativa, neovascularización del disco (NVD), o desprendimiento de retina traccional"
+    }
+  ],
+  "classification_rules": [
+    {
+      "severity": "no_dr",
+      "conditions": [
+        {
+          "field": "total_lesions",
+          "operator": "==",
+          "value": 0
+        }
+      ],
+      "logic": "AND",
+      "priority": 1
+    },
+    {
+      "severity": "pdr_high_risk",
+      "conditions": [
+        {
+          "field": "neovascularization",
+          "operator": ">=",
+          "value": 5
+        }
+      ],
+      "logic": "OR",
+      "priority": 2
+    },
+    {
+      "severity": "pdr_moderate",
+      "conditions": [
+        {
+          "field": "neovascularization",
+          "operator": ">=",
+          "value": 2
+        },
+        {
+          "field": "hemorrhages",
+          "operator": ">=",
+          "value": 10
+        }
+      ],
+      "logic": "AND",
+      "priority": 3
+    },
+    {
+      "severity": "pdr_mild",
+      "conditions": [
+        {
+          "field": "neovascularization",
+          "operator": ">",
+          "value": 0
+        }
+      ],
+      "logic": "AND",
+      "priority": 4
+    },
+    {
+      "severity": "very_severe_npdr",
+      "conditions": [
+        {
+          "field": "rule_421_criteria_met",
+          "operator": ">=",
+          "value": 2
+        }
+      ],
+      "logic": "AND",
+      "priority": 5
+    },
+    {
+      "severity": "severe_npdr",
+      "conditions": [
+        {
+          "field": "rule_421_criteria_met",
+          "operator": "==",
+          "value": 1
+        }
+      ],
+      "logic": "OR",
+      "priority": 6
+    },
+    {
+      "severity": "severe_npdr",
+      "conditions": [
+        {
+          "field": "hemorrhages",
+          "operator": ">=",
+          "value": 20
+        }
+      ],
+      "logic": "OR",
+      "priority": 6
+    },
+    {
+      "severity": "severe_npdr",
+      "conditions": [
+        {
+          "field": "soft_exudates",
+          "operator": ">=",
+          "value": 5
+        }
+      ],
+      "logic": "OR",
+      "priority": 6
+    },
+    {
+      "severity": "moderate_npdr",
+      "conditions": [
+        {
+          "field": "lesion_types_count",
+          "operator": ">=",
+          "value": 2
+        },
+        {
+          "field": "total_lesions",
+          "operator": ">=",
+          "value": 5
+        }
+      ],
+      "logic": "AND",
+      "priority": 7
+    },
+    {
+      "severity": "moderate_npdr",
+      "conditions": [
+        {
+          "field": "hemorrhages",
+          "operator": ">=",
+          "value": 5
+        }
+      ],
+      "logic": "OR",
+      "priority": 7
+    },
+    {
+      "severity": "mild_npdr",
+      "conditions": [
+        {
+          "field": "microaneurysms",
+          "operator": ">",
+          "value": 0
+        },
+        {
+          "field": "microaneurysms",
+          "operator": "<=",
+          "value": 15
+        }
+      ],
+      "logic": "AND",
+      "priority": 8
+    }
+  ],
+  "rule_421": {
+    "enabled": true,
+    "name": "Regla 4-2-1",
+    "description": "Criterios de severidad RDNP según ETDRS adaptados para MINSAL Chile",
+    "criteria": [
+      {
+        "name": "severe_hemorrhages_4q",
+        "description": "Hemorragias severas en los 4 cuadrantes (≥5 por cuadrante)",
+        "field": "hemorrhages",
+        "min_quadrants": 4,
+        "min_per_quadrant": 5
+      },
+      {
+        "name": "venous_beading_2q",
+        "description": "Arrosariamiento venoso en 2 o más cuadrantes",
+        "field": "venous_beading",
+        "min_quadrants": 2,
+        "severity": "moderate"
+      },
+      {
+        "name": "irma_1q",
+        "description": "IRMA en 1 o más cuadrantes (≥0.5 áreas de disco)",
+        "field": "irma",
+        "min_quadrants": 1,
+        "min_area_disc_diameters": 0.5
+      }
+    ],
+    "severity_mapping": {
+      "0_criteria_met": "moderate_npdr",
+      "1_criteria_met": "severe_npdr",
+      "2_or_more_criteria_met": "very_severe_npdr"
+    }
+  },
+  "treatment_protocols": [
+    {
+      "severity": "no_dr",
+      "urgency": "routine",
+      "actions": [
+        "Continuar control de diabetes",
+        "Screening anual recomendado",
+        "Mantener HbA1c <7%"
+      ],
+      "followup_interval_days": 365,
+      "rationale": "Sin retinopatía detectada - seguimiento anual de rutina según normativa MINSAL"
+    },
+    {
+      "severity": "mild_npdr",
+      "urgency": "routine",
+      "actions": [
+        "Optimizar control glicémico (HbA1c <7%)",
+        "Control de presión arterial (<130/80 mmHg)",
+        "Seguimiento oftalmológico anual",
+        "Educación sobre diabetes y adherencia a tratamiento"
+      ],
+      "followup_interval_days": 365,
+      "rationale": "RDNP leve requiere monitoreo anual y optimización de factores de riesgo"
+    },
+    {
+      "severity": "moderate_npdr",
+      "urgency": "routine",
+      "actions": [
+        "Optimizar control glicémico (HbA1c <7%)",
+        "Control de presión arterial (<130/80 mmHg)",
+        "Seguimiento oftalmológico cada 6 meses",
+        "Control de lípidos (LDL <100 mg/dL)",
+        "Evaluación de función renal"
+      ],
+      "followup_interval_days": 180,
+      "rationale": "RDNP moderada requiere monitoreo semestral según protocolo MINSAL"
+    },
+    {
+      "severity": "severe_npdr",
+      "urgency": "accelerated",
+      "actions": [
+        "Derivación a oftalmología en 2-4 semanas",
+        "Optimizar control metabólico estricto",
+        "Considerar panfotocoagulación retiniana (PRP)",
+        "Seguimiento oftalmológico cada 3-4 meses",
+        "Angiografía fluorescénica si disponible"
+      ],
+      "followup_interval_days": 90,
+      "rationale": "RDNP severa tiene riesgo significativo de progresión - requiere seguimiento acelerado MINSAL"
+    },
+    {
+      "severity": "very_severe_npdr",
+      "urgency": "urgent",
+      "actions": [
+        "Derivación URGENTE a oftalmología (1-2 semanas)",
+        "Panfotocoagulación retiniana (PRP) indicada",
+        "Control metabólico estricto inmediato",
+        "Seguimiento oftalmológico mensual",
+        "Angiografía fluorescénica recomendada",
+        "Considerar terapia anti-VEGF"
+      ],
+      "followup_interval_days": 30,
+      "rationale": "RDNP muy severa tiene altísimo riesgo de progresión a RDP - requiere intervención urgente según MINSAL"
+    },
+    {
+      "severity": "pdr_mild",
+      "urgency": "urgent",
+      "actions": [
+        "Derivación INMEDIATA a oftalmología (<1 semana)",
+        "Panfotocoagulación retiniana (PRP) dentro de 2 semanas",
+        "Terapia anti-VEGF intravítrea a considerar",
+        "Control metabólico estricto",
+        "Seguimiento oftalmológico cada 2-4 semanas hasta estabilización"
+      ],
+      "followup_interval_days": 21,
+      "rationale": "RDP leve requiere intervención inmediata con láser según protocolo MINSAL GES"
+    },
+    {
+      "severity": "pdr_moderate",
+      "urgency": "urgent",
+      "actions": [
+        "Derivación INMEDIATA a oftalmología (<48 horas)",
+        "Panfotocoagulación retiniana (PRP) URGENTE",
+        "Anti-VEGF intravítreo indicado",
+        "Evaluación para vitrectomía si hemorragia vítrea significativa",
+        "Seguimiento oftalmológico semanal hasta estabilización",
+        "Ingreso a protocolo GES"
+      ],
+      "followup_interval_days": 14,
+      "rationale": "RDP moderada con hemorragia requiere manejo urgente multidisciplinario según MINSAL GES"
+    },
+    {
+      "severity": "pdr_high_risk",
+      "urgency": "urgent",
+      "actions": [
+        "Derivación INMEDIATA a centro de referencia oftalmológico (<24 horas)",
+        "Panfotocoagulación retiniana (PRP) URGENTE si medios transparentes",
+        "Anti-VEGF intravítreo URGENTE",
+        "Vitrectomía pars plana si hemorragia vítrea densa o desprendimiento traccional",
+        "Hospitalización a considerar",
+        "Seguimiento oftalmológico 2 veces por semana hasta estabilización",
+        "Protocolo GES prioritario"
+      ],
+      "followup_interval_days": 7,
+      "rationale": "RDP de alto riesgo es emergencia oftalmológica - riesgo inminente de ceguera. Requiere intervención inmediata según normativa MINSAL GES"
+    }
+  ],
+  "emcs_criteria": {
+    "enabled": true,
+    "name": "EMCS - Edema Macular Clínicamente Significativo",
+    "geometric_distance_fovea_um": 500,
+    "min_disc_areas": 1.0,
+    "apply_geometric_rule": true,
+    "description": "Exudados duros dentro de 500μm del centro foveal según criterios MINSAL Chile"
+  }
+}

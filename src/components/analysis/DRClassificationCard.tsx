@@ -1,48 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Eye, TrendingUp, Info, Check, ChevronDown } from 'lucide-react';
+import { Eye, TrendingUp, Info, Check, ChevronDown, Send } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { getSessionClassifications } from '@/lib/analysis/image-classification-service';
 import type { ImageDRClassification } from '@/lib/analysis/image-dr-classifier';
-// import { db } from '@/lib/db/schema';
+import { db } from '@/lib/db/schema';
+import { toast } from 'sonner';
 
 interface DRClassificationCardProps {
   sessionId: number;
   refreshKey?: number;
 }
 
-const severityLabels: Record<string, { es: string; en: string; color: string; bg: string }> = {
+// Severity labels are now handled through translation keys
+const severityStyles: Record<string, { color: string; bg: string }> = {
   'no_dr': {
-    es: 'Sin Retinopatía Diabética',
-    en: 'No Diabetic Retinopathy',
     color: 'text-green-700 dark:text-green-400',
     bg: 'bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700'
   },
   'mild_npdr': {
-    es: 'RDNP Leve',
-    en: 'Mild NPDR',
     color: 'text-yellow-700 dark:text-yellow-400',
     bg: 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700'
   },
   'moderate_npdr': {
-    es: 'RDNP Moderada',
-    en: 'Moderate NPDR',
     color: 'text-orange-700 dark:text-orange-400',
     bg: 'bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700'
   },
   'severe_npdr': {
-    es: 'RDNP Severa',
-    en: 'Severe NPDR',
     color: 'text-red-700 dark:text-red-400',
     bg: 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700'
   },
   'pdr': {
-    es: 'RD Proliferativa',
-    en: 'Proliferative DR',
     color: 'text-red-900 dark:text-red-300',
     bg: 'bg-red-200 dark:bg-red-900/50 border-red-400 dark:border-red-600'
   }
@@ -118,17 +110,26 @@ export const DRClassificationCard: React.FC<DRClassificationCardProps> = ({ sess
     return currentIndex > worstIndex ? current : worst;
   }, null as ImageDRClassification | null);
 
-  const getSeverityLabel = (severity: string) => {
-    const lang = i18n.language === 'es' ? 'es' : 'en';
-    return severityLabels[severity]?.[lang] || severity;
+  const getSeverityLabel = (classif: ImageDRClassification | null) => {
+    if (!classif) return '';
+    if (classif.severityLabel) return classif.severityLabel;
+
+    // Use translation key instead of hardcoded language check
+    return t(`analysis.drClassification.severity.${classif.severity}.${i18n.language === 'es' ? 'es' : 'en'}`);
   };
 
-  const getSeverityColor = (severity: string) => {
-    return severityLabels[severity]?.color || 'text-gray-700';
+  const getSeverityColor = (classif: ImageDRClassification | null) => {
+    if (!classif) return 'text-gray-700';
+
+    // Use guideline color if available
+    // Note: color might be a hex code from the guideline, while our map uses tailwind classes
+    // We'll prioritize our map if it's a standard severity, otherwise we'd need to handle hex
+    return severityStyles[classif.severity]?.color || 'text-gray-700';
   };
 
-  const getSeverityBg = (severity: string) => {
-    return severityLabels[severity]?.bg || 'bg-gray-100 border-gray-300';
+  const getSeverityBg = (classif: ImageDRClassification | null) => {
+    if (!classif) return 'bg-gray-100 border-gray-300';
+    return severityStyles[classif.severity]?.bg || 'bg-gray-100 border-gray-300';
   };
 
   const handleImageSelect = (imageId: number, eye: 'OD' | 'OI') => {
@@ -172,8 +173,8 @@ export const DRClassificationCard: React.FC<DRClassificationCardProps> = ({ sess
                   {isSelected && <Check className="h-3 w-3 text-white" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium truncate">Imagen {classif.imageId}</div>
-                  <div className="text-xs text-smoke-600">{getSeverityLabel(classif.severity)}</div>
+                  <div className="text-xs font-medium truncate">{t('analysis.drClassification.image', { id: classif.imageId })}</div>
+                  <div className="text-xs text-smoke-600">{getSeverityLabel(classif)}</div>
                 </div>
                 <Badge variant={classif.confidence === 'high' ? 'default' : 'secondary'} className="text-xs flex-shrink-0">
                   {t(`analysis.drClassification.confidenceLevels.${classif.confidence}Short`)}
@@ -184,6 +185,51 @@ export const DRClassificationCard: React.FC<DRClassificationCardProps> = ({ sess
         </CollapsibleContent>
       </Collapsible>
     );
+  };
+
+  // Handle marking classification for contribution
+  const handleMarkForContribution = async (classification: ImageDRClassification) => {
+    try {
+      // Get the full classification from DB to ensure we have the ID
+      const dbClassification = await db.imageClassifications
+        .where('imageId')
+        .equals(classification.imageId)
+        .first();
+
+      if (!dbClassification?.id) {
+        toast.error('No se pudo encontrar la clasificación en la base de datos');
+        return;
+      }
+
+      // Check if already pending
+      const existing = await db.pendingContributions
+        .where({ type: 'conclusion', referenceId: dbClassification.id })
+        .first();
+
+      if (existing) {
+        toast.info('Esta conclusión ya está marcada para contribuir');
+        return;
+      }
+
+      // Add to pending contributions
+      await db.pendingContributions.add({
+        type: 'conclusion',
+        referenceId: dbClassification.id,
+        status: 'pending',
+        metadata: {
+          severity: classification.severity,
+          eyeType: classification.eyeType,
+          guideline: classification.guideline || 'unknown',
+        },
+        createdAt: new Date(),
+      });
+
+      toast.success('Conclusión marcada para contribuir. Ve a la sección Contribuir para enviarla.');
+      setShowDetailsModal(null);
+    } catch (error) {
+      toast.error('Error al marcar la conclusión para contribuir');
+      console.error(error);
+    }
   };
 
   // Render details modal
@@ -208,10 +254,10 @@ export const DRClassificationCard: React.FC<DRClassificationCardProps> = ({ sess
 
           <div className="space-y-4 mt-4">
             {/* Severity Result */}
-            <div className={`p-4 rounded-lg border-2 ${getSeverityBg(classification.severity)}`}>
+            <div className={`p-4 rounded-lg border-2 ${getSeverityBg(classification)}`}>
               <div className="font-semibold text-sm mb-1">{t('analysis.drClassification.detailsModal.finalClassification')}</div>
-              <div className={`text-lg font-bold ${getSeverityColor(classification.severity)}`}>
-                {getSeverityLabel(classification.severity)}
+              <div className={`text-lg font-bold ${getSeverityColor(classification)}`}>
+                {getSeverityLabel(classification)}
               </div>
               <div className="text-xs mt-2">
                 <span className="font-medium">{t('analysis.drClassification.confidence')}:</span>{' '}
@@ -316,6 +362,32 @@ export const DRClassificationCard: React.FC<DRClassificationCardProps> = ({ sess
               </div>
             </div>
           </div>
+
+          <DialogFooter className="flex-col gap-3 sm:flex-row">
+            {/* Only show contribution button if manually modified */}
+            {classification.manuallyModified && (
+              <div className="w-full space-y-2">
+                <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                  ⚠️ <strong>{t('analysis.drClassification.contribution.warningTitle')}:</strong> {t('analysis.drClassification.contribution.warningText')}
+                </div>
+                <Button
+                  variant="default"
+                  onClick={() => handleMarkForContribution(classification)}
+                  className="w-full gap-2 bg-amber-500 hover:bg-amber-600"
+                >
+                  <Send className="h-4 w-4" />
+                  {t('analysis.drClassification.contributeModifiedConclusion')}
+                </Button>
+              </div>
+            )}
+            <Button
+              variant="outline"
+              onClick={() => setShowDetailsModal(null)}
+              className="w-full sm:w-auto"
+            >
+              {t('ui.close')}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     );
@@ -358,9 +430,9 @@ export const DRClassificationCard: React.FC<DRClassificationCardProps> = ({ sess
               <div className="text-xs text-smoke-600 mb-2">
                 {t('analysis.drClassification.overallSeverity', 'Severidad Global')}
               </div>
-              <div className={`inline-block px-4 py-2 rounded-lg border-2 font-semibold ${getSeverityBg(overallWorst.severity)}`}>
-                <span className={getSeverityColor(overallWorst.severity)}>
-                  {getSeverityLabel(overallWorst.severity)}
+              <div className={`inline-block px-4 py-2 rounded-lg border-2 font-semibold ${getSeverityBg(overallWorst)}`}>
+                <span className={getSeverityColor(overallWorst)}>
+                  {getSeverityLabel(overallWorst)}
                 </span>
               </div>
             </div>
@@ -369,10 +441,10 @@ export const DRClassificationCard: React.FC<DRClassificationCardProps> = ({ sess
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Right Eye (OD) */}
               {odSelected && (
-                <div className={`p-4 rounded-lg border-2 ${getSeverityBg(odSelected.severity)}`}>
+                <div className={`p-4 rounded-lg border-2 ${getSeverityBg(odSelected)}`}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <Eye className={`h-4 w-4 ${getSeverityColor(odSelected.severity)}`} />
+                      <Eye className={`h-4 w-4 ${getSeverityColor(odSelected)}`} />
                       <span className="font-semibold text-sm">
                         {t('analysis.drClassification.rightEye', 'Ojo Derecho (OD)')}
                       </span>
@@ -386,8 +458,8 @@ export const DRClassificationCard: React.FC<DRClassificationCardProps> = ({ sess
                       <Info className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className={`text-sm font-medium mb-2 ${getSeverityColor(odSelected.severity)}`}>
-                    {getSeverityLabel(odSelected.severity)}
+                  <div className={`text-sm font-medium mb-2 ${getSeverityColor(odSelected)}`}>
+                    {getSeverityLabel(odSelected)}
                   </div>
                   <div className="text-xs text-smoke-700 space-y-2">
                     <div className="flex items-center gap-1">
@@ -418,10 +490,10 @@ export const DRClassificationCard: React.FC<DRClassificationCardProps> = ({ sess
 
               {/* Left Eye (OI) */}
               {oiSelected && (
-                <div className={`p-4 rounded-lg border-2 ${getSeverityBg(oiSelected.severity)}`}>
+                <div className={`p-4 rounded-lg border-2 ${getSeverityBg(oiSelected)}`}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <Eye className={`h-4 w-4 ${getSeverityColor(oiSelected.severity)}`} />
+                      <Eye className={`h-4 w-4 ${getSeverityColor(oiSelected)}`} />
                       <span className="font-semibold text-sm">
                         {t('analysis.drClassification.leftEye', 'Ojo Izquierdo (OI)')}
                       </span>
@@ -435,8 +507,8 @@ export const DRClassificationCard: React.FC<DRClassificationCardProps> = ({ sess
                       <Info className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className={`text-sm font-medium mb-2 ${getSeverityColor(oiSelected.severity)}`}>
-                    {getSeverityLabel(oiSelected.severity)}
+                  <div className={`text-sm font-medium mb-2 ${getSeverityColor(oiSelected)}`}>
+                    {getSeverityLabel(oiSelected)}
                   </div>
                   <div className="text-xs text-smoke-700 space-y-2">
                     <div className="flex items-center gap-1">
@@ -470,6 +542,11 @@ export const DRClassificationCard: React.FC<DRClassificationCardProps> = ({ sess
             <div className="mt-4 p-3 bg-smoke-50 border border-smoke-200 rounded-lg">
               <p className="text-xs text-smoke-600">
                 <strong>{t('analysis.drClassification.note')}</strong> {t('analysis.drClassification.noteText')}
+                {overallWorst?.guidelineName && (
+                  <span className="block mt-1 font-medium text-primary-700">
+                    Protocolo utilizado: {overallWorst.guidelineName} {overallWorst.guidelineVersion ? `(v${overallWorst.guidelineVersion})` : ''}
+                  </span>
+                )}
                 {odClassifications.length > 1 || oiClassifications.length > 1 ? (
                   <> {t('analysis.drClassification.noteMultipleImages')}</>
                 ) : (

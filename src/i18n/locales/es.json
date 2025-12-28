@@ -62,7 +62,11 @@
     "import": "Error de Importación",
     "deletePatient": "Error al eliminar el paciente.",
     "archivePatient": "Error al {{action}} el paciente.",
-    "processingImages": "Error procesando imágenes: {{error}}"
+    "processingImages": "Error procesando imágenes: {{error}}",
+    "drClassification": {
+      "noClassification": "No se pudo generar la clasificación",
+      "noClassifications": "No se pudieron generar las clasificaciones"
+    }
   },
   "confirmations": {
     "deleteImage": "¿Estás seguro de que quieres eliminar esta imagen y todos sus análisis asociados?",
@@ -284,6 +288,14 @@
       "customPlaceholder": "Escribe el nombre de la clase...",
       "alert": "Por favor selecciona o escribe una clase",
       "confirm": "Confirmar"
+    },
+    "redetection": {
+      "title": "Re-detección de IA",
+      "description": "Esto eliminará todas las detecciones de IA actuales para esta imagen y volverá a ejecutar el análisis. ¿Continuar?"
+    },
+    "errors": {
+      "saveAnnotationError": "Error al guardar la anotación. Por favor intenta de nuevo.",
+      "redetectionError": "Error al ejecutar la re-detección."
     }
   },
   "analysis": {
@@ -356,6 +368,34 @@
         "highShort": "Alta",
         "moderateShort": "Mod.",
         "lowShort": "Baja"
+      },
+      "severity": {
+        "no_dr": {
+          "es": "Sin Retinopatía Diabética",
+          "en": "No Diabetic Retinopathy"
+        },
+        "mild_npdr": {
+          "es": "RDNP Leve",
+          "en": "Mild NPDR"
+        },
+        "moderate_npdr": {
+          "es": "RDNP Moderada",
+          "en": "Moderate NPDR"
+        },
+        "severe_npdr": {
+          "es": "RDNP Severa",
+          "en": "Severe NPDR"
+        },
+        "pdr": {
+          "es": "RD Proliferativa",
+          "en": "Proliferative DR"
+        }
+      },
+      "image": "Imagen {{id}}",
+      "contributeModifiedConclusion": "Contribuir esta conclusión modificada",
+      "contribution": {
+        "warningTitle": "Importante",
+        "warningText": "Esta conclusión fue modificada manualmente. Al contribuirla, asegúrate de que NO contenga datos personales del paciente. Solo contribuye si los cambios mejoran la clasificación de forma general."
       },
       "showDetails": "Ver Detalles Completos",
       "hideDetails": "Ocultar Detalles",
@@ -509,6 +549,159 @@
     "en": "English",
     "auto": "Automático (Sistema)"
   },
+  "admin": {
+    "sessionClosed": "Sesión cerrada",
+    "panelTitle": "Panel de Administración",
+    "systemLabel": "DIRD - Sistema de Gestión",
+    "logout": "Cerrar Sesión",
+    "tabs": {
+      "installations": "Instalaciones",
+      "contributions": "Contribuciones",
+      "messages": "Mensajes",
+      "beacons": "Balizas",
+      "ai": "IA / Groq",
+      "logs": "Logs",
+      "settings": "Configuración"
+    },
+    "login": {
+      "title": "Acceso Administrativo",
+      "usernameLabel": "Usuario",
+      "passwordLabel": "Contraseña",
+      "submit": "Iniciar Sesión",
+      "loading": "Iniciando sesión...",
+      "errors": {
+        "missingCredentials": "Por favor ingresa usuario y contraseña",
+        "loginError": "Error al iniciar sesión",
+        "invalidCredentials": "Credenciales incorrectas"
+      },
+      "success": "Inicio de sesión exitoso"
+    },
+    "changePassword": {
+      "title": "Cambiar Contraseña",
+      "description": "Actualiza tu contraseña de administrador",
+      "currentPasswordLabel": "Contraseña Actual",
+      "newPasswordLabel": "Nueva Contraseña",
+      "confirmPasswordLabel": "Confirmar Nueva Contraseña",
+      "currentPasswordPlaceholder": "Ingresa tu contraseña actual",
+      "newPasswordPlaceholder": "Mínimo 8 caracteres",
+      "confirmPasswordPlaceholder": "Confirma tu nueva contraseña",
+      "passwordLengthMessage": "La contraseña debe tener al menos 8 caracteres",
+      "passwordMismatchMessage": "Las contraseñas no coinciden",
+      "securityNoteTitle": "Nota de seguridad",
+      "securityNoteText": "Al cambiar tu contraseña, se cerrarán todas las sesiones activas y deberás iniciar sesión nuevamente.",
+      "resetButton": "Limpiar",
+      "submitButton": "Cambiar Contraseña",
+      "updating": "Actualizando...",
+      "errors": {
+        "requiredFields": "Todos los campos son requeridos",
+        "passwordMismatch": "Las contraseñas nuevas no coinciden",
+        "passwordLength": "La nueva contraseña debe tener al menos 8 caracteres",
+        "passwordSame": "La nueva contraseña debe ser diferente a la actual",
+        "changeError": "Error al cambiar contraseña"
+      },
+      "success": "Contraseña actualizada correctamente"
+    },
+    "beaconMonitor": {
+      "title": "Balizas de Ayuda Activas",
+      "description_one": "Actualización automática cada 10 segundos · {{count}} activa",
+      "description_other": "Actualización automática cada 10 segundos · {{count}} activas",
+      "refreshButton": "Actualizar",
+      "noBeacons": "No hay balizas activas en este momento",
+      "instructions": "Los usuarios pueden activar balizas desde su panel de tokens",
+      "activeBeacon": "Baliza Activa",
+      "installationLabel": "Installation:",
+      "activatedLabel": "Activada:",
+      "timeRemaining": "tiempo restante",
+      "infoLabel": "ℹ️ Información",
+      "infoDescription": "Las balizas tienen una duración de 5 minutos. Los usuarios las activan cuando necesitan ayuda urgente. Se eliminan automáticamente al expirar.",
+      "success": "Lista actualizada",
+      "errors": {
+        "loadError": "Error al cargar balizas"
+      }
+    },
+    "installations": {
+      "title": "Instalaciones Registradas",
+      "total": "Total: {{count}}",
+      "refreshButton": "Actualizar",
+      "noInstallations": "No hay instalaciones registradas",
+      "columns": {
+        "token": "Installation Token",
+        "tokens": "Tokens",
+        "created": "Creado",
+        "lastAccess": "Último Acceso",
+        "status": "Estado",
+        "actions": "Acciones"
+      },
+      "activeBeacon": "Baliza Activa",
+      "editTokens": "Editar Tokens",
+      "updating": "Actualizando...",
+      "saveChanges": "Guardar Cambios",
+      "success": "Lista actualizada",
+      "dialog": {
+        "title": "Actualizar Tokens",
+        "tokenLabel": "Installation Token",
+        "currentTokens": "Tokens Actuales",
+        "newTotal": "Nuevo Total",
+        "newTotalLabel": "Nuevo Total de Tokens",
+        "placeholder": "Ej: 50",
+        "range": "Rango permitido: 0 - 9999"
+      },
+      "errors": {
+        "loadError": "Error al cargar instalaciones",
+        "invalidAmount": "Ingresa una cantidad válida",
+        "exceedsLimit": "El total no puede exceder 9999",
+        "updateError": "Error al actualizar tokens"
+      },
+      "info": {
+        "noChanges": "No hay cambios en la cantidad de tokens"
+      },
+      "tokensUpdated": "Tokens actualizados a: {{tokens}}"
+    },
+    "messageBroadcast": {
+      "title": "Enviar Mensaje a Todos los Usuarios",
+      "messageLabel": "Mensaje",
+      "messagePlaceholder": "Escribe el mensaje que verán todos los usuarios...",
+      "characterCount": "{{count}} caracteres",
+      "typeLabel": "Tipo de Notificación",
+      "styleLabel": "Estilo",
+      "durationLabel": "Duración (horas)",
+      "durationDescription": "El mensaje expirará automáticamente después de este tiempo",
+      "sendButton": "Enviar Mensaje",
+      "sending": "Enviando...",
+      "previewTitle": "Vista Previa",
+      "previewDescription": "Así verán el mensaje los usuarios:",
+      "previewMessage": "El mensaje aparecerá aquí...",
+      "acceptButton": "Aceptar",
+      "type": "Tipo",
+      "style": "Estilo",
+      "expiresIn": "Expira en",
+      "hours": "{{count}} horas",
+      "types": {
+        "toast": "Toast (Notificación)",
+        "modal": "Modal (Ventana)"
+      },
+      "variants": {
+        "info": "Información",
+        "success": "Éxito",
+        "warning": "Advertencia",
+        "error": "Error"
+      },
+      "duration": {
+        "1": "1 hora",
+        "6": "6 horas",
+        "12": "12 horas",
+        "24": "24 horas (1 día)",
+        "48": "48 horas (2 días)",
+        "168": "168 horas (1 semana)"
+      },
+      "errors": {
+        "emptyMessage": "Escribe un mensaje",
+        "invalidDuration": "Duración inválida",
+        "sendError": "Error al enviar mensaje"
+      },
+      "success": "Mensaje enviado a todos los usuarios"
+    }
+  },
   "settings": {
     "title": "Configuración",
     "description": "Personaliza la aplicación según tus necesidades",
@@ -519,6 +712,14 @@
       "pwa": "Instalación",
       "about": "Acerca de",
       "report": "Reporte"
+    },
+    "guidelines": {
+      "copy": "Copia",
+      "exportJson": "Exportar JSON",
+      "contribution": {
+        "warningTitle": "Importante",
+        "warningText": "Por favor, asegúrate de que esta guía NO contenga datos personales, nombres de instituciones específicas, o información confidencial. Elimina cualquier referencia identificatoria antes de contribuir."
+      }
     },
     "classes": {
       "title": "Gestión de Clases del Modelo",
@@ -727,6 +928,26 @@
       "updateNow": "Actualizar Ahora",
       "noUpdates": "Tienes la versión más reciente",
       "checkError": "Error al verificar actualizaciones"
+    },
+    "guidelines": {
+      "title": "Selección de Guía Clínica",
+      "description": "Selecciona la guía clínica para clasificar la retinopatía diabética según diferentes estándares internacionales",
+      "loading": "Cargando guías clínicas...",
+      "active": "Activa",
+      "official": "Oficial",
+      "severityPreview": "Vista Previa de Niveles de Severidad",
+      "applyButton": "Aplicar Guía",
+      "confirmDialog": {
+        "title": "¿Cambiar Guía Clínica?",
+        "description": "Cambiar la guía clínica activa afectará todas las clasificaciones futuras. Las clasificaciones existentes mantendrán su guía original.",
+        "warning": "Nota: Si tienes sesiones en progreso, considera completarlas antes de cambiar la guía.",
+        "cancel": "Cancelar",
+        "confirm": "Confirmar Cambio"
+      },
+      "errors": {
+        "loadFailed": "Error al cargar las guías clínicas",
+        "applyFailed": "Error al aplicar la guía clínica"
+      }
     }
   },
   "pwa": {
@@ -780,6 +1001,36 @@
       "error": "Hubo un error al enviar las imágenes. Por favor revisa la consola o intenta más tarde.",
       "generalError": "Error general al enviar la contribación",
       "submit": "Enviar {{count}} Imágenes"
+    },
+    "guidelines": {
+      "title": "Contribución de Guías Clínicas",
+      "pendingMessage": "Tienes {{count}} guías clínicas pendientes para contribuir. Tus protocolos personalizados ayudan a expandir las opciones disponibles.",
+      "viewGuideline": "Ver guía clínica",
+      "success": "¡Gracias! Se enviaron {{count}} guías exitosamente.",
+      "error": "Hubo un error al enviar las guías.",
+      "submit": "Enviar {{count}} Guías"
+    },
+    "conclusions": {
+      "title": "Contribución de Conclusiones",
+      "pendingMessage": "Tienes {{count}} conclusiones modificadas para contribuir. Tus correcciones mejoran la precisión de la IA.",
+      "viewConclusion": "Ver conclusión",
+      "success": "¡Gracias! Se enviaron {{count}} conclusiones exitosamente.",
+      "error": "Hubo un error al enviar las conclusiones.",
+      "submit": "Enviar {{count}} Conclusiones"
+    },
+    "all": {
+      "terms": "Acepto los términos y condiciones. He revisado que mis contribuciones NO contienen datos personales de pacientes y comprendo que se utilizarán para mejorar DIRD.",
+      "privacyWarning": "IMPORTANTE: Antes de enviar, verifica que tus contribuciones NO contengan:",
+      "privacyList": {
+        "item1": "Nombres de pacientes o personal médico",
+        "item2": "Fechas de nacimiento o números de identificación",
+        "item3": "Nombres de instituciones específicas",
+        "item4": "Cualquier información que permita identificar a una persona"
+      },
+      "privacyNote": "Nosotros también revisaremos y eliminaremos cualquier dato personal antes de usar las contribuciones.",
+      "pendingContributions": "Contribuciones Pendientes",
+      "noContributions": "No hay contribuciones pendientes",
+      "sending": "Enviando contribuciones..."
     },
     "feedback": {
       "title": "Enviar Comentarios",

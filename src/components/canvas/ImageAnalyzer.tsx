@@ -230,19 +230,41 @@ const ImageAnalyzer: React.FC = () => {
     // useLiveQuery automáticamente detectará cambios en db.detections
   };
 
+  // Check if image is already marked for contribution
+  const existingContribution = useLiveQuery(
+    () => image?.id ? db.pendingContributions
+      .where({ type: 'image', referenceId: image.id })
+      .first() : undefined,
+    [image?.id]
+  );
+
   const handleMark = async () => {
     if (!image) return;
-    await db.images.update(image.id!, { contributionStatus: 'pending' });
+
+    // Check if already exists
+    if (existingContribution) {
+      setShowContributionDialog(false);
+      return;
+    }
+
+    // Add to pending contributions
+    await db.pendingContributions.add({
+      type: 'image',
+      referenceId: image.id!,
+      status: 'pending',
+      createdAt: new Date(),
+    });
     setShowContributionDialog(false);
   };
 
   const handleUnmark = async () => {
-    if (!image) return;
-    await db.images.update(image.id!, { contributionStatus: 'none' });
+    if (!image || !existingContribution) return;
+    await db.pendingContributions.delete(existingContribution.id!);
     setShowContributionDialog(false);
   };
 
-  const showContributionPrompt = (manualDetections.length > 0 || image?.contributionStatus === 'pending') && image?.contributionStatus !== 'submitted';
+  const isMarkedForContribution = existingContribution && existingContribution.status === 'pending';
+  const showContributionPrompt = manualDetections.length > 0 || isMarkedForContribution;
 
   if (!image) {
     return (
@@ -285,17 +307,17 @@ const ImageAnalyzer: React.FC = () => {
             variant="ghost"
             className={cn(
               "ml-auto mr-2 flex-shrink-0 transition-all hover:scale-110",
-              image.contributionStatus === 'pending'
+              isMarkedForContribution
                 ? "text-amber-500 hover:text-red-500 hover:bg-red-50"
                 : "hover:bg-purple-50 dark:hover:bg-purple-950/20"
             )}
-            title={image.contributionStatus === 'pending' ? t('contribution.dialog.manage') : t('contribution.dialog.markToContribute')}
+            title={isMarkedForContribution ? t('contribution.dialog.manage') : t('contribution.dialog.markToContribute')}
             onClick={() => setShowContributionDialog(true)}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
             <div className="flex items-center gap-1.5">
-              {image.contributionStatus === 'pending' ? (
+              {isMarkedForContribution ? (
                 isHovered ? (
                   <Heart className="w-6 h-6 fill-current animate-pulse" />
                 ) : (
@@ -472,8 +494,8 @@ const ImageAnalyzer: React.FC = () => {
             <Button variant="outline" onClick={() => setShowContributionDialog(false)}>
               {t('ui.cancel')}
             </Button>
-            {image?.contributionStatus === 'pending' ? (
-              <Button 
+            {isMarkedForContribution ? (
+              <Button
                 variant="destructive"
                 onClick={handleUnmark}
               >

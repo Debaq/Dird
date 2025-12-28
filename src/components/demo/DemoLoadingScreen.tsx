@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useTranslation } from 'react-i18next';
+import { getAssetPath } from '@/utils/assets';
 
 export interface LoadingProgress {
   step: 'init' | 'patient' | 'model' | 'images' | 'report' | 'done';
@@ -72,9 +73,6 @@ export function DemoLoadingScreen({ progress }: DemoLoadingScreenProps) {
     }
   }, [percentage, showLogo, isTransitioning]);
 
-  // Determinar la ruta base para las imágenes
-  const basePath = import.meta.env.PROD ? '/dird' : '';
-
   return (
     <>
       <style>
@@ -103,7 +101,7 @@ export function DemoLoadingScreen({ progress }: DemoLoadingScreenProps) {
               >
                 {showLogo ? (
                   <img
-                    src={`${basePath}/logo.svg`}
+                    src={getAssetPath('/logo.svg')}
                     alt="DIRD Logo"
                     className="h-14 w-14"
                   />

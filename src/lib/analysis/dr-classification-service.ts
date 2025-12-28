@@ -4,6 +4,7 @@
  */
 
 import { db } from '../db/schema';
+import { useConfigStore } from '@/stores/config-store';
 import {
   classifyDiabeticRetinopathy,
   formatClassificationText,
@@ -56,8 +57,11 @@ export async function classifySessionDR(sessionId: number): Promise<DRClassifica
       detectionsByEye.set(eyeType, [...existing, ...detections]);
     }
 
+    // Get active guideline
+    const activeGuideline = useConfigStore.getState().config.activeGuideline;
+
     // Perform classification
-    const classification = classifyDiabeticRetinopathy(detectionsByEye, patient);
+    const classification = await classifyDiabeticRetinopathy(detectionsByEye, patient, activeGuideline);
 
     // Log results
     console.log('\n' + '='.repeat(80));

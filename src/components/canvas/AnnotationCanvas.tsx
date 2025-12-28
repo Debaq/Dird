@@ -53,7 +53,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   selectedLandmarkType = 'optic_disc',
   history,
 }) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { confirm, ConfirmDialogComponent } = useConfirm();
   const { config } = useConfigStore();
   const { selectedAnnotationId, setSelectedAnnotation } = useCanvasStore();
@@ -720,9 +720,9 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
       // Guardar en base de datos como detección manual
       const newId = await db.detections.add(newDetectionData);
-      
+
       const savedDetection = { ...newDetectionData, id: newId };
-      
+
       if (history) {
         history.onAdd({ type: 'add', detection: savedDetection });
       }
@@ -750,7 +750,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       onAnnotationAdded?.();
     } catch (error) {
       console.error('Error al guardar anotación:', error);
-      toast.error('Error al guardar la anotación. Por favor intenta de nuevo.');
+      toast.error(t('canvas.errors.saveAnnotationError'));
     }
   };
 
@@ -758,10 +758,10 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     if (!image.id || isProcessing) return;
 
     const confirmed = await confirm({
-      title: 'Re-detección de IA',
-      description: 'Esto eliminará todas las detecciones de IA actuales para esta imagen y volverá a ejecutar el análisis. ¿Continuar?',
-      confirmText: 'Continuar',
-      cancelText: 'Cancelar',
+      title: t('canvas.redetection.title'),
+      description: t('canvas.redetection.description'),
+      confirmText: t('ui.continue'),
+      cancelText: t('ui.cancel'),
       variant: 'warning',
     });
 
@@ -792,7 +792,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       onAnnotationAdded?.();
     } catch (error) {
       console.error('Error en re-detección:', error);
-      toast.error('Error al ejecutar la re-detección.');
+      toast.error(t('canvas.errors.redetectionError'));
     } finally {
       setIsProcessing(false);
     }

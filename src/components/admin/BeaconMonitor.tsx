@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Radio, RefreshCw, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
@@ -10,6 +11,7 @@ export function BeaconMonitor() {
   const [beacons, setBeacons] = useState<Beacon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { t } = useTranslation();
 
   const loadBeacons = async (showToast = false) => {
     try {
@@ -17,10 +19,10 @@ export function BeaconMonitor() {
       const data = await getActiveBeacons();
       setBeacons(data);
       if (showToast) {
-        toast.success('Lista actualizada');
+        toast.success(t('admin.beaconMonitor.success'));
       }
     } catch (error) {
-      toast.error('Error al cargar balizas');
+      toast.error(t('admin.beaconMonitor.errors.loadError'));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -66,10 +68,10 @@ export function BeaconMonitor() {
         <div>
           <h2 className="text-lg font-semibold text-coal-800 dark:text-dark-text flex items-center gap-2">
             <Radio className="w-5 h-5 text-red-500 animate-pulse" />
-            Balizas de Ayuda Activas
+            {t('admin.beaconMonitor.title')}
           </h2>
           <p className="text-sm text-smoke-600 dark:text-dark-textSecondary">
-            Actualización automática cada 10 segundos · {beacons.length} activa{beacons.length !== 1 ? 's' : ''}
+            {t('admin.beaconMonitor.description', { count: beacons.length })}
           </p>
         </div>
         <Button
@@ -80,7 +82,7 @@ export function BeaconMonitor() {
           className="gap-2"
         >
           <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Actualizar
+          {t('admin.beaconMonitor.refreshButton')}
         </Button>
       </div>
 
@@ -88,10 +90,10 @@ export function BeaconMonitor() {
         <div className="text-center py-12">
           <Radio className="w-12 h-12 mx-auto mb-4 text-smoke-400 dark:text-coal-600" />
           <p className="text-smoke-600 dark:text-dark-textSecondary">
-            No hay balizas activas en este momento
+            {t('admin.beaconMonitor.noBeacons')}
           </p>
           <p className="text-sm text-smoke-500 dark:text-coal-500 mt-1">
-            Los usuarios pueden activar balizas desde su panel de tokens
+            {t('admin.beaconMonitor.instructions')}
           </p>
         </div>
       ) : (
@@ -106,14 +108,14 @@ export function BeaconMonitor() {
                   <div className="flex items-center gap-2 mb-2">
                     <Radio className="w-4 h-4 text-red-600 dark:text-red-400 animate-pulse flex-shrink-0" />
                     <h3 className="font-semibold text-coal-800 dark:text-dark-text">
-                      Baliza Activa
+                      {t('admin.beaconMonitor.activeBeacon')}
                     </h3>
                   </div>
 
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-smoke-600 dark:text-dark-textSecondary">
-                        Installation:
+                        {t('admin.beaconMonitor.installationLabel')}
                       </span>
                       <code className="text-xs bg-white dark:bg-coal-900 px-2 py-0.5 rounded font-mono text-coal-800 dark:text-dark-text">
                         {truncateToken(beacon.installation_token)}
@@ -122,7 +124,7 @@ export function BeaconMonitor() {
 
                     <div className="flex items-center gap-2 text-sm text-smoke-600 dark:text-dark-textSecondary">
                       <Clock className="w-3 h-3" />
-                      Activada: {new Date(beacon.activated_at).toLocaleString()}
+                      {t('admin.beaconMonitor.activatedLabel')} {new Date(beacon.activated_at).toLocaleString()}
                     </div>
                   </div>
                 </div>
@@ -132,7 +134,7 @@ export function BeaconMonitor() {
                     {formatTimeRemaining(beacon.seconds_remaining)}
                   </div>
                   <p className="text-xs text-smoke-600 dark:text-dark-textSecondary mt-1">
-                    tiempo restante
+                    {t('admin.beaconMonitor.timeRemaining')}
                   </p>
                 </div>
               </div>
@@ -153,7 +155,7 @@ export function BeaconMonitor() {
 
       <div className="mt-6 p-4 bg-smoke-100 dark:bg-coal-900 rounded-lg">
         <p className="text-sm text-smoke-700 dark:text-dark-textSecondary">
-          <strong>ℹ️ Información:</strong> Las balizas tienen una duración de 5 minutos. Los usuarios las activan cuando necesitan ayuda urgente. Se eliminan automáticamente al expirar.
+          <strong>{t('admin.beaconMonitor.infoLabel')}:</strong> {t('admin.beaconMonitor.infoDescription')}
         </p>
       </div>
     </Card>

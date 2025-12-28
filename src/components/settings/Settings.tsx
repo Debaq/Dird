@@ -13,7 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
-  Lock
+  Lock,
+  BookOpen
 } from 'lucide-react';
 import { useConfigStore, type ModelSource } from '@/stores/config-store';
 import { apiInferenceService } from '@/lib/ai/api-inference-service';
@@ -28,6 +29,7 @@ import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import ModelSettings from './ModelSettings';
 import ReportSettings from './ReportSettings';
+import { GuidelineSelector } from './GuidelineSelector';
 import { getCurrentVersion, type VersionInfo } from '@/utils/version';
 import { changeLanguage } from '@/i18n/config';
 import { getAssetPath } from '@/utils/assets';
@@ -77,6 +79,11 @@ export function Settings() {
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
   }, []);
+
+  // Check authentication status when modal closes
+  const handleAdminLoginClose = (open: boolean) => {
+    setShowAdminLogin(open);
+  };
 
   const scroll = (direction: 'left' | 'right') => {
     if (tabsListRef.current) {
@@ -224,6 +231,10 @@ export function Settings() {
             <TabsTrigger value="processing" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <Gauge className="h-4 w-4 mr-2" />
               {t('settings.tabs.processing')}
+            </TabsTrigger>
+            <TabsTrigger value="guidelines" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
+              <BookOpen className="h-4 w-4 mr-2" />
+              Clinical Guidelines
             </TabsTrigger>
             <TabsTrigger value="pwa" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <Download className="h-4 w-4 mr-2" />
@@ -699,6 +710,13 @@ export function Settings() {
           </Card>
         </TabsContent>
 
+        {/* Clinical Guidelines Tab */}
+        <TabsContent value="guidelines">
+          <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
+            <GuidelineSelector />
+          </Card>
+        </TabsContent>
+
         {/* PWA Tab */}
         <TabsContent value="pwa">
           <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
@@ -847,7 +865,7 @@ export function Settings() {
       {/* Admin Login Modal */}
       <AdminLogin
         open={showAdminLogin}
-        onOpenChange={setShowAdminLogin}
+        onOpenChange={handleAdminLoginClose}
       />
     </div>
   );

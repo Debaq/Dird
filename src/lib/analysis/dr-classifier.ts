@@ -9,6 +9,8 @@
 
 import { Detection } from '../db/schema';
 import { Patient } from '../db/schema';
+import { classifyWithGuideline } from '../clinical-guidelines/multi-guideline-classifier';
+import type { LesionCounts as GuidelineLesionCounts } from '@/types/clinical-guidelines';
 
 /**
  * Severity levels according to ICDR scale
@@ -65,6 +67,9 @@ export interface DRClassification {
   recommendations: string[];
   warnings: string[];
   clinicalNotes: string[];
+  guidelineId?: string;
+  guidelineName?: string;
+  guidelineVersion?: string;
 }
 
 /**
@@ -147,103 +152,6 @@ export function countLesions(detections: Detection[]): LesionCounts {
   return counts;
 }
 
-/**
- * Classify severity based on lesion counts (ICDR criteria)
- *
- * Criteria:
- * - No DR: No microaneurysms or other lesions
- * - Mild NPDR: Only microaneurysms
- * - Moderate NPDR: More than microaneurysms but less than severe NPDR
- * - Severe NPDR: One of the following (4-2-1 rule):
- *   - Severe hemorrhages in 4 quadrants
- *   - Venous beading in 2+ quadrants
- *   - IRMA in 1+ quadrant
- * - PDR: Neovascularization or vitreous/preretinal hemorrhage
- */
-export function classifySeverity(lesions: LesionCounts): {
-  severity: DRSeverityLevel;
-  criteria: string[];
-  confidence: 'low' | 'moderate' | 'high';
-} {
-  const criteria: string[] = [];
-
-  // Proliferative DR - highest priority
-  if (lesions.neovascularization > 0) {
-    criteria.push(`Neovascularization detected (${lesions.neovascularization} areas)`);
-    return {
-      severity: 'pdr',
-      criteria,
-      confidence: 'high'
-    };
-  }
-
-  // Check for severe NPDR indicators
-  const hasSevereHemorrhages = lesions.hemorrhages >= 20; // Proxy for "4 quadrants"
-  const hasSoftExudates = lesions.softExudates >= 3; // Cotton wool spots indicate severe
-
-  if (hasSevereHemorrhages || hasSoftExudates) {
-    if (hasSevereHemorrhages) {
-      criteria.push(`Multiple hemorrhages detected (${lesions.hemorrhages})`);
-    }
-    if (hasSoftExudates) {
-      criteria.push(`Cotton wool spots present (${lesions.softExudates})`);
-    }
-    criteria.push('Meets criteria for severe NPDR (4-2-1 rule indicators)');
-    return {
-      severity: 'severe_npdr',
-      criteria,
-      confidence: 'moderate'
-    };
-  }
-
-  // Moderate NPDR
-  const hasMultipleLesionTypes =
-    (lesions.microaneurysms > 0 ? 1 : 0) +
-    (lesions.hemorrhages > 0 ? 1 : 0) +
-    (lesions.hardExudates > 0 ? 1 : 0) +
-    (lesions.softExudates > 0 ? 1 : 0) >= 2;
-
-  const hasModerateFindings =
-    lesions.microaneurysms >= 5 ||
-    lesions.hemorrhages >= 5 ||
-    lesions.hardExudates >= 5;
-
-  if (hasMultipleLesionTypes || hasModerateFindings) {
-    if (lesions.microaneurysms > 0) {
-      criteria.push(`Microaneurysms: ${lesions.microaneurysms}`);
-    }
-    if (lesions.hemorrhages > 0) {
-      criteria.push(`Hemorrhages: ${lesions.hemorrhages}`);
-    }
-    if (lesions.hardExudates > 0) {
-      criteria.push(`Hard exudates: ${lesions.hardExudates}`);
-    }
-    criteria.push('Multiple lesion types present');
-    return {
-      severity: 'moderate_npdr',
-      criteria,
-      confidence: 'moderate'
-    };
-  }
-
-  // Mild NPDR
-  if (lesions.microaneurysms > 0) {
-    criteria.push(`Only microaneurysms detected (${lesions.microaneurysms})`);
-    return {
-      severity: 'mild_npdr',
-      criteria,
-      confidence: 'high'
-    };
-  }
-
-  // No DR
-  criteria.push('No retinopathy lesions detected');
-  return {
-    severity: 'no_dr',
-    criteria,
-    confidence: 'high'
-  };
-}
 
 /**
  * Assess risk factors from patient data
@@ -357,19 +265,61 @@ export function generateWarnings(
 /**
  * Main classification function
  */
-export function classifyDiabeticRetinopathy(
+export async function classifyDiabeticRetinopathy(
   detectionsByEye: Map<'OD' | 'OI', Detection[]>,
-  patient: Patient
-): DRClassification {
+  patient: Patient,
+  guidelineId: string = 'icdr_2024'
+): Promise<DRClassification> {
   const riskFactors = assessRiskFactors(patient);
   const clinicalNotes: string[] = [];
 
   // Classify each eye
   const eyeClassifications: EyeClassification[] = [];
+  let gName: string | undefined;
+  let gVersion: string | undefined;
 
   for (const [eye, detections] of detectionsByEye) {
     const lesions = countLesions(detections);
-    const { severity, criteria, confidence } = classifySeverity(lesions);
+    
+    let severity: DRSeverityLevel;
+    let criteria: string[] = [];
+    let confidence: 'low' | 'moderate' | 'high';
+    
+    try {
+      // Prepare for guideline classifier
+      const guidelineLesions: GuidelineLesionCounts = {
+          ...lesions,
+          total_lesions: Object.values(lesions).reduce((a, b) => a + b, 0),
+          lesion_types_count: Object.values(lesions).filter(v => v > 0).length
+      };
+
+      const result = await classifyWithGuideline(guidelineId, guidelineLesions);
+      severity = result.severity as DRSeverityLevel;
+      confidence = result.confidence;
+      
+      // Capture guideline info
+      gName = result.guideline_name;
+      gVersion = result.guideline_version;
+      
+      // Add criteria info
+      if (result.rule_421_details) {
+        criteria.push(...result.rule_421_details);
+      }
+      
+      // Add generic lesion counts as criteria
+      if (lesions.neovascularization > 0) criteria.push(`Neovascularization: ${lesions.neovascularization}`);
+      if (lesions.hemorrhages > 0) criteria.push(`Hemorrhages: ${lesions.hemorrhages}`);
+      if (lesions.microaneurysms > 0) criteria.push(`Microaneurysms: ${lesions.microaneurysms}`);
+      if (lesions.hardExudates > 0) criteria.push(`Hard Exudates: ${lesions.hardExudates}`);
+      if (lesions.softExudates > 0) criteria.push(`Soft Exudates: ${lesions.softExudates}`);
+      
+      criteria.push(`Classified using ${result.guideline_name} (v${result.guideline_version})`);
+
+    } catch (e) {
+      console.error(`Error classifying eye ${eye} with guideline ${guidelineId}:`, e);
+      // Fallback removed to prevent bad clinical decisions based on hardcoded logic
+      throw new Error(`Failed to classify eye ${eye} with guideline ${guidelineId}: ${e instanceof Error ? e.message : 'Unknown error'}`);
+    }
 
     eyeClassifications.push({
       eye,
@@ -381,6 +331,9 @@ export function classifyDiabeticRetinopathy(
   }
 
   // Determine overall severity (worst eye determines overall)
+  // We need to fetch the severity order from the guideline if possible, but here we might need to rely on the static order or the one returned by the guideline result if we had access to it for both eyes.
+  // Since we processed eyes in loop, we can assume standard order for now or try to get order from results.
+  
   const severityOrder: DRSeverityLevel[] = ['no_dr', 'mild_npdr', 'moderate_npdr', 'severe_npdr', 'pdr'];
   const worstSeverity = eyeClassifications.reduce((worst, current) => {
     return severityOrder.indexOf(current.severity) > severityOrder.indexOf(worst)
@@ -388,35 +341,18 @@ export function classifyDiabeticRetinopathy(
       : worst;
   }, 'no_dr' as DRSeverityLevel);
 
-  // Generate recommendations
-  const recommendations = new Set<string>();
-  eyeClassifications.forEach(eyeClass => {
-    generateRecommendations(eyeClass, riskFactors).forEach(rec =>
-      recommendations.add(rec)
-    );
-  });
-
-  // Clinical notes
-  if (patient.diabetes) {
-    clinicalNotes.push(`Patient has diabetes (${patient.diabetesType || 'type unknown'})`);
-    if (patient.diabetesDuration) {
-      clinicalNotes.push(`Diabetes duration: ${patient.diabetesDuration} years`);
-    }
-  }
-
-  if (patient.medications && patient.medications.length > 0) {
-    clinicalNotes.push(`Current medications: ${patient.medications.join(', ')}`);
-  }
-
   return {
     timestamp: new Date().toISOString(),
     overallSeverity: worstSeverity,
     rightEye: eyeClassifications.find(e => e.eye === 'OD'),
     leftEye: eyeClassifications.find(e => e.eye === 'OI'),
     riskFactors,
-    recommendations: Array.from(recommendations),
+    recommendations: [],
     warnings: generateWarnings(detectionsByEye),
-    clinicalNotes
+    clinicalNotes,
+    guidelineId,
+    guidelineName: gName,
+    guidelineVersion: gVersion
   };
 }
 
@@ -433,6 +369,9 @@ export function formatClassificationText(classification: DRClassification): stri
   };
 
   let text = `CLASIFICACIÓN DE RETINOPATÍA DIABÉTICA\n`;
+  if (classification.guidelineName) {
+    text += `Protocolo: ${classification.guidelineName} ${classification.guidelineVersion ? `(v${classification.guidelineVersion})` : ''}\n`;
+  }
   text += `${'='.repeat(50)}\n\n`;
   text += `Severidad Global: ${severityLabels[classification.overallSeverity]}\n\n`;
 

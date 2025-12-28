@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
     react(),
                                            VitePWA({
                                              registerType: 'autoUpdate',
-                                             includeAssets: ['logo.svg', 'logo-default.svg', 'locales/**/*.json'],
+                                             includeAssets: ['logo.svg', 'logo-default.svg', 'locales/**/*.json', 'clinical-guidelines/**/*.json'],
                                              manifest: {
                                                name: 'DIRD - Diabetic Retinopathy Detection',
                                                short_name: 'DIRD',
@@ -90,6 +90,21 @@ export default defineConfig(({ mode }) => ({
                                                      networkTimeoutSeconds: 3,
                                                      expiration: {
                                                        maxAgeSeconds: 60 * 60 * 24 * 7 // 7 días
+                                                     },
+                                                     cacheableResponse: {
+                                                       statuses: [0, 200]
+                                                     }
+                                                   }
+                                                 },
+                                                 // Clinical Guidelines: NetworkFirst para tener versiones actualizadas
+                                                 {
+                                                   urlPattern: /clinical-guidelines\/.*\.json$/,
+                                                   handler: 'NetworkFirst',
+                                                   options: {
+                                                     cacheName: 'clinical-guidelines-cache',
+                                                     networkTimeoutSeconds: 3,
+                                                     expiration: {
+                                                       maxAgeSeconds: 60 * 60 * 24 * 30 // 30 días
                                                      },
                                                      cacheableResponse: {
                                                        statuses: [0, 200]

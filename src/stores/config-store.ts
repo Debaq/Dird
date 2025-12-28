@@ -89,6 +89,7 @@ export interface AppConfig {
   apiModels: APIModelConfig;
   processing: ProcessingConfig;
   report: ReportConfig;
+  activeGuideline: string; // ID of active clinical guideline
   pwa: {
     installPromptShown: boolean;
     updateAvailable: boolean;
@@ -104,6 +105,7 @@ interface ConfigStore {
   updateAPIModels: (updates: Partial<APIModelConfig>) => void;
   updateLocalModels: (updates: Partial<LocalModelConfig>) => void;
   setModelSource: (source: ModelSource) => void;
+  setActiveGuideline: (guidelineId: string) => void;
   resetConfig: () => void;
 }
 
@@ -183,6 +185,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       text: 'Firma del Especialista'
     }
   },
+  activeGuideline: 'icdr_2024', // Default to ICDR International standard
   pwa: {
     installPromptShown: false,
     updateAvailable: false
@@ -244,11 +247,16 @@ export const useConfigStore = create<ConfigStore>()(
           config: { ...state.config, modelSource: source }
         })),
 
+      setActiveGuideline: (guidelineId) =>
+        set((state) => ({
+          config: { ...state.config, activeGuideline: guidelineId }
+        })),
+
       resetConfig: () => set({ config: DEFAULT_CONFIG })
     }),
     {
       name: 'dird-config',
-      version: 4,
+      version: 5,
       migrate: (persistedState: any, version) => {
         let state = persistedState;
 
@@ -286,6 +294,13 @@ export const useConfigStore = create<ConfigStore>()(
                ...state.processing,
                opticDiscRefinement: true
              }
+           };
+        }
+
+        if (version < 5) {
+           state = {
+             ...state,
+             activeGuideline: DEFAULT_CONFIG.activeGuideline
            };
         }
 

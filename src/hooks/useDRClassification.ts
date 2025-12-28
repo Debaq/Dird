@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DRClassification } from '../lib/analysis/dr-classifier';
 import {
   classifySessionDR,
@@ -25,6 +26,7 @@ export function useDRClassification(): UseDRClassificationReturn {
   const [classification, setClassification] = useState<DRClassification | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const classifySession = useCallback(async (sessionId: number) => {
     setIsLoading(true);
@@ -35,15 +37,15 @@ export function useDRClassification(): UseDRClassificationReturn {
       if (result) {
         setClassification(result);
       } else {
-        setError('No se pudo generar la clasificación');
+        setError(t('errors.drClassification.noClassification'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      setError(err instanceof Error ? err.message : t('errors.unknown'));
       console.error('Error en clasificación:', err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const classifyPatient = useCallback(async (patientId: number) => {
     setIsLoading(true);
@@ -54,15 +56,15 @@ export function useDRClassification(): UseDRClassificationReturn {
       if (result) {
         setClassification(result);
       } else {
-        setError('No se pudo generar la clasificación');
+        setError(t('errors.drClassification.noClassification'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      setError(err instanceof Error ? err.message : t('errors.unknown'));
       console.error('Error en clasificación:', err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const compareSessions = useCallback(async (sessionIds: number[]) => {
     setIsLoading(true);
@@ -74,15 +76,15 @@ export function useDRClassification(): UseDRClassificationReturn {
         // Set the latest classification
         setClassification(results[results.length - 1]);
       } else {
-        setError('No se pudieron generar las clasificaciones');
+        setError(t('errors.drClassification.noClassifications'));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      setError(err instanceof Error ? err.message : t('errors.unknown'));
       console.error('Error en comparación:', err);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const reset = useCallback(() => {
     setClassification(null);

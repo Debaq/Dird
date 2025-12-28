@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { RefreshCw, Download, Image as ImageIcon, FileJson } from 'lucide-react';
+import { RefreshCw, Download, Image as ImageIcon, FileJson, BookOpen, BrainCircuit } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,6 +53,38 @@ export function ContributionsList() {
     return `${token.substring(0, 8)}...`;
   };
 
+  const renderIcon = (type?: string) => {
+    switch (type) {
+      case 'guideline':
+        return <BookOpen className="w-4 h-4 text-blue-500" />;
+      case 'conclusion':
+        return <BrainCircuit className="w-4 h-4 text-purple-500" />;
+      case 'image':
+      default:
+        return <ImageIcon className="w-4 h-4 text-smoke-500 dark:text-dark-textSecondary" />;
+    }
+  };
+
+  const renderTitle = (contribution: Contribution) => {
+    if (contribution.type === 'guideline') {
+      return (
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-coal-800 dark:text-dark-text">
+            {contribution.guideline_name || contribution.original_filename}
+          </span>
+          <span className="text-xs text-smoke-500">
+            v{contribution.guideline_version || '?'} • {contribution.original_filename}
+          </span>
+        </div>
+      );
+    }
+    return (
+      <span className="text-sm font-medium text-coal-800 dark:text-dark-text">
+        {contribution.original_filename}
+      </span>
+    );
+  };
+
   if (isLoading) {
     return (
       <Card className="p-8">
@@ -69,7 +101,7 @@ export function ContributionsList() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-lg font-semibold text-coal-800 dark:text-dark-text">
-            Imágenes Contribuidas
+            Contribuciones
           </h2>
           <p className="text-sm text-smoke-600 dark:text-dark-textSecondary">
             Total: {contributions.length}
@@ -94,7 +126,7 @@ export function ContributionsList() {
             No hay contribuciones aún
           </p>
           <p className="text-sm text-smoke-500 dark:text-coal-500 mt-1">
-            Los usuarios pueden contribuir imágenes desde el menú de contribución
+            Los usuarios pueden contribuir desde la aplicación
           </p>
         </div>
       ) : (
@@ -106,7 +138,10 @@ export function ContributionsList() {
                   Fecha
                 </th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-smoke-600 dark:text-dark-textSecondary">
-                  Archivo
+                  Tipo
+                </th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-smoke-600 dark:text-dark-textSecondary">
+                  Archivo / Detalles
                 </th>
                 <th className="text-left py-3 px-4 text-sm font-medium text-smoke-600 dark:text-dark-textSecondary">
                   Tamaño
@@ -125,18 +160,22 @@ export function ContributionsList() {
                   key={contribution.id}
                   className="border-b border-smoke-100 dark:border-coal-800 hover:bg-smoke-50 dark:hover:bg-coal-900 transition-colors"
                 >
-                  <td className="py-3 px-4 text-sm text-smoke-600 dark:text-dark-textSecondary">
+                  <td className="py-3 px-4 text-sm text-smoke-600 dark:text-dark-textSecondary whitespace-nowrap">
                     {formatDate(contribution.uploaded_at)}
                   </td>
                   <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <ImageIcon className="w-4 h-4 text-smoke-500 dark:text-dark-textSecondary" />
-                      <span className="text-sm font-medium text-coal-800 dark:text-dark-text">
-                        {contribution.original_filename}
+                    <div className="flex items-center gap-2" title={contribution.type || 'image'}>
+                      {renderIcon(contribution.type)}
+                      <span className="text-xs capitalize text-smoke-600">
+                        {contribution.type === 'guideline' ? 'Protocolo' : 
+                         contribution.type === 'conclusion' ? 'Conclusión' : 'Imagen'}
                       </span>
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-sm text-smoke-600 dark:text-dark-textSecondary">
+                  <td className="py-3 px-4">
+                    {renderTitle(contribution)}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-smoke-600 dark:text-dark-textSecondary whitespace-nowrap">
                     {contribution.size_formatted}
                   </td>
                   <td className="py-3 px-4">
@@ -146,33 +185,59 @@ export function ContributionsList() {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center justify-end gap-2">
-                      {contribution.image_exists && (
+                      {/* Image Type Actions */}
+                      {(!contribution.type || contribution.type === 'image') && (
+                        <>
+                          {contribution.image_exists && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                handleDownload(
+                                  contribution.download_url_image!,
+                                  contribution.original_filename
+                                )
+                              }
+                              className="gap-1"
+                              title="Descargar Imagen"
+                            >
+                              <Download className="w-3 h-3" />
+                              <ImageIcon className="w-3 h-3" />
+                            </Button>
+                          )}
+                          {contribution.json_exists && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                handleDownload(
+                                  contribution.download_url_json!,
+                                  `${contribution.id}.json`
+                                )
+                              }
+                              className="gap-1"
+                              title="Descargar Anotaciones"
+                            >
+                              <Download className="w-3 h-3" />
+                              <FileJson className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </>
+                      )}
+
+                      {/* Single File Types (Guideline / Conclusion) */}
+                      {(contribution.type === 'guideline' || contribution.type === 'conclusion') && contribution.exists && (
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() =>
                             handleDownload(
-                              contribution.download_url_image,
+                              contribution.download_url!,
                               contribution.original_filename
                             )
                           }
                           className="gap-1"
-                        >
-                          <Download className="w-3 h-3" />
-                          <ImageIcon className="w-3 h-3" />
-                        </Button>
-                      )}
-                      {contribution.json_exists && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            handleDownload(
-                              contribution.download_url_json,
-                              `${contribution.id}.json`
-                            )
-                          }
-                          className="gap-1"
+                          title="Descargar JSON"
                         >
                           <Download className="w-3 h-3" />
                           <FileJson className="w-3 h-3" />
@@ -188,9 +253,14 @@ export function ContributionsList() {
       )}
 
       <div className="mt-6 p-4 bg-smoke-100 dark:bg-coal-900 rounded-lg">
-        <p className="text-sm text-smoke-700 dark:text-dark-textSecondary">
-          <strong>ℹ️ Información:</strong> Las contribuciones incluyen la imagen original y un archivo JSON con las anotaciones. Puedes descargarlas individualmente.
-        </p>
+        <div className="text-sm text-smoke-700 dark:text-dark-textSecondary">
+          <strong>ℹ️ Información:</strong>
+          <ul className="list-disc ml-5 mt-1 space-y-1">
+            <li><strong>Imágenes:</strong> Incluyen la imagen original y un JSON con anotaciones.</li>
+            <li><strong>Protocolos:</strong> Archivos de configuración de guías clínicas (JSON).</li>
+            <li><strong>Conclusiones:</strong> Resultados de IA con correcciones del usuario (JSON).</li>
+          </ul>
+        </div>
       </div>
     </Card>
   );

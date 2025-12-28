@@ -12,14 +12,16 @@ import { AIConfiguration } from '@/components/admin/AIConfiguration';
 import { LogsViewer } from '@/components/admin/LogsViewer';
 import { logoutAdmin } from '@/lib/api/admin-service';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('installations');
+  const { t } = useTranslation();
 
   const handleLogout = () => {
     logoutAdmin();
-    toast.success('Sesión cerrada');
+    toast.success(t('admin.sessionClosed'));
     navigate('/settings');
   };
 
@@ -35,10 +37,10 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-coal-800 dark:text-dark-text">
-                  Panel de Administración
+                  {t('admin.panelTitle')}
                 </h1>
                 <p className="text-sm text-smoke-600 dark:text-dark-textSecondary">
-                  DIRD - Sistema de Gestión
+                  {t('admin.systemLabel')}
                 </p>
               </div>
             </div>
@@ -49,7 +51,7 @@ export default function AdminDashboard() {
               className="gap-2"
             >
               <LogOut className="w-4 h-4" />
-              Cerrar Sesión
+              {t('admin.logout')}
             </Button>
           </div>
         </div>
@@ -61,31 +63,31 @@ export default function AdminDashboard() {
           <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-grid">
             <TabsTrigger value="installations" className="gap-2">
               <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Instalaciones</span>
+              <span className="hidden sm:inline">{t('admin.tabs.installations')}</span>
             </TabsTrigger>
             <TabsTrigger value="contributions" className="gap-2">
               <Image className="w-4 h-4" />
-              <span className="hidden sm:inline">Contribuciones</span>
+              <span className="hidden sm:inline">{t('admin.tabs.contributions')}</span>
             </TabsTrigger>
             <TabsTrigger value="messages" className="gap-2">
               <MessageSquare className="w-4 h-4" />
-              <span className="hidden sm:inline">Mensajes</span>
+              <span className="hidden sm:inline">{t('admin.tabs.messages')}</span>
             </TabsTrigger>
             <TabsTrigger value="beacons" className="gap-2">
               <Radio className="w-4 h-4" />
-              <span className="hidden sm:inline">Balizas</span>
+              <span className="hidden sm:inline">{t('admin.tabs.beacons')}</span>
             </TabsTrigger>
             <TabsTrigger value="ai" className="gap-2">
               <Bot className="w-4 h-4" />
-              <span className="hidden sm:inline">IA / Groq</span>
+              <span className="hidden sm:inline">{t('admin.tabs.ai')}</span>
             </TabsTrigger>
             <TabsTrigger value="logs" className="gap-2">
               <FileText className="w-4 h-4" />
-              <span className="hidden sm:inline">Logs</span>
+              <span className="hidden sm:inline">{t('admin.tabs.logs')}</span>
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="w-4 h-4" />
-              <span className="hidden sm:inline">Configuración</span>
+              <span className="hidden sm:inline">{t('admin.tabs.settings')}</span>
             </TabsTrigger>
           </TabsList>
 
