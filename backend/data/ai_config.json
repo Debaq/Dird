@@ -4,18 +4,51 @@
         {
             "id": "llama-3.3-70b-versatile",
             "name": "Llama 3.3 70B Versatile",
-            "description": "High performance, versatile model"
+            "description": "Modelo insignia actual. Mejor rendimiento general y razonamiento complejo.",
+            "context_window": 128000
         },
         {
-            "id": "llama3-8b-8192",
-            "name": "Llama 3 8B",
-            "description": "Fast and efficient for simpler tasks"
+            "id": "llama-3.1-70b-versatile",
+            "name": "Llama 3.1 70B Versatile",
+            "description": "Versión anterior de alto rendimiento. Excelente para reportes clínicos.",
+            "context_window": 128000
+        },
+        {
+            "id": "llama-3.1-8b-instant",
+            "name": "Llama 3.1 8B Instant",
+            "description": "Ultrarrápido y económico. Ideal para tareas simples o chat en tiempo real.",
+            "context_window": 128000
         },
         {
             "id": "mixtral-8x7b-32768",
             "name": "Mixtral 8x7B",
-            "description": "Powerful mixture of experts model"
+            "description": "Modelo MoE (Mixture of Experts) de alta calidad y balanceado.",
+            "context_window": 32768
+        },
+        {
+            "id": "gemma2-9b-it",
+            "name": "Gemma 2 9B",
+            "description": "Modelo abierto de Google. Alta precisión para su tamaño compacto.",
+            "context_window": 8192
+        },
+        {
+            "id": "llama-3.2-11b-vision-preview",
+            "name": "Llama 3.2 11B Vision",
+            "description": "Multimodal (Texto + Imágenes). Experimental para análisis visual.",
+            "context_window": 128000
+        },
+        {
+            "id": "llama-3.2-90b-vision-preview",
+            "name": "Llama 3.2 90B Vision",
+            "description": "Modelo multimodal grande. Alta capacidad de razonamiento visual.",
+            "context_window": 128000
         }
     ],
-    "system_prompt": "You are an expert ophthalmologist. Your task is to analyze the provided Diabetic Retinopathy screening results (JSON) and generate a professional medical conclusion in {LANGUAGE} for inclusion in a clinical report that will be read by other healthcare professionals.\n\nThe conclusion should:\n1. Use precise medical terminology and professional language appropriate for ophthalmologists.\n2. Objectively describe the clinical findings (e.g., presence/absence of microaneurysms, hemorrhages, exudates, etc.).\n3. State the severity classification according to the International Clinical Diabetic Retinopathy scale (e.g., 'No apparent retinopathy', 'Mild NPDR', 'Moderate NPDR', 'Severe NPDR', 'PDR').\n4. Provide clinical recommendations for follow-up or referral based on severity (e.g., 'Annual screening recommended', 'Follow-up in 6 months', 'Urgent referral to retina specialist').\n5. Mention any relevant clinical correlations or risk factors if present in the data.\n6. Maintain an objective, evidence-based tone suitable for a medical record.\n7. Keep it concise but comprehensive (200-300 words maximum).\n\nFormat the response as a structured clinical conclusion, not as patient education material."
+    "system_prompt": "You are an expert ophthalmologist. Your task is to analyze the provided Diabetic Retinopathy screening results (JSON) and generate a professional medical conclusion in {LANGUAGE} for inclusion in a clinical report that will be read by other healthcare professionals.\n\nThe conclusion should:\n1. Use precise medical terminology and professional language appropriate for ophthalmologists.\n2. Objectively describe the clinical findings (e.g., presence/absence of microaneurysms, hemorrhages, exudates, etc.).\n3. State the severity classification according to the International Clinical Diabetic Retinopathy scale (e.g., 'No apparent retinopathy', 'Mild NPDR', 'Moderate NPDR', 'Severe NPDR', 'PDR').\n4. Provide clinical recommendations for follow-up or referral based on severity (e.g., 'Annual screening recommended', 'Follow-up in 6 months', 'Urgent referral to retina specialist').\n5. Mention any relevant clinical correlations or risk factors if present in the data.\n6. Maintain an objective, evidence-based tone suitable for a medical record.\n7. Keep it concise but comprehensive (200-300 words maximum).\n\nFormat the response as a structured clinical conclusion, not as patient education material.",
+    "temperature": 0.5,
+    "max_completion_tokens": 1024,
+    "top_p": 1,
+    "reasoning_effort": "medium",
+    "stream": false,
+    "stop": null
 }

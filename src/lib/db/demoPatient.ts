@@ -421,7 +421,6 @@ export async function loadDemoImage(
       width: dimensions.width,
       height: dimensions.height,
       uploadedAt: new Date(),
-      contributionStatus: 'none',
     });
 
     // Cargar detecciones desde JSON si existe

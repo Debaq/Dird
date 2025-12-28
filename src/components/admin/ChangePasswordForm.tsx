@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,28 +18,29 @@ export function ChangePasswordForm() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validation
     if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error('Todos los campos son requeridos');
+      toast.error(t('admin.changePassword.errors.requiredFields'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error('Las contraseñas nuevas no coinciden');
+      toast.error(t('admin.changePassword.errors.passwordMismatch'));
       return;
     }
 
     if (newPassword.length < 8) {
-      toast.error('La nueva contraseña debe tener al menos 8 caracteres');
+      toast.error(t('admin.changePassword.errors.passwordLength'));
       return;
     }
 
     if (currentPassword === newPassword) {
-      toast.error('La nueva contraseña debe ser diferente a la actual');
+      toast.error(t('admin.changePassword.errors.passwordSame'));
       return;
     }
 
@@ -52,17 +54,17 @@ export function ChangePasswordForm() {
       });
 
       if (result.success) {
-        toast.success('Contraseña actualizada correctamente');
+        toast.success(t('admin.changePassword.success'));
         // Redirect to login after short delay
         setTimeout(() => {
           navigate('/settings');
         }, 1500);
       } else {
-        toast.error(result.error || 'Error al cambiar contraseña');
+        toast.error(result.error || t('admin.changePassword.errors.changeError'));
         setIsChanging(false);
       }
     } catch (error) {
-      toast.error('Error al cambiar contraseña');
+      toast.error(t('admin.changePassword.errors.changeError'));
       console.error(error);
       setIsChanging(false);
     }
@@ -82,10 +84,10 @@ export function ChangePasswordForm() {
         </div>
         <div>
           <h2 className="text-lg font-semibold text-coal-800 dark:text-dark-text">
-            Cambiar Contraseña
+            {t('admin.changePassword.title')}
           </h2>
           <p className="text-sm text-smoke-600 dark:text-dark-textSecondary">
-            Actualiza tu contraseña de administrador
+            {t('admin.changePassword.description')}
           </p>
         </div>
       </div>
@@ -93,14 +95,14 @@ export function ChangePasswordForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Current Password */}
         <div className="space-y-2">
-          <Label htmlFor="current-password">Contraseña Actual</Label>
+          <Label htmlFor="current-password">{t('admin.changePassword.currentPasswordLabel')}</Label>
           <div className="relative">
             <Input
               id="current-password"
               type={showCurrentPassword ? 'text' : 'password'}
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Ingresa tu contraseña actual"
+              placeholder={t('admin.changePassword.currentPasswordPlaceholder')}
               disabled={isChanging}
               className="pr-10"
             />
@@ -121,14 +123,14 @@ export function ChangePasswordForm() {
 
         {/* New Password */}
         <div className="space-y-2">
-          <Label htmlFor="new-password">Nueva Contraseña</Label>
+          <Label htmlFor="new-password">{t('admin.changePassword.newPasswordLabel')}</Label>
           <div className="relative">
             <Input
               id="new-password"
               type={showNewPassword ? 'text' : 'password'}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Mínimo 8 caracteres"
+              placeholder={t('admin.changePassword.newPasswordPlaceholder')}
               disabled={isChanging}
               className="pr-10"
             />
@@ -147,21 +149,21 @@ export function ChangePasswordForm() {
           </div>
           {newPassword && newPassword.length < 8 && (
             <p className="text-xs text-amber-600 dark:text-amber-400">
-              La contraseña debe tener al menos 8 caracteres
+              {t('admin.changePassword.passwordLengthMessage')}
             </p>
           )}
         </div>
 
         {/* Confirm Password */}
         <div className="space-y-2">
-          <Label htmlFor="confirm-password">Confirmar Nueva Contraseña</Label>
+          <Label htmlFor="confirm-password">{t('admin.changePassword.confirmPasswordLabel')}</Label>
           <div className="relative">
             <Input
               id="confirm-password"
               type={showConfirmPassword ? 'text' : 'password'}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirma tu nueva contraseña"
+              placeholder={t('admin.changePassword.confirmPasswordPlaceholder')}
               disabled={isChanging}
               className="pr-10"
             />
@@ -180,7 +182,7 @@ export function ChangePasswordForm() {
           </div>
           {confirmPassword && newPassword !== confirmPassword && (
             <p className="text-xs text-red-600 dark:text-red-400">
-              Las contraseñas no coinciden
+              {t('admin.changePassword.passwordMismatchMessage')}
             </p>
           )}
         </div>
@@ -188,7 +190,7 @@ export function ChangePasswordForm() {
         {/* Security Note */}
         <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
           <p className="text-xs text-amber-800 dark:text-amber-200">
-            <strong>Nota de seguridad:</strong> Al cambiar tu contraseña, se cerrarán todas las sesiones activas y deberás iniciar sesión nuevamente.
+            <strong>{t('admin.changePassword.securityNoteTitle')}:</strong> {t('admin.changePassword.securityNoteText')}
           </p>
         </div>
 
@@ -201,7 +203,7 @@ export function ChangePasswordForm() {
             disabled={isChanging}
             className="flex-1"
           >
-            Limpiar
+            {t('admin.changePassword.resetButton')}
           </Button>
           <Button
             type="submit"
@@ -215,7 +217,7 @@ export function ChangePasswordForm() {
             }
             className="flex-1"
           >
-            {isChanging ? 'Actualizando...' : 'Cambiar Contraseña'}
+            {isChanging ? t('admin.changePassword.updating') : t('admin.changePassword.submitButton')}
           </Button>
         </div>
       </form>

@@ -1,0 +1,284 @@
+{
+  "guideline_id": "icdr_2024",
+  "metadata": {
+    "name": "ICDR International 2024",
+    "full_name": "International Clinical Diabetic Retinopathy Disease Severity Scale",
+    "version": "1.0.0",
+    "country": "International",
+    "language": "en",
+    "status": "official",
+    "date_published": "2024-01-01",
+    "organization": "International Council of Ophthalmology (ICO)",
+    "description": "Internationally recognized 5-level severity classification for diabetic retinopathy"
+  },
+  "severity_levels": [
+    {
+      "id": "no_dr",
+      "name": "No Apparent DR",
+      "name_es": "Sin RD Aparente",
+      "order": 0,
+      "color": "#22c55e",
+      "description": "No abnormalities detected",
+      "description_es": "Sin lesiones detectadas"
+    },
+    {
+      "id": "mild_npdr",
+      "name": "Mild NPDR",
+      "name_es": "RDNP Leve",
+      "order": 1,
+      "color": "#84cc16",
+      "description": "Microaneurysms only",
+      "description_es": "Solo microaneurismas"
+    },
+    {
+      "id": "moderate_npdr",
+      "name": "Moderate NPDR",
+      "name_es": "RDNP Moderada",
+      "order": 2,
+      "color": "#eab308",
+      "description": "More than just microaneurysms but less than severe NPDR",
+      "description_es": "Más que solo microaneurismas, pero menos que RDNP severa"
+    },
+    {
+      "id": "severe_npdr",
+      "name": "Severe NPDR",
+      "name_es": "RDNP Severa",
+      "order": 3,
+      "color": "#f97316",
+      "description": "Any of the following: extensive hemorrhages (4 quadrants), venous beading (2+ quadrants), or prominent IRMA (1+ quadrant)",
+      "description_es": "Alguno de los siguientes: hemorragias extensas (4 cuadrantes), arrosariamiento venoso (2+ cuadrantes), o IRMA prominente (1+ cuadrante)"
+    },
+    {
+      "id": "pdr",
+      "name": "PDR",
+      "name_es": "RDP",
+      "order": 4,
+      "color": "#dc2626",
+      "description": "Neovascularization and/or vitreous/preretinal hemorrhage",
+      "description_es": "Neovascularización y/o hemorragia vítrea/prerretiniana"
+    }
+  ],
+  "classification_rules": [
+    {
+      "severity": "no_dr",
+      "conditions": [
+        {
+          "field": "total_lesions",
+          "operator": "==",
+          "value": 0
+        }
+      ],
+      "logic": "AND",
+      "priority": 1
+    },
+    {
+      "severity": "pdr",
+      "conditions": [
+        {
+          "field": "neovascularization",
+          "operator": ">",
+          "value": 0
+        }
+      ],
+      "logic": "AND",
+      "priority": 2
+    },
+    {
+      "severity": "severe_npdr",
+      "conditions": [
+        {
+          "field": "rule_421_met",
+          "operator": "==",
+          "value": true
+        }
+      ],
+      "logic": "OR",
+      "priority": 3
+    },
+    {
+      "severity": "severe_npdr",
+      "conditions": [
+        {
+          "field": "hemorrhages",
+          "operator": ">=",
+          "value": 20
+        }
+      ],
+      "logic": "OR",
+      "priority": 3
+    },
+    {
+      "severity": "severe_npdr",
+      "conditions": [
+        {
+          "field": "soft_exudates",
+          "operator": ">=",
+          "value": 3
+        }
+      ],
+      "logic": "OR",
+      "priority": 3
+    },
+    {
+      "severity": "moderate_npdr",
+      "conditions": [
+        {
+          "field": "lesion_types_count",
+          "operator": ">=",
+          "value": 2
+        },
+        {
+          "field": "total_lesions",
+          "operator": ">=",
+          "value": 5
+        }
+      ],
+      "logic": "AND",
+      "priority": 4
+    },
+    {
+      "severity": "mild_npdr",
+      "conditions": [
+        {
+          "field": "microaneurysms",
+          "operator": ">",
+          "value": 0
+        }
+      ],
+      "logic": "AND",
+      "priority": 5
+    }
+  ],
+  "rule_421": {
+    "enabled": true,
+    "name": "4-2-1 Rule",
+    "description": "Severe NPDR criteria based on ETDRS findings",
+    "criteria": [
+      {
+        "name": "severe_hemorrhages_4q",
+        "description": "Severe hemorrhages in all 4 quadrants",
+        "field": "hemorrhages",
+        "min_quadrants": 4,
+        "min_per_quadrant": 5
+      },
+      {
+        "name": "venous_beading_2q",
+        "description": "Venous beading in 2+ quadrants",
+        "field": "venous_beading",
+        "min_quadrants": 2,
+        "severity": "moderate"
+      },
+      {
+        "name": "irma_1q",
+        "description": "IRMA in 1+ quadrant",
+        "field": "irma",
+        "min_quadrants": 1,
+        "min_area_disc_diameters": 0.5
+      }
+    ],
+    "severity_mapping": {
+      "0_criteria_met": "moderate_npdr",
+      "1_criteria_met": "severe_npdr",
+      "2_or_more_criteria_met": "severe_npdr"
+    }
+  },
+  "treatment_protocols": [
+    {
+      "severity": "no_dr",
+      "urgency": "routine",
+      "actions": [
+        "Continue diabetes management",
+        "Annual screening recommended"
+      ],
+      "actions_es": [
+        "Continuar control de diabetes",
+        "Screening anual recomendado"
+      ],
+      "followup_interval_days": 365,
+      "rationale": "No retinopathy detected - routine annual follow-up",
+      "rationale_es": "Sin retinopatía detectada - seguimiento anual de rutina"
+    },
+    {
+      "severity": "mild_npdr",
+      "urgency": "routine",
+      "actions": [
+        "Optimize glycemic control (HbA1c <7%)",
+        "Blood pressure control (<130/80 mmHg)",
+        "Annual ophthalmology follow-up"
+      ],
+      "actions_es": [
+        "Optimizar control glicémico (HbA1c <7%)",
+        "Control de presión arterial (<130/80 mmHg)",
+        "Seguimiento oftalmológico anual"
+      ],
+      "followup_interval_days": 365,
+      "rationale": "Mild NPDR requires annual monitoring",
+      "rationale_es": "RDNP leve requiere monitoreo anual"
+    },
+    {
+      "severity": "moderate_npdr",
+      "urgency": "routine",
+      "actions": [
+        "Optimize glycemic control (HbA1c <7%)",
+        "Blood pressure control (<130/80 mmHg)",
+        "Ophthalmology follow-up every 6-12 months"
+      ],
+      "actions_es": [
+        "Optimizar control glicémico (HbA1c <7%)",
+        "Control de presión arterial (<130/80 mmHg)",
+        "Seguimiento oftalmológico cada 6-12 meses"
+      ],
+      "followup_interval_days": 180,
+      "rationale": "Moderate NPDR requires semi-annual monitoring",
+      "rationale_es": "RDNP moderada requiere monitoreo semestral"
+    },
+    {
+      "severity": "severe_npdr",
+      "urgency": "accelerated",
+      "actions": [
+        "Urgent ophthalmology referral (within 1-2 weeks)",
+        "Consider panretinal photocoagulation (PRP)",
+        "Optimize diabetes and hypertension control",
+        "Follow-up every 2-4 months"
+      ],
+      "actions_es": [
+        "Derivación urgente a oftalmología (en 1-2 semanas)",
+        "Considerar panfotocoagulación retiniana (PRP)",
+        "Optimizar control de diabetes e hipertensión",
+        "Seguimiento cada 2-4 meses"
+      ],
+      "followup_interval_days": 90,
+      "rationale": "Severe NPDR has high risk of progression to PDR",
+      "rationale_es": "RDNP severa tiene alto riesgo de progresión a RDP"
+    },
+    {
+      "severity": "pdr",
+      "urgency": "urgent",
+      "actions": [
+        "IMMEDIATE ophthalmology referral (<24-48 hours)",
+        "Panretinal photocoagulation (PRP) within 1-2 weeks",
+        "Consider anti-VEGF therapy",
+        "Vitrectomy if vitreous hemorrhage present",
+        "Monthly follow-up until stabilized"
+      ],
+      "actions_es": [
+        "Derivación INMEDIATA a oftalmología (<24-48 horas)",
+        "Panfotocoagulación retiniana (PRP) en 1-2 semanas",
+        "Considerar terapia anti-VEGF",
+        "Vitrectomía si hay hemorragia vítrea",
+        "Seguimiento mensual hasta estabilización"
+      ],
+      "followup_interval_days": 30,
+      "rationale": "PDR requires urgent intervention to prevent vision loss",
+      "rationale_es": "RDP requiere intervención urgente para prevenir pérdida visual"
+    }
+  ],
+  "emcs_criteria": {
+    "enabled": true,
+    "name": "CSME - Clinically Significant Macular Edema",
+    "geometric_distance_fovea_um": 500,
+    "min_disc_areas": 1.0,
+    "apply_geometric_rule": true,
+    "description": "Hard exudates within 500μm of fovea center"
+  }
+}

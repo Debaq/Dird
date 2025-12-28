@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -45,14 +46,19 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onOpenChange,
   title,
   description,
-  confirmText = 'Confirmar',
-  cancelText = 'Cancelar',
+  confirmText,
+  cancelText,
   variant = 'default',
   onConfirm,
   onCancel,
 }) => {
+  const { t } = useTranslation();
   const config = variantConfig[variant];
   const Icon = config.icon;
+
+  // Use translation keys if no custom text is provided
+  const defaultConfirmText = confirmText || t('common.confirm');
+  const defaultCancelText = cancelText || t('common.cancel');
 
   const handleConfirm = () => {
     onConfirm();
@@ -85,7 +91,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             onClick={handleCancel}
             className="flex-1"
           >
-            {cancelText}
+            {defaultCancelText}
           </Button>
           <Button
             type="button"
@@ -93,7 +99,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             onClick={handleConfirm}
             className="flex-1"
           >
-            {confirmText}
+            {defaultConfirmText}
           </Button>
         </DialogFooter>
       </DialogContent>

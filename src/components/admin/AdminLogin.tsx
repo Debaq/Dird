@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Lock, User, Eye, EyeOff } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -19,12 +20,13 @@ export function AdminLogin({ open, onOpenChange }: AdminLoginProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!username || !password) {
-      toast.error('Por favor ingresa usuario y contraseña');
+      toast.error(t('admin.login.errors.missingCredentials'));
       return;
     }
 
@@ -34,14 +36,14 @@ export function AdminLogin({ open, onOpenChange }: AdminLoginProps) {
       const response = await loginAdmin({ username, password });
 
       if (response.success) {
-        toast.success('Inicio de sesión exitoso');
+        toast.success(t('admin.login.success'));
         onOpenChange(false);
         navigate('/admin');
       } else {
-        toast.error(response.error || 'Credenciales incorrectas');
+        toast.error(response.error || t('admin.login.errors.invalidCredentials'));
       }
     } catch (error) {
-      toast.error('Error al iniciar sesión');
+      toast.error(t('admin.login.errors.loginError'));
       console.error('Login error:', error);
     } finally {
       setIsLoading(false);
@@ -61,13 +63,13 @@ export function AdminLogin({ open, onOpenChange }: AdminLoginProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Lock className="w-5 h-5" />
-            Acceso Administrativo
+            {t('admin.login.title')}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="space-y-2">
-            <Label htmlFor="admin-username">Usuario</Label>
+            <Label htmlFor="admin-username">{t('admin.login.usernameLabel')}</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-smoke-500 dark:text-dark-textSecondary" />
               <Input
@@ -84,7 +86,7 @@ export function AdminLogin({ open, onOpenChange }: AdminLoginProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="admin-password">Contraseña</Label>
+            <Label htmlFor="admin-password">{t('admin.login.passwordLabel')}</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-smoke-500 dark:text-dark-textSecondary" />
               <Input
@@ -120,14 +122,14 @@ export function AdminLogin({ open, onOpenChange }: AdminLoginProps) {
               disabled={isLoading}
               className="flex-1"
             >
-              Cancelar
+              {t('ui.cancel')}
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
               className="flex-1"
             >
-              {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+              {isLoading ? t('admin.login.loading') : t('admin.login.submit')}
             </Button>
           </div>
         </form>

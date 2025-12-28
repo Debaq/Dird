@@ -57,6 +57,26 @@ try {
         $currentConfig['system_prompt'] = $input['system_prompt'];
     }
 
+    // New Parameters
+    if (isset($input['temperature'])) {
+        $currentConfig['temperature'] = (float)$input['temperature'];
+    }
+    if (isset($input['max_completion_tokens'])) {
+        $currentConfig['max_completion_tokens'] = (int)$input['max_completion_tokens'];
+    }
+    if (isset($input['top_p'])) {
+        $currentConfig['top_p'] = (float)$input['top_p'];
+    }
+    if (isset($input['reasoning_effort'])) {
+        $currentConfig['reasoning_effort'] = $input['reasoning_effort'];
+    }
+    if (isset($input['stream'])) {
+        $currentConfig['stream'] = (bool)$input['stream'];
+    }
+    if (isset($input['stop'])) {
+        $currentConfig['stop'] = $input['stop'];
+    }
+
     file_put_contents($AI_CONFIG_FILE, json_encode($currentConfig, JSON_PRETTY_PRINT));
 
     ob_clean();

@@ -18,6 +18,7 @@ import type { ReportType } from '@/lib/pdf/report-generator';
 import { db } from '@/lib/db/schema';
 import { isDemoPreviewSession } from '@/lib/db/demoPatient';
 import { useTokenStore } from '@/stores/token-store';
+import { useConfigStore } from '@/stores/config-store';
 import { processConclusion, confirmProcessing } from '@/lib/api/token-service';
 import { getSessionClassifications } from '@/lib/analysis/image-classification-service';
 import { classifyDiabeticRetinopathy, formatClassificationText } from '@/lib/analysis/dr-classifier';
@@ -109,10 +110,20 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
           classifications: classifications.map(c => ({
             eyeType: c.eyeType,
             severity: c.severity,
+            severityLabel: c.severityLabel,
             confidence: c.confidence,
             criteria: c.criteria,
             lesions: c.lesions,
-            warnings: c.warnings
+            warnings: c.warnings,
+            // Guideline information
+            guideline: c.guideline,
+            guidelineName: c.guidelineName,
+            guidelineVersion: c.guidelineVersion,
+            treatments: c.treatments,
+            followupDays: c.followupDays,
+            urgency: c.urgency,
+            rationale: c.rationale,
+            rule421CriteriaMet: c.rule421CriteriaMet
           })),
           segmentations: segmentations.map(s => ({
             id: s.id,
@@ -164,7 +175,9 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
           }
         }
 
-        const localClassification = classifyDiabeticRetinopathy(detectionsByEye, patient);
+        // Get active guideline
+        const { config } = useConfigStore.getState();
+        const localClassification = await classifyDiabeticRetinopathy(detectionsByEye, patient, config.activeGuideline);
         const formattedText = formatClassificationText(localClassification);
         
         systemComment = `[OFFLINE GENERATION]\n${formattedText}`;

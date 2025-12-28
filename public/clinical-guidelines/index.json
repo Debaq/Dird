@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "guidelines": [
+    {
+      "id": "icdr_2024",
+      "name": "ICDR International 2024",
+      "description": "International Clinical Diabetic Retinopathy Disease Severity Scale",
+      "country": "International",
+      "language": "en",
+      "status": "official",
+      "file": "icdr_2024.json",
+      "version": "1.0.0",
+      "date_published": "2024-01-01"
+    },
+    {
+      "id": "minsal_chile_2017",
+      "name": "MINSAL Chile 2017",
+      "description": "Guía Clínica de Retinopatía Diabética - Ministerio de Salud de Chile",
+      "country": "Chile",
+      "language": "es",
+      "status": "official",
+      "file": "minsal_chile_2017.json",
+      "version": "1.0.0",
+      "date_published": "2017-06-01"
+    }
+  ]
+}

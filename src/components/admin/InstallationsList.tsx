@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw, Plus, Radio } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
@@ -16,6 +17,7 @@ export function InstallationsList() {
   const [selectedInstallation, setSelectedInstallation] = useState<Installation | null>(null);
   const [newTotalTokens, setNewTotalTokens] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const { t } = useTranslation();
 
   const loadInstallations = async (showToast = false) => {
     try {
@@ -23,10 +25,10 @@ export function InstallationsList() {
       const data = await getInstallations();
       setInstallations(data);
       if (showToast) {
-        toast.success('Lista actualizada');
+        toast.success(t('admin.installations.success'));
       }
     } catch (error) {
-      toast.error('Error al cargar instalaciones');
+      toast.error(t('admin.installations.errors.loadError'));
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -43,17 +45,17 @@ export function InstallationsList() {
 
     const newTotal = parseInt(newTotalTokens);
     if (isNaN(newTotal) || newTotal < 0) {
-      toast.error('Ingresa una cantidad válida');
+      toast.error(t('admin.installations.errors.invalidAmount'));
       return;
     }
 
     if (newTotal > 9999) {
-      toast.error('El total no puede exceder 9999');
+      toast.error(t('admin.installations.errors.exceedsLimit'));
       return;
     }
 
     if (newTotal === selectedInstallation.tokens) {
-      toast.info('No hay cambios en la cantidad de tokens');
+      toast.info(t('admin.installations.info.noChanges'));
       return;
     }
 
@@ -65,12 +67,12 @@ export function InstallationsList() {
         new_total: newTotal,
       });
 
-      toast.success(`Tokens actualizados a: ${newTokens}`);
+      toast.success(t('admin.installations.tokensUpdated', { tokens: newTokens }));
       setSelectedInstallation(null);
       setNewTotalTokens('');
       loadInstallations();
     } catch (error) {
-      toast.error('Error al actualizar tokens');
+      toast.error(t('admin.installations.errors.updateError'));
       console.error(error);
     } finally {
       setIsUpdating(false);
@@ -112,10 +114,10 @@ export function InstallationsList() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-lg font-semibold text-coal-800 dark:text-dark-text">
-              Instalaciones Registradas
+              {t('admin.installations.title')}
             </h2>
             <p className="text-sm text-smoke-600 dark:text-dark-textSecondary">
-              Total: {installations.length}
+              {t('admin.installations.total', { count: installations.length })}
             </p>
           </div>
           <Button
@@ -126,13 +128,13 @@ export function InstallationsList() {
             className="gap-2"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Actualizar
+            {t('admin.installations.refreshButton')}
           </Button>
         </div>
 
         {installations.length === 0 ? (
           <div className="text-center py-12 text-smoke-600 dark:text-dark-textSecondary">
-            No hay instalaciones registradas
+            {t('admin.installations.noInstallations')}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -140,22 +142,22 @@ export function InstallationsList() {
               <thead>
                 <tr className="border-b border-smoke-200 dark:border-coal-700">
                   <th className="text-left py-3 px-4 text-sm font-medium text-smoke-600 dark:text-dark-textSecondary">
-                    Installation Token
+                    {t('admin.installations.columns.token')}
                   </th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-smoke-600 dark:text-dark-textSecondary">
-                    Tokens
+                    {t('admin.installations.columns.tokens')}
                   </th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-smoke-600 dark:text-dark-textSecondary">
-                    Creado
+                    {t('admin.installations.columns.created')}
                   </th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-smoke-600 dark:text-dark-textSecondary">
-                    Último Acceso
+                    {t('admin.installations.columns.lastAccess')}
                   </th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-smoke-600 dark:text-dark-textSecondary">
-                    Estado
+                    {t('admin.installations.columns.status')}
                   </th>
                   <th className="text-right py-3 px-4 text-sm font-medium text-smoke-600 dark:text-dark-textSecondary">
-                    Acciones
+                    {t('admin.installations.columns.actions')}
                   </th>
                 </tr>
               </thead>
@@ -191,7 +193,7 @@ export function InstallationsList() {
                       {installation.has_active_beacon && (
                         <span className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
                           <Radio className="w-3 h-3 animate-pulse" />
-                          Baliza Activa
+                          {t('admin.installations.activeBeacon')}
                         </span>
                       )}
                     </td>
@@ -206,7 +208,7 @@ export function InstallationsList() {
                         className="gap-1"
                       >
                         <Plus className="w-3 h-3" />
-                        Editar Tokens
+                        {t('admin.installations.editTokens')}
                       </Button>
                     </td>
                   </tr>
@@ -229,14 +231,14 @@ export function InstallationsList() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Actualizar Tokens</DialogTitle>
+            <DialogTitle>{t('admin.installations.dialog.title')}</DialogTitle>
           </DialogHeader>
 
           {selectedInstallation && (
             <div className="space-y-4">
               <div className="bg-smoke-50 dark:bg-coal-900 p-3 rounded-lg space-y-1">
                 <p className="text-xs text-smoke-600 dark:text-dark-textSecondary">
-                  Installation Token
+                  {t('admin.installations.dialog.tokenLabel')}
                 </p>
                 <code className="text-xs font-mono break-all">
                   {selectedInstallation.installation_token}
@@ -245,13 +247,13 @@ export function InstallationsList() {
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-smoke-600 dark:text-dark-textSecondary">Tokens Actuales</p>
+                  <p className="text-smoke-600 dark:text-dark-textSecondary">{t('admin.installations.dialog.currentTokens')}</p>
                   <p className="text-lg font-semibold text-coal-800 dark:text-dark-text">
                     {selectedInstallation.tokens}
                   </p>
                 </div>
                 <div>
-                  <p className="text-smoke-600 dark:text-dark-textSecondary">Nuevo Total</p>
+                  <p className="text-smoke-600 dark:text-dark-textSecondary">{t('admin.installations.dialog.newTotal')}</p>
                   <p className="text-lg font-semibold text-primary-600 dark:text-primary-400">
                     {parseInt(newTotalTokens) || 0}
                   </p>
@@ -259,7 +261,7 @@ export function InstallationsList() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tokens-amount">Nuevo Total de Tokens</Label>
+                <Label htmlFor="tokens-amount">{t('admin.installations.dialog.newTotalLabel')}</Label>
                 <Input
                   id="tokens-amount"
                   type="number"
@@ -267,11 +269,11 @@ export function InstallationsList() {
                   max="9999"
                   value={newTotalTokens}
                   onChange={(e) => setNewTotalTokens(e.target.value)}
-                  placeholder="Ej: 50"
+                  placeholder={t('admin.installations.dialog.placeholder')}
                   disabled={isUpdating}
                 />
                 <p className="text-xs text-smoke-600 dark:text-dark-textSecondary">
-                  Rango permitido: 0 - 9999
+                  {t('admin.installations.dialog.range')}
                 </p>
               </div>
             </div>
@@ -286,13 +288,13 @@ export function InstallationsList() {
               }}
               disabled={isUpdating}
             >
-              Cancelar
+              {t('ui.cancel')}
             </Button>
             <Button
               onClick={handleUpdateTokens}
               disabled={isUpdating || !newTotalTokens || parseInt(newTotalTokens) < 0}
             >
-              {isUpdating ? 'Actualizando...' : 'Guardar Cambios'}
+              {isUpdating ? t('admin.installations.updating') : t('admin.installations.saveChanges')}
             </Button>
           </DialogFooter>
         </DialogContent>

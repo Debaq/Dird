@@ -5,6 +5,7 @@
 
 import { db } from '../db/schema';
 import type { ImageClassification } from '../db/schema';
+import { useConfigStore } from '@/stores/config-store';
 import { classifyImageDR, type ImageDRClassification } from './image-dr-classifier';
 
 /**
@@ -33,6 +34,16 @@ export async function saveImageClassification(
     criteria: classification.criteria,
     usedQuadrantAnalysis: classification.usedQuadrantAnalysis,
     warnings: classification.warnings,
+    
+    // Guideline fields
+    guideline: classification.guideline,
+    guidelineName: classification.guidelineName,
+    guidelineVersion: classification.guidelineVersion,
+    treatments: classification.treatments,
+    followupDays: classification.followupDays,
+    urgency: classification.urgency,
+    rationale: classification.rationale,
+
     createdAt: existing?.createdAt || now,
     updatedAt: now
   };
@@ -72,6 +83,16 @@ export async function getImageClassification(
     criteria: record.criteria,
     usedQuadrantAnalysis: record.usedQuadrantAnalysis,
     warnings: record.warnings,
+    
+    // Guideline fields
+    guideline: record.guideline,
+    guidelineName: record.guidelineName,
+    guidelineVersion: record.guidelineVersion,
+    treatments: record.treatments,
+    followupDays: record.followupDays,
+    urgency: record.urgency,
+    rationale: record.rationale,
+
     timestamp: record.updatedAt.toISOString()
   };
 }
@@ -96,13 +117,17 @@ export async function classifyAndSaveImage(
       .equals(imageId)
       .toArray();
 
+    // Get active guideline
+    const activeGuideline = useConfigStore.getState().config.activeGuideline;
+
     // Classify (auto-detection happens inside classifyImageDR)
     const classification = await classifyImageDR(
       imageId,
       detections,
       image.width,
       image.height,
-      image.eyeType // Passed as fallback only
+      image.eyeType, // Passed as fallback only
+      activeGuideline // Pass active guideline ID
     );
 
     // Update image.eyeType in DB if auto-detected successfully

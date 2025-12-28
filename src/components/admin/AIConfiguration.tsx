@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  Save, Key, Cpu, MessageSquare, Play, RefreshCw, Trash2, Edit2, Check, BarChart2
+  Save, Key, Cpu, MessageSquare, Play, RefreshCw, Trash2, Edit2, Check, BarChart2, Settings2, Cloud
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
 import {
   Card,
   CardContent,
@@ -34,6 +36,7 @@ import {
   saveAIConfig, 
   testAIConfig, 
   getAIStats,
+  syncAIModels,
   type AIConfig, 
   type AIModel,
   type AIStats
@@ -56,10 +59,11 @@ export function AIConfiguration() {
   // Stats State
   const [stats, setStats] = useState<AIStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   // Model Editing State
   const [isEditingModel, setIsEditingModel] = useState(false);
-  const [editingModel, setEditingModel] = useState<AIModel>({ id: '', name: '', description: '' });
+  const [editingModel, setEditingModel] = useState<AIModel>({ id: '', name: '', description: '', context_window: 128000 });
 
   useEffect(() => {
     loadConfig();
@@ -106,7 +110,13 @@ export function AIConfiguration() {
       await saveAIConfig({
         active_model: config.active_model,
         models: config.models,
-        system_prompt: config.system_prompt
+        system_prompt: config.system_prompt,
+        temperature: config.temperature,
+        max_completion_tokens: config.max_completion_tokens,
+        top_p: config.top_p,
+        reasoning_effort: config.reasoning_effort,
+        stream: config.stream,
+        stop: config.stop
       });
       toast.success('Configuración guardada');
     } catch (error: any) {
@@ -163,6 +173,23 @@ export function AIConfiguration() {
     }
   };
 
+  const handleSyncModels = async () => {
+    try {
+        setSyncing(true);
+        const result = await syncAIModels();
+        if (result.success) {
+            toast.success(`Sincronización exitosa: ${result.models.length} modelos encontrados`);
+            loadConfig(); // Reload to reflect changes
+        } else {
+            toast.warning(result.message);
+        }
+    } catch (error: any) {
+        toast.error('Error al sincronizar: ' + error.message);
+    } finally {
+        setSyncing(false);
+    }
+  };
+
   const handleAddModel = () => {
     if (!config) return;
     const newModel = { ...editingModel };
@@ -186,7 +213,7 @@ export function AIConfiguration() {
         toast.success('Modelo agregado');
     }
     setIsEditingModel(false);
-    setEditingModel({ id: '', name: '', description: '' });
+    setEditingModel({ id: '', name: '', description: '', context_window: 128000 });
   };
 
   const handleDeleteModel = (id: string) => {
@@ -279,14 +306,26 @@ export function AIConfiguration() {
                 />
             </div>
             
-            <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full gap-2"
-                onClick={() => setIsEditingModel(true)}
-            >
-                <Edit2 className="w-4 h-4" /> Administrar Modelos
-            </Button>
+            <div className="flex gap-2">
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 gap-2"
+                    onClick={() => setIsEditingModel(true)}
+                >
+                    <Edit2 className="w-4 h-4" /> Administrar
+                </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 gap-2 border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400"
+                    onClick={handleSyncModels}
+                    disabled={syncing || !hasKey}
+                >
+                    <Cloud className={`w-4 h-4 ${syncing ? 'animate-pulse' : ''}`} /> 
+                    {syncing ? 'Sincronizando...' : 'Sincronizar'}
+                </Button>
+            </div>
 
             <Dialog open={isEditingModel} onOpenChange={setIsEditingModel}>
                 <DialogContent>
@@ -295,14 +334,21 @@ export function AIConfiguration() {
                     </DialogHeader>
                     
                     <div className="space-y-4 my-4">
-                        <div className="border rounded-md overflow-hidden max-h-[200px] overflow-y-auto">
+                        <div className="border rounded-md overflow-hidden max-h-[300px] overflow-y-auto">
                             {config.models.map(m => (
                                 <div key={m.id} className="flex items-center justify-between p-3 border-b last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800">
-                                    <div>
-                                        <div className="font-semibold text-sm">{m.name}</div>
-                                        <div className="text-xs text-muted-foreground">{m.id}</div>
+                                    <div className="flex-1 min-w-0 pr-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="font-semibold text-sm truncate">{m.name}</div>
+                                            {m.context_window && (
+                                                <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-mono">
+                                                    {(m.context_window / 1000)}k
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground truncate" title={m.id}>{m.id}</div>
                                     </div>
-                                    <div className="flex gap-1">
+                                    <div className="flex gap-1 flex-shrink-0">
                                         <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleEditClick(m)}>
                                             <Edit2 className="w-3 h-3" />
                                         </Button>
@@ -324,13 +370,24 @@ export function AIConfiguration() {
                                     placeholder="e.g. llama-3.3-70b-versatile"
                                 />
                             </div>
-                            <div className="grid gap-2">
-                                <Label>Nombre Visible</Label>
-                                <Input 
-                                    value={editingModel.name} 
-                                    onChange={(e) => setEditingModel({...editingModel, name: e.target.value})} 
-                                    placeholder="e.g. Llama 3.3 70B"
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label>Nombre Visible</Label>
+                                    <Input 
+                                        value={editingModel.name} 
+                                        onChange={(e) => setEditingModel({...editingModel, name: e.target.value})} 
+                                        placeholder="e.g. Llama 3.3 70B"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Context Window (tokens)</Label>
+                                    <Input 
+                                        type="number"
+                                        value={editingModel.context_window ?? 128000} 
+                                        onChange={(e) => setEditingModel({...editingModel, context_window: parseInt(e.target.value)})} 
+                                        placeholder="128000"
+                                    />
+                                </div>
                             </div>
                             <div className="grid gap-2">
                                 <Label>Descripción</Label>
@@ -359,6 +416,9 @@ export function AIConfiguration() {
             <TabsTrigger value="prompt" className="gap-2">
                 <MessageSquare className="w-4 h-4" /> System Prompt
             </TabsTrigger>
+            <TabsTrigger value="params" className="gap-2">
+                <Settings2 className="w-4 h-4" /> Parámetros
+            </TabsTrigger>
             <TabsTrigger value="test" className="gap-2">
                 <Play className="w-4 h-4" /> Probador / Playground
             </TabsTrigger>
@@ -381,6 +441,129 @@ export function AIConfiguration() {
                         value={config.system_prompt}
                         onChange={(e) => setConfig({...config, system_prompt: e.target.value})}
                     />
+                </CardContent>
+            </Card>
+        </TabsContent>
+
+        <TabsContent value="params">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Parámetros de Inferencia</CardTitle>
+                    <CardDescription>
+                        Configura el comportamiento del modelo de Groq
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Temperature */}
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <Label className="text-sm font-medium">Temperature</Label>
+                                <span className="text-xs font-mono bg-slate-100 px-2 py-1 rounded">
+                                    {config.temperature ?? 1}
+                                </span>
+                            </div>
+                            <Slider 
+                                value={[config.temperature ?? 1]} 
+                                min={0} 
+                                max={2} 
+                                step={0.1}
+                                onValueChange={([val]) => setConfig({...config, temperature: val})}
+                            />
+                            <p className="text-[10px] text-muted-foreground italic">
+                                Controla la aleatoriedad. 0 es determinista, 2 es muy creativo.
+                            </p>
+                        </div>
+
+                        {/* Top P */}
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <Label className="text-sm font-medium">Top P</Label>
+                                <span className="text-xs font-mono bg-slate-100 px-2 py-1 rounded">
+                                    {config.top_p ?? 1}
+                                </span>
+                            </div>
+                            <Slider 
+                                value={[config.top_p ?? 1]} 
+                                min={0} 
+                                max={1} 
+                                step={0.05}
+                                onValueChange={([val]) => setConfig({...config, top_p: val})}
+                            />
+                            <p className="text-[10px] text-muted-foreground italic">
+                                Muestreo de núcleo (nucleus sampling). Alternativa a temperature.
+                            </p>
+                        </div>
+
+                        {/* Max Tokens */}
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">Max Completion Tokens</Label>
+                            <Input 
+                                type="number"
+                                value={config.max_completion_tokens ?? 8192}
+                                onChange={(e) => setConfig({...config, max_completion_tokens: parseInt(e.target.value)})}
+                            />
+                            <p className="text-[10px] text-muted-foreground italic">
+                                Límite máximo de tokens generados en la respuesta.
+                            </p>
+                        </div>
+
+                        {/* Reasoning Effort */}
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">Reasoning Effort</Label>
+                            <Select 
+                                value={config.reasoning_effort ?? 'medium'}
+                                onValueChange={(val: any) => setConfig({...config, reasoning_effort: val})}
+                                options={[
+                                    { value: 'low', label: 'Bajo (Low)' },
+                                    { value: 'medium', label: 'Medio (Medium)' },
+                                    { value: 'high', label: 'Alto (High)' }
+                                ]}
+                            />
+                            <p className="text-[10px] text-muted-foreground italic">
+                                Solo aplica para modelos con capacidades de razonamiento (como o1).
+                            </p>
+                        </div>
+
+                        {/* Stream */}
+                        <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50/50">
+                            <div className="space-y-0.5">
+                                <Label className="text-sm font-medium">Stream</Label>
+                                <p className="text-[10px] text-muted-foreground">Recibir respuesta en tiempo real</p>
+                            </div>
+                            <Switch 
+                                checked={config.stream ?? true}
+                                onCheckedChange={(val) => setConfig({...config, stream: val})}
+                            />
+                        </div>
+
+                        {/* Stop Sequences */}
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">Stop Sequences (JSON format)</Label>
+                            <Input 
+                                value={typeof config.stop === 'string' ? config.stop : JSON.stringify(config.stop) === 'null' ? '' : JSON.stringify(config.stop)}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    try {
+                                        if (!val) {
+                                            setConfig({...config, stop: null});
+                                        } else if (val.startsWith('[') || val.startsWith('"')) {
+                                            setConfig({...config, stop: JSON.parse(val)});
+                                        } else {
+                                            setConfig({...config, stop: val});
+                                        }
+                                    } catch {
+                                        // While typing ignore JSON errors
+                                        setConfig({...config, stop: val});
+                                    }
+                                }}
+                                placeholder='null, "STOP", o ["END", "\n"]'
+                            />
+                            <p className="text-[10px] text-muted-foreground italic">
+                                Secuencias que detienen la generación.
+                            </p>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
         </TabsContent>

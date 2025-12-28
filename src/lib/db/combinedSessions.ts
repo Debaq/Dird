@@ -84,7 +84,6 @@ export async function createCombinedSession(
         width: image.width,
         height: image.height,
         uploadedAt: now,
-        contributionStatus: 'none',
       };
 
       const newImageId = await db.images.add(newImageData as Image);

@@ -22,8 +22,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
   const tokens = useTokenStore((state) => state.tokens);
   const [showTokenInfo, setShowTokenInfo] = useState(false);
 
+  // Count all pending contributions
   const pendingContributions = useLiveQuery(
-    () => db.images.where('contributionStatus').equals('pending').count()
+    () => db.pendingContributions.where('status').equals('pending').count()
   );
 
   const navItems = [

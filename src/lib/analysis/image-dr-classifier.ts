@@ -2,10 +2,13 @@
  * Image-based DR Classifier
  * Classifies diabetic retinopathy PER IMAGE (not per session)
  * Integrates with quadrant system and auto-detects eye type
+ * Now supports multi-guideline classification system
  */
 
 import { Detection } from '../db/schema';
 import { quadrantCalculator, type QuadrantAnalysis } from './quadrant-calculator';
+import { classifyWithGuideline } from '../clinical-guidelines/multi-guideline-classifier';
+import type { LesionCounts as GuidelineLesionCounts } from '@/types/clinical-guidelines';
 
 export type DRSeverityLevel =
   | 'no_dr'
@@ -35,7 +38,10 @@ export interface ImageDRClassification {
   imageId: number;
   eyeType: EyeType;
   eyeTypeDetectionMethod: 'manual' | 'auto' | 'unknown';
-  severity: DRSeverityLevel;
+  severity: string; // Changed to string to support multiple guidelines
+  severityLabel?: string; // Human-readable severity label
+  severityOrder?: number; // Numeric order for comparison
+  severityColor?: string; // Color for UI display
   confidence: 'low' | 'moderate' | 'high';
   lesions: LesionCounts;
   quadrantAnalysis: QuadrantAnalysis;
@@ -43,6 +49,20 @@ export interface ImageDRClassification {
   criteria: string[];
   usedQuadrantAnalysis: boolean;
   warnings: string[];
+
+  // Clinical Guideline Integration
+  guideline?: string; // ID of guideline used
+  guidelineName?: string; // Name of guideline
+  guidelineVersion?: string; // Version of guideline
+  treatments?: string[]; // Recommended treatment actions
+  followupDays?: number; // Days until recommended follow-up
+  urgency?: 'routine' | 'accelerated' | 'urgent'; // Treatment urgency
+  rationale?: string; // Clinical rationale for classification
+  rule421CriteriaMet?: number; // Number of 4-2-1 criteria met
+
+  // Manual modification tracking
+  manuallyModified?: boolean; // True if user manually modified the AI classification
+
   timestamp: string;
 }
 
@@ -245,159 +265,18 @@ export function countLesionsByQuadrant(
   return quadrantLesions;
 }
 
-/**
- * Apply 4-2-1 rule for severe NPDR using quadrant analysis
- */
-function checkSevereNPDR_421Rule(
-  quadrantLesions: QuadrantLesionCounts,
-  _quadrantAnalysis: QuadrantAnalysis
-): { isSevere: boolean; criteria: string[] } {
-  const criteria: string[] = [];
-
-  // Count quadrants with severe hemorrhages/microaneurysms
-  // Severe = >= 5 hemorrhages OR >= 10 microaneurysms in a quadrant
-  const quadrantsWithSevereHemorrhages = Object.entries(quadrantLesions).filter(([_, counts]) => {
-    return counts.hemorrhages >= 5 || counts.microaneurysms >= 10;
-  }).length;
-
-  // Check 4-2-1 rule criteria
-  if (quadrantsWithSevereHemorrhages >= 4) {
-    criteria.push(`Severe hemorrhages/microaneurysms in ${quadrantsWithSevereHemorrhages} quadrants (4-2-1 rule: criterion 1)`);
-    return { isSevere: true, criteria };
-  }
-
-  // Note: Venous beading and IRMA would be checked here when those classes are available
-  // For now, we approximate with soft exudates (cotton wool spots) which indicate ischemia
-  const quadrantsWithIschemia = Object.entries(quadrantLesions).filter(([_, counts]) => {
-    return counts.softExudates >= 2;
-  }).length;
-
-  if (quadrantsWithIschemia >= 2) {
-    criteria.push(`Signs of ischemia (cotton wool spots) in ${quadrantsWithIschemia} quadrants (approximates venous beading criterion)`);
-    return { isSevere: true, criteria };
-  }
-
-  return { isSevere: false, criteria: [] };
-}
-
-/**
- * Classify severity for a single image
- */
-export function classifySeverity(
-  lesions: LesionCounts,
-  quadrantAnalysis: QuadrantAnalysis,
-  quadrantLesions: QuadrantLesionCounts
-): {
-  severity: DRSeverityLevel;
-  criteria: string[];
-  confidence: 'low' | 'moderate' | 'high';
-  usedQuadrantAnalysis: boolean;
-} {
-  const criteria: string[] = [];
-  let usedQuadrantAnalysis = false;
-
-  // PDR - Highest priority
-  if (lesions.neovascularization > 0) {
-    criteria.push(`Neovascularization detected (${lesions.neovascularization} areas)`);
-    return {
-      severity: 'pdr',
-      criteria,
-      confidence: 'high',
-      usedQuadrantAnalysis: false
-    };
-  }
-
-  // Severe NPDR - Use quadrant analysis if available
-  if (quadrantAnalysis.opticDiscFound && quadrantAnalysis.foveaFound && !quadrantAnalysis.usedFallback) {
-    usedQuadrantAnalysis = true;
-    const { isSevere, criteria: severeCriteria } = checkSevereNPDR_421Rule(quadrantLesions, quadrantAnalysis);
-
-    if (isSevere) {
-      criteria.push(...severeCriteria);
-      return {
-        severity: 'severe_npdr',
-        criteria,
-        confidence: 'moderate',
-        usedQuadrantAnalysis: true
-      };
-    }
-  } else {
-    // Fallback: use total counts (less accurate)
-    const hasSevereHemorrhages = lesions.hemorrhages >= 20;
-    const hasSoftExudates = lesions.softExudates >= 3;
-
-    if (hasSevereHemorrhages || hasSoftExudates) {
-      if (hasSevereHemorrhages) {
-        criteria.push(`Multiple hemorrhages detected (${lesions.hemorrhages})`);
-      }
-      if (hasSoftExudates) {
-        criteria.push(`Cotton wool spots present (${lesions.softExudates})`);
-      }
-      criteria.push('Approximated severe NPDR (quadrant analysis not available)');
-      return {
-        severity: 'severe_npdr',
-        criteria,
-        confidence: 'low',
-        usedQuadrantAnalysis: false
-      };
-    }
-  }
-
-  // Moderate NPDR
-  const hasMultipleLesionTypes =
-    (lesions.microaneurysms > 0 ? 1 : 0) +
-    (lesions.hemorrhages > 0 ? 1 : 0) +
-    (lesions.hardExudates > 0 ? 1 : 0) +
-    (lesions.softExudates > 0 ? 1 : 0) >= 2;
-
-  const hasModerateFindings =
-    lesions.microaneurysms >= 5 ||
-    lesions.hemorrhages >= 5 ||
-    lesions.hardExudates >= 5;
-
-  if (hasMultipleLesionTypes || hasModerateFindings) {
-    if (lesions.microaneurysms > 0) criteria.push(`Microaneurysms: ${lesions.microaneurysms}`);
-    if (lesions.hemorrhages > 0) criteria.push(`Hemorrhages: ${lesions.hemorrhages}`);
-    if (lesions.hardExudates > 0) criteria.push(`Hard exudates: ${lesions.hardExudates}`);
-    criteria.push('Multiple lesion types present');
-    return {
-      severity: 'moderate_npdr',
-      criteria,
-      confidence: 'moderate',
-      usedQuadrantAnalysis
-    };
-  }
-
-  // Mild NPDR
-  if (lesions.microaneurysms > 0) {
-    criteria.push(`Only microaneurysms detected (${lesions.microaneurysms})`);
-    return {
-      severity: 'mild_npdr',
-      criteria,
-      confidence: 'high',
-      usedQuadrantAnalysis
-    };
-  }
-
-  // No DR
-  criteria.push('No retinopathy lesions detected');
-  return {
-    severity: 'no_dr',
-    criteria,
-    confidence: 'high',
-    usedQuadrantAnalysis
-  };
-}
 
 /**
  * Main classification function for a single image
+ * Now uses multi-guideline classification system
  */
 export async function classifyImageDR(
   imageId: number,
   detections: Detection[],
   imageWidth: number,
   imageHeight: number,
-  manualEyeType?: 'OD' | 'OI'
+  manualEyeType?: 'OD' | 'OI',
+  guidelineId?: string // Optional guideline ID, defaults to active guideline from config
 ): Promise<ImageDRClassification> {
   const warnings: string[] = [];
 
@@ -434,14 +313,75 @@ export async function classifyImageDR(
   // Count lesions by quadrant
   const quadrantLesions = countLesionsByQuadrant(detections, quadrantAnalysis);
 
-  // Classify severity
-  const { severity, criteria, confidence, usedQuadrantAnalysis } = classifySeverity(
-    lesions,
-    quadrantAnalysis,
-    quadrantLesions
-  );
+  // Determine confidence based on quadrant analysis quality
+  let baseConfidence: 'low' | 'moderate' | 'high' = 'moderate';
+  if (quadrantAnalysis.usedFallback) {
+    baseConfidence = 'low';
+  } else if (quadrantAnalysis.opticDiscFound && quadrantAnalysis.foveaFound) {
+    baseConfidence = 'high';
+  }
 
-  // Add warnings
+  // Use guideline ID or fallback to default 'icdr_2024'
+  const activeGuidelineId = guidelineId || 'icdr_2024';
+
+  // Convert lesions to guideline format
+  const guidelineLesions: GuidelineLesionCounts = {
+    microaneurysms: lesions.microaneurysms,
+    hemorrhages: lesions.hemorrhages,
+    hardExudates: lesions.hardExudates,
+    softExudates: lesions.softExudates,
+    neovascularization: lesions.neovascularization,
+    total_lesions: Object.values(lesions).reduce((sum, val) => sum + val, 0),
+    lesion_types_count: Object.values(lesions).filter(val => val > 0).length,
+  };
+
+  // Convert quadrant lesions to guideline format (if available)
+  const guidelineQuadrantLesions = quadrantAnalysis.opticDiscFound && quadrantAnalysis.foveaFound
+    ? quadrantLesions
+    : undefined;
+
+  // Classify using guideline
+  let guidelineResult;
+  try {
+    guidelineResult = await classifyWithGuideline(
+      activeGuidelineId,
+      guidelineLesions,
+      guidelineQuadrantLesions,
+      baseConfidence
+    );
+  } catch (error) {
+    console.error('Error classifying with guideline:', error);
+    // Fallback removed to prevent bad clinical decisions
+    throw new Error(`Guideline classification error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+
+  // Build criteria from guideline result and quadrant analysis
+  const criteria: string[] = [];
+
+  if (guidelineResult.rule_421_details && guidelineResult.rule_421_details.length > 0) {
+    criteria.push(...guidelineResult.rule_421_details);
+  }
+
+  if (lesions.neovascularization > 0) {
+    criteria.push(`Neovascularization detected (${lesions.neovascularization} areas)`);
+  }
+  if (lesions.hemorrhages > 0) {
+    criteria.push(`Hemorrhages: ${lesions.hemorrhages}`);
+  }
+  if (lesions.microaneurysms > 0) {
+    criteria.push(`Microaneurysms: ${lesions.microaneurysms}`);
+  }
+  if (lesions.hardExudates > 0) {
+    criteria.push(`Hard exudates: ${lesions.hardExudates}`);
+  }
+  if (lesions.softExudates > 0) {
+    criteria.push(`Cotton wool spots: ${lesions.softExudates}`);
+  }
+
+  // Add warnings from guideline classification
+  warnings.push(...guidelineResult.warnings);
+
+  // Add standard warnings
   if (!quadrantAnalysis.opticDiscFound) {
     warnings.push('Optic disc not detected - quadrant-based 4-2-1 rule cannot be applied accurately');
   }
@@ -452,18 +392,36 @@ export async function classifyImageDR(
     warnings.push('Using fallback quadrant analysis (simple center-based division)');
   }
 
+  const usedQuadrantAnalysis = quadrantAnalysis.opticDiscFound &&
+                                quadrantAnalysis.foveaFound &&
+                                !quadrantAnalysis.usedFallback;
+
   return {
     imageId,
     eyeType,
     eyeTypeDetectionMethod,
-    severity,
-    confidence,
+    severity: guidelineResult.severity,
+    severityLabel: guidelineResult.severity_label,
+    severityOrder: guidelineResult.severity_order,
+    severityColor: guidelineResult.severity_color,
+    confidence: guidelineResult.confidence,
     lesions,
     quadrantAnalysis,
     quadrantLesions,
     criteria,
     usedQuadrantAnalysis,
     warnings,
+
+    // Guideline information
+    guideline: guidelineResult.guideline_id,
+    guidelineName: guidelineResult.guideline_name,
+    guidelineVersion: guidelineResult.guideline_version,
+    treatments: guidelineResult.actions,
+    followupDays: guidelineResult.followup_days,
+    urgency: guidelineResult.urgency,
+    rationale: guidelineResult.rationale,
+    rule421CriteriaMet: guidelineResult.rule_421_criteria_met,
+
     timestamp: new Date().toISOString()
   };
 }

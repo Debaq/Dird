@@ -6,12 +6,19 @@ export interface AIModel {
   id: string;
   name: string;
   description: string;
+  context_window?: number;
 }
 
 export interface AIConfig {
   active_model: string;
   models: AIModel[];
   system_prompt: string;
+  temperature?: number;
+  max_completion_tokens?: number;
+  top_p?: number;
+  reasoning_effort?: 'low' | 'medium' | 'high';
+  stream?: boolean;
+  stop?: string | string[] | null;
 }
 
 export interface AIConfigResponse {
@@ -27,6 +34,12 @@ export interface SaveAIConfigPayload {
   active_model?: string;
   models?: AIModel[];
   system_prompt?: string;
+  temperature?: number;
+  max_completion_tokens?: number;
+  top_p?: number;
+  reasoning_effort?: 'low' | 'medium' | 'high';
+  stream?: boolean;
+  stop?: string | string[] | null;
 }
 
 export interface TestAIConfigPayload {
@@ -49,6 +62,7 @@ const ENDPOINTS = {
   SAVE_CONFIG: `${API_BASE_URL}/admin/save_ai_config.php`,
   TEST_CONFIG: `${API_BASE_URL}/admin/test_ai_config.php`,
   GET_STATS: `${API_BASE_URL}/admin/get_ai_stats.php`,
+  SYNC_MODELS: `${API_BASE_URL}/admin/sync_ai_models.php`,
 };
 
 export interface AIStats {
@@ -70,6 +84,20 @@ export interface AIStats {
       total_tokens: number;
     };
   }>;
+}
+
+export async function syncAIModels(): Promise<{ success: boolean; message: string; models: AIModel[] }> {
+  const response = await fetch(ENDPOINTS.SYNC_MODELS, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error(`Error ${response.status}: ${response.statusText}`);
+  }
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to sync models');
+  }
+  return result;
 }
 
 export async function getAIStats(): Promise<AIStats> {

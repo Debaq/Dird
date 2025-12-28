@@ -7,7 +7,6 @@
 export {
   classifyDiabeticRetinopathy,
   countLesions,
-  classifySeverity,
   assessRiskFactors,
   generateRecommendations,
   formatClassificationText,
@@ -29,6 +28,3 @@ export {
 
 // React hook
 export { useDRClassification } from '../../hooks/useDRClassification';
-
-// Demo component
-export { DRClassificationDemo } from '../../components/analysis/DRClassificationDemo';

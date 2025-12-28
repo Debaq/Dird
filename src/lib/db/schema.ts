@@ -47,7 +47,6 @@ export interface Image {
   width: number;
   height: number;
   uploadedAt: Date;
-  contributionStatus?: 'none' | 'pending' | 'submitted';
 }
 
 export interface Detection {
@@ -115,7 +114,7 @@ export interface ImageClassification {
   imageId: number;
   eyeType: 'OD' | 'OI' | 'unknown';
   eyeTypeDetectionMethod: 'manual' | 'auto' | 'unknown';
-  severity: 'no_dr' | 'mild_npdr' | 'moderate_npdr' | 'severe_npdr' | 'pdr';
+  severity: string; // Changed from union type to string to support multiple guidelines
   confidence: 'low' | 'moderate' | 'high';
   lesions: {
     microaneurysms: number;
@@ -129,8 +128,30 @@ export interface ImageClassification {
   criteria: string[]; // Array of criteria strings
   usedQuadrantAnalysis: boolean;
   warnings: string[]; // Array of warning strings
+
+  // Clinical Guideline Integration (v12)
+  guideline?: string; // ID of clinical guideline used (e.g., 'icdr_2024', 'minsal_chile_2017')
+  guidelineName?: string; // Name of guideline for quick reference
+  guidelineVersion?: string; // Version of guideline
+  treatments?: string[]; // Recommended treatment actions
+  followupDays?: number; // Days until recommended follow-up
+  urgency?: 'routine' | 'accelerated' | 'urgent'; // Treatment urgency level
+  rationale?: string; // Clinical rationale for classification
+
+  // Manual modification tracking (v14)
+  manuallyModified?: boolean; // True if user manually modified the AI classification
+
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface PendingContribution {
+  id?: number;
+  type: 'image' | 'guideline' | 'conclusion';
+  referenceId: number; // imageId, guidelineId (not used for guidelines from files), or imageClassificationId
+  status: 'pending' | 'submitted';
+  metadata?: Record<string, any>; // Store guideline JSON or conclusion data
+  createdAt: Date;
 }
 
 export class DirdDatabase extends Dexie {
@@ -142,6 +163,7 @@ export class DirdDatabase extends Dexie {
   reports!: Table<Report>;
   measurements!: Table<Measurement>;
   imageClassifications!: Table<ImageClassification>;
+  pendingContributions!: Table<PendingContribution>;
 
   constructor() {
     super('DirdDatabase');
@@ -274,6 +296,38 @@ export class DirdDatabase extends Dexie {
       reports: '++id, [sessionId+type], sessionId, type, reportCategory, generatedAt', // Added compound index
       measurements: '++id, imageId, visible, createdAt',
       imageClassifications: '++id, imageId, eyeType, severity, createdAt, updatedAt'
+    });
+    this.version(12).stores({
+      patients: '++id, patientId, name, status, createdAt',
+      sessions: '++id, patientId, name, sessionNumber, date, locked, type',
+      images: '++id, sessionId, eyeType, uploadedAt, contributionStatus',
+      detections: '++id, imageId, type, class, visible',
+      segmentations: '++id, imageId, type, class, visible',
+      reports: '++id, [sessionId+type], sessionId, type, reportCategory, generatedAt',
+      measurements: '++id, imageId, visible, createdAt',
+      imageClassifications: '++id, imageId, eyeType, severity, guideline, urgency, createdAt, updatedAt' // Added guideline fields
+    });
+    this.version(13).stores({
+      patients: '++id, patientId, name, status, createdAt',
+      sessions: '++id, patientId, name, sessionNumber, date, locked, type',
+      images: '++id, sessionId, eyeType, uploadedAt',
+      detections: '++id, imageId, type, class, visible',
+      segmentations: '++id, imageId, type, class, visible',
+      reports: '++id, [sessionId+type], sessionId, type, reportCategory, generatedAt',
+      measurements: '++id, imageId, visible, createdAt',
+      imageClassifications: '++id, imageId, eyeType, severity, guideline, urgency, createdAt, updatedAt',
+      pendingContributions: '++id, type, referenceId, status, createdAt'
+    });
+    this.version(14).stores({
+      patients: '++id, patientId, name, status, createdAt',
+      sessions: '++id, patientId, name, sessionNumber, date, locked, type',
+      images: '++id, sessionId, eyeType, uploadedAt',
+      detections: '++id, imageId, type, class, visible',
+      segmentations: '++id, imageId, type, class, visible',
+      reports: '++id, [sessionId+type], sessionId, type, reportCategory, generatedAt',
+      measurements: '++id, imageId, visible, createdAt',
+      imageClassifications: '++id, imageId, eyeType, severity, guideline, urgency, manuallyModified, createdAt, updatedAt',
+      pendingContributions: '++id, type, referenceId, status, createdAt'
     });
   }
 }
