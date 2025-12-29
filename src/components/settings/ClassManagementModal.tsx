@@ -133,15 +133,18 @@ const ClassManagementModal: React.FC<ClassManagementModalProps> = ({
             </Button>
           </div>
 
-          <div className="flex-1 border rounded-md overflow-hidden bg-background">
-            <div className="grid grid-cols-12 gap-4 p-3 border-b bg-muted/50 text-xs font-medium text-muted-foreground">
+          {/* Class List with Header */}
+          <div className="flex-1 flex flex-col border rounded-md overflow-hidden bg-background">
+            {/* Fixed Header */}
+            <div className="grid grid-cols-12 gap-4 p-3 border-b bg-muted/50 text-xs font-medium text-muted-foreground flex-shrink-0">
               <div className="col-span-1 text-center">#</div>
               <div className="col-span-3">{t('settings.classes.idLabel')}</div>
               <div className="col-span-5">{t('settings.classes.nameLabel')}</div>
               <div className="col-span-3 text-center">{t('settings.classes.colorLabel')}</div>
             </div>
-            
-            <div className="h-[400px] overflow-y-auto border rounded-md">
+
+            {/* Scrollable Body */}
+            <div className="flex-1 overflow-y-auto">
               <div className="divide-y">
                 {classes.map((cls, index) => (
                   <div key={cls.name} className="grid grid-cols-12 gap-4 p-3 items-center hover:bg-muted/30">
@@ -160,7 +163,7 @@ const ClassManagementModal: React.FC<ClassManagementModalProps> = ({
                       />
                     </div>
                     <div className="col-span-3 flex justify-center items-center gap-2">
-                      <div 
+                      <div
                         className="w-6 h-6 rounded-full border shadow-sm cursor-pointer relative overflow-hidden"
                         style={{ backgroundColor: edits[cls.name]?.color }}
                       >

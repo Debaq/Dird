@@ -30,6 +30,11 @@ export function useLandmarksAndQuadrants({
 
     // 1. Load landmarks from AI detections
     for (const detection of detections) {
+      // Skip if class is not defined
+      if (!detection.class || typeof detection.class !== 'string') {
+        continue;
+      }
+
       const detClass = detection.class.toLowerCase().trim();
       if (detClass === 'optic_disc' || detClass === 'optic disc') {
         newLandmarks.push({

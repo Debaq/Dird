@@ -552,7 +552,7 @@ export function Settings() {
                       type="text"
                       value={config.apiModels.modelName}
                       onChange={(e) => updateAPIModels({ modelName: e.target.value })}
-                      placeholder="yolov8n-retina-v2.0"
+                      placeholder="????????"
                       className="mt-2 dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
                     />
                   </div>
@@ -655,6 +655,37 @@ export function Settings() {
                   checked={config.processing.opticDiscRefinement}
                   onCheckedChange={(checked) => updateProcessing({ opticDiscRefinement: checked })}
                 />
+              </div>
+
+              {/* CPU Vendor */}
+              <div>
+                <Label htmlFor="cpuVendor" className="dark:text-dark-text font-semibold">
+                  {t('settings.processing.cpuVendor')}
+                </Label>
+                <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1 mb-2">
+                  {t('settings.processing.cpuVendorDescription')}
+                </p>
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-md mb-3 dark:bg-amber-900/20 dark:border-amber-700">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                      {t('settings.processing.cpuVendorWarning')}
+                    </p>
+                  </div>
+                </div>
+                <select
+                  id="cpuVendor"
+                  value={config.processing.cpuVendor}
+                  onChange={(e) =>
+                    updateProcessing({ cpuVendor: e.target.value as 'auto' | 'intel' | 'amd' | 'arm' })
+                  }
+                  className="w-full rounded-md border border-smoke-300 px-3 py-2 dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
+                >
+                  <option value="auto">{t('settings.processing.cpuVendorOptions.auto')}</option>
+                  <option value="intel">{t('settings.processing.cpuVendorOptions.intel')}</option>
+                  <option value="amd">{t('settings.processing.cpuVendorOptions.amd')}</option>
+                  <option value="arm">{t('settings.processing.cpuVendorOptions.arm')}</option>
+                </select>
               </div>
 
               {/* Max Image Size */}

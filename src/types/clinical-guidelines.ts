@@ -103,9 +103,13 @@ export interface TreatmentProtocol {
 }
 
 // ============================================================================
-// EMCS Criteria
+// EMCS Criteria (DEPRECATED - use MacularEdemaCriteria)
 // ============================================================================
 
+/**
+ * @deprecated Use MacularEdemaCriteria instead
+ * Kept for backward compatibility with old guideline files
+ */
 export interface EMCSCriteria {
   enabled: boolean;
   name?: string;
@@ -113,6 +117,63 @@ export interface EMCSCriteria {
   min_disc_areas: number;
   apply_geometric_rule: boolean;
   description?: string;
+}
+
+// ============================================================================
+// Macular Edema Criteria
+// ============================================================================
+
+/**
+ * Macular edema detection criteria
+ * Each guideline can define its own method and thresholds
+ * Replaces EMCSCriteria with more flexible configuration
+ */
+export interface MacularEdemaCriteria {
+  /** Enable macular edema detection */
+  enabled: boolean;
+
+  /** Detection method identifier (e.g., "emcs", "etdrs", "custom") */
+  method: string;
+
+  /** Maximum distance from fovea for hard exudates (in micrometers) */
+  hard_exudates_distance_um: number;
+
+  /** Minimum number of hard exudates required to flag edema */
+  min_exudates_for_flag?: number;
+
+  /** Enable circinate pattern detection */
+  circinate_pattern_detection?: boolean;
+
+  /** Minimum angular dispersion (0-1) to consider circinate pattern */
+  min_angular_dispersion?: number;
+
+  /** Visual zones configuration for display */
+  visual_zones?: {
+    show_foveal_zone: boolean;
+    foveal_zone_radius_um: number;
+    show_disc_diameter_zone?: boolean;
+  };
+
+  /** Human-readable description */
+  description?: string;
+}
+
+// ============================================================================
+// Class Mapping (Model to Guideline)
+// ============================================================================
+
+/**
+ * Maps model class names to guideline-expected class names
+ * Allows flexibility when model detects classes with different naming
+ *
+ * Example:
+ * {
+ *   "microaneurysms": ["microaneurysm", "microhemorrhage", "dot_hemorrhage"],
+ *   "hemorrhages": ["hemorrhage", "flame_hemorrhage", "blot_hemorrhage"]
+ * }
+ */
+export interface ClassMapping {
+  [guidelineClassName: string]: string[]; // Array of model class names
 }
 
 // ============================================================================
@@ -126,7 +187,14 @@ export interface ClinicalGuideline {
   classification_rules: ClassificationRule[];
   rule_421: Rule421;
   treatment_protocols: TreatmentProtocol[];
-  emcs_criteria: EMCSCriteria;
+
+  /** @deprecated Use macular_edema_criteria instead */
+  emcs_criteria?: EMCSCriteria;
+
+  /** Macular edema detection criteria (replaces emcs_criteria) */
+  macular_edema_criteria?: MacularEdemaCriteria;
+
+  class_mapping?: ClassMapping; // Optional mapping for model classes
 }
 
 // ============================================================================
@@ -175,6 +243,12 @@ export interface GuidelineClassificationResult {
   // Rule 4-2-1 info
   rule_421_criteria_met?: number;
   rule_421_details?: string[];
+
+  // Macular edema info
+  macular_edema_detected?: boolean;
+  macular_edema_method?: string;
+  macular_edema_description?: string;
+  circinate_pattern_detected?: boolean;
 
   // Warnings and flags
   warnings: string[];

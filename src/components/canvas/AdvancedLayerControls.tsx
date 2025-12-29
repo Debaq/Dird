@@ -147,11 +147,41 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
     setEditingDetection(null);
   };
 
+  const targetLabelLayers = ['detections-ai', 'manual-annotations'];
+  const areAnyLabelsVisible = layers
+    .filter(l => targetLabelLayers.includes(l.id))
+    .some(l => l.showLabels !== false);
+
+  const handleToggleAllLabels = () => {
+    const newState = !areAnyLabelsVisible;
+    targetLabelLayers.forEach(id => {
+      const layer = layers.find(l => l.id === id);
+      if (layer) {
+        onLayerUpdate(id, { showLabels: newState });
+      }
+    });
+  };
+
   return (
     <div className="bg-white rounded-lg border border-coal-200 p-4">
-      <h3 className="font-semibold text-coal-800 mb-3">{t('canvas.layers.title')}</h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold text-coal-800">{t('canvas.layers.title')}</h3>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleToggleAllLabels}
+          title={areAnyLabelsVisible ? t('canvas.layers.hideAllLabels') : t('canvas.layers.showAllLabels')}
+          className="h-8 px-2"
+        >
+          <div className="flex items-center gap-1.5 text-xs font-medium text-smoke-600">
+             <span>{areAnyLabelsVisible ? t('canvas.layers.hideAllLabels') : t('canvas.layers.showAllLabels')}</span>
+             <Tag className={cn("w-4 h-4", areAnyLabelsVisible ? "text-primary-500" : "text-smoke-400")} />
+          </div>
+        </Button>
+      </div>
       <div className="space-y-2">
         {layers
+          .filter(l => l.id !== 'original')
           .sort((a, b) => b.zIndex - a.zIndex)
           .map((layer) => {
             const layerDetections = getLayerDetections(layer.id);

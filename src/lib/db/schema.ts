@@ -329,6 +329,17 @@ export class DirdDatabase extends Dexie {
       imageClassifications: '++id, imageId, eyeType, severity, guideline, urgency, manuallyModified, createdAt, updatedAt',
       pendingContributions: '++id, type, referenceId, status, createdAt'
     });
+    this.version(15).stores({
+      patients: '++id, patientId, name, status, createdAt',
+      sessions: '++id, patientId, name, sessionNumber, date, locked, type',
+      images: '++id, sessionId, eyeType, uploadedAt',
+      detections: '++id, imageId, type, class, visible',
+      segmentations: '++id, imageId, type, class, visible',
+      reports: '++id, [sessionId+type], sessionId, type, reportCategory, generatedAt',
+      measurements: '++id, imageId, visible, createdAt',
+      imageClassifications: '++id, imageId, eyeType, severity, guideline, urgency, manuallyModified, createdAt, updatedAt',
+      pendingContributions: '++id, [type+referenceId], type, referenceId, status, createdAt'
+    });
   }
 }
 

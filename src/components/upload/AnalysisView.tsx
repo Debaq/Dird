@@ -5,12 +5,14 @@ import { Eye, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { db, type Image, type Detection } from '@/lib/db/schema';
-import { getClassColor } from '@/lib/ai/model-metadata';
+import { classManager } from '@/lib/classes/class-manager';
 import { getClassName } from '@/lib/ai/class-translations';
 import i18n from '@/i18n/config';
 import { QuadrantAnalysisPanel } from '@/components/canvas/QuadrantAnalysisPanel';
 import { quadrantCalculator, type QuadrantAnalysis } from '@/lib/analysis/quadrant-calculator';
 import { DRClassificationCard } from '@/components/analysis/DRClassificationCard';
+import { detectMacularEdema, findFovea } from '@/lib/analysis/macular-edema-detector';
+import { calibrateFromOpticDisc, createFallbackCalibration } from '@/lib/analysis/spatial-calibrator';
 
 interface AnalysisViewProps {
   images: Image[];
@@ -25,6 +27,39 @@ interface ImageWithDetections {
   thumbnail: string;
   quadrantAnalysis: QuadrantAnalysis;
 }
+
+const calculateECM = (detections: Detection[]) => {
+  try {
+      const fovea = findFovea(detections);
+      if (!fovea) return null;
+
+      const opticDisc = detections.find(d =>
+        d.class && typeof d.class === 'string' &&
+        ['optic_disc', 'optic disc'].includes(d.class.toLowerCase().trim())
+      );
+
+      const calibration = opticDisc
+        ? calibrateFromOpticDisc(opticDisc)
+        : createFallbackCalibration();
+
+      const defaultCriteria = {
+        enabled: true,
+        method: 'EMCS',
+        hard_exudates_distance_um: 500,
+        min_exudates_for_flag: 1,
+        circinate_pattern_detection: true,
+        min_angular_dispersion: 0.5,
+        visual_zones: {
+          show_foveal_zone: true,
+          foveal_zone_radius_um: 500,
+        },
+      };
+
+      return detectMacularEdema(detections, fovea, calibration, defaultCriteria);
+  } catch (e) {
+    return null;
+  }
+};
 
 const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientId, refreshKey }) => {
   const navigate = useNavigate();
@@ -226,7 +261,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
                           <span
                             key={className}
                             className="text-xs px-2 py-1 rounded-full text-white font-medium"
-                            style={{ backgroundColor: getClassColor(className) }}
+                            style={{ backgroundColor: classManager.getAssignedColor(className) }}
                           >
                             {getClassName(className, i18n.language)}: {count}
                           </span>
@@ -240,6 +275,17 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
                     {/* Quadrant Analysis Panel */}
                     <div className="mt-auto pt-2 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
                        <QuadrantAnalysisPanel analysis={quadrantAnalysis} className="border-0 shadow-none p-0" eyeType="OD" />
+                       {(() => {
+                          const ecmResult = calculateECM(detections);
+                          if (ecmResult?.detected) {
+                            return (
+                               <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-amber-600 font-medium">
+                                 ⚠️ {ecmResult.exudatesInZone.length} exudados cerca de fóvea. Verificar edema y anillos circinados.
+                               </div>
+                            );
+                          }
+                          return null;
+                       })()}
                     </div>
                   </div>
                   <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -322,7 +368,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
                           <span
                             key={className}
                             className="text-xs px-2 py-1 rounded-full text-white font-medium"
-                            style={{ backgroundColor: getClassColor(className) }}
+                            style={{ backgroundColor: classManager.getAssignedColor(className) }}
                           >
                             {getClassName(className, i18n.language)}: {count}
                           </span>
@@ -336,6 +382,17 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ images, sessionId, patientI
                     {/* Quadrant Analysis Panel */}
                     <div className="mt-auto pt-2 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
                        <QuadrantAnalysisPanel analysis={quadrantAnalysis} className="border-0 shadow-none p-0" eyeType="OI" />
+                       {(() => {
+                          const ecmResult = calculateECM(detections);
+                          if (ecmResult?.detected) {
+                            return (
+                               <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-amber-600 font-medium">
+                                 ⚠️ {ecmResult.exudatesInZone.length} exudados cerca de fóvea. Verificar edema y anillos circinados.
+                               </div>
+                            );
+                          }
+                          return null;
+                       })()}
                     </div>
                   </div>
                   <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">

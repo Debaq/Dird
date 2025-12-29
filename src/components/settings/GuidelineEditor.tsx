@@ -456,6 +456,11 @@ export function GuidelineEditor({
     setGuideline((prev) => ({
       ...prev,
       emcs_criteria: {
+        enabled: true,
+        name: '',
+        geometric_distance_fovea_um: 500,
+        min_disc_areas: 1,
+        apply_geometric_rule: true,
         ...prev.emcs_criteria,
         [field]: value,
       },
@@ -475,11 +480,11 @@ export function GuidelineEditor({
       try {
         const json = JSON.parse(e.target?.result as string);
         setGuideline(json);
-        setSuccess('Guideline imported successfully');
+        setSuccess(t('settings.guidelines.editor.messages.importSuccess'));
         setErrors([]);
         setTimeout(() => setSuccess(null), 3000);
       } catch (err) {
-        setErrors(['Invalid JSON file']);
+        setErrors([t('settings.guidelines.editor.messages.importError')]);
       }
     };
     reader.readAsText(file);
@@ -512,10 +517,10 @@ export function GuidelineEditor({
         metadata: guideline,
         createdAt: new Date(),
       });
-      setSuccess('Guideline exported and marked for contribution');
+      setSuccess(t('settings.guidelines.editor.messages.exportContribution'));
       setMarkForContribution(false);
     } else {
-      setSuccess('Guideline exported successfully');
+      setSuccess(t('settings.guidelines.editor.messages.exportSuccess'));
     }
 
     setTimeout(() => setSuccess(null), 3000);
@@ -529,34 +534,34 @@ export function GuidelineEditor({
     const errors: string[] = [];
 
     // Metadata validation
-    if (!guideline.guideline_id) errors.push('Guideline ID is required');
-    if (!guideline.metadata.name) errors.push('Guideline name is required');
-    if (!guideline.metadata.version) errors.push('Version is required');
-    if (!guideline.metadata.country) errors.push('Country is required');
+    if (!guideline.guideline_id) errors.push(t('settings.guidelines.editor.validation.idRequired'));
+    if (!guideline.metadata.name) errors.push(t('settings.guidelines.editor.validation.nameRequired'));
+    if (!guideline.metadata.version) errors.push(t('settings.guidelines.editor.validation.versionRequired'));
+    if (!guideline.metadata.country) errors.push(t('settings.guidelines.editor.validation.countryRequired'));
 
     // Severity levels validation
     if (guideline.severity_levels.length === 0) {
-      errors.push('At least one severity level is required');
+      errors.push(t('settings.guidelines.editor.validation.severityRequired'));
     }
 
     guideline.severity_levels.forEach((level, i) => {
-      if (!level.id) errors.push(`Severity level ${i + 1}: ID is required`);
-      if (!level.name) errors.push(`Severity level ${i + 1}: Name is required`);
-      if (!level.color) errors.push(`Severity level ${i + 1}: Color is required`);
+      if (!level.id) errors.push(t('settings.guidelines.editor.validation.levelIdRequired', { index: i + 1 }));
+      if (!level.name) errors.push(t('settings.guidelines.editor.validation.levelNameRequired', { index: i + 1 }));
+      if (!level.color) errors.push(t('settings.guidelines.editor.validation.levelColorRequired', { index: i + 1 }));
     });
 
     // Check for duplicate severity level IDs
     const severityIds = guideline.severity_levels.map((l) => l.id);
     const duplicateIds = severityIds.filter((id, i) => severityIds.indexOf(id) !== i);
     if (duplicateIds.length > 0) {
-      errors.push(`Duplicate severity level IDs: ${duplicateIds.join(', ')}`);
+      errors.push(t('settings.guidelines.editor.validation.duplicateIds', { ids: duplicateIds.join(', ') }));
     }
 
     // Classification rules validation
     guideline.classification_rules.forEach((rule, i) => {
-      if (!rule.severity) errors.push(`Rule ${i + 1}: Severity is required`);
+      if (!rule.severity) errors.push(t('settings.guidelines.editor.validation.ruleSeverityRequired', { index: i + 1 }));
       if (rule.conditions.length === 0) {
-        errors.push(`Rule ${i + 1}: At least one condition is required`);
+        errors.push(t('settings.guidelines.editor.validation.ruleConditionRequired', { index: i + 1 }));
       }
     });
 
@@ -572,20 +577,20 @@ export function GuidelineEditor({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Name *
+            {t('settings.guidelines.editor.metadata.name')} *
           </label>
           <input
             type="text"
             value={guideline.metadata.name}
             onChange={(e) => updateMetadata('name', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-            placeholder="MINSAL Chile 2017"
+            placeholder={t('settings.guidelines.editor.metadata.namePlaceholder')}
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Guideline ID (auto-generated)
+            {t('settings.guidelines.editor.metadata.id')}
           </label>
           <input
             type="text"
@@ -598,21 +603,21 @@ export function GuidelineEditor({
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Full Name
+          {t('settings.guidelines.editor.metadata.fullName')}
         </label>
         <input
           type="text"
           value={guideline.metadata.full_name || ''}
           onChange={(e) => updateMetadata('full_name', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-          placeholder="Guía Clínica de Retinopatía Diabética - Ministerio de Salud de Chile"
+          placeholder={t('settings.guidelines.editor.metadata.fullNamePlaceholder')}
         />
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Version *
+            {t('settings.guidelines.editor.metadata.version')} *
           </label>
           <input
             type="text"
@@ -625,7 +630,7 @@ export function GuidelineEditor({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Country *
+            {t('settings.guidelines.editor.metadata.country')} *
           </label>
           <input
             type="text"
@@ -638,7 +643,7 @@ export function GuidelineEditor({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Language
+            {t('settings.guidelines.editor.metadata.language')}
           </label>
           <select
             value={guideline.metadata.language}
@@ -654,7 +659,7 @@ export function GuidelineEditor({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Status
+            {t('settings.guidelines.editor.metadata.status')}
           </label>
           <select
             value={guideline.metadata.status}
@@ -670,7 +675,7 @@ export function GuidelineEditor({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Date Published
+            {t('settings.guidelines.editor.metadata.datePublished')}
           </label>
           <input
             type="date"
@@ -683,7 +688,7 @@ export function GuidelineEditor({
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Organization
+          {t('settings.guidelines.editor.metadata.organization')}
         </label>
         <input
           type="text"
@@ -696,14 +701,14 @@ export function GuidelineEditor({
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Description
+          {t('settings.guidelines.editor.metadata.description')}
         </label>
         <textarea
           value={guideline.metadata.description || ''}
           onChange={(e) => updateMetadata('description', e.target.value)}
           rows={3}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-          placeholder="Brief description of this guideline..."
+          placeholder={t('settings.guidelines.editor.metadata.descriptionPlaceholder')}
         />
       </div>
     </div>
@@ -713,14 +718,14 @@ export function GuidelineEditor({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm text-gray-600">
-          Define severity levels for DR classification (in order from least to most severe)
+          {t('settings.guidelines.editor.severity.description')}
         </p>
         <button
           onClick={addSeverityLevel}
           className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Add Level
+          {t('settings.guidelines.editor.severity.addLevel')}
         </button>
       </div>
 
@@ -738,9 +743,9 @@ export function GuidelineEditor({
                 />
                 <div>
                   <h4 className="font-semibold text-gray-900">
-                    {level.name || 'Unnamed Level'}
+                    {level.name || t('settings.guidelines.editor.severity.level.unnamed')}
                   </h4>
-                  <p className="text-xs text-gray-500">Order: {level.order}</p>
+                  <p className="text-xs text-gray-500">{t('settings.guidelines.editor.severity.level.order')}: {level.order}</p>
                 </div>
               </div>
 
@@ -777,7 +782,7 @@ export function GuidelineEditor({
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  ID *
+                  {t('settings.guidelines.editor.severity.level.id')} *
                 </label>
                 <input
                   type="text"
@@ -790,7 +795,7 @@ export function GuidelineEditor({
 
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Name (ES) *
+                  {t('settings.guidelines.editor.severity.level.name')} *
                 </label>
                 <input
                   type="text"
@@ -803,7 +808,7 @@ export function GuidelineEditor({
 
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Color *
+                  {t('settings.guidelines.editor.severity.level.color')} *
                 </label>
                 <input
                   type="color"
@@ -816,7 +821,7 @@ export function GuidelineEditor({
 
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Description (ES)
+                {t('settings.guidelines.editor.severity.level.description')}
               </label>
               <textarea
                 value={level.description}
@@ -832,7 +837,7 @@ export function GuidelineEditor({
 
       {guideline.severity_levels.length === 0 && (
         <div className="text-center py-12 text-gray-500">
-          No severity levels defined. Click "Add Level" to create one.
+          {t('settings.guidelines.editor.severity.noLevels')}
         </div>
       )}
     </div>
@@ -842,14 +847,14 @@ export function GuidelineEditor({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm text-gray-600">
-          Define classification rules based on lesion counts and other criteria
+          {t('settings.guidelines.editor.rules.description')}
         </p>
         <button
           onClick={addClassificationRule}
           className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Add Rule
+          {t('settings.guidelines.editor.rules.addRule')}
         </button>
       </div>
 
@@ -861,8 +866,8 @@ export function GuidelineEditor({
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
-                <h4 className="font-semibold text-gray-900">Rule {ruleIndex + 1}</h4>
-                <span className="text-xs text-gray-500">Priority: {rule.priority}</span>
+                <h4 className="font-semibold text-gray-900">{t('settings.guidelines.editor.rules.rule')} {ruleIndex + 1}</h4>
+                <span className="text-xs text-gray-500">{t('settings.guidelines.editor.rules.priority')}: {rule.priority}</span>
               </div>
               <button
                 onClick={() => deleteClassificationRule(ruleIndex)}
@@ -875,7 +880,7 @@ export function GuidelineEditor({
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Severity Level
+                  {t('settings.guidelines.editor.rules.severityLevel')}
                 </label>
                 <select
                   value={rule.severity}
@@ -894,7 +899,7 @@ export function GuidelineEditor({
 
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Logic
+                  {t('settings.guidelines.editor.rules.logic')}
                 </label>
                 <select
                   value={rule.logic}
@@ -903,14 +908,14 @@ export function GuidelineEditor({
                   }
                   className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-sky-500"
                 >
-                  <option value="AND">AND (all must match)</option>
-                  <option value="OR">OR (any can match)</option>
+                  <option value="AND">{t('settings.guidelines.editor.rules.logicOptions.and')}</option>
+                  <option value="OR">{t('settings.guidelines.editor.rules.logicOptions.or')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Priority
+                  {t('settings.guidelines.editor.rules.priority')}
                 </label>
                 <input
                   type="number"
@@ -931,14 +936,14 @@ export function GuidelineEditor({
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-xs font-medium text-gray-700">
-                  Conditions
+                  {t('settings.guidelines.editor.rules.conditions')}
                 </label>
                 <button
                   onClick={() => addRuleCondition(ruleIndex)}
                   className="text-xs text-sky-600 hover:text-sky-700 flex items-center gap-1"
                 >
                   <Plus className="w-3 h-3" />
-                  Add Condition
+                  {t('settings.guidelines.editor.rules.addCondition')}
                 </button>
               </div>
 
@@ -1016,7 +1021,7 @@ export function GuidelineEditor({
 
       {guideline.classification_rules.length === 0 && (
         <div className="text-center py-12 text-gray-500">
-          No classification rules defined. Click "Add Rule" to create one.
+          {t('settings.guidelines.editor.rules.noRules')}
         </div>
       )}
     </div>
@@ -1032,7 +1037,7 @@ export function GuidelineEditor({
           className="w-4 h-4 text-sky-600 rounded focus:ring-sky-500"
         />
         <label className="text-sm font-medium text-gray-700">
-          Enable Rule 4-2-1
+          {t('settings.guidelines.editor.rule421.enable')}
         </label>
       </div>
 
@@ -1041,7 +1046,7 @@ export function GuidelineEditor({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Rule Name
+                {t('settings.guidelines.editor.rule421.name')}
               </label>
               <input
                 type="text"
@@ -1055,7 +1060,7 @@ export function GuidelineEditor({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
+              {t('settings.guidelines.editor.rule421.description')}
             </label>
             <textarea
               value={guideline.rule_421.description || ''}
@@ -1069,14 +1074,14 @@ export function GuidelineEditor({
           <div>
             <div className="flex justify-between items-center mb-3">
               <label className="block text-sm font-medium text-gray-700">
-                Criteria
+                {t('settings.guidelines.editor.rule421.criteria')}
               </label>
               <button
                 onClick={addRule421Criterion}
                 className="flex items-center gap-2 px-3 py-1 text-sm bg-sky-600 text-white rounded hover:bg-sky-700"
               >
                 <Plus className="w-3 h-3" />
-                Add Criterion
+                {t('settings.guidelines.editor.rule421.addCriterion')}
               </button>
             </div>
 
@@ -1088,7 +1093,7 @@ export function GuidelineEditor({
                 >
                   <div className="flex justify-between items-start">
                     <h5 className="text-sm font-semibold text-gray-900">
-                      Criterion {index + 1}
+                      {t('settings.guidelines.editor.rule421.criterion')} {index + 1}
                     </h5>
                     <button
                       onClick={() => deleteRule421Criterion(index)}
@@ -1101,7 +1106,7 @@ export function GuidelineEditor({
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Name
+                        {t('settings.guidelines.editor.rule421.fields.name')}
                       </label>
                       <input
                         type="text"
@@ -1116,7 +1121,7 @@ export function GuidelineEditor({
 
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Field
+                        {t('settings.guidelines.editor.rule421.fields.field')}
                       </label>
                       <select
                         value={criterion.field}
@@ -1137,7 +1142,7 @@ export function GuidelineEditor({
                   <div className="grid grid-cols-3 gap-2">
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Min Quadrants
+                        {t('settings.guidelines.editor.rule421.fields.minQuadrants')}
                       </label>
                       <input
                         type="number"
@@ -1157,7 +1162,7 @@ export function GuidelineEditor({
 
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Min per Quadrant
+                        {t('settings.guidelines.editor.rule421.fields.minPerQuadrant')}
                       </label>
                       <input
                         type="number"
@@ -1176,7 +1181,7 @@ export function GuidelineEditor({
 
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Min Disc Areas
+                        {t('settings.guidelines.editor.rule421.fields.minDiscAreas')}
                       </label>
                       <input
                         type="number"
@@ -1196,7 +1201,7 @@ export function GuidelineEditor({
 
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Description
+                      {t('settings.guidelines.editor.rule421.fields.description')}
                     </label>
                     <textarea
                       value={criterion.description || ''}
@@ -1215,13 +1220,13 @@ export function GuidelineEditor({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Severity Mapping
+              {t('settings.guidelines.editor.rule421.severityMapping')}
             </label>
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">
-                    0 criteria met →
+                    {t('settings.guidelines.editor.rule421.mapping.0met')}
                   </label>
                   <select
                     value={guideline.rule_421.severity_mapping['0_criteria_met'] || ''}
@@ -1233,7 +1238,7 @@ export function GuidelineEditor({
                     }
                     className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
                   >
-                    <option value="">None</option>
+                    <option value="">{t('settings.guidelines.editor.rule421.mapping.none')}</option>
                     {guideline.severity_levels.map((level) => (
                       <option key={level.id} value={level.id}>
                         {level.name}
@@ -1244,7 +1249,7 @@ export function GuidelineEditor({
 
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">
-                    1 criterion met →
+                    {t('settings.guidelines.editor.rule421.mapping.1met')}
                   </label>
                   <select
                     value={guideline.rule_421.severity_mapping['1_criteria_met'] || ''}
@@ -1256,7 +1261,7 @@ export function GuidelineEditor({
                     }
                     className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
                   >
-                    <option value="">None</option>
+                    <option value="">{t('settings.guidelines.editor.rule421.mapping.none')}</option>
                     {guideline.severity_levels.map((level) => (
                       <option key={level.id} value={level.id}>
                         {level.name}
@@ -1268,7 +1273,7 @@ export function GuidelineEditor({
 
               <div>
                 <label className="block text-xs text-gray-600 mb-1">
-                  2 or more criteria met →
+                  {t('settings.guidelines.editor.rule421.mapping.2met')}
                 </label>
                 <select
                   value={
@@ -1282,7 +1287,7 @@ export function GuidelineEditor({
                   }
                   className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
                 >
-                  <option value="">None</option>
+                  <option value="">{t('settings.guidelines.editor.rule421.mapping.none')}</option>
                   {guideline.severity_levels.map((level) => (
                     <option key={level.id} value={level.id}>
                       {level.name}
@@ -1301,14 +1306,14 @@ export function GuidelineEditor({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm text-gray-600">
-          Define treatment protocols and follow-up recommendations for each severity level
+          {t('settings.guidelines.editor.treatment.description')}
         </p>
         <button
           onClick={addTreatmentProtocol}
           className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Add Protocol
+          {t('settings.guidelines.editor.treatment.addProtocol')}
         </button>
       </div>
 
@@ -1319,7 +1324,7 @@ export function GuidelineEditor({
             className="p-4 border border-gray-200 rounded-lg bg-white space-y-3"
           >
             <div className="flex items-start justify-between">
-              <h4 className="font-semibold text-gray-900">Protocol {index + 1}</h4>
+              <h4 className="font-semibold text-gray-900">{t('settings.guidelines.editor.treatment.protocol')} {index + 1}</h4>
               <button
                 onClick={() => deleteTreatmentProtocol(index)}
                 className="p-1 text-red-400 hover:text-red-600"
@@ -1331,7 +1336,7 @@ export function GuidelineEditor({
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Severity Level
+                  {t('settings.guidelines.editor.treatment.severityLevel')}
                 </label>
                 <select
                   value={protocol.severity}
@@ -1350,7 +1355,7 @@ export function GuidelineEditor({
 
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Urgency
+                  {t('settings.guidelines.editor.treatment.urgency')}
                 </label>
                 <select
                   value={protocol.urgency}
@@ -1359,15 +1364,15 @@ export function GuidelineEditor({
                   }
                   className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-sky-500"
                 >
-                  <option value="routine">Routine</option>
-                  <option value="accelerated">Accelerated</option>
-                  <option value="urgent">Urgent</option>
+                  <option value="routine">{t('settings.guidelines.editor.treatment.urgencyOptions.routine')}</option>
+                  <option value="accelerated">{t('settings.guidelines.editor.treatment.urgencyOptions.accelerated')}</option>
+                  <option value="urgent">{t('settings.guidelines.editor.treatment.urgencyOptions.urgent')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Follow-up Days
+                  {t('settings.guidelines.editor.treatment.followupDays')}
                 </label>
                 <input
                   type="number"
@@ -1388,14 +1393,14 @@ export function GuidelineEditor({
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-xs font-medium text-gray-700">
-                  Actions
+                  {t('settings.guidelines.editor.treatment.actions')}
                 </label>
                 <button
                   onClick={() => addTreatmentAction(index)}
                   className="text-xs text-sky-600 hover:text-sky-700 flex items-center gap-1"
                 >
                   <Plus className="w-3 h-3" />
-                  Add Action
+                  {t('settings.guidelines.editor.treatment.addAction')}
                 </button>
               </div>
 
@@ -1424,7 +1429,7 @@ export function GuidelineEditor({
 
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Rationale
+                {t('settings.guidelines.editor.treatment.rationale')}
               </label>
               <textarea
                 value={protocol.rationale}
@@ -1442,7 +1447,7 @@ export function GuidelineEditor({
 
       {guideline.treatment_protocols.length === 0 && (
         <div className="text-center py-12 text-gray-500">
-          No treatment protocols defined. Click "Add Protocol" to create one.
+          {t('settings.guidelines.editor.treatment.noProtocols')}
         </div>
       )}
     </div>
@@ -1453,24 +1458,24 @@ export function GuidelineEditor({
       <div className="flex items-center gap-3">
         <input
           type="checkbox"
-          checked={guideline.emcs_criteria.enabled}
+          checked={guideline.emcs_criteria?.enabled ?? false}
           onChange={(e) => updateEMCSCriteria('enabled', e.target.checked)}
           className="w-4 h-4 text-sky-600 rounded focus:ring-sky-500"
         />
         <label className="text-sm font-medium text-gray-700">
-          Enable EMCS (Clinically Significant Macular Edema) Criteria
+          {t('settings.guidelines.editor.emcs.enable')}
         </label>
       </div>
 
-      {guideline.emcs_criteria.enabled && (
+      {guideline.emcs_criteria?.enabled && (
         <>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name
+              {t('settings.guidelines.editor.emcs.name')}
             </label>
             <input
               type="text"
-              value={guideline.emcs_criteria.name || ''}
+              value={guideline.emcs_criteria?.name || ''}
               onChange={(e) => updateEMCSCriteria('name', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500"
               placeholder="EMCS - Edema Macular Clínicamente Significativo"
@@ -1480,11 +1485,11 @@ export function GuidelineEditor({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Geometric Distance from Fovea (μm)
+                {t('settings.guidelines.editor.emcs.distance')}
               </label>
               <input
                 type="number"
-                value={guideline.emcs_criteria.geometric_distance_fovea_um}
+                value={guideline.emcs_criteria?.geometric_distance_fovea_um ?? 500}
                 onChange={(e) =>
                   updateEMCSCriteria(
                     'geometric_distance_fovea_um',
@@ -1498,12 +1503,12 @@ export function GuidelineEditor({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Minimum Disc Areas
+                {t('settings.guidelines.editor.emcs.minDiscAreas')}
               </label>
               <input
                 type="number"
                 step="0.1"
-                value={guideline.emcs_criteria.min_disc_areas}
+                value={guideline.emcs_criteria?.min_disc_areas ?? 1}
                 onChange={(e) =>
                   updateEMCSCriteria('min_disc_areas', parseFloat(e.target.value))
                 }
@@ -1516,27 +1521,27 @@ export function GuidelineEditor({
           <div className="flex items-center gap-3">
             <input
               type="checkbox"
-              checked={guideline.emcs_criteria.apply_geometric_rule}
+              checked={guideline.emcs_criteria?.apply_geometric_rule ?? true}
               onChange={(e) =>
                 updateEMCSCriteria('apply_geometric_rule', e.target.checked)
               }
               className="w-4 h-4 text-sky-600 rounded focus:ring-sky-500"
             />
             <label className="text-sm text-gray-700">
-              Apply geometric rule for detection
+              {t('settings.guidelines.editor.emcs.applyGeometric')}
             </label>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
+              {t('settings.guidelines.editor.emcs.description')}
             </label>
             <textarea
-              value={guideline.emcs_criteria.description || ''}
+              value={guideline.emcs_criteria?.description || ''}
               onChange={(e) => updateEMCSCriteria('description', e.target.value)}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500"
-              placeholder="Description of EMCS criteria..."
+              placeholder={t('settings.guidelines.editor.metadata.descriptionPlaceholder')}
             />
           </div>
         </>
@@ -1549,12 +1554,12 @@ export function GuidelineEditor({
   // ============================================================================
 
   const tabs: { id: TabType; label: string; icon: any }[] = [
-    { id: 'metadata', label: 'Metadata', icon: FileText },
-    { id: 'severity', label: 'Severity Levels', icon: Layers },
-    { id: 'rules', label: 'Classification Rules', icon: GitBranch },
-    { id: 'rule421', label: 'Rule 4-2-1', icon: Binary },
-    { id: 'treatment', label: 'Treatment Protocols', icon: Pill },
-    { id: 'emcs', label: 'EMCS Criteria', icon: Eye },
+    { id: 'metadata', label: t('settings.guidelines.editor.tabs.metadata'), icon: FileText },
+    { id: 'severity', label: t('settings.guidelines.editor.tabs.severity'), icon: Layers },
+    { id: 'rules', label: t('settings.guidelines.editor.tabs.rules'), icon: GitBranch },
+    { id: 'rule421', label: t('settings.guidelines.editor.tabs.rule421'), icon: Binary },
+    { id: 'treatment', label: t('settings.guidelines.editor.tabs.treatment'), icon: Pill },
+    { id: 'emcs', label: t('settings.guidelines.editor.tabs.emcs'), icon: Eye },
   ];
 
   return (
@@ -1563,10 +1568,10 @@ export function GuidelineEditor({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">
-            Guideline Editor
+            {t('settings.guidelines.editor.title')}
           </h3>
           <p className="mt-1 text-sm text-gray-600">
-            Create and modify custom clinical guidelines
+            {t('settings.guidelines.editor.subtitle')}
           </p>
         </div>
 
@@ -1583,14 +1588,14 @@ export function GuidelineEditor({
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <Upload className="w-4 h-4" />
-            Import JSON
+            {t('settings.guidelines.editor.importJson')}
           </button>
           <button
             onClick={handleExportJSON}
             className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
           >
             <Download className="w-4 h-4" />
-            Export JSON
+            {t('settings.guidelines.editor.exportJson')}
           </button>
         </div>
       </div>
@@ -1602,7 +1607,7 @@ export function GuidelineEditor({
             <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <h4 className="text-sm font-semibold text-red-900 mb-2">
-                Validation Errors
+                {t('settings.guidelines.editor.messages.validationError')}
               </h4>
               <ul className="text-sm text-red-700 space-y-1">
                 {errors.map((error, i) => (
@@ -1669,9 +1674,9 @@ export function GuidelineEditor({
       <div className="pt-4 border-t border-gray-200 space-y-4">
         <div className="flex justify-between items-center">
           <div className="text-sm text-gray-600">
-            {guideline.severity_levels.length} severity levels •{' '}
-            {guideline.classification_rules.length} rules •{' '}
-            {guideline.treatment_protocols.length} protocols
+            {t('settings.guidelines.editor.summary.levels', { count: guideline.severity_levels.length })} •{' '}
+            {t('settings.guidelines.editor.summary.rules', { count: guideline.classification_rules.length })} •{' '}
+            {t('settings.guidelines.editor.summary.protocols', { count: guideline.treatment_protocols.length })}
           </div>
         </div>
 
@@ -1703,7 +1708,7 @@ export function GuidelineEditor({
               onClick={onClose}
               className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              {t('ui.cancel')}
+              {t('settings.guidelines.editor.cancel')}
             </button>
           )}
           <button
@@ -1711,7 +1716,7 @@ export function GuidelineEditor({
             className="flex items-center gap-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <Download className="w-4 h-4" />
-            {t('settings.guidelines.exportJson')}
+            {t('settings.guidelines.editor.exportJson')}
           </button>
           <button
             onClick={() => {
@@ -1721,7 +1726,7 @@ export function GuidelineEditor({
               } else {
                 // Export and close
                 handleExportJSON();
-                setSuccess('Guía guardada exitosamente');
+                setSuccess(t('settings.guidelines.editor.messages.saveSuccess'));
                 setTimeout(() => {
                   setSuccess(null);
                   onClose?.();
@@ -1731,7 +1736,7 @@ export function GuidelineEditor({
             className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
           >
             <CheckCircle className="w-4 h-4" />
-            Guardar
+            {t('settings.guidelines.editor.save')}
           </button>
         </div>
       </div>

@@ -19,6 +19,8 @@ import ToolPanel, { type CanvasTool } from './ToolPanel';
 import { db } from '@/lib/db/schema';
 import { cn } from '@/lib/utils';
 import type { HistoryEntry } from '@/types/annotations';
+import { detectMacularEdema, findFovea } from '@/lib/analysis/macular-edema-detector';
+import { calibrateFromOpticDisc, createFallbackCalibration } from '@/lib/analysis/spatial-calibrator';
 
 const DEFAULT_LAYERS: CanvasLayer[] = [
   { id: 'original', name: 'canvas.layers.original', visible: true, opacity: 1, locked: true, zIndex: 0 },
@@ -55,6 +57,14 @@ const DEFAULT_LAYERS: CanvasLayer[] = [
     opacity: 0.5,
     locked: false,
     zIndex: 4,
+  },
+  {
+    id: 'macular-zones',
+    name: 'canvas.layers.macular_zones',
+    visible: true,
+    opacity: 0.7,
+    locked: false,
+    zIndex: 5,
   },
 ];
 
@@ -190,6 +200,8 @@ const ImageAnalyzer: React.FC = () => {
       } else if (e.key === 'PageDown') {
         e.preventDefault();
         handleNextImage();
+      } else if (e.key === 'Escape') {
+        setActiveTool('select');
       }
     };
 
@@ -211,6 +223,43 @@ const ImageAnalyzer: React.FC = () => {
     () => (imageId ? db.measurements.where('imageId').equals(parseInt(imageId)).and(m => m.visible === true).toArray() : []),
     [imageId]
   );
+
+  // Calculate macular edema result
+  const macularEdemaResult = React.useMemo(() => {
+    if (!allDetections || allDetections.length === 0) return null;
+
+    try {
+      const fovea = findFovea(allDetections);
+      if (!fovea) return null;
+
+      const opticDisc = allDetections.find(d =>
+        d.class && typeof d.class === 'string' &&
+        ['optic_disc', 'optic disc'].includes(d.class.toLowerCase().trim())
+      );
+
+      const calibration = opticDisc
+        ? calibrateFromOpticDisc(opticDisc)
+        : createFallbackCalibration();
+
+      const defaultCriteria = {
+        enabled: true,
+        method: 'EMCS',
+        hard_exudates_distance_um: 500,
+        min_exudates_for_flag: 1,
+        circinate_pattern_detection: true,
+        min_angular_dispersion: 0.5,
+        visual_zones: {
+          show_foveal_zone: true,
+          foveal_zone_radius_um: 500,
+        },
+      };
+
+      return detectMacularEdema(allDetections, fovea, calibration, defaultCriteria);
+    } catch (error) {
+      console.error('Error calculating macular edema:', error);
+      return null;
+    }
+  }, [allDetections]);
 
   // Separar detecciones por tipo
   const aiDetections = allDetections?.filter((d) => d.type === 'ai') || [];
@@ -296,7 +345,14 @@ const ImageAnalyzer: React.FC = () => {
           </Button>
           <div className="min-w-0">
             <h1 className="text-lg lg:text-3xl font-bold text-coal-800 dark:text-gray-100 truncate">{t('analysis.title')}</h1>
-            <p className="text-xs lg:text-sm text-smoke-500 dark:text-gray-400 mt-0.5 truncate">{image.filename}</p>
+            <div className="flex flex-col">
+              <p className="text-xs lg:text-sm text-smoke-500 dark:text-gray-400 mt-0.5 truncate">{image.filename}</p>
+              {macularEdemaResult?.detected && (
+                <div className="flex items-center gap-2 mt-1 text-xs font-medium text-amber-600 dark:text-amber-400">
+                  <span>⚠️ {macularEdemaResult.exudatesInZone.length} exudados cerca de fóvea. Verificar edema y anillos circinados.</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

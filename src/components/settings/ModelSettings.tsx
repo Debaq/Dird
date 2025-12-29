@@ -14,6 +14,7 @@ import type { ModelMetadata } from '@/lib/ai/model-metadata';
 import ModelInfoModal from './ModelInfoModal';
 import ClassManagementModal from './ClassManagementModal';
 import { useConfirm } from '@/hooks/useConfirm';
+import { classManager } from '@/lib/classes/class-manager';
 
 const ModelSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -50,14 +51,43 @@ const ModelSettings: React.FC = () => {
       // Try to load metadata if model is cached
       if (detectionVer) {
         try {
-          const metadataUrl = `https://raw.githubusercontent.com/Debaq/dird_models/main/detection-v${detectionVer}.json`;
-          const response = await fetch(metadataUrl);
-          if (response.ok) {
-            const metadata = await response.json();
+          // First try to get from cache (model metadata is cached with the model)
+          const cache = await caches.open('dird-onnx-models');
+          const cachedMetadata = await cache.match(`https://raw.githubusercontent.com/Debaq/dird_models/main/detection-v${detectionVer}.json`);
+
+          if (cachedMetadata) {
+            const metadata = await cachedMetadata.json();
             setDetectionMetadata(metadata);
+          } else {
+            // If not in cache, try to fetch from GitHub
+            const metadataUrl = `https://raw.githubusercontent.com/Debaq/dird_models/main/detection-v${detectionVer}.json`;
+            const response = await fetch(metadataUrl);
+            if (response.ok) {
+              const metadata = await response.json();
+              setDetectionMetadata(metadata);
+              // Cache for future use
+              await cache.put(metadataUrl, response.clone());
+            }
           }
         } catch (error) {
-          console.warn('Could not load detection metadata:', error);
+          console.warn('Could not load detection metadata from cache or GitHub:', error);
+          // Fallback: Get classes from classManager
+          try {
+            await classManager.ensureMetadataLoaded();
+            const aiClasses = classManager.getAIClasses();
+            // Create minimal metadata with classes from classManager
+            setDetectionMetadata({
+              classes: aiClasses,
+              model_info: {
+                version: detectionVer || 'unknown',
+                type: 'detection'
+              }
+            } as any);
+          } catch (fallbackError) {
+            console.error('Could not load metadata from classManager:', fallbackError);
+            // Last resort: set minimal metadata
+            setDetectionMetadata({ classes: [] } as any);
+          }
         }
       }
 
@@ -325,7 +355,7 @@ const ModelSettings: React.FC = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    {isDetectionCached && detectionMetadata && (
+                    {isDetectionCached && (
                       <>
                         <Button
                           variant="ghost"
@@ -341,6 +371,7 @@ const ModelSettings: React.FC = () => {
                           size="sm"
                           onClick={() => setShowModelInfo(true)}
                           className="h-8 px-2"
+                          title={t('settings.models.viewInfo')}
                         >
                           <Info className="w-4 h-4" />
                         </Button>

@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useConfirm } from '@/hooks/useConfirm';
 import { Stage, Layer, Image as KonvaImage, Rect, Group, Text, Transformer, Circle, Line } from 'react-konva';
-import { RotateCcw, RotateCw, Brain, Loader2 } from 'lucide-react';
+import { RotateCcw, RotateCw, Brain, Loader2, Maximize } from 'lucide-react';
 import type { Image as ImageType, Detection } from '@/lib/db/schema';
 import type { HistoryEntry } from '@/types/annotations';
 import type { CanvasTool } from './ToolPanel';
@@ -17,8 +17,11 @@ import { useCanvasStore } from '@/stores/canvas-store';
 import { inferenceService } from '@/lib/ai/inference-service';
 import { updateOpticDiscSegmentation, deleteOpticDiscSegmentation } from '@/lib/ai/optic-disc-updater';
 import { QuadrantOverlay } from './QuadrantOverlay';
+import { MacularZonesOverlay } from './MacularZonesOverlay';
 import { useLandmarksAndQuadrants } from '@/hooks/useLandmarksAndQuadrants';
 import { classifyAndSaveImage } from '@/lib/analysis/image-classification-service';
+import { calibrateFromOpticDisc, createFallbackCalibration } from '@/lib/analysis/spatial-calibrator';
+import { detectMacularEdema, findFovea, findHardExudates } from '@/lib/analysis/macular-edema-detector';
 
 interface AnnotationCanvasProps {
   image: ImageType;
@@ -70,6 +73,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const manualAnnotationsLayer = layers.find(l => l.id === 'manual-annotations');
   const measurementsLayer = layers.find(l => l.id === 'measurements');
   const quadrantsLayer = layers.find(l => l.id === 'quadrants');
+  const macularZonesLayer = layers.find(l => l.id === 'macular-zones');
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
   const trRef = useRef<any>(null);
@@ -112,6 +116,102 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     detections,
   });
 
+  // Create a revision key that changes when relevant detection properties change
+  // This ensures macular edema recalculates when fovea moves or hard exudates change
+  // Uses the same detection logic as macular-edema-detector for consistency
+  const macularEdemaRevisionKey = useMemo(() => {
+    // Combine ALL detections (AI + manual) for consistency
+    const allDetections = [...(detections || []), ...(manualAnnotations || [])];
+
+    if (allDetections.length === 0) {
+      return 'empty';
+    }
+
+    // Use the same functions from macular-edema-detector to ensure consistency
+    const fovea = findFovea(allDetections);
+    const hardExudates = findHardExudates(allDetections);
+
+    const opticDisc = allDetections.find(d =>
+      d.class && typeof d.class === 'string' &&
+      ['optic_disc', 'optic disc'].includes(d.class.toLowerCase().trim())
+    );
+
+    // Create a key that includes positions of relevant detections
+    const parts: string[] = [];
+
+    if (fovea) {
+      parts.push(`fovea:${fovea.bbox.x.toFixed(2)},${fovea.bbox.y.toFixed(2)},${fovea.bbox.width.toFixed(2)},${fovea.bbox.height.toFixed(2)}`);
+    }
+
+    if (opticDisc) {
+      parts.push(`disc:${opticDisc.bbox.x.toFixed(2)},${opticDisc.bbox.y.toFixed(2)},${opticDisc.bbox.width.toFixed(2)},${opticDisc.bbox.height.toFixed(2)}`);
+    }
+
+    parts.push(`exudates:${hardExudates.length}`);
+    hardExudates.forEach((ex, idx) => {
+      parts.push(`ex${idx}:${ex.bbox.x.toFixed(2)},${ex.bbox.y.toFixed(2)}`);
+    });
+
+    return parts.join('|');
+  }, [detections, manualAnnotations]);
+
+  // Calculate macular edema data in real-time
+  const macularEdemaData = useMemo(() => {
+    // Combine AI detections and manual annotations into a single array
+    const allDetections = [...(detections || []), ...(manualAnnotations || [])];
+
+    // Only calculate if we have detections and konva image
+    if (allDetections.length === 0 || !konvaImage) {
+      return null;
+    }
+
+    try {
+      // Find fovea from ALL detections (AI + manual)
+      const fovea = findFovea(allDetections);
+      if (!fovea) {
+        return null; // No fovea, can't detect edema
+      }
+
+      // Find optic disc for calibration (from all detections)
+      const opticDisc = allDetections.find(d =>
+        d.class && typeof d.class === 'string' &&
+        ['optic_disc', 'optic disc'].includes(d.class.toLowerCase().trim())
+      );
+
+      // Calibrate spatial measurements
+      const calibration = opticDisc
+        ? calibrateFromOpticDisc(opticDisc)
+        : createFallbackCalibration();
+
+      // Get guideline asynchronously (we'll use default criteria for now)
+      // In a real scenario, we'd need to pass guideline from parent or use a different approach
+      const defaultCriteria = {
+        enabled: true,
+        method: 'EMCS',
+        hard_exudates_distance_um: 500,
+        min_exudates_for_flag: 1,
+        circinate_pattern_detection: true,
+        min_angular_dispersion: 0.5,
+        visual_zones: {
+          show_foveal_zone: true,
+          foveal_zone_radius_um: 500,
+        },
+      };
+
+      // Detect macular edema using ALL detections (AI + manual)
+      const result = detectMacularEdema(allDetections, fovea, calibration, defaultCriteria);
+
+      return {
+        fovea,
+        result,
+        zoneRadiusUm: defaultCriteria.hard_exudates_distance_um,
+      };
+    } catch (error) {
+      console.error('Error calculating macular edema data:', error);
+      return null;
+    }
+  }, [detections, manualAnnotations, konvaImage, macularEdemaRevisionKey]);
+
   // Update transformer when selection changes
   useEffect(() => {
     if (selectedAnnotationId && trRef.current && stageRef.current) {
@@ -145,7 +245,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   };
 
   // Helper to record history after drag/transform
-  const recordMoveHistory = async (id: number) => {
+  const recordMoveHistory = React.useCallback(async (id: number) => {
     if (!dragStartAnnotation.current || !history) return;
 
     const currentDetection = await db.detections.get(id);
@@ -167,10 +267,10 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       }
     }
     dragStartAnnotation.current = null;
-  };
+  }, [history]);
 
   // Handle updates (drag/resize)
-  const handleAnnotationChange = async (id: number, newAttrs: any) => {
+  const handleAnnotationChange = React.useCallback(async (id: number, newAttrs: any) => {
     try {
       const detection = await db.detections.get(id);
       if (!detection) return;
@@ -225,7 +325,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     } catch (error) {
       console.error('Error updating annotation:', error);
     }
-  };
+  }, [image.id, imageOffset, onAnnotationAdded, scale]);
 
   const checkDeselect = (e: any) => {
     // deselect when clicked on empty area
@@ -572,6 +672,49 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     setSelectedMeasurementId(null);
   };
 
+  // Delete a specific annotation
+  const handleDeleteAnnotation = React.useCallback(async (detection: any) => {
+    if (!detection || !detection.id) return;
+
+    if (history) {
+      history.onAdd({ type: 'delete', detection: detection });
+    }
+    
+    // Delete associated optic disc segmentation first
+    await deleteOpticDiscSegmentation(detection.id);
+    await db.detections.delete(detection.id);
+
+    // Re-classify DR after deleting detection
+    if (image.id) {
+      try {
+        await classifyAndSaveImage(image.id);
+      } catch (error) {
+        console.error('Error re-classifying after deleting detection:', error);
+      }
+    }
+
+    if (selectedAnnotationId === String(detection.id)) {
+      setSelectedAnnotation(null);
+    }
+    
+    onAnnotationAdded?.();
+  }, [history, image.id, onAnnotationAdded, selectedAnnotationId, setSelectedAnnotation]);
+
+  // Delete selected annotation or measurement
+  const handleDeleteSelected = React.useCallback(async () => {
+    if (selectedAnnotationId) {
+      const detection = 
+        detections.find(d => String(d.id) === selectedAnnotationId) ||
+        manualAnnotations.find(d => String(d.id) === selectedAnnotationId);
+
+      if (detection) {
+        await handleDeleteAnnotation(detection);
+      }
+    } else if (selectedMeasurementId) {
+      await handleDeleteMeasurement(selectedMeasurementId);
+    }
+  }, [selectedAnnotationId, selectedMeasurementId, detections, manualAnnotations, handleDeleteAnnotation, handleDeleteMeasurement]);
+
   // Helper to get effective measurement (with temp updates if dragging)
   const getEffectiveMeasurement = (measurement: any) => {
     const tempUpdate = tempMeasurementUpdates.get(measurement.id);
@@ -754,6 +897,11 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     }
   };
 
+  const handleResetZoom = () => {
+    setStageScale(1);
+    setStagePos({ x: 0, y: 0 });
+  };
+
   const handleReDetect = async () => {
     if (!image.id || isProcessing) return;
 
@@ -801,6 +949,20 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   // Manejar teclas de acceso rápido (Ctrl+Z para deshacer, Ctrl+Y o Ctrl+Shift+Z para rehacer, Flechas para mover)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape to deselect and (via ImageAnalyzer) return to select tool
+      if (e.key === 'Escape') {
+        setSelectedAnnotation(null);
+        setSelectedMeasurementId(null);
+      }
+
+      // Delete selected annotation/measurement
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        // Only delete if no input is focused
+        if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+          handleDeleteSelected();
+        }
+      }
+
       // Undo/Redo
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 'z' || e.key === 'Z') {
@@ -876,7 +1038,20 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [history, selectedAnnotationId, detections, manualAnnotations, scale, imageOffset]);
+  }, [
+    history, 
+    selectedAnnotationId, 
+    selectedMeasurementId,
+    detections, 
+    manualAnnotations, 
+    scale, 
+    imageOffset, 
+    handleDeleteSelected, 
+    handleAnnotationChange, 
+    recordMoveHistory,
+    setSelectedAnnotation,
+    setSelectedMeasurementId
+  ]);
 
   // Handle modal close/cancel
   const handleModalClose = () => {
@@ -946,6 +1121,13 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
               <Brain className="w-4 h-4" />
             )}
           </button>
+          <button
+            onClick={handleResetZoom}
+            className="p-2 rounded-lg bg-white text-gray-700 hover:bg-gray-100 shadow"
+            title={t('canvas.resetZoom')}
+          >
+            <Maximize className="w-4 h-4" />
+          </button>
         </div>
       </div>
       <div
@@ -993,7 +1175,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
             <Text
               x={imageOffset.x + 20}
               y={imageOffset.y + 20}
-              text="Cargando detecciones..."
+              text={t('canvas.loadingDetections')}
               fontSize={14}
               fill="#20B5AE"
               padding={8}
@@ -1004,7 +1186,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
             <Text
               x={imageOffset.x + 20}
               y={imageOffset.y + 20}
-              text="No hay detecciones en esta imagen"
+              text={t('canvas.noDetectionsOnImage')}
               fontSize={14}
               fill="#FF6B6B"
               padding={8}
@@ -1028,12 +1210,18 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                 scaleX={scale}
                 scaleY={scale}
                 listening={false}
+                opacity={0.4}
               />
             );
           })}
 
           {/* AI Detections */}
           {isCanvasReady && detections.map((detection, idx) => {
+            // Skip if class is not defined
+            if (!detection.class || typeof detection.class !== 'string') {
+              return null;
+            }
+
             // Check if this is a landmark class (optic_disc or fovea)
             const className = detection.class.toLowerCase().trim();
             const isLandmarkClass = className === 'optic_disc' || className === 'optic disc' || className === 'fovea';
@@ -1081,23 +1269,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                   onClick={async (e) => {
                     if (activeTool === 'eraser' && detection.id) {
                       e.cancelBubble = true;
-                      if (history) {
-                          history.onAdd({ type: 'delete', detection: detection });
-                      }
-                      // Delete associated optic disc segmentation first
-                      await deleteOpticDiscSegmentation(detection.id);
-                      await db.detections.delete(detection.id);
-
-                      // Re-classify DR after deleting detection
-                      if (image.id) {
-                        try {
-                          await classifyAndSaveImage(image.id);
-                        } catch (error) {
-                          console.error('Error re-classifying after deleting detection:', error);
-                        }
-                      }
-
-                      onAnnotationAdded?.();
+                      await handleDeleteAnnotation(detection);
                     } else if (activeTool === 'select' && detection.id) {
                       setSelectedAnnotation(String(detection.id));
                       e.cancelBubble = true;
@@ -1200,7 +1372,6 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                   const centerY = (detection.bbox.y + detection.bbox.height / 2) * scale + imageOffset.y;
                   const radius = landmark.radius * scale;
                   const isOpticDisc = landmark.type === 'optic_disc';
-                  const color = isOpticDisc ? '#FF6B6B' : '#4ECDC4';
                   const strokeColor = isOpticDisc ? '#E63946' : '#2A9D8F';
 
                   return (
@@ -1220,8 +1391,8 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                         x={centerX}
                         y={centerY}
                         radius={radius}
-                        fill={isOpticDisc ? 'transparent' : color}
-                        opacity={0.3}
+                        fill='transparent'
+                        opacity={0.8}
                         stroke={strokeColor}
                         strokeWidth={2}
                         listening={false}
@@ -1266,6 +1437,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                 scaleX={scale}
                 scaleY={scale}
                 listening={false}
+                opacity={0.4}
               />
             );
           })}
@@ -1326,23 +1498,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                                       onClick={async (e) => {
                                         if (activeTool === 'eraser' && annotation.id) {
                                           e.cancelBubble = true;
-                                          if (history) {
-                                              history.onAdd({ type: 'delete', detection: annotation });
-                                          }
-                                          // Delete associated optic disc segmentation first
-                                          await deleteOpticDiscSegmentation(annotation.id);
-                                          await db.detections.delete(annotation.id);
-
-                                          // Re-classify DR after deleting detection
-                                          if (image.id) {
-                                            try {
-                                              await classifyAndSaveImage(image.id);
-                                            } catch (error) {
-                                              console.error('Error re-classifying after deleting detection:', error);
-                                            }
-                                          }
-
-                                          onAnnotationAdded?.();
+                                          await handleDeleteAnnotation(annotation);
                                         } else if (activeTool === 'select' && annotation.id) {
                                           setSelectedAnnotation(String(annotation.id));
                                           e.cancelBubble = true;
@@ -1797,6 +1953,26 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
               imageWidth={konvaImage?.width || 0}
               imageHeight={konvaImage?.height || 0}
             />
+
+            {/* Macular zones overlay */}
+            {macularEdemaData && (
+              <MacularZonesOverlay
+                visible={macularZonesLayer?.visible ?? false}
+                opacity={macularZonesLayer?.opacity ?? 0.7}
+                fovea={macularEdemaData.fovea}
+                macularEdemaResult={{
+                  detected: macularEdemaData.result.detected,
+                  method: macularEdemaData.result.method,
+                  exudatesInZone: macularEdemaData.result.exudatesInZone,
+                  circinatePattern: macularEdemaData.result.circinatePattern,
+                  description: macularEdemaData.result.clinicalDescription || '',
+                  calibration: macularEdemaData.result.calibration,
+                }}
+                zoneRadiusUm={macularEdemaData.zoneRadiusUm}
+                showDiscDiameterZone={false}
+                showLegend={false}
+              />
+            )}
           </Group>
         </Layer>
 

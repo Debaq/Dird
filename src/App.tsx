@@ -14,6 +14,7 @@ import GlobalReportsList from '@/components/reports/GlobalReportsList';
 import SessionComparison from '@/components/patients/SessionComparison';
 import ContributionMenu from '@/components/contribution/ContributionMenu';
 import AcademyView from '@/components/academy/AcademyView';
+import { db } from '@/lib/db/schema';
 import { initializeDemoPatient, demoPatientExists, type LoadingProgress } from '@/lib/db/demoPatient';
 import { DemoLoadingScreen } from '@/components/demo/DemoLoadingScreen';
 import { useTokenStore } from '@/stores/token-store';
@@ -21,6 +22,7 @@ import { fetchTokens } from '@/lib/api/token-service';
 import AdminDashboard from '@/pages/AdminDashboard';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
 import { useMessagePolling } from '@/hooks/useMessagePolling';
+import { classManager } from '@/lib/classes/class-manager';
 
 function App() {
   const { t } = useTranslation();
@@ -44,21 +46,36 @@ function App() {
   useEffect(() => {
     let cancelled = false; // Para evitar race conditions
 
-    const setupDemoPatient = async () => {
-      const exists = await demoPatientExists();
-
-      if (cancelled) return; // Si el componente se desmontó, salir
-
-      if (!exists) {
-        await initializeDemoPatient((progress) => {
-          if (!cancelled) {
-            setLoadingProgress(progress);
-          }
-        });
+    // Handle database blocked event (version upgrade stuck)
+    const handleDbBlocked = () => {
+      console.warn('Database upgrade blocked');
+      // Only show alert if we are stuck initializing
+      if (isInitializing) {
+        alert(t('common.error.dbBlocked') || 'Please close other tabs of this application to allow the database update.');
       }
+    };
 
-      if (!cancelled) {
-        setIsInitializing(false);
+    db.on('blocked', handleDbBlocked);
+
+    const setupDemoPatient = async () => {
+      try {
+        const exists = await demoPatientExists();
+
+        if (cancelled) return; // Si el componente se desmontó, salir
+
+        if (!exists) {
+          await initializeDemoPatient((progress) => {
+            if (!cancelled) {
+              setLoadingProgress(progress);
+            }
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error initializing demo patient:', error);
+      } finally {
+        if (!cancelled) {
+          setIsInitializing(false);
+        }
       }
     };
 
@@ -73,9 +90,18 @@ function App() {
       }
     };
 
+    const loadModelMetadata = async () => {
+      try {
+        // Cargar metadata del modelo desde GitHub
+        await classManager.ensureMetadataLoaded();
+      } catch (error) {
+        console.error('❌ Error al cargar metadata del modelo:', error);
+      }
+    };
+
     // Ejecutar en paralelo
-    Promise.all([setupDemoPatient(), loadTokens()]).catch(() => {
-      console.error('❌ Error al inicializar aplicación');
+    Promise.all([setupDemoPatient(), loadTokens(), loadModelMetadata()]).catch((error) => {
+      console.error('❌ Error al inicializar aplicación:', error);
       if (!cancelled) {
         setIsInitializing(false);
       }
@@ -84,8 +110,10 @@ function App() {
     // Cleanup function para evitar actualizaciones en componente desmontado
     return () => {
       cancelled = true;
+      // db.on('blocked') does not need to be removed as db is a singleton and long-lived, 
+      // but strictly we should unsubscribe if we could. Dexie doesn't provide easy off().
     };
-  }, [setTokens]);
+  }, [setTokens, isInitializing, t]);
 
   // Mostrar pantalla de carga mientras se inicializa
   if (isInitializing) {

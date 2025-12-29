@@ -198,8 +198,8 @@
       "editDescription": "Actualiza la información de la sesión"
     },
     "reportHistory": {
-        "title": "Historial de Informes",
-        "description": "Todos los informes generados para esta sesión"
+      "title": "Historial de Informes",
+      "description": "Todos los informes generados para esta sesión"
     },
     "duplicate": "Duplicar Sesión",
     "duplicateSuccess": "Sesión duplicada exitosamente",
@@ -265,6 +265,7 @@
       "manual": "Anotaciones Manuales",
       "measurements": "Medidas",
       "quadrants": "Cuadrantes",
+      "macular_zones": "Zonas de Edema Macular",
       "show": "Mostrar capa",
       "hide": "Ocultar capa",
       "showLabels": "Mostrar etiquetas",
@@ -275,23 +276,48 @@
       "collapse": "Cerrar",
       "deleteAnnotation": "Eliminar",
       "editAnnotationClass": "Editar clase",
-      "convertAndEdit": "Convertir a manual / Editar"
+      "convertAndEdit": "Convertir a manual / Editar",
+      "hideAllLabels": "Ocultar todas las etiquetas",
+      "showAllLabels": "Mostrar todas las etiquetas"
     },
     "classSelection": {
       "title": "Seleccionar clase",
       "description": "Elige la clase para esta anotación",
       "loading": "Cargando clases...",
-      "label": "Clase de la anotación",
+      "label": "Clase de anotación",
       "placeholder": "Selecciona una clase...",
-      "other": "Otra...",
-      "customLabel": "Nombre de la clase nueva",
+      "other": "Otro...",
+      "customLabel": "Nombre de nueva clase",
       "customPlaceholder": "Escribe el nombre de la clase...",
       "alert": "Por favor selecciona o escribe una clase",
       "confirm": "Confirmar"
     },
     "redetection": {
-      "title": "Re-detección de IA",
+      "title": "Re-detección IA",
       "description": "Esto eliminará todas las detecciones de IA actuales para esta imagen y volverá a ejecutar el análisis. ¿Continuar?"
+    },
+    "resetZoom": "Centrar y reiniciar zoom",
+    "loadingDetections": "Cargando detecciones...",
+    "noDetectionsOnImage": "No hay detecciones en esta imagen",
+    "overlays": {
+      "macular": {
+        "detectionTitle": "Detección {{method}}",
+        "zoneInfo": "Zona: {{radius}} μm desde fóvea",
+        "statusLabel": "Estado: {{status}}",
+        "statusDetected": "⚠️ DETECTADO",
+        "statusNotDetected": "✓ No detectado",
+        "exudatesCount": "Exudados en zona: {{count}}",
+        "circinatePattern": "Patrón circinado: SÍ",
+        "details": "Detalles: {{description}}",
+        "noneFound": "No se detectaron exudados duros",
+        "noneInZone": "No hay exudados duros dentro de la zona foveal",
+        "onlyFewInZone": "Solo {{count}} exudado(s) duro(s) dentro de la zona ({{min}} requeridos)",
+        "detectedInZone": "{{count}} exudado(s) duro(s) dentro de {{distance}} μm de la fóvea",
+        "detectedInZoneWithPattern": "{{count}} exudado(s) duro(s) formando un patrón circinado dentro de {{distance}} μm de la fóvea"
+      },
+      "quadrants": {
+        "fallbackWarning": "⚠ Modo fallback: Coloca landmarks para referencia anatómica"
+      }
     },
     "errors": {
       "saveAnnotationError": "Error al guardar la anotación. Por favor intenta de nuevo.",
@@ -440,7 +466,7 @@
         "algorithmSummary": "Resumen del Algoritmo",
         "algorithmSteps": {
           "step1": "1. Detección de lesiones:",
-          "step1Desc": "El modelo YOLO identifica y cuenta microaneurismas, hemorragias, exudados y neovascularización.",
+          "step1Desc": "El modeloidentifica y cuenta microaneurismas, hemorragias, exudados y neovascularización.",
           "step2": "2. Análisis de cuadrantes:",
           "step2Desc": "Si se detectan disco óptico y fóvea, se aplica la regla 4-2-1 por cuadrantes anatómicos.",
           "step3": "3. Clasificación ICDR:",
@@ -719,6 +745,164 @@
       "contribution": {
         "warningTitle": "Importante",
         "warningText": "Por favor, asegúrate de que esta guía NO contenga datos personales, nombres de instituciones específicas, o información confidencial. Elimina cualquier referencia identificatoria antes de contribuir."
+      },
+      "models": {
+        "metadataNotLoaded": "Metadatos no cargados",
+        "metadataNotLoadedDesc": "No se pudieron cargar los metadatos del modelo",
+        "viewInfo": "Ver información",
+        "viewDetails": "Ver detalles",
+        "contributeModifiedConclusion": "Contribuir esta conclusión modificada"
+      },
+      "title": "Selección de Guía Clínica",
+      "description": "Selecciona la guía clínica para clasificar la retinopatía diabética según diferentes estándares internacionales",
+      "loading": "Cargando guías clínicas...",
+      "active": "Activa",
+      "official": "Oficial",
+      "severityPreview": "Vista Previa de Niveles de Severidad",
+      "applyButton": "Aplicar Guía",
+      "confirmDialog": {
+        "title": "¿Cambiar Guía Clínica?",
+        "description": "Cambiar la guía clínica activa afectará todas las clasificaciones futuras. Las clasificaciones existentes mantendrán su guía original.",
+        "warning": "Nota: Si tienes sesiones en progreso, considera completarlas antes de cambiar la guía.",
+        "cancel": "Cancelar",
+        "confirm": "Confirmar Cambio"
+      },
+      "errors": {
+        "loadFailed": "Error al cargar las guías clínicas",
+        "applyFailed": "Error al aplicar la guía clínica"
+      },
+      "editor": {
+        "title": "Editor de Guías",
+        "subtitle": "Crea y modifica guías clínicas personalizadas",
+        "importJson": "Importar JSON",
+        "exportJson": "Exportar JSON",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "tabs": {
+          "metadata": "Metadatos",
+          "severity": "Niveles de Severidad",
+          "rules": "Reglas de Clasificación",
+          "rule421": "Regla 4-2-1",
+          "treatment": "Protocolos de Tratamiento",
+          "emcs": "Criterios EMCS"
+        },
+        "metadata": {
+          "name": "Nombre",
+          "namePlaceholder": "MINSAL Chile 2017",
+          "id": "ID de Guía (autogenerado)",
+          "fullName": "Nombre Completo",
+          "fullNamePlaceholder": "Guía Clínica de Retinopatía Diabética...",
+          "version": "Versión",
+          "country": "País",
+          "language": "Idioma",
+          "status": "Estado",
+          "datePublished": "Fecha de Publicación",
+          "organization": "Organización",
+          "description": "Descripción",
+          "descriptionPlaceholder": "Breve descripción de esta guía..."
+        },
+        "severity": {
+          "description": "Define los niveles de severidad para la clasificación de RD (en orden de menor a mayor severidad)",
+          "addLevel": "Agregar Nivel",
+          "noLevels": "No hay niveles de severidad definidos. Haz clic en \"Agregar Nivel\" para crear uno.",
+          "level": {
+            "order": "Orden",
+            "id": "ID",
+            "name": "Nombre (ES)",
+            "color": "Color",
+            "description": "Descripción (ES)",
+            "unnamed": "Nivel sin nombre"
+          }
+        },
+        "rules": {
+          "description": "Define reglas de clasificación basadas en conteo de lesiones y otros criterios",
+          "addRule": "Agregar Regla",
+          "noRules": "No hay reglas definidas. Haz clic en \"Agregar Regla\" para crear una.",
+          "rule": "Regla",
+          "priority": "Prioridad",
+          "severityLevel": "Nivel de Severidad",
+          "logic": "Lógica",
+          "conditions": "Condiciones",
+          "addCondition": "Agregar Condición",
+          "logicOptions": {
+            "and": "Y (todas deben coincidir)",
+            "or": "O (cualquiera puede coincidir)"
+          }
+        },
+        "rule421": {
+          "enable": "Habilitar Regla 4-2-1",
+          "name": "Nombre de la Regla",
+          "description": "Descripción",
+          "criteria": "Criterios",
+          "addCriterion": "Agregar Criterio",
+          "criterion": "Criterio",
+          "severityMapping": "Mapeo de Severidad",
+          "fields": {
+            "name": "Nombre",
+            "field": "Campo",
+            "minQuadrants": "Mín. Cuadrantes",
+            "minPerQuadrant": "Mín. por Cuadrante",
+            "minDiscAreas": "Mín. Áreas de Disco",
+            "description": "Descripción"
+          },
+          "mapping": {
+            "0met": "0 criterios cumplidos →",
+            "1met": "1 criterio cumplido →",
+            "2met": "2 o más criterios cumplidos →",
+            "none": "Ninguno"
+          }
+        },
+        "treatment": {
+          "description": "Define protocolos de tratamiento y recomendaciones de seguimiento para cada nivel de severidad",
+          "addProtocol": "Agregar Protocolo",
+          "noProtocols": "No hay protocolos definidos. Haz clic en \"Agregar Protocolo\" para crear uno.",
+          "protocol": "Protocolo",
+          "severityLevel": "Nivel de Severidad",
+          "urgency": "Urgencia",
+          "followupDays": "Días de Seguimiento",
+          "actions": "Acciones",
+          "addAction": "Agregar Acción",
+          "rationale": "Justificación",
+          "urgencyOptions": {
+            "routine": "Rutina",
+            "accelerated": "Acelerada",
+            "urgent": "Urgente"
+          }
+        },
+        "emcs": {
+          "enable": "Habilitar Criterios EMCS (Edema Macular Clínicamente Significativo)",
+          "name": "Nombre",
+          "distance": "Distancia Geométrica desde Fovea (μm)",
+          "minDiscAreas": "Mínimo Áreas de Disco",
+          "applyGeometric": "Aplicar regla geométrica para detección",
+          "description": "Descripción"
+        },
+        "messages": {
+          "importSuccess": "Guía importada exitosamente",
+          "importError": "Archivo JSON inválido",
+          "exportSuccess": "Guía exportada exitosamente",
+          "exportContribution": "Guía exportada y marcada para contribución",
+          "saveSuccess": "Guía guardada exitosamente",
+          "validationError": "Errores de Validación"
+        },
+        "validation": {
+          "idRequired": "Se requiere ID de guía",
+          "nameRequired": "Se requiere nombre de guía",
+          "versionRequired": "Se requiere versión",
+          "countryRequired": "Se requiere país",
+          "severityRequired": "Se requiere al menos un nivel de severidad",
+          "levelIdRequired": "Nivel {{index}}: Se requiere ID",
+          "levelNameRequired": "Nivel {{index}}: Se requiere nombre",
+          "levelColorRequired": "Nivel {{index}}: Se requiere color",
+          "duplicateIds": "IDs de nivel de severidad duplicados: {{ids}}",
+          "ruleSeverityRequired": "Regla {{index}}: Se requiere severidad",
+          "ruleConditionRequired": "Regla {{index}}: Se requiere al menos una condición"
+        },
+        "summary": {
+          "levels": "{{count}} niveles",
+          "rules": "{{count}} reglas",
+          "protocols": "{{count}} protocolos"
+        }
       }
     },
     "classes": {
@@ -825,7 +1009,7 @@
         "unknownError": "Error desconocido",
         "endpointPlaceholder": "https://api.example.com/inference",
         "keyPlaceholder": "sk-…",
-        "modelNamePlaceholder": "yolov8n-retina-v2.0",
+        "modelNamePlaceholder": "______?????",
         "headersPlaceholder": "{ \"X-Custom-Header\": \"value\" }"
       },
       "title": "Configuración de Modelos",
@@ -858,6 +1042,9 @@
       "clearCacheError": "Error al limpiar el cache",
       "sensitivity": "Sensibilidad",
       "sensitivityHelp": "Ajusta el umbral de confianza para las detecciones.",
+      "metadataNotLoaded": "Metadatos no cargados",
+      "metadataNotLoadedDesc": "No se pudieron cargar los metadatos del modelo",
+      "viewInfo": "Ver información",
       "modelInfo": "Información del Modelo",
       "modelInfoDescription": "Detalles técnicos, métricas de rendimiento y análisis del modelo de detección",
       "generalInfo": "Información General",
@@ -896,7 +1083,16 @@
     "processing": {
       "title": "Configuración de Procesamiento",
       "opticDiscRefinement": "Segmentación de Disco Óptico",
-      "opticDiscRefinementDescription": "Genera máscara circular del disco óptico dentro del área detectada por YOLO",
+      "opticDiscRefinementDescription": "Genera máscara circular del disco óptico dentro del área detectada por el Modelo",
+      "cpuVendor": "Fabricante del CPU",
+      "cpuVendorDescription": "Configura el fabricante del CPU para optimizar el rendimiento de ONNX Runtime. En modo manual verás warnings del sistema en la consola (esto es normal).",
+      "cpuVendorWarning": "⚠️ Solo modifica si sabes lo que haces. El modo automático es recomendado para la mayoría de usuarios.",
+      "cpuVendorOptions": {
+        "auto": "Automático (Recomendado)",
+        "intel": "Intel",
+        "amd": "AMD",
+        "arm": "ARM"
+      },
       "maxImageSize": "Tamaño Máximo de Imagen",
       "maxImageSizeWithUnit": "Tamaño Máximo de Imagen ({{size}} MB)",
       "compressionQuality": "Calidad de Compresión",
@@ -928,26 +1124,6 @@
       "updateNow": "Actualizar Ahora",
       "noUpdates": "Tienes la versión más reciente",
       "checkError": "Error al verificar actualizaciones"
-    },
-    "guidelines": {
-      "title": "Selección de Guía Clínica",
-      "description": "Selecciona la guía clínica para clasificar la retinopatía diabética según diferentes estándares internacionales",
-      "loading": "Cargando guías clínicas...",
-      "active": "Activa",
-      "official": "Oficial",
-      "severityPreview": "Vista Previa de Niveles de Severidad",
-      "applyButton": "Aplicar Guía",
-      "confirmDialog": {
-        "title": "¿Cambiar Guía Clínica?",
-        "description": "Cambiar la guía clínica activa afectará todas las clasificaciones futuras. Las clasificaciones existentes mantendrán su guía original.",
-        "warning": "Nota: Si tienes sesiones en progreso, considera completarlas antes de cambiar la guía.",
-        "cancel": "Cancelar",
-        "confirm": "Confirmar Cambio"
-      },
-      "errors": {
-        "loadFailed": "Error al cargar las guías clínicas",
-        "applyFailed": "Error al aplicar la guía clínica"
-      }
     }
   },
   "pwa": {

@@ -38,6 +38,7 @@ export interface ProcessingConfig {
   compressionQuality: number; // 0-1
   batchSize: number;
   opticDiscRefinement: boolean; // Refinar detección de disco óptico con OpenCV
+  cpuVendor: 'auto' | 'intel' | 'amd' | 'arm'; // CPU vendor for ONNX Runtime optimizations
 }
 
 export interface ReportConfig {
@@ -143,7 +144,8 @@ export const DEFAULT_CONFIG: AppConfig = {
     maxImageSize: 10,
     compressionQuality: 0.8,
     batchSize: 5,
-    opticDiscRefinement: true
+    opticDiscRefinement: true,
+    cpuVendor: 'auto'
   },
   report: {
     title: 'DIRD',
@@ -256,7 +258,7 @@ export const useConfigStore = create<ConfigStore>()(
     }),
     {
       name: 'dird-config',
-      version: 5,
+      version: 6,
       migrate: (persistedState: any, version) => {
         let state = persistedState;
 
@@ -301,6 +303,16 @@ export const useConfigStore = create<ConfigStore>()(
            state = {
              ...state,
              activeGuideline: DEFAULT_CONFIG.activeGuideline
+           };
+        }
+
+        if (version < 6) {
+           state = {
+             ...state,
+             processing: {
+               ...state.processing,
+               cpuVendor: 'auto'
+             }
            };
         }
 
