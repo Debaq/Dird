@@ -197,8 +197,13 @@
       "eraserInstruction": "Click on any annotation or measurement to delete it permanently.",
       "panInstruction": "Click and drag to move the image. You can also use the middle mouse button at any time.",
       "zoomInstruction": "Click to zoom in. Hold Ctrl and click to zoom out. You can also use the mouse wheel.",
-      "rulerInstruction": "Click origin point, then click destination to measure distance in Disc Diameters (DD)"
+      "rulerInstruction": "Click origin point, then click destination to measure distance in Disc Diameters (DD)",
+      "toggleClassList": "Toggle quick class list",
+      "showClassList": "Show Class List",
+      "hideClassList": "Hide Class List"
     },
+    "quickClassSelection": "Quick Class Selection",
+    "classPreSelected": "Next annotation will be:",
     "layers": {
       "title": "Layers",
       "opacity": "Opacity",

@@ -65,7 +65,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const { t, i18n } = useTranslation();
   const { confirm, ConfirmDialogComponent } = useConfirm();
   const { config } = useConfigStore();
-  const { selectedAnnotationId, setSelectedAnnotation } = useCanvasStore();
+  const { selectedAnnotationId, setSelectedAnnotation, showClassList, preSelectedClass, setPreSelectedClass } = useCanvasStore();
   const rainbowMode = config.appearance.rainbowMode; // Subscribe to rainbow mode changes
 
   // Key único para forzar re-mount cuando cambian detecciones o rainbow mode
@@ -98,6 +98,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const [pendingAnnotation, setPendingAnnotation] = useState<any>(null);
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [availableClasses, setAvailableClasses] = useState<Array<{ name: string; displayName: string; color: string }>>([]);
 
   // State for ruler tool
   const [rulerOrigin, setRulerOrigin] = useState<{ x: number; y: number } | null>(null);
@@ -241,6 +242,26 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       setRulerDestination(null);
     }
   }, [activeTool]);
+
+  // Load available classes when class list is shown
+  useEffect(() => {
+    if (showClassList && activeTool === 'bbox') {
+      const loadClasses = async () => {
+        try {
+          await classManager.ensureMetadataLoaded();
+          const classes = await classManager.getAllClasses();
+          setAvailableClasses(classes.map(c => ({
+            name: c.name,
+            displayName: c.displayName,
+            color: c.color
+          })));
+        } catch (error) {
+          console.error('Error loading classes:', error);
+        }
+      };
+      loadClasses();
+    }
+  }, [showClassList, activeTool]);
 
   // Capture initial state before drag/transform
   const handleDragStart = (id: number) => {
@@ -733,13 +754,22 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
       // Only save if the annotation has some size
       if (clampedBbox.width > minSize && clampedBbox.height > minSize) {
-        // En lugar de guardar directamente, guardar como pendiente y abrir modal
-        setPendingAnnotation({
+        // Guardar como pendiente
+        const pendingBbox = {
           ...newAnnotation,
           ...clampedBbox,
           id: Date.now()
-        });
-        setIsClassModalOpen(true);
+        };
+
+        // Si la lista de clases está activa Y hay una clase pre-seleccionada, guardar inmediatamente
+        if (showClassList && preSelectedClass) {
+          // Guardar directamente sin usar el estado pendiente ni abrir modal
+          saveAnnotationWithClass(pendingBbox, preSelectedClass);
+        } else {
+          // En cualquier otro caso, guardar como pendiente y abrir el modal
+          setPendingAnnotation(pendingBbox);
+          setIsClassModalOpen(true);
+        }
       }
       setNewAnnotation(null);
     }
@@ -925,18 +955,19 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     }
   }, [hoveredDetectionId]);
 
-  const handleClassSelected = async (className: string) => {
-    if (!pendingAnnotation || !image.id) return;
+  // Función auxiliar para guardar anotación con bbox y clase
+  const saveAnnotationWithClass = async (bbox: any, className: string) => {
+    if (!image.id) return;
 
     try {
       const newDetectionData: Detection = {
         imageId: image.id,
         type: 'manual',
         bbox: {
-          x: pendingAnnotation.x,
-          y: pendingAnnotation.y,
-          width: pendingAnnotation.width,
-          height: pendingAnnotation.height
+          x: bbox.x,
+          y: bbox.y,
+          width: bbox.width,
+          height: bbox.height
         },
         class: className,
         visible: true,
@@ -955,7 +986,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       // Agregar al estado local para visualización inmediata
       setAnnotations([
         ...annotations,
-        { ...pendingAnnotation, class: className, id: newId }
+        { ...bbox, class: className, id: newId }
       ]);
 
       // Limpiar estados
@@ -977,6 +1008,11 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       console.error('Error al guardar anotación:', error);
       toast.error(t('canvas.errors.saveAnnotationError'));
     }
+  };
+
+  const handleClassSelected = async (className: string) => {
+    if (!pendingAnnotation || !image.id) return;
+    await saveAnnotationWithClass(pendingAnnotation, className);
   };
 
   const handleResetZoom = () => {
@@ -1057,11 +1093,39 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           const areAnyLabelsVisible = layers
             .filter(l => targetLabelLayers.includes(l.id))
             .some(l => l.showLabels !== false);
-          
+
           const newState = !areAnyLabelsVisible;
           targetLabelLayers.forEach(id => {
             onLayerUpdate?.(id, { showLabels: newState });
           });
+        }
+      }
+
+      // Quick class selection with number keys 1-9 and letters q,w,e,r,t,y,u,i,o,p
+      if (showClassList && activeTool === 'bbox' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+          let classIndex = -1;
+
+          // Handle number keys 1-9 (indices 0-8)
+          const num = parseInt(e.key);
+          if (!isNaN(num) && num >= 1 && num <= 9) {
+            classIndex = num - 1;
+          }
+          // Handle letter keys q,w,e,r,t,y,u,i,o,p (indices 9-18)
+          else {
+            const letterKeys = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'];
+            const letterIndex = letterKeys.indexOf(e.key.toLowerCase());
+            if (letterIndex !== -1) {
+              classIndex = 9 + letterIndex;
+            }
+          }
+
+          if (classIndex !== -1 && classIndex < availableClasses.length) {
+            e.preventDefault();
+            const selectedClass = availableClasses[classIndex];
+            // Toggle: if already selected, deselect; otherwise select
+            setPreSelectedClass(preSelectedClass === selectedClass.name ? null : selectedClass.name);
+          }
         }
       }
 
@@ -1150,20 +1214,25 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         window.removeEventListener('keyup', handleKeyUp);
     };
   }, [
-    history, 
-    selectedAnnotationId, 
+    history,
+    selectedAnnotationId,
     selectedMeasurementId,
-    detections, 
-    manualAnnotations, 
+    detections,
+    manualAnnotations,
     layers,
     onLayerUpdate,
-    scale, 
-    imageOffset, 
-    handleDeleteSelected, 
-    handleAnnotationChange, 
+    scale,
+    imageOffset,
+    handleDeleteSelected,
+    handleAnnotationChange,
     recordMoveHistory,
     setSelectedAnnotation,
-    onSelectMeasurement
+    onSelectMeasurement,
+    showClassList,
+    activeTool,
+    availableClasses,
+    preSelectedClass,
+    setPreSelectedClass
   ]);
 
   // Handle modal close/cancel
@@ -1242,6 +1311,56 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
             <Maximize className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Quick class selection list */}
+        {showClassList && activeTool === 'bbox' && (
+          <div className="absolute top-14 left-2 z-10 bg-white rounded-lg shadow-lg border border-coal-200 p-1.5 max-w-xs">
+            <div className="text-[9px] font-semibold text-coal-600 mb-1 uppercase tracking-wider px-1">
+              {t('canvas.quickClassSelection') || 'Quick Class Selection'}
+            </div>
+            <div className="space-y-0.5">
+              {availableClasses.map((cls, index) => {
+                // Get shortcut key: 1-9 for indices 0-8, q,w,e,r,t,y,u,i,o,p for indices 9-18
+                const shortcutKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
+                const shortcutKey = index < 19 ? shortcutKeys[index] : '';
+                const isSelected = preSelectedClass === cls.name;
+                return (
+                  <button
+                    key={cls.name}
+                    onClick={() => setPreSelectedClass(isSelected ? null : cls.name)}
+                    className={`w-full text-left px-1.5 py-0.5 rounded text-[10px] transition-all flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-primary-100 border border-primary-500 text-primary-700 shadow-sm'
+                        : 'hover:bg-coal-50 border border-transparent text-coal-700'
+                    }`}
+                    title={shortcutKey ? `Press ${shortcutKey} to select` : cls.displayName}
+                  >
+                    {shortcutKey && (
+                      <span className="font-mono font-bold text-[9px] text-coal-500 min-w-[16px]">
+                        [{shortcutKey}]
+                      </span>
+                    )}
+                    <div
+                      className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
+                      style={{ backgroundColor: cls.color }}
+                    />
+                    <span className="flex-1 truncate leading-tight">{cls.displayName}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {preSelectedClass && (
+              <div className="mt-1 pt-1 border-t border-coal-200">
+                <div className="text-[9px] text-primary-600 px-1">
+                  {t('canvas.classPreSelected') || 'Next annotation will be:'}{' '}
+                  <span className="font-semibold">
+                    {availableClasses.find(c => c.name === preSelectedClass)?.displayName}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <div
         ref={containerRef}
