@@ -541,6 +541,48 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     }
   };
 
+  // Zoom to bbox when clicking on a detection
+  const zoomToBbox = React.useCallback((bbox: { x: number; y: number; width: number; height: number }, isLandmark: boolean = false) => {
+    const stage = stageRef.current;
+    if (!stage || !konvaImage) return;
+
+    // For landmarks (circles), use the center and create a square bbox based on radius
+    let effectiveBbox = bbox;
+    if (isLandmark) {
+      const centerX = bbox.x + bbox.width / 2;
+      const centerY = bbox.y + bbox.height / 2;
+      const radius = Math.max(bbox.width, bbox.height) / 2;
+      // Create a square bbox around the circle with some extra margin
+      const size = radius * 2 * 1.5;
+      effectiveBbox = {
+        x: centerX - size / 2,
+        y: centerY - size / 2,
+        width: size,
+        height: size
+      };
+    }
+
+    // Calculate center of bbox in image coordinates
+    const centerX = (effectiveBbox.x + effectiveBbox.width / 2) * scale + imageOffset.x;
+    const centerY = (effectiveBbox.y + effectiveBbox.height / 2) * scale + imageOffset.y;
+
+    // Calculate zoom level to fit bbox with some margin
+    const marginFactor = isLandmark ? 2.0 : 2.5;
+    const targetZoomX = stageSize.width / (effectiveBbox.width * scale * marginFactor);
+    const targetZoomY = stageSize.height / (effectiveBbox.height * scale * marginFactor);
+    const targetZoom = Math.min(targetZoomX, targetZoomY);
+
+    // Clamp zoom between 1 and 5
+    const newScale = Math.max(1.5, Math.min(5, targetZoom));
+
+    // Calculate new position to center the bbox
+    const newX = stageSize.width / 2 - centerX * newScale;
+    const newY = stageSize.height / 2 - centerY * newScale;
+
+    setStageScale(newScale);
+    setStagePos({ x: newX, y: newY });
+  }, [scale, imageOffset, stageSize, konvaImage]);
+
   // Handle annotation drawing
   const handleMouseDown = (e: any) => {
     checkDeselect(e);
@@ -560,12 +602,23 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     if (activeTool === 'zoom') {
       const stage = stageRef.current;
       if (stage) {
-        // Simple click-to-zoom logic
+        // Check if clicking on empty area or image (not a bbox)
+        const clickedOnEmpty = e.target === e.target.getStage();
+        const clickedOnImage = e.target.getClassName() === 'Image';
+
+        // If already zoomed and clicking on empty area, reset zoom
+        if ((clickedOnEmpty || clickedOnImage) && stageScale > 1.1) {
+          setStageScale(1);
+          setStagePos({ x: 0, y: 0 });
+          return;
+        }
+
+        // Otherwise, normal zoom behavior
         const oldScale = stageScale;
         const pointer = stage.getPointerPosition();
-        
+
         if (!pointer) return;
-        
+
         const mousePointTo = {
           x: (pointer.x - stage.x()) / oldScale,
           y: (pointer.y - stage.y()) / oldScale,
@@ -575,7 +628,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         const isZoomOut = e.evt.ctrlKey;
         const zoomFactor = isZoomOut ? 1 / 1.5 : 1.5;
         const newScale = Math.max(1, Math.min(5, oldScale * zoomFactor));
-        
+
         setStageScale(newScale);
         setStagePos({
           x: pointer.x - mousePointTo.x * newScale,
@@ -1101,6 +1154,21 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         }
       }
 
+      // Toggle marks/detections visibility with 'm'
+      if (e.key.toLowerCase() === 'm' && !e.ctrlKey && !e.metaKey) {
+        if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+          const targetMarkLayers = ['detections-ai', 'manual-annotations'];
+          const areAnyMarksVisible = layers
+            .filter(l => targetMarkLayers.includes(l.id))
+            .some(l => l.visible !== false);
+
+          const newState = !areAnyMarksVisible;
+          targetMarkLayers.forEach(id => {
+            onLayerUpdate?.(id, { visible: newState });
+          });
+        }
+      }
+
       // Quick class selection with number keys 1-9 and letters q,w,e,r,t,y,u,i,o,p
       if (showClassList && activeTool === 'bbox' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
@@ -1248,6 +1316,14 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       case 'pan':
         return isPanning ? 'grabbing' : 'grab';
       case 'zoom':
+        // Si estás sobre una detección, mostrar cursor de target
+        if (hoveredDetectionId !== null) {
+          return 'crosshair';
+        }
+        // Si ya estás con zoom y no estás sobre una detección, mostrar que puedes resetear
+        if (stageScale > 1.1 && !isCtrlPressed) {
+          return 'zoom-out';
+        }
         return isCtrlPressed ? 'zoom-out' : 'zoom-in';
       case 'bbox':
       case 'ruler':
@@ -1507,10 +1583,10 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                   opacity={isLandmarkClass && !isSelected ? 0 : 1} // Invisible but interactive for landmarks
                   draggable={activeTool === 'select' && isSelected}
                   onMouseEnter={() => {
-                    if (detection.id && !isLandmarkClass) setHoveredDetectionId(detection.id);
+                    if (detection.id) setHoveredDetectionId(detection.id);
                   }}
                   onMouseLeave={() => {
-                    if (!isLandmarkClass) setHoveredDetectionId(null);
+                    setHoveredDetectionId(null);
                   }}
                   onDragStart={() => detection.id && handleDragStart(detection.id)}
                   onClick={async (e) => {
@@ -1519,6 +1595,9 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                       await handleDeleteAnnotation(detection);
                     } else if (activeTool === 'select' && detection.id) {
                       setSelectedAnnotation(String(detection.id));
+                      e.cancelBubble = true;
+                    } else if (activeTool === 'zoom' && detection.id) {
+                      zoomToBbox(detection.bbox, isLandmarkClass);
                       e.cancelBubble = true;
                     }
                   }}
@@ -1736,10 +1815,10 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                     opacity={isLandmarkClass && !isSelected ? 0 : 1} // Invisible but interactive for landmarks
                     draggable={activeTool === 'select' && isSelected}
                     onMouseEnter={() => {
-                      if (annotation.id && !isLandmarkClass) setHoveredDetectionId(annotation.id);
+                      if (annotation.id) setHoveredDetectionId(annotation.id);
                     }}
                     onMouseLeave={() => {
-                      if (!isLandmarkClass) setHoveredDetectionId(null);
+                      setHoveredDetectionId(null);
                     }}
                     onDragStart={() => annotation.id && handleDragStart(annotation.id)}
                                       onClick={async (e) => {
@@ -1748,6 +1827,9 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                                           await handleDeleteAnnotation(annotation);
                                         } else if (activeTool === 'select' && annotation.id) {
                                           setSelectedAnnotation(String(annotation.id));
+                                          e.cancelBubble = true;
+                                        } else if (activeTool === 'zoom' && annotation.id) {
+                                          zoomToBbox(annotation.bbox, isLandmarkClass);
                                           e.cancelBubble = true;
                                         }
                                       }}                    
