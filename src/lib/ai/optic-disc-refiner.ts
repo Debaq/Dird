@@ -2,7 +2,7 @@
  * Optic Disc Refinement Module
  *
  * Detects the precise circular boundary of the optic disc within
- * the YOLO bounding box and generates a segmentation mask
+ * the Model bounding box and generates a segmentation mask
  */
 
 // OpenCV types (will be available globally when opencv.js is loaded)
@@ -25,7 +25,7 @@ export interface BoundingBox {
 export interface OpticDiscSegmentation {
   circle: OpticDiscCircle;
   maskData: string;  // Base64 encoded mask
-  bbox: BoundingBox; // Original YOLO bbox (unchanged)
+  bbox: BoundingBox; // Original Model bbox (unchanged)
 }
 
 /**
@@ -56,11 +56,11 @@ export function waitForOpenCV(timeoutMs: number = 5000): Promise<boolean> {
 
 /**
  * Generate optic disc segmentation mask using OpenCV circle detection
- * DOES NOT modify the YOLO bbox - only creates a circular mask within it
+ * DOES NOT modify the Model bbox - only creates a circular mask within it
  *
  * @param imageElement - HTML Image element containing the fundus image
- * @param bbox - Bounding box from YOLO detection (will NOT be modified)
- * @param originalConfidence - Original YOLO confidence score
+ * @param bbox - Bounding box from Model detection (will NOT be modified)
+ * @param originalConfidence - Original Model confidence score
  * @returns Segmentation data with circular mask and original bbox
  */
 export async function generateOpticDiscMask(
@@ -90,7 +90,7 @@ export async function generateOpticDiscMask(
     gray = new cv.Mat();
     cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
 
-    // 3. Extract ROI from YOLO bbox (exact bbox)
+    // 3. Extract ROI from Model bbox (exact bbox)
     const roiX = Math.max(0, Math.floor(bbox.x));
     const roiY = Math.max(0, Math.floor(bbox.y));
     const roiWidth = Math.min(gray.cols - roiX, Math.floor(bbox.width));
@@ -107,7 +107,7 @@ export async function generateOpticDiscMask(
       return null;
     }
 
-    // 5. Use bbox center as disc center (YOLO already positioned it correctly)
+    // 5. Use bbox center as disc center (Model already positioned it correctly)
     const centerX = roiWidth / 2;
     const centerY = roiHeight / 2;
 
@@ -191,7 +191,7 @@ function calculateAverageBrightness(mat: any): number {
 
 /**
  * Batch generate masks for multiple optic disc detections
- * Useful if YOLO detects discs in both eyes
+ * Useful if Model detects discs in both eyes
  */
 export async function generateMultipleOpticDiscMasks(
   imageElement: HTMLImageElement,

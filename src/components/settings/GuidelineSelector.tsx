@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Check, AlertTriangle, Globe, MapPin, Edit, Plus } from 'lucide-react';
+import { Check, AlertTriangle, Globe, MapPin, Edit, Plus, ArrowLeftRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useConfigStore } from '@/stores/config-store';
 import {
@@ -20,6 +20,7 @@ import type {
   GuidelineIndexEntry,
   SeverityLevel,
   ClinicalGuideline,
+  ClassMapping,
 } from '@/types/clinical-guidelines';
 
 export function GuidelineSelector() {
@@ -28,6 +29,7 @@ export function GuidelineSelector() {
   const [guidelines, setGuidelines] = useState<GuidelineIndexEntry[]>([]);
   const [pendingGuidelineId, setPendingGuidelineId] = useState<string | null>(null);
   const [previewSeverityLevels, setPreviewSeverityLevels] = useState<SeverityLevel[]>([]);
+  const [previewClassMapping, setPreviewClassMapping] = useState<ClassMapping | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,9 +46,11 @@ export function GuidelineSelector() {
         const index = await loadGuidelineIndex();
         setGuidelines(index.guidelines);
 
-        // Load severity levels for current guideline
+        // Load severity levels and class mapping for current guideline
+        const guideline = await loadGuideline(config.activeGuideline);
         const severityLevels = await getGuidelineSeverityLevels(config.activeGuideline);
         setPreviewSeverityLevels(severityLevels);
+        setPreviewClassMapping(guideline.class_mapping);
 
         setError(null);
       } catch (err) {
@@ -66,8 +70,10 @@ export function GuidelineSelector() {
     // If clicking on the already active guideline, just update preview
     if (guidelineId === config.activeGuideline) {
       try {
+        const guideline = await loadGuideline(guidelineId);
         const severityLevels = await getGuidelineSeverityLevels(guidelineId);
         setPreviewSeverityLevels(severityLevels);
+        setPreviewClassMapping(guideline.class_mapping);
       } catch (err) {
         console.error('Error loading severity levels:', err);
       }
@@ -79,8 +85,10 @@ export function GuidelineSelector() {
 
     // Load preview for pending guideline
     try {
+      const guideline = await loadGuideline(guidelineId);
       const severityLevels = await getGuidelineSeverityLevels(guidelineId);
       setPreviewSeverityLevels(severityLevels);
+      setPreviewClassMapping(guideline.class_mapping);
     } catch (err) {
       console.error('Error loading severity levels:', err);
     }
@@ -296,6 +304,65 @@ export function GuidelineSelector() {
           ))}
         </div>
       </div>
+
+      {/* Class Mapping Preview */}
+      {previewClassMapping && Object.keys(previewClassMapping).length > 0 && (
+        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <ArrowLeftRight className="w-4 h-4 text-blue-700" />
+              <h4 className="text-sm font-semibold text-gray-900">
+                Mapeo de Clases (Modelo → Protocolo)
+              </h4>
+            </div>
+            <button
+              onClick={() => {
+                const guideline = guidelines.find(g => g.id === config.activeGuideline);
+                if (guideline) handleEditGuideline(guideline.id);
+              }}
+              className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+            >
+              <Edit className="w-3 h-3" />
+              Editar mapeos
+            </button>
+          </div>
+          <div className="space-y-2">
+            {Object.entries(previewClassMapping).map(([protocolClass, modelClasses]) => (
+              <div
+                key={protocolClass}
+                className="p-3 bg-white rounded border border-blue-200"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-gray-900 mb-1">
+                      {protocolClass}
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {modelClasses.map((modelClass, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded"
+                        >
+                          {modelClass}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <ArrowLeftRight className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                </div>
+                <div className="mt-2 text-xs text-gray-500">
+                  {modelClasses.length} {modelClasses.length === 1 ? 'clase del modelo' : 'clases del modelo'} mapeadas
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 p-2 bg-blue-100 rounded text-xs text-blue-800">
+            <strong>Nota:</strong> Este mapeo permite que el protocolo reconozca diferentes nombres de clases
+            detectadas por el modelo. Por ejemplo, si el modelo detecta "microhemorrhage" y "microaneurysm",
+            ambas se contarán como "microaneurysms" según este protocolo.
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Dialog */}
       {pendingGuidelineId && (

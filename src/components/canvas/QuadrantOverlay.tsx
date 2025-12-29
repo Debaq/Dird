@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Line, Text, Group } from 'react-konva';
 import type { Landmark } from '@/types/annotations';
 
@@ -22,6 +23,8 @@ export function QuadrantOverlay({
   imageWidth,
   imageHeight,
 }: QuadrantOverlayProps) {
+  const { t } = useTranslation();
+
   if (!visible || imageWidth === 0 || imageHeight === 0) {
     return null;
   }
@@ -55,6 +58,7 @@ export function QuadrantOverlay({
           lineColor={lineColor}
           labelColor={labelColor}
           opacity={opacity}
+          t={t}
         />
       )}
     </Group>
@@ -208,12 +212,14 @@ function FallbackQuadrants({
   lineColor,
   labelColor,
   opacity,
+  t,
 }: {
   imageWidth: number;
   imageHeight: number;
   lineColor: string;
   labelColor: string;
   opacity: number;
+  t: any;
 }) {
   const centerX = imageWidth / 2;
   const centerY = imageHeight / 2;
@@ -287,7 +293,7 @@ function FallbackQuadrants({
       <Text
         x={10}
         y={imageHeight - 30}
-        text="⚠ Fallback mode: Place landmarks for anatomical reference"
+        text={t('canvas.overlays.quadrants.fallbackWarning')}
         fontSize={12}
         fill="rgba(255, 150, 0, 0.8)"
         listening={false}

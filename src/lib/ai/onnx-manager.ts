@@ -1,17 +1,42 @@
 import * as ort from 'onnxruntime-web';
-import type { ModelMetadata } from './model-metadata';
+import type { ModelMetadata, ClassDefinitionMetadata } from './model-metadata';
+import { useConfigStore } from '@/stores/config-store';
 
 export class ONNXModelManager {
   private session: ort.InferenceSession | null = null;
   private metadata: ModelMetadata | null = null;
 
   constructor() {
-    // Configure ONNX Runtime with optimized settings
-    ort.env.wasm.numThreads = 1;
+    const config = useConfigStore.getState().config;
+    const cpuVendor = config.processing.cpuVendor;
+
+    // Configure ONNX Runtime with optimized settings based on CPU vendor
+    // Different vendors may benefit from different thread configurations
+    if (cpuVendor === 'arm') {
+      // ARM processors typically work better with single thread in WASM
+      ort.env.wasm.numThreads = 1;
+    } else if (cpuVendor === 'intel' || cpuVendor === 'amd') {
+      // x86 processors can handle more threads
+      ort.env.wasm.numThreads = 1; // Keep at 1 for stability, but can be increased
+    } else {
+      // Auto mode: conservative single-threaded approach
+      ort.env.wasm.numThreads = 1;
+    }
+
     ort.env.wasm.simd = true;
 
     // Use CDN for WASM files (most reliable option)
     ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.23.2/dist/';
+
+    // Configure logging based on CPU vendor setting
+    if (cpuVendor === 'auto') {
+      // Auto mode: suppress CPU vendor warnings as they're cosmetic on Linux
+      ort.env.logLevel = 'error';
+    } else {
+      // Manual configuration: show warnings so user can verify settings
+      ort.env.logLevel = 'warning';
+      console.log(`🔧 ONNX Runtime configured for ${cpuVendor.toUpperCase()} CPU`);
+    }
 
     // ONNX Runtime configured with optimized settings
   }
@@ -168,7 +193,7 @@ export function preprocessImage(
   };
 }
 
-// Post-processing for YOLOv8 detection
+// Post-processing for model detection
 export interface Detection {
   bbox: { x: number; y: number; width: number; height: number };
   class: string;
@@ -188,14 +213,36 @@ export function postprocessDetections(
   const dims = output.dims;
 
   // Get classes (new format or legacy)
-  const classes = metadata.classes || [];
+  const allClasses = metadata.classes || [];
+
+  // CRITICAL: Filter only currently_detected classes for the model
+  // The model was trained with fewer classes than listed in metadata
+  let classes: any[];
+  if (allClasses.length > 0 && typeof allClasses[0] === 'object' && 'currently_detected' in allClasses[0]) {
+    // New format with metadata - filter only currently_detected
+    classes = (allClasses as ClassDefinitionMetadata[]).filter(c => c.currently_detected);
+  } else {
+    // Legacy format - use all
+    classes = allClasses;
+  }
+
+  // Helper function to get class name (handles both string[] and ClassDefinitionMetadata[])
+  const getClassName = (index: number): string => {
+    const classItem = classes[index];
+    if (typeof classItem === 'string') {
+      return classItem;
+    } else if (classItem && typeof classItem === 'object' && 'technical_name' in classItem) {
+      return classItem.technical_name;
+    }
+    return `class_${index}`;
+  };
 
   // Get threshold (parameter, legacy field, or default)
   const threshold = confidenceThreshold !== undefined
     ? confidenceThreshold
     : (metadata.confidence_threshold || 0.5);
 
-  // YOLOv8 output format can be:
+  // Model output format can be:
   // [batch, num_detections, 4 + num_classes] (transposed)
   // or [batch, 4 + num_classes, num_detections] (original)
   const numClasses = classes.length;
@@ -255,20 +302,27 @@ export function postprocessDetections(
 
     // Filter by confidence threshold
     if (maxScore >= threshold) {
-      // Denormalize coordinates (YOLOv8 uses normalized 0-1 coords)
-      // Get input size (new format or legacy)
+      // Model outputs coordinates in model space (0-inputSize pixels), not normalized
+      // We need to scale from model space to original image space
       const inputSize = metadata.model_info?.input_size?.[0] || metadata.input_size?.[0] || 640;
       const scaleX = originalWidth / inputSize;
       const scaleY = originalHeight / inputSize;
 
+      // Convert from center format (cx, cy, w, h) to corner format (x, y, w, h)
+      // and scale to original image dimensions
+      const bboxX = (x - w / 2) * scaleX;
+      const bboxY = (y - h / 2) * scaleY;
+      const bboxWidth = w * scaleX;
+      const bboxHeight = h * scaleY;
+
       detections.push({
         bbox: {
-          x: (x - w / 2) * scaleX,
-          y: (y - h / 2) * scaleY,
-          width: w * scaleX,
-          height: h * scaleY,
+          x: bboxX,
+          y: bboxY,
+          width: bboxWidth,
+          height: bboxHeight,
         },
-        class: classes[maxClassIndex],
+        class: getClassName(maxClassIndex),
         confidence: maxScore,
         classIndex: maxClassIndex,
       });

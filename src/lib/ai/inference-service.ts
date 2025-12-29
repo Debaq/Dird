@@ -2,7 +2,7 @@ import { ONNXModelManager, preprocessImage, postprocessDetections, applyNMS } fr
 import type { Detection } from './onnx-manager';
 import type { ModelMetadata } from './model-metadata';
 import { db } from '@/lib/db/schema';
-import { modelDownloader } from './model-downloader';
+import { modelDownloader, type DownloadProgressCallback } from './model-downloader';
 import { useConfigStore } from '@/stores/config-store';
 import { classManager } from '@/lib/classes/class-manager';
 import { generateOpticDiscMask, isOpenCVReady } from './optic-disc-refiner';
@@ -16,7 +16,11 @@ export class InferenceService {
   /**
    * Load detection model from GitHub or local
    */
-  async loadDetectionModel(modelPath?: string, metadata?: ModelMetadata): Promise<void> {
+  async loadDetectionModel(
+    modelPath?: string, 
+    metadata?: ModelMetadata,
+    onProgress?: DownloadProgressCallback
+  ): Promise<void> {
     // If path and metadata provided, use them directly (backward compatibility)
     if (modelPath && metadata) {
       this.detectionModel = new ONNXModelManager();
@@ -27,7 +31,7 @@ export class InferenceService {
     }
 
     // Otherwise, download from GitHub
-    const { modelUrl, metadata: downloadedMetadata } = await modelDownloader.downloadModel('detection');
+    const { modelUrl, metadata: downloadedMetadata } = await modelDownloader.downloadModel('detection', onProgress);
     this.detectionModel = new ONNXModelManager();
     await this.detectionModel.loadModel(modelUrl, downloadedMetadata);
     // Update class manager with loaded metadata

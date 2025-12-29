@@ -60,13 +60,15 @@ export function LandmarkLayer({
               }
             }}
           >
-            {/* Outer ring (for visibility) */}
-            <Circle
-              radius={landmark.radius + 3}
-              stroke={strokeColor}
-              strokeWidth={2}
-              opacity={0.8}
-            />
+            {/* Outer ring (for visibility) - only for fovea */}
+            {!isOpticDisc && (
+              <Circle
+                radius={landmark.radius + 3}
+                stroke={strokeColor}
+                strokeWidth={2}
+                opacity={0.8}
+              />
+            )}
 
             {/* Main circle - optic disc has no fill, fovea has fill */}
             <Circle

@@ -12,12 +12,186 @@ import type {
   QuadrantLesionCounts,
   RuleCondition,
   ClassificationRule,
+  ClassMapping,
 } from '@/types/clinical-guidelines';
 import { loadGuideline } from './guideline-loader';
+import { classManager } from '../classes/class-manager';
+
+// ============================================================================
+// Class Mapping
+// ============================================================================
+
+/**
+ * Legacy mapping for backward compatibility with LesionCounts interface
+ * Maps technical_names from model to LesionCounts field names
+ */
+const TECHNICAL_NAME_TO_LESION_COUNTS: Record<string, keyof LesionCounts> = {
+  'microaneurysm': 'microaneurysms',
+  'microhemorrhages': 'microaneurysms', // Often grouped with microaneurysms
+  'hemorrhage': 'hemorrhages',
+  'hard_exudate': 'hardExudates',
+  'cotton_wool_spot': 'softExudates',
+  'neovascularization': 'neovascularization',
+  'venous_beading': 'venous_beading',
+  'irma': 'irma',
+};
+
+/**
+ * Applies class mapping to transform model detections to guideline-expected classes
+ * NOW uses classManager for normalization instead of hardcoded class_mapping
+ *
+ * Example:
+ * - Model detects: { microhemorrhage: 5, microaneurysm: 3, ... }
+ * - classManager normalizes both to their technical_names
+ * - Result: { microaneurysms: 8, ... } (mapped to LesionCounts fields)
+ *
+ * @param modelLesions - Raw lesion counts from model detections
+ * @param classMapping - (DEPRECATED) Optional fallback mapping for backward compatibility
+ * @returns Transformed lesion counts matching guideline expectations
+ */
+function applyClassMapping(
+  modelLesions: Record<string, any>,
+  _classMapping?: ClassMapping
+): LesionCounts {
+  // Initialize mapped lesions with zeros
+  const mappedLesions: Record<string, number> = {
+    microaneurysms: 0,
+    hemorrhages: 0,
+    hardExudates: 0,
+    softExudates: 0,
+    neovascularization: 0,
+    venous_beading: 0,
+    irma: 0,
+  };
+
+  // Process each model detection class
+  for (const [modelClassName, count] of Object.entries(modelLesions)) {
+    if (typeof count !== 'number') continue;
+
+    // Skip metadata fields
+    if (modelClassName === 'total_lesions' || modelClassName === 'lesion_types_count') {
+      continue;
+    }
+
+    // Step 1: Normalize to technical_name using classManager
+    const technicalName = classManager.normalizeName(modelClassName);
+
+    if (technicalName) {
+      // Step 2: Map technical_name to LesionCounts field
+      const lesionCountsKey = TECHNICAL_NAME_TO_LESION_COUNTS[technicalName];
+
+      if (lesionCountsKey) {
+        mappedLesions[lesionCountsKey] += count;
+      } else {
+        // Unknown technical_name, try direct match
+        if (technicalName in mappedLesions) {
+          (mappedLesions as any)[technicalName] += count;
+        }
+      }
+    } else {
+      // Fallback: try direct match with modelClassName
+      if (modelClassName in mappedLesions) {
+        (mappedLesions as any)[modelClassName] += count;
+      }
+    }
+  }
+
+  return normalizeToLesionCounts(mappedLesions);
+}
+
+/**
+ * Applies class mapping to quadrant lesion counts
+ */
+function applyClassMappingToQuadrants(
+  modelQuadrantLesions?: Record<string, any>,
+  _classMapping?: ClassMapping
+): QuadrantLesionCounts | undefined {
+  if (!modelQuadrantLesions) {
+    return undefined;
+  }
+
+  const quadrantNames = ['superior-temporal', 'inferior-temporal', 'superior-nasal', 'inferior-nasal'];
+  const mappedQuadrants: any = {};
+
+  for (const quadrantName of quadrantNames) {
+    const quadrant = modelQuadrantLesions[quadrantName];
+    if (quadrant) {
+      mappedQuadrants[quadrantName] = applyClassMapping(quadrant, _classMapping);
+    }
+  }
+
+  return mappedQuadrants as QuadrantLesionCounts;
+}
+
+/**
+ * Normalizes any object to LesionCounts structure
+ */
+function normalizeToLesionCounts(data: Record<string, any>): LesionCounts {
+  const microaneurysms = data.microaneurysms || 0;
+  const hemorrhages = data.hemorrhages || 0;
+  const hardExudates = data.hardExudates || data.hard_exudates || 0;
+  const softExudates = data.softExudates || data.soft_exudates || 0;
+  const neovascularization = data.neovascularization || 0;
+  const venous_beading = data.venous_beading || data.venousBeading || 0;
+  const irma = data.irma || 0;
+
+  const total_lesions =
+    microaneurysms +
+    hemorrhages +
+    hardExudates +
+    softExudates +
+    neovascularization +
+    (venous_beading || 0) +
+    (irma || 0);
+
+  const lesion_types_count = [
+    microaneurysms > 0,
+    hemorrhages > 0,
+    hardExudates > 0,
+    softExudates > 0,
+    neovascularization > 0,
+    (venous_beading || 0) > 0,
+    (irma || 0) > 0,
+  ].filter(Boolean).length;
+
+  return {
+    microaneurysms,
+    hemorrhages,
+    hardExudates,
+    softExudates,
+    neovascularization,
+    venous_beading,
+    irma,
+    total_lesions,
+    lesion_types_count,
+  };
+}
 
 // ============================================================================
 // Rule Evaluation
 // ============================================================================
+
+/**
+ * Normalize field name to handle both snake_case and camelCase
+ */
+function normalizeFieldName(field: string): keyof LesionCounts | string {
+  const fieldMap: Record<string, keyof LesionCounts> = {
+    'microaneurysms': 'microaneurysms',
+    'micro_aneurysms': 'microaneurysms',
+    'hemorrhages': 'hemorrhages',
+    'hardExudates': 'hardExudates',
+    'hard_exudates': 'hardExudates',
+    'softExudates': 'softExudates',
+    'soft_exudates': 'softExudates',
+    'neovascularization': 'neovascularization',
+    'venous_beading': 'venous_beading',
+    'irma': 'irma',
+    'total_lesions': 'total_lesions',
+    'lesion_types_count': 'lesion_types_count'
+  };
+
+  return fieldMap[field] || field;
+}
 
 /**
  * Evaluates a single rule condition against lesion counts
@@ -36,11 +210,16 @@ function evaluateCondition(
     fieldValue = rule421CriteriaMet !== undefined ? rule421CriteriaMet >= 1 : false;
   } else if (field === 'rule_421_criteria_met') {
     fieldValue = rule421CriteriaMet || 0;
-  } else if (field in lesions) {
-    fieldValue = lesions[field as keyof LesionCounts];
   } else {
-    console.warn(`Unknown field in rule condition: ${field}`);
-    return false;
+    // Normalize field name to handle both snake_case and camelCase
+    const normalizedField = normalizeFieldName(field);
+
+    if (normalizedField in lesions) {
+      fieldValue = lesions[normalizedField as keyof LesionCounts];
+    } else {
+      console.warn(`Unknown field in rule condition: ${field} (normalized: ${normalizedField})`);
+      return false;
+    }
   }
 
   // Evaluate based on operator
@@ -150,19 +329,32 @@ export async function classifyWithGuideline(
   // Load guideline
   const guideline = await loadGuideline(guidelineId);
 
-  // Calculate Rule 4-2-1 criteria if enabled
-  const rule421Result = calculateRule421CriteriaMet(guideline, lesions, quadrantLesions);
+  // Apply class mapping if defined (transforms model classes to guideline classes)
+  const mappedLesions = applyClassMapping(lesions as any, guideline.class_mapping);
+  const mappedQuadrantLesions = applyClassMappingToQuadrants(
+    quadrantLesions as any,
+    guideline.class_mapping
+  );
+
+  // Calculate Rule 4-2-1 criteria if enabled (using mapped lesions)
+  const rule421Result = calculateRule421CriteriaMet(
+    guideline,
+    mappedLesions,
+    mappedQuadrantLesions
+  );
 
   // Sort rules by priority (lower priority number = evaluated first)
   const sortedRules = [...guideline.classification_rules].sort(
     (a, b) => a.priority - b.priority
   );
 
-  // Find first matching rule
+  // Find first matching rule (using mapped lesions)
   let matchedSeverity: string | null = null;
 
   for (const rule of sortedRules) {
-    if (evaluateRule(rule, lesions, rule421Result.criteriaMet)) {
+    const ruleMatched = evaluateRule(rule, mappedLesions, rule421Result.criteriaMet);
+
+    if (ruleMatched) {
       matchedSeverity = rule.severity;
       break;
     }

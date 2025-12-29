@@ -373,5 +373,46 @@
     "min_disc_areas": 1.0,
     "apply_geometric_rule": true,
     "description": "Exudados duros dentro de 500μm del centro foveal según criterios MINSAL Chile"
+  },
+  "macular_edema_criteria": {
+    "enabled": true,
+    "method": "EMCS",
+    "hard_exudates_distance_um": 500,
+    "min_exudates_for_flag": 1,
+    "circinate_pattern_detection": true,
+    "min_angular_dispersion": 0.5,
+    "visual_zones": {
+      "show_foveal_zone": true,
+      "foveal_zone_radius_um": 500,
+      "show_disc_diameter_zone": false
+    },
+    "description": "Edema Macular Clínicamente Significativo (EMCS) según criterios MINSAL Chile 2017. Detecta exudados duros dentro de 500μm del centro foveal, con detección de patrón de anillo circinado como indicador indirecto de edema macular."
+  },
+  "_comments": {
+    "class_mapping": "DEPRECATED: class_mapping is now optional. The system uses the model's JSON as the single source of truth for class definitions and aliases. This mapping is kept for backward compatibility only."
+  },
+  "class_mapping": {
+    "microaneurysms": [
+      "microaneurysm",
+      "microhemorrhages"
+    ],
+    "hemorrhages": [
+      "hemorrhage"
+    ],
+    "hardExudates": [
+      "hard_exudate"
+    ],
+    "softExudates": [
+      "cotton_wool_spot"
+    ],
+    "neovascularization": [
+      "neovascularization"
+    ],
+    "venous_beading": [
+      "venous_beading"
+    ],
+    "irma": [
+      "irma"
+    ]
   }
 }

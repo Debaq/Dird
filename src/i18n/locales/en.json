@@ -195,7 +195,11 @@
       "ai_detections": "AI Detections",
       "ai_segmentations": "AI Segmentations",
       "manual": "Manual Annotations",
-      "measurements": "Measurements"
+      "measurements": "Measurements",
+      "quadrants": "Quadrants",
+      "macular_zones": "Macular Edema Zones",
+      "hideAllLabels": "Hide All Labels",
+      "showAllLabels": "Show All Labels"
     },
     "classSelection": {
       "title": "Select class",
@@ -212,6 +216,29 @@
     "redetection": {
       "title": "AI Re-detection",
       "description": "This will delete all current AI detections for this image and re-run the analysis. Continue?"
+    },
+    "resetZoom": "Reset Zoom",
+    "loadingDetections": "Loading detections...",
+    "noDetectionsOnImage": "No detections on this image",
+    "overlays": {
+      "macular": {
+        "detectionTitle": "{{method}} Detection",
+        "zoneInfo": "Zone: {{radius}} μm from fovea",
+        "statusLabel": "Status: {{status}}",
+        "statusDetected": "⚠️ DETECTED",
+        "statusNotDetected": "✓ Not detected",
+        "exudatesCount": "Exudates in zone: {{count}}",
+        "circinatePattern": "Circinate pattern: YES",
+        "details": "Details: {{description}}",
+        "noneFound": "No hard exudates detected",
+        "noneInZone": "No hard exudates within foveal zone",
+        "onlyFewInZone": "Only {{count}} hard exudate(s) within zone ({{min}} required)",
+        "detectedInZone": "{{count}} hard exudate(s) within {{distance}} μm of fovea",
+        "detectedInZoneWithPattern": "{{count}} hard exudate(s) forming a circinate pattern within {{distance}} μm of fovea"
+      },
+      "quadrants": {
+        "fallbackWarning": "⚠ Fallback mode: Place landmarks for anatomical reference"
+      }
     },
     "errors": {
       "saveAnnotationError": "Error saving annotation. Please try again.",
@@ -358,7 +385,7 @@
         "algorithmSummary": "Algorithm Summary",
         "algorithmSteps": {
           "step1": "1. Lesion detection:",
-          "step1Desc": "The YOLO model identifies and counts microaneurysms, hemorrhages, exudates, and neovascularization.",
+          "step1Desc": "The model identifies and counts microaneurysms, hemorrhages, exudates, and neovascularization.",
           "step2": "2. Quadrant analysis:",
           "step2Desc": "If optic disc and fovea are detected, the 4-2-1 rule is applied by anatomical quadrants.",
           "step3": "3. ICDR classification:",
@@ -582,6 +609,164 @@
       "contribution": {
         "warningTitle": "Important",
         "warningText": "Please ensure this guideline does NOT contain personal data, specific institution names, or confidential information. Remove any identifying references before contributing."
+      },
+      "models": {
+        "metadataNotLoaded": "Metadata not loaded",
+        "metadataNotLoadedDesc": "Could not load model metadata",
+        "viewInfo": "View info",
+        "viewDetails": "View details",
+        "contributeModifiedConclusion": "Contribute this modified conclusion"
+      },
+      "title": "Clinical Guideline Selection",
+      "description": "Select the clinical guideline to classify diabetic retinopathy according to different international standards",
+      "loading": "Loading clinical guidelines...",
+      "active": "Active",
+      "official": "Official",
+      "severityPreview": "Severity Levels Preview",
+      "applyButton": "Apply Guideline",
+      "confirmDialog": {
+        "title": "Change Clinical Guideline?",
+        "description": "Changing the active clinical guideline will affect all future classifications. Existing classifications will retain their original guideline.",
+        "warning": "Note: If you have sessions in progress, consider completing them before changing the guideline.",
+        "cancel": "Cancel",
+        "confirm": "Confirm Change"
+      },
+      "errors": {
+        "loadFailed": "Failed to load clinical guidelines",
+        "applyFailed": "Failed to apply guideline"
+      },
+      "editor": {
+        "title": "Guideline Editor",
+        "subtitle": "Create and modify custom clinical guidelines",
+        "importJson": "Import JSON",
+        "exportJson": "Export JSON",
+        "save": "Save",
+        "cancel": "Cancel",
+        "tabs": {
+          "metadata": "Metadata",
+          "severity": "Severity Levels",
+          "rules": "Classification Rules",
+          "rule421": "Rule 4-2-1",
+          "treatment": "Treatment Protocols",
+          "emcs": "EMCS Criteria"
+        },
+        "metadata": {
+          "name": "Name",
+          "namePlaceholder": "MINSAL Chile 2017",
+          "id": "Guideline ID (auto-generated)",
+          "fullName": "Full Name",
+          "fullNamePlaceholder": "Diabetic Retinopathy Clinical Guideline...",
+          "version": "Version",
+          "country": "Country",
+          "language": "Language",
+          "status": "Status",
+          "datePublished": "Date Published",
+          "organization": "Organization",
+          "description": "Description",
+          "descriptionPlaceholder": "Brief description of this guideline..."
+        },
+        "severity": {
+          "description": "Define severity levels for DR classification (in order from least to most severe)",
+          "addLevel": "Add Level",
+          "noLevels": "No severity levels defined. Click \"Add Level\" to create one.",
+          "level": {
+            "order": "Order",
+            "id": "ID",
+            "name": "Name (ES)",
+            "color": "Color",
+            "description": "Description (ES)",
+            "unnamed": "Unnamed Level"
+          }
+        },
+        "rules": {
+          "description": "Define classification rules based on lesion counts and other criteria",
+          "addRule": "Add Rule",
+          "noRules": "No rules defined. Click \"Add Rule\" to create one.",
+          "rule": "Rule",
+          "priority": "Priority",
+          "severityLevel": "Severity Level",
+          "logic": "Logic",
+          "conditions": "Conditions",
+          "addCondition": "Add Condition",
+          "logicOptions": {
+            "and": "AND (all must match)",
+            "or": "OR (any can match)"
+          }
+        },
+        "rule421": {
+          "enable": "Enable Rule 4-2-1",
+          "name": "Rule Name",
+          "description": "Description",
+          "criteria": "Criteria",
+          "addCriterion": "Add Criterion",
+          "criterion": "Criterion",
+          "severityMapping": "Severity Mapping",
+          "fields": {
+            "name": "Name",
+            "field": "Field",
+            "minQuadrants": "Min Quadrants",
+            "minPerQuadrant": "Min per Quadrant",
+            "minDiscAreas": "Min Disc Areas",
+            "description": "Description"
+          },
+          "mapping": {
+            "0met": "0 criteria met →",
+            "1met": "1 criterion met →",
+            "2met": "2 or more criteria met →",
+            "none": "None"
+          }
+        },
+        "treatment": {
+          "description": "Define treatment protocols and follow-up recommendations for each severity level",
+          "addProtocol": "Add Protocol",
+          "noProtocols": "No treatment protocols defined. Click \"Add Protocol\" to create one.",
+          "protocol": "Protocol",
+          "severityLevel": "Severity Level",
+          "urgency": "Urgency",
+          "followupDays": "Follow-up Days",
+          "actions": "Actions",
+          "addAction": "Add Action",
+          "rationale": "Rationale",
+          "urgencyOptions": {
+            "routine": "Routine",
+            "accelerated": "Accelerated",
+            "urgent": "Urgent"
+          }
+        },
+        "emcs": {
+          "enable": "Enable EMCS (Clinically Significant Macular Edema) Criteria",
+          "name": "Name",
+          "distance": "Geometric Distance from Fovea (μm)",
+          "minDiscAreas": "Minimum Disc Areas",
+          "applyGeometric": "Apply geometric rule for detection",
+          "description": "Description"
+        },
+        "messages": {
+          "importSuccess": "Guideline imported successfully",
+          "importError": "Invalid JSON file",
+          "exportSuccess": "Guideline exported successfully",
+          "exportContribution": "Guideline exported and marked for contribution",
+          "saveSuccess": "Guideline saved successfully",
+          "validationError": "Validation Errors"
+        },
+        "validation": {
+          "idRequired": "Guideline ID is required",
+          "nameRequired": "Guideline name is required",
+          "versionRequired": "Version is required",
+          "countryRequired": "Country is required",
+          "severityRequired": "At least one severity level is required",
+          "levelIdRequired": "Level {{index}}: ID is required",
+          "levelNameRequired": "Level {{index}}: Name is required",
+          "levelColorRequired": "Level {{index}}: Color is required",
+          "duplicateIds": "Duplicate severity level IDs: {{ids}}",
+          "ruleSeverityRequired": "Rule {{index}}: Severity is required",
+          "ruleConditionRequired": "Rule {{index}}: At least one condition is required"
+        },
+        "summary": {
+          "levels": "{{count}} levels",
+          "rules": "{{count}} rules",
+          "protocols": "{{count}} protocols"
+        }
       }
     },
     "report": {
@@ -675,7 +860,7 @@
         "connectionFailed": "Connection failed",
         "endpointPlaceholder": "https://api.example.com/inference",
         "keyPlaceholder": "sk-…",
-        "modelNamePlaceholder": "yolov8n-retina-v2.0",
+        "modelNamePlaceholder": "___????",
         "headersPlaceholder": "{ \"X-Custom-Header\": \"value\" }"
       },
       "title": "Model Settings",
@@ -700,12 +885,32 @@
       "info3": "• If download fails, local model will be used as fallback",
       "info4": "• Cache persists between sessions and can be cleared at any time",
       "detectionModels": "Detection Models",
-      "segmentationModels": "Segmentation Models"
+      "segmentationModels": "Segmentation Models",
+      "downloadSuccess": "Detection model downloaded and loaded successfully",
+      "downloadError": "Error downloading model",
+      "clearCacheConfirm": "Are you sure you want to clear the model cache?",
+      "clearCacheSuccess": "Cache cleared successfully",
+      "clearCacheError": "Error clearing cache",
+      "sensitivity": "Sensitivity",
+      "sensitivityHelp": "Adjust confidence threshold for detections.",
+      "metadataNotLoaded": "Metadata not loaded",
+      "metadataNotLoadedDesc": "Could not load model metadata",
+      "viewInfo": "View info",
+      "modelInfo": "Model Information"
     },
     "processing": {
       "title": "Processing Settings",
       "opticDiscRefinement": "Optic Disc Segmentation",
-      "opticDiscRefinementDescription": "Generate circular mask of the optic disc within the YOLO detected area",
+      "opticDiscRefinementDescription": "Generate circular mask of the optic disc within the Model detected area",
+      "cpuVendor": "CPU Vendor",
+      "cpuVendorDescription": "Configure CPU vendor to optimize ONNX Runtime performance. In manual mode you'll see system warnings in console (this is normal).",
+      "cpuVendorWarning": "⚠️ Only modify if you know what you're doing. Automatic mode is recommended for most users.",
+      "cpuVendorOptions": {
+        "auto": "Automatic (Recommended)",
+        "intel": "Intel",
+        "amd": "AMD",
+        "arm": "ARM"
+      },
       "maxImageSize": "Max Image Size",
       "maxImageSizeWithUnit": "Max Image Size ({{size}} MB)",
       "compressionQuality": "Compression Quality",
@@ -737,26 +942,6 @@
       "updateNow": "Update Now",
       "noUpdates": "You have the latest version",
       "checkError": "Error checking for updates"
-    },
-    "guidelines": {
-      "title": "Clinical Guideline Selection",
-      "description": "Select the clinical guideline to classify diabetic retinopathy according to different international standards",
-      "loading": "Loading clinical guidelines...",
-      "active": "Active",
-      "official": "Official",
-      "severityPreview": "Severity Levels Preview",
-      "applyButton": "Apply Guideline",
-      "confirmDialog": {
-        "title": "Change Clinical Guideline?",
-        "description": "Changing the active clinical guideline will affect all future classifications. Existing classifications will retain their original guideline.",
-        "warning": "Note: If you have sessions in progress, consider completing them before changing the guideline.",
-        "cancel": "Cancel",
-        "confirm": "Confirm Change"
-      },
-      "errors": {
-        "loadFailed": "Failed to load clinical guidelines",
-        "applyFailed": "Failed to apply guideline"
-      }
     }
   },
   "pwa": {

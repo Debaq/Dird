@@ -29,24 +29,72 @@ export interface ModelInfo {
   input_size: [number, number];
 }
 
+export interface ClassDefinitionMetadata {
+  index: number;
+  technical_name: string;
+  display_name_en: string;
+  display_name_es: string;
+  category: 'anatomical_landmark' | 'lesion';
+  severity_impact: 'none' | 'mild' | 'mild_to_moderate' | 'moderate' | 'moderate_to_severe' | 'severe';
+  description_en: string;
+  description_es: string;
+  currently_detected: boolean;
+  aliases?: string[];
+}
+
 export interface ModelMetadata {
-  model_info: ModelInfo;
-  classes: string[];
-  performance_metrics: PerformanceMetrics;
-  analysis_report: AnalysisReport;
+  model_info?: ModelInfo;
+  classes?: string[] | ClassDefinitionMetadata[];
+  performance_metrics?: PerformanceMetrics;
+  analysis_report?: AnalysisReport;
 
   // Legacy fields for backward compatibility
   model_version?: string;
   model_type?: 'detection' | 'segmentation';
+  model_name?: string;
   input_size?: [number, number];
   confidence_threshold?: number;
   iou_threshold?: number;
   date_trained?: string;
   metrics?: {
     mAP50?: number;
+    mAP50_95?: number;
     precision?: number;
     recall?: number;
+    f1_score?: number;
+    per_class_mAP50?: Record<string, number>;
   };
+
+  // New structure fields
+  class_groups?: Record<string, number[]>;
+  color_palette?: Record<string, string>;
+  usage_notes?: {
+    normalization?: string;
+    classification?: string;
+    severity_impact?: string;
+    categories?: string;
+  };
+  training_info?: {
+    dataset?: string;
+    num_images?: number;
+    num_annotations?: number;
+    epochs?: number;
+    framework?: string;
+    input_resolution?: string;
+    known_issues?: string[];
+    recommended_improvements?: string[];
+  };
+}
+
+export interface TrainingInfo {
+  dataset?: string;
+  num_images?: number;
+  num_annotations?: number;
+  epochs?: number;
+  framework?: string;
+  input_resolution?: string;
+  known_issues?: string[];
+  recommended_improvements?: string[];
 }
 
 export interface ModelFile {
@@ -96,22 +144,13 @@ export async function getAvailableModels(): Promise<ModelFile[]> {
   return models;
 }
 
-export function getClassColor(className: string): string {
-  const colors: Record<string, string> = {
-    // Current model classes
-    optic_disc: '#4CAF50',        // Verde - estructura normal
-    hard_exudate: '#F9A825',      // Amarillo oscuro - exudados
-    fovea: '#2196F3',             // Azul - estructura normal
-    hemorrhage: '#D32F2F',        // Rojo - hemorragia
-    cotton_wool_spot: '#FDD835',  // Amarillo claro - manchas algodonosas
-    microhemorrhages: '#FF6B6B',  // Rojo claro - microhemorragias
-    edema: '#9C27B0',             // Púrpura - edema
+export function getClassColor(className: string, metadata?: ModelMetadata): string {
+  // ONLY use color_palette from metadata - no hardcoded colors
+  if (metadata?.color_palette && metadata.color_palette[className]) {
+    return metadata.color_palette[className];
+  }
 
-    // Legacy classes (backward compatibility)
-    microaneurysm: '#FF6B6B',
-    soft_exudate: '#FDD835',
-    neovascularization: '#7B1FA2',
-  };
-
-  return colors[className] || '#20B5AE';
+  // Minimal fallback ONLY if metadata is not available
+  // This should rarely happen - metadata should always be loaded
+  return '#20B5AE'; // Generic teal color for unknown/unloaded classes
 }

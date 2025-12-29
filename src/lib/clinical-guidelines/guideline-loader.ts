@@ -326,6 +326,44 @@ export function validateGuideline(guideline: ClinicalGuideline): GuidelineValida
     });
   }
 
+  // Validate class_mapping (optional but recommended)
+  if (guideline.class_mapping) {
+    if (typeof guideline.class_mapping !== 'object' || Array.isArray(guideline.class_mapping)) {
+      errors.push({
+        field: 'class_mapping',
+        message: 'class_mapping must be an object',
+        severity: 'error',
+      });
+    } else {
+      // Validate each mapping entry
+      Object.entries(guideline.class_mapping).forEach(([guidelineClass, modelClasses]) => {
+        if (!Array.isArray(modelClasses)) {
+          errors.push({
+            field: `class_mapping.${guidelineClass}`,
+            message: `class_mapping.${guidelineClass} must be an array of model class names`,
+            severity: 'error',
+          });
+        } else {
+          // Check if all entries are strings
+          const invalidEntries = modelClasses.filter((c) => typeof c !== 'string');
+          if (invalidEntries.length > 0) {
+            errors.push({
+              field: `class_mapping.${guidelineClass}`,
+              message: `class_mapping.${guidelineClass} must contain only strings`,
+              severity: 'error',
+            });
+          }
+        }
+      });
+    }
+  } else {
+    warnings.push({
+      field: 'class_mapping',
+      message: 'class_mapping is recommended for flexibility with different model class names',
+      severity: 'warning',
+    });
+  }
+
   return {
     valid: errors.length === 0,
     errors,

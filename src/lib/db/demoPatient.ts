@@ -250,21 +250,29 @@ export async function initializeDemoPatient(onProgress?: ProgressCallback): Prom
         onProgress?.({
           step: 'model',
           current: 0,
-          total: 1,
+          total: 100, // Changed to percentage
           message: i18n.t('demo.loading.steps.model'),
         });
 
-        await inferenceService.loadDetectionModel();
+        await inferenceService.loadDetectionModel(undefined, undefined, (percent) => {
+          onProgress?.({
+            step: 'model',
+            current: percent,
+            total: 100,
+            message: `${i18n.t('demo.loading.steps.model')} (${percent}%)`,
+          });
+        });
 
         onProgress?.({
           step: 'model',
-          current: 1,
-          total: 1,
+          current: 100,
+          total: 100,
           message: i18n.t('demo.loading.steps.modelLoaded'),
         });
 
       } catch (error) {
         // Continuar sin el modelo, no es crítico para la demo
+        console.warn('Failed to load detection model during demo init', error);
       }
     }
 

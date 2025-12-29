@@ -94,7 +94,7 @@ export class QuadrantCalculator {
     const normalizedNames = classNames.map(name => name.toLowerCase().trim());
 
     return detections.find(detection =>
-      normalizedNames.includes(detection.class.toLowerCase().trim())
+      detection.class && typeof detection.class === 'string' && normalizedNames.includes(detection.class.toLowerCase().trim())
     ) || null;
   }
 
@@ -138,6 +138,11 @@ export class QuadrantCalculator {
 
     // Step 4: Classify each lesion (excluding OD and fovea)
     for (const detection of detections) {
+      // Skip if class is not defined
+      if (!detection.class || typeof detection.class !== 'string') {
+        continue;
+      }
+
       // Skip optic disc and fovea themselves
       const detClass = detection.class.toLowerCase().trim();
       if (detClass === 'optic_disc' || detClass === 'optic disc' || detClass === 'fovea') {
@@ -218,6 +223,11 @@ export class QuadrantCalculator {
     const centerY = imageHeight / 2;
 
     for (const detection of detections) {
+      // Skip if class is not defined
+      if (!detection.class || typeof detection.class !== 'string') {
+        continue;
+      }
+
       // Skip anatomical landmarks
       const detClass = detection.class.toLowerCase().trim();
       if (detClass === 'optic_disc' || detClass === 'optic disc' || detClass === 'fovea') {

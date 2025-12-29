@@ -280,5 +280,46 @@
     "min_disc_areas": 1.0,
     "apply_geometric_rule": true,
     "description": "Hard exudates within 500μm of fovea center"
+  },
+  "macular_edema_criteria": {
+    "enabled": true,
+    "method": "ETDRS-CSME",
+    "hard_exudates_distance_um": 500,
+    "min_exudates_for_flag": 3,
+    "circinate_pattern_detection": true,
+    "min_angular_dispersion": 0.6,
+    "visual_zones": {
+      "show_foveal_zone": true,
+      "foveal_zone_radius_um": 500,
+      "show_disc_diameter_zone": true
+    },
+    "description": "Clinically Significant Macular Edema (CSME) based on ETDRS criteria. Detects hard exudates within 500μm of foveal center, with circinate ring pattern detection as indirect indicator of macular edema. Requires minimum 3 exudates for higher specificity."
+  },
+  "_comments": {
+    "class_mapping": "DEPRECATED: class_mapping is now optional. The system uses the model's JSON as the single source of truth for class definitions and aliases. This mapping is kept for backward compatibility only."
+  },
+  "class_mapping": {
+    "microaneurysms": [
+      "microaneurysm",
+      "microhemorrhages"
+    ],
+    "hemorrhages": [
+      "hemorrhage"
+    ],
+    "hardExudates": [
+      "hard_exudate"
+    ],
+    "softExudates": [
+      "cotton_wool_spot"
+    ],
+    "neovascularization": [
+      "neovascularization"
+    ],
+    "venous_beading": [
+      "venous_beading"
+    ],
+    "irma": [
+      "irma"
+    ]
   }
 }

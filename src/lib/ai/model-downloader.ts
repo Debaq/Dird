@@ -1,5 +1,7 @@
 import type { ModelMetadata } from './model-metadata';
 
+export type DownloadProgressCallback = (progress: number) => void;
+
 export interface ModelSource {
   type: 'github' | 'local';
   branch?: string; // For GitHub (version branch)
@@ -132,7 +134,8 @@ export class ModelDownloader {
    * Download model from GitHub or load from local
    */
   async downloadModel(
-    modelType: 'detection' | 'segmentation'
+    modelType: 'detection' | 'segmentation',
+    onProgress?: DownloadProgressCallback
   ): Promise<{ modelUrl: string; metadata: ModelMetadata }> {
     // First, try to find the latest model in the repository
     try {
@@ -141,7 +144,7 @@ export class ModelDownloader {
 
       if (latestModel) {
         console.log(`Found latest ${modelType} model: ${latestModel.name} (v${latestModel.version})`);
-        return await this.downloadFromUrls(latestModel.onnxUrl, latestModel.jsonUrl);
+        return await this.downloadFromUrls(latestModel.onnxUrl, latestModel.jsonUrl, onProgress);
       }
 
       console.warn(`No ${modelType} model found in repository, trying fallback...`);
@@ -156,8 +159,9 @@ export class ModelDownloader {
     }
 
     if (source.type === 'github') {
-      return await this.downloadFromGitHub(source);
+      return await this.downloadFromGitHub(source, onProgress);
     } else {
+      onProgress?.(100); // Local load is instant relative to download
       return await this.loadFromLocal(source);
     }
   }
@@ -167,7 +171,8 @@ export class ModelDownloader {
    */
   private async downloadFromUrls(
     modelUrl: string,
-    metadataUrl: string
+    metadataUrl: string,
+    onProgress?: DownloadProgressCallback
   ): Promise<{ modelUrl: string; metadata: ModelMetadata }> {
     console.log(`Downloading model from: ${modelUrl}`);
 
@@ -194,17 +199,61 @@ export class ModelDownloader {
       // Download model if not cached
       if (!modelResponse) {
         console.log('Model not in cache, downloading...');
-        const modelFetchResponse = await fetch(modelUrl);
-
-        if (!modelFetchResponse.ok) {
-          throw new Error(`Failed to fetch model: ${modelFetchResponse.statusText}`);
+        
+        // Use fetch with ReadableStream for progress
+        const response = await fetch(modelUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch model: ${response.statusText}`);
         }
 
-        // Cache the model
-        await cache.put(modelUrl, modelFetchResponse.clone());
-        modelResponse = modelFetchResponse;
+        const contentLength = response.headers.get('content-length');
+        const total = contentLength ? parseInt(contentLength, 10) : 0;
+        let loaded = 0;
+
+        const stream = new ReadableStream({
+          start(controller) {
+            const reader = response.body!.getReader();
+
+            function push() {
+              reader.read().then(({ done, value }) => {
+                if (done) {
+                  controller.close();
+                  return;
+                }
+                loaded += value.byteLength;
+                if (total && onProgress) {
+                  onProgress(Math.round((loaded / total) * 100));
+                }
+                controller.enqueue(value);
+                push();
+              });
+            }
+
+            push();
+          }
+        });
+
+        // Create a new response from the stream
+        const newResponse = new Response(stream, { headers: response.headers });
+        
+        // We need to clone it because we consume one for cache and one for return (if needed, though here we just cache)
+        // Actually, Response.clone() might not work well with streams that are being read.
+        // Better approach: Read the stream into a Blob/ArrayBuffer, then cache that.
+        const blob = await newResponse.blob();
+        
+        // Cache the blob
+        await cache.put(modelUrl, new Response(blob));
+        
+        // Return a response pointing to the blob (mocking a fetch response)
+        // But since our loadFromLocal/download functions return URLs or objects,
+        // and ONNX manager usually takes a URL or ArrayBuffer...
+        // The current implementation returns { modelUrl, metadata }.
+        // ONNX manager will fetch this URL again.
+        // If it's in cache, the subsequent fetch in ONNX manager will hit the cache.
+        
       } else {
         console.log('Model loaded from cache');
+        onProgress?.(100);
       }
 
       return {
@@ -221,7 +270,8 @@ export class ModelDownloader {
    * Download from GitHub with caching
    */
   private async downloadFromGitHub(
-    source: ModelSource
+    source: ModelSource,
+    onProgress?: DownloadProgressCallback
   ): Promise<{ modelUrl: string; metadata: ModelMetadata }> {
     const { branch, path } = source;
 
@@ -229,7 +279,7 @@ export class ModelDownloader {
     const modelUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${branch}/${path}`;
     const metadataUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${branch}/${path.replace('.onnx', '.json')}`;
 
-    return await this.downloadFromUrls(modelUrl, metadataUrl);
+    return await this.downloadFromUrls(modelUrl, metadataUrl, onProgress);
   }
 
   /**

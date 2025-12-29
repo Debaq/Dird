@@ -1,5 +1,5 @@
 import { db } from '@/lib/db/schema';
-import { getClassColor, type ModelMetadata } from '@/lib/ai/model-metadata';
+import { getClassColor, type ModelMetadata, type ClassDefinitionMetadata } from '@/lib/ai/model-metadata';
 import { getClassName } from '@/lib/ai/class-translations';
 import { useConfigStore } from '@/stores/config-store';
 
@@ -55,8 +55,8 @@ export class ClassManager {
     }
 
     try {
-      // Intentar obtener la versión del modelo cargado desde IndexedDB
-      const cache = await caches.open('dird-models-v1');
+      // PRIORITY 1: Try to load from IndexedDB cache (downloaded models)
+      const cache = await caches.open('dird-onnx-models');
       const keys = await cache.keys();
 
       // Buscar archivos de metadata en cache
@@ -66,19 +66,17 @@ export class ClassManager {
           if (response) {
             const metadata = await response.json();
             this.setModelMetadata(metadata);
-            // Limpiar colores incorrectos después de cargar metadata
             this.cleanupIncorrectColors();
             return;
           }
         }
       }
 
-      // Si no hay en cache, intentar cargar desde GitHub (latest)
+      // PRIORITY 2: Load from GitHub (always latest version)
       const response = await fetch('https://raw.githubusercontent.com/Debaq/dird_models/main/detection-v1.0.1.json');
       if (response.ok) {
         const metadata = await response.json();
         this.setModelMetadata(metadata);
-        // Limpiar colores incorrectos después de cargar metadata
         this.cleanupIncorrectColors();
         return;
       }
@@ -91,15 +89,104 @@ export class ClassManager {
   }
 
   /**
-   * Obtiene las clases del modelo AI
+   * Obtiene las clases del modelo AI (solo las que actualmente se detectan)
    * Si hay metadata cargado, usa las clases del modelo
    * Si no, usa las clases legacy para compatibilidad
    */
   getAIClasses(): string[] {
     if (currentModelMetadata && currentModelMetadata.classes) {
-      return [...currentModelMetadata.classes];
+      // Check if classes is the new structure (array of objects with technical_name)
+      if (Array.isArray(currentModelMetadata.classes) && currentModelMetadata.classes.length > 0) {
+        const firstItem = currentModelMetadata.classes[0];
+        if (typeof firstItem === 'object' && 'technical_name' in firstItem) {
+          // New structure - extract technical_names ONLY currently_detected
+          return (currentModelMetadata.classes as ClassDefinitionMetadata[])
+            .filter(c => c.currently_detected)
+            .map(c => c.technical_name);
+        } else {
+          // Legacy structure - array of strings
+          return [...currentModelMetadata.classes as string[]];
+        }
+      }
     }
     return [...LEGACY_AI_CLASSES];
+  }
+
+  /**
+   * Obtiene TODAS las clases del modelo AI (incluyendo las no detectadas actualmente)
+   * Útil para mostrar en interfaces de configuración
+   */
+  getAllAIClasses(): string[] {
+    if (currentModelMetadata && currentModelMetadata.classes) {
+      if (Array.isArray(currentModelMetadata.classes) && currentModelMetadata.classes.length > 0) {
+        const firstItem = currentModelMetadata.classes[0];
+        if (typeof firstItem === 'object' && 'technical_name' in firstItem) {
+          // New structure - extract ALL technical_names (sin filtrar)
+          return (currentModelMetadata.classes as ClassDefinitionMetadata[])
+            .map(c => c.technical_name);
+        } else {
+          // Legacy structure - array of strings
+          return [...currentModelMetadata.classes as string[]];
+        }
+      }
+    }
+    return [...LEGACY_AI_CLASSES];
+  }
+
+  /**
+   * Obtiene las definiciones completas de clases del modelo
+   * Retorna la estructura completa con aliases, categorías, etc.
+   */
+  getAIClassDefinitions(): ClassDefinitionMetadata[] {
+    if (currentModelMetadata && currentModelMetadata.classes) {
+      if (Array.isArray(currentModelMetadata.classes) && currentModelMetadata.classes.length > 0) {
+        const firstItem = currentModelMetadata.classes[0];
+        if (typeof firstItem === 'object' && 'technical_name' in firstItem) {
+          return currentModelMetadata.classes as ClassDefinitionMetadata[];
+        }
+      }
+    }
+    return [];
+  }
+
+  /**
+   * Normaliza un nombre de clase a su technical_name canónico
+   * Busca en technical_names y aliases
+   * Retorna el technical_name correspondiente o null si no se encuentra
+   */
+  normalizeName(name: string): string | null {
+    if (!name) return null;
+
+    const normalizedInput = name.toLowerCase().trim();
+    const classDefinitions = this.getAIClassDefinitions();
+
+    // Si no hay definiciones completas, usar búsqueda simple
+    if (classDefinitions.length === 0) {
+      const aiClasses = this.getAIClasses();
+      const found = aiClasses.find(c => c.toLowerCase() === normalizedInput);
+      return found || null;
+    }
+
+    // Buscar en technical_names
+    for (const classDef of classDefinitions) {
+      if (classDef.technical_name.toLowerCase() === normalizedInput) {
+        return classDef.technical_name;
+      }
+    }
+
+    // Buscar en aliases
+    for (const classDef of classDefinitions) {
+      if (classDef.aliases) {
+        const aliasFound = classDef.aliases.find(
+          alias => alias.toLowerCase() === normalizedInput
+        );
+        if (aliasFound) {
+          return classDef.technical_name;
+        }
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -133,9 +220,10 @@ export class ClassManager {
   /**
    * Obtiene todas las clases disponibles (AI + custom) ordenadas
    * AI primero, custom después alfabéticamente
+   * INCLUYE todas las clases del modelo, incluso las no detectadas actualmente
    */
   async getAllClasses(): Promise<ClassDefinition[]> {
-    const aiClasses = this.getAIClasses();
+    const aiClasses = this.getAllAIClasses(); // Usa getAllAIClasses para mostrar TODAS
     const customClasses = await this.getCustomClasses();
 
     // Contar uso de cada clase
@@ -202,9 +290,15 @@ export class ClassManager {
       return storedColor;
     }
 
-    // Si es clase AI y no tiene override, usar color predefinido
+    // Si es clase AI y no tiene override, usar color del metadata o predefinido
     if (aiClasses.includes(className)) {
-      return getClassColor(className);
+      // Priority 1: Use color_palette from loaded metadata
+      if (currentModelMetadata?.color_palette && currentModelMetadata.color_palette[className]) {
+        return currentModelMetadata.color_palette[className];
+      }
+
+      // Priority 2: Fallback to static colors with metadata support
+      return getClassColor(className, currentModelMetadata || undefined);
     }
 
     // Para clases custom, generar color pero NO guardarlo automáticamente
@@ -335,6 +429,33 @@ export class ClassManager {
       // Error handling without logging
       return null;
     }
+  }
+
+  /**
+   * Obtiene el nombre display de una clase según el idioma
+   * Usa el metadata del modelo como fuente de verdad
+   * @param className - Nombre de la clase (puede ser technical_name o alias)
+   * @param language - Idioma ('es' o 'en')
+   * @returns Display name del modelo o null si no se encuentra
+   */
+  getDisplayName(className: string, language: 'es' | 'en' = 'es'): string | null {
+    if (!className) return null;
+
+    // Normalizar el nombre a technical_name
+    const technicalName = this.normalizeName(className);
+    if (!technicalName) return null;
+
+    // Buscar en las definiciones del modelo
+    const classDefinitions = this.getAIClassDefinitions();
+    const classDef = classDefinitions.find(
+      c => c.technical_name === technicalName
+    );
+
+    if (classDef) {
+      return language === 'es' ? classDef.display_name_es : classDef.display_name_en;
+    }
+
+    return null;
   }
 }
 
