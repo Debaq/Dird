@@ -246,6 +246,7 @@ try {
 
     $reportData = $input['report_data'];
     $language = $input['language'] ?? 'es';
+    $aiSettings = $input['ai_settings'] ?? null;
 
     // Get API Key and Config
     $groqKey = getGroqKey();
@@ -255,7 +256,57 @@ try {
     logDebug("AI Config Retrieved", ['model' => $aiConfig['active_model'] ?? 'unknown']);
 
     $model = $aiConfig['active_model'];
+    
+    // 1. BASE PROMPT (Source of Truth: ai_config.json)
     $promptTemplate = $aiConfig['system_prompt'];
+
+    // 2. DOCTOR'S DRAFT INTEGRATION
+    $doctorDraft = $reportData['evaluatorNotes'] ?? '';
+    if (!empty($doctorDraft)) {
+        logDebug("Including Doctor's Draft in Prompt");
+        $draftInstruction = "\n\n*** DOCTOR'S DRAFT INPUT (PRIORITY CONTEXT) ***\n" .
+            "The doctor has provided the following initial conclusion draft:\n" .
+            "\"" . $doctorDraft . "\"\n" .
+            "INSTRUCTION: Integrate this draft into the final narrative. Polish the tone to be professional, but retain the core clinical observations made by the doctor. Verify that the draft aligns with the JSON data; if there is a contradiction, prioritize the JSON data but mention the discrepancy.";
+        
+        $promptTemplate .= $draftInstruction;
+    }
+
+    // 3. DYNAMIC OVERRIDES (Based on User Selection)
+    if ($aiSettings) {
+        logDebug("Applying Dynamic Settings to Base Prompt");
+        
+        $overrides = [];
+        $overrides[] = "\n\n*** SESSION SPECIFIC INSTRUCTIONS (OVERRIDE DEFAULTS) ***";
+        
+        // Structural Logic
+        if (!empty($aiSettings['perEyeAnalysis'])) {
+            $overrides[] = "- STRUCTURE OVERRIDE: You MUST organize the output into two distinct sections: 'Right Eye (OD)' and 'Left Eye (OS)'. Do NOT merge them.";
+        } else if (!empty($aiSettings['generalConclusion'])) {
+            $overrides[] = "- STRUCTURE: Provide a single unified summary.";
+        }
+
+        // Clinical Logic
+        if (!empty($aiSettings['guidelineAlignment'])) {
+            $overrides[] = "- CLASSIFICATION: Explicitly cite the specific clinical criteria (e.g., '4-2-1 rule', 'Venous beading') that justify the severity level.";
+        }
+        
+        if (!empty($aiSettings['riskFactors'])) {
+             $overrides[] = "- CONTENT: Highlight specific risk factors found in the data.";
+        }
+
+        if (!empty($aiSettings['treatmentRecommendations'])) {
+            $overrides[] = "- CONTENT: Include follow-up recommendations based on the severity.";
+        }
+
+        // Custom User Override
+        if (!empty($aiSettings['customPrompt'])) {
+             $overrides[] = "\n*** USER SPECIAL NOTE ***\n" . $aiSettings['customPrompt'];
+        }
+
+        // Append overrides to the base template
+        $promptTemplate .= implode("\n", $overrides);
+    }
 
     // Fallback message
     $limitMessage = "El programa es gratuito y lamentablemente solo tenemos un número limitado de créditos por día para todos los usuarios. Siempre puedes contribuir con un café para que mejoremos nuestros servicios.";

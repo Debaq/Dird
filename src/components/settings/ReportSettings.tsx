@@ -4,12 +4,13 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useConfigStore, DEFAULT_CONFIG } from '@/stores/config-store';
-import { FileText, Image as ImageIcon, Layout, PenTool, Palette } from 'lucide-react';
+import { FileText, Image as ImageIcon, Layout, PenTool, Palette, Brain } from 'lucide-react';
 
 export default function ReportSettings() {
   const { t } = useTranslation();
-  const { config, updateReportConfig } = useConfigStore();
+  const { config, updateReportConfig, updateAIConclusion } = useConfigStore();
   
   // Ensure we have all fields even if local config is stale
   const report = {
@@ -23,6 +24,11 @@ export default function ReportSettings() {
       ...DEFAULT_CONFIG.report.patientInfoFields,
       ...(config.report?.patientInfoFields || {})
     }
+  };
+
+  const aiConclusion = {
+    ...DEFAULT_CONFIG.aiConclusion,
+    ...(config.aiConclusion || {})
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,6 +71,88 @@ export default function ReportSettings() {
               onChange={(e) => updateReportConfig({ subtitle: e.target.value })}
               className="mt-1 dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
             />
+          </div>
+        </div>
+      </Card>
+
+      {/* AI Conclusion Settings */}
+      <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
+        <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4 flex items-center gap-2">
+          <Brain className="h-5 w-5" />
+          {t('settings.report.ai.title') || 'AI Conclusion Configuration'}
+        </h2>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="ai-general"
+                checked={aiConclusion.generalConclusion}
+                onCheckedChange={(checked) => updateAIConclusion({ generalConclusion: checked })}
+              />
+              <Label htmlFor="ai-general" className="dark:text-dark-text">
+                {t('settings.report.ai.generalConclusion') || 'General Conclusion'}
+              </Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="ai-per-eye"
+                checked={aiConclusion.perEyeAnalysis}
+                onCheckedChange={(checked) => updateAIConclusion({ perEyeAnalysis: checked })}
+              />
+              <Label htmlFor="ai-per-eye" className="dark:text-dark-text">
+                {t('settings.report.ai.perEyeAnalysis') || 'Analysis Per Eye'}
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="ai-guidelines"
+                checked={aiConclusion.guidelineAlignment}
+                onCheckedChange={(checked) => updateAIConclusion({ guidelineAlignment: checked })}
+              />
+              <Label htmlFor="ai-guidelines" className="dark:text-dark-text">
+                {t('settings.report.ai.guidelineAlignment') || 'Align with Clinical Guidelines'}
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="ai-treatment"
+                checked={aiConclusion.treatmentRecommendations}
+                onCheckedChange={(checked) => updateAIConclusion({ treatmentRecommendations: checked })}
+              />
+              <Label htmlFor="ai-treatment" className="dark:text-dark-text">
+                {t('settings.report.ai.treatmentRecommendations') || 'Treatment Recommendations'}
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="ai-risks"
+                checked={aiConclusion.riskFactors}
+                onCheckedChange={(checked) => updateAIConclusion({ riskFactors: checked })}
+              />
+              <Label htmlFor="ai-risks" className="dark:text-dark-text">
+                {t('settings.report.ai.riskFactors') || 'Risk Factors Analysis'}
+              </Label>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-coal-200 dark:border-coal-600">
+            <Label htmlFor="ai-custom-prompt" className="dark:text-dark-text">
+              {t('settings.report.ai.customPrompt') || 'Custom Prompt Instructions (Max 500 chars)'}
+            </Label>
+            <Textarea
+              id="ai-custom-prompt"
+              value={aiConclusion.customPrompt}
+              onChange={(e) => updateAIConclusion({ customPrompt: e.target.value.slice(0, 500) })}
+              className="mt-2 dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text min-h-[100px]"
+              placeholder={t('settings.report.ai.customPromptPlaceholder') || 'E.g., "Use very simple language", "Focus on macular edema", etc.'}
+            />
+            <div className="text-right text-xs text-gray-500 mt-1">
+              {aiConclusion.customPrompt.length}/500
+            </div>
           </div>
         </div>
       </Card>

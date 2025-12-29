@@ -82,6 +82,15 @@ export interface ReportConfig {
   };
 }
 
+export interface AIConclusionSettings {
+  generalConclusion: boolean;
+  perEyeAnalysis: boolean;
+  guidelineAlignment: boolean;
+  treatmentRecommendations: boolean;
+  riskFactors: boolean;
+  customPrompt: string;
+}
+
 export interface AppConfig {
   name: string;
   appearance: AppearanceConfig;
@@ -90,6 +99,7 @@ export interface AppConfig {
   apiModels: APIModelConfig;
   processing: ProcessingConfig;
   report: ReportConfig;
+  aiConclusion: AIConclusionSettings;
   activeGuideline: string; // ID of active clinical guideline
   pwa: {
     installPromptShown: boolean;
@@ -103,6 +113,7 @@ interface ConfigStore {
   updateAppearance: (updates: Partial<AppearanceConfig>) => void;
   updateProcessing: (updates: Partial<ProcessingConfig>) => void;
   updateReportConfig: (updates: Partial<ReportConfig>) => void;
+  updateAIConclusion: (updates: Partial<AIConclusionSettings>) => void;
   updateAPIModels: (updates: Partial<APIModelConfig>) => void;
   updateLocalModels: (updates: Partial<LocalModelConfig>) => void;
   setModelSource: (source: ModelSource) => void;
@@ -187,6 +198,14 @@ export const DEFAULT_CONFIG: AppConfig = {
       text: 'Firma del Especialista'
     }
   },
+  aiConclusion: {
+    generalConclusion: true,
+    perEyeAnalysis: false,
+    guidelineAlignment: true,
+    treatmentRecommendations: true,
+    riskFactors: true,
+    customPrompt: ''
+  },
   activeGuideline: 'icdr_2024', // Default to ICDR International standard
   pwa: {
     installPromptShown: false,
@@ -228,6 +247,14 @@ export const useConfigStore = create<ConfigStore>()(
           }
         })),
 
+      updateAIConclusion: (updates) =>
+        set((state) => ({
+          config: {
+            ...state.config,
+            aiConclusion: { ...state.config.aiConclusion, ...updates }
+          }
+        })),
+
       updateAPIModels: (updates) =>
         set((state) => ({
           config: {
@@ -258,7 +285,7 @@ export const useConfigStore = create<ConfigStore>()(
     }),
     {
       name: 'dird-config',
-      version: 6,
+      version: 7,
       migrate: (persistedState: any, version) => {
         let state = persistedState;
 
@@ -313,6 +340,13 @@ export const useConfigStore = create<ConfigStore>()(
                ...state.processing,
                cpuVendor: 'auto'
              }
+           };
+        }
+
+        if (version < 7) {
+           state = {
+             ...state,
+             aiConclusion: DEFAULT_CONFIG.aiConclusion
            };
         }
 

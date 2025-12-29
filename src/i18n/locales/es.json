@@ -42,7 +42,10 @@
       "reports": "La generación de reportes estará disponible próximamente"
     },
     "save": "Guardar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "exit": "Salir",
+    "loadingPDF": "Cargando PDF...",
+    "failedToLoadPDF": "Error al cargar el documento PDF"
   },
   "common": {
     "confirm": "Confirmar",
@@ -482,8 +485,8 @@
     "preview": "Vista Preliminar",
     "finalize": "Finalizar y Cerrar Caso",
     "reportType": "Tipo de Reporte",
-    "evaluatorNotes": "Notas del Evaluador (Opcional)",
-    "evaluatorNotesPlaceholder": "Escriba aquí las conclusiones clínicas y recomendaciones para el paciente...",
+    "evaluatorNotes": "Conclusiones",
+    "evaluatorNotesPlaceholder": "Escriba sus conclusiones iniciales aquí (la IA las refinará e integrará)...",
     "finalWarning": "Nota: El reporte final bloqueará la sesión y no se podrán añadir o eliminar imágenes ni análisis.",
     "dialogDescription": "Asegúrese de que todos los hallazgos han sido revisados antes de generar el informe.",
     "previewDescription": "Genera un borrador para revisión interna. Incluye marca de agua y no bloquea la sesión para futuras ediciones.",
@@ -495,9 +498,45 @@
     "processingWithAI": "Procesando con IA...",
     "previewGenerated": "Vista preliminar generada",
     "approveAndFinalize": "Aprobar y Finalizar",
+    "dialog": {
+      "withAI": "Con procesamiento IA de conclusión",
+      "previewExists": "Ya existe una vista previa para esta sesión",
+      "previewExistsDescription": "Puede revisar la vista previa en la lista de informes. Elija una opción a continuación:",
+      "regenerateTitle": "Regenerar Preview",
+      "regenerateDescription": "Elimina la vista previa actual y genera una nueva con las notas actualizadas.",
+      "regenerateButton": "Regenerar",
+      "regenerateConfirmTitle": "¿Regenerar vista previa?",
+      "regenerateConfirmDescription": "Se eliminará la vista previa actual y se generará una nueva. ¿Desea continuar?",
+      "finalizeTitle": "Finalizar Informe",
+      "finalizeDescription": "Genera el informe final y bloquea la sesión permanentemente. No podrá realizar más cambios.",
+      "finalizeButton": "Finalizar",
+      "warningTitle": "Advertencia:",
+      "warningBody": "Al finalizar el informe, la sesión quedará bloqueada y no podrá realizar más modificaciones.",
+      "interactionRequired": "Interacción requerida:",
+      "mustInteractFirst": "Debe visualizar, descargar o editar el preview primero"
+    },
     "status": {
       "preliminary": "VERSIÓN PRELIMINAR",
       "final": "INFORME FINAL"
+    },
+    "pdf": {
+      "clinicalInfo": "INFORMACIÓN CLÍNICA",
+      "findingsAndAnalysis": "RESUMEN DE HALLAZGOS Y ANÁLISIS POR CUADRANTES",
+      "comparativeEvolution": "EVOLUCIÓN COMPARATIVA",
+      "finding": "Hallazgo",
+      "quadrant": "Cuadrante",
+      "total": "Total",
+      "noRelevantHistory": "Sin antecedentes relevantes",
+      "model": "Modelo",
+      "findingsLabel": "Hallazgos",
+      "age": "Edad",
+      "background": "Antecedentes",
+      "sessionNote": "Nota Sesión",
+      "noImage": "Sin imagen",
+      "noAdditionalObservations": "Sin observaciones adicionales.",
+      "combinedTitle": "Informe Evolutivo",
+      "footerText": "Generado por DIRD - AI Assistant",
+      "generatedOn": "Generado:"
     },
     "list": {
       "noReports": "No se han generado informes aún",
@@ -528,7 +567,13 @@
         "single": "Sesiones únicas",
         "combined": "Sesiones combinadas"
       },
-      "deleteSuccess": "Informe eliminado exitosamente"
+      "deleteSuccess": "Informe eliminado exitosamente",
+      "editModalInfo": "Por defecto se muestra la versión mejorada por IA. Puedes alternar con tu borrador original.",
+      "aiVersion": "🤖 Versión Actual (IA)",
+      "restoreDraft": "📝 Restaurar mi Borrador",
+      "updateError": "Error al actualizar las conclusiones",
+      "updateSuccess": "Conclusión actualizada exitosamente",
+      "mustInteractFirst": "Debe visualizar, descargar o editar el preview primero"
     }
   },
   "models": {
@@ -939,7 +984,17 @@
         "patientInfo": "Información del Paciente",
         "summary": "Resumen de Hallazgos",
         "gallery": "Galería de Imágenes",
-        "evaluatorNotes": "Notas del Evaluador"
+        "evaluatorNotes": "Conclusiones"
+      },
+      "ai": {
+        "title": "Configuración de Conclusiones IA",
+        "generalConclusion": "Generar Conclusión General",
+        "perEyeAnalysis": "Análisis Detallado por Ojo",
+        "guidelineAlignment": "Alineación con Guía Clínica",
+        "treatmentRecommendations": "Recomendaciones de Tratamiento",
+        "riskFactors": "Análisis de Factores de Riesgo",
+        "customPrompt": "Instrucciones Personalizadas (Max 500 cars)",
+        "customPromptPlaceholder": "Ej: 'Usar lenguaje muy simple', 'Enfocar en edema macular', etc."
       },
       "patientDetails": {
         "title": "Detalles del Paciente",

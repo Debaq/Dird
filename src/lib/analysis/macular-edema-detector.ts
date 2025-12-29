@@ -282,9 +282,6 @@ export function detectMacularEdema(
   // Find all hard exudates
   const allHardExudates = findHardExudates(detections);
 
-  console.log(`[Macular Edema] Found ${allHardExudates.length} hard exudates (${allHardExudates.filter(e => e.type === 'manual').length} manual, ${allHardExudates.filter(e => e.type === 'ai').length} AI)`);
-  console.log('[Macular Edema] Using MINIMUM distance calculation (closest bbox edge to fovea center)');
-
   if (allHardExudates.length === 0) {
     return {
       detected: false,
@@ -309,8 +306,6 @@ export function detectMacularEdema(
   const exudatesInZone = exudatesWithDistances
     .filter(item => item.distanceUm <= criteria.hard_exudates_distance_um)
     .map(item => item.detection);
-
-  console.log(`[Macular Edema] ✓ IN ZONE: ${exudatesInZone.length}/${allHardExudates.length} | Status: ${exudatesInZone.length > 0 ? '⚠️ DETECTED' : '✓ Clear'}`);
 
   const distancesToFoveaUm = exudatesWithDistances
     .filter(item => item.distanceUm <= criteria.hard_exudates_distance_um)

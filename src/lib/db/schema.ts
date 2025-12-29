@@ -88,11 +88,16 @@ export interface Report {
   reportCategory: 'single' | 'combined';
   pdfBlob: Blob;
   evaluatorNotes: string;
+  originalNotes?: string; // The original notes entered by the user before AI processing
   areasOfInterest: Array<{
     imageId: number;
     coords: { x: number; y: number };
     comment: string;
   }>;
+  // Tracking de interacciones del usuario con el preview
+  previewViewed?: boolean; // El usuario visualizó el preview
+  previewDownloaded?: boolean; // El usuario descargó el preview
+  conclusionEdited?: boolean; // El usuario editó la conclusión
   generatedAt: Date;
 }
 
@@ -339,6 +344,19 @@ export class DirdDatabase extends Dexie {
       measurements: '++id, imageId, visible, createdAt',
       imageClassifications: '++id, imageId, eyeType, severity, guideline, urgency, manuallyModified, createdAt, updatedAt',
       pendingContributions: '++id, [type+referenceId], type, referenceId, status, createdAt'
+    });
+    this.version(16).stores({
+      patients: '++id, patientId, name, status, createdAt',
+      sessions: '++id, patientId, name, sessionNumber, date, locked, type',
+      images: '++id, sessionId, eyeType, uploadedAt',
+      detections: '++id, imageId, type, class, visible',
+      segmentations: '++id, imageId, type, class, visible',
+      reports: '++id, [sessionId+type], sessionId, type, reportCategory, generatedAt', // added originalNotes implicitly (no index needed)
+      measurements: '++id, imageId, visible, createdAt',
+      imageClassifications: '++id, imageId, eyeType, severity, guideline, urgency, manuallyModified, createdAt, updatedAt',
+      pendingContributions: '++id, [type+referenceId], type, referenceId, status, createdAt'
+    }).upgrade(_ => {
+       // No specific upgrade logic needed for non-indexed fields
     });
   }
 }

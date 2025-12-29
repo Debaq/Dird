@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
@@ -18,6 +19,7 @@ const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
   title,
   onDownload
 }) => {
+  const { t } = useTranslation();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,7 +31,7 @@ const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
         setError(null);
       } catch (err) {
         console.error('Error creating PDF object URL:', err);
-        setError('Failed to load PDF document');
+        setError(t('ui.failedToLoadPDF'));
       }
     } else {
       if (pdfUrl) {
@@ -43,7 +45,7 @@ const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
         URL.revokeObjectURL(pdfUrl);
       }
     };
-  }, [isOpen, pdfBlob]);
+  }, [isOpen, pdfBlob, t]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -60,7 +62,7 @@ const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
               className="flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
-              Descargar
+              {t('ui.download')}
             </Button>
             <Button
               variant="outline"
@@ -68,7 +70,7 @@ const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
               onClick={onClose}
               className="flex items-center gap-2"
             >
-              Salir
+              {t('ui.exit')}
             </Button>
           </div>
         </DialogHeader>
@@ -93,7 +95,7 @@ const PDFViewerModal: React.FC<PDFViewerModalProps> = ({
 
           {!error && !pdfUrl && (
             <div className="flex-1 flex items-center justify-center">
-              <div className="text-smoke-600">Cargando PDF...</div>
+              <div className="text-smoke-600">{t('ui.loadingPDF')}</div>
             </div>
           )}
         </div>

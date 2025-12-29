@@ -4,6 +4,7 @@
 
 import { getInstallationToken } from '@/lib/utils/installation';
 import { API_ENDPOINTS } from '@/config/api';
+import { useConfigStore } from '@/stores/config-store';
 
 interface TokenResponse {
   success: boolean;
@@ -80,6 +81,7 @@ export async function fetchTokens(): Promise<number> {
 export async function processConclusion(reportData: any, language: string): Promise<ProcessConclusionResult> {
   try {
     const installationToken = getInstallationToken();
+    const aiSettings = useConfigStore.getState().config.aiConclusion;
 
     const response = await fetch(API_ENDPOINTS.PROCESS_CONCLUSION, {
       method: 'POST',
@@ -90,6 +92,7 @@ export async function processConclusion(reportData: any, language: string): Prom
         installation_token: installationToken,
         report_data: reportData,
         language: language,
+        ai_settings: aiSettings,
       }),
     });
 
