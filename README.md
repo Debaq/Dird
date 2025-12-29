@@ -1,6 +1,6 @@
-# DIRD - Diabetic Retinopathy Detection Platform
+# DIRD+ - Diabetic Retinopathy & AMD Detection Platform
 
-DIRD is a privacy-first, edge-computing web application for ophthalmological image analysis. It runs ONNX AI models (YOLOv8n detection + segmentation) entirely in the browser using WebAssembly, ensuring patient data never leaves the device.
+DIRD+ is a privacy-first, edge-computing web application for ophthalmological image analysis. It runs ONNX AI models (YOLOv8n detection + segmentation) entirely in the browser using WebAssembly, ensuring patient data never leaves the device.
 
 - **Patient & Session Management**: Create patients, organize fundus images by sessions
 - **Dual AI Models**: Detection (bounding boxes) + Segmentation (masks) with configurable execution

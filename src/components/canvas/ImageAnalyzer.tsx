@@ -16,6 +16,7 @@ import {
 import AnnotationCanvas from './AnnotationCanvas';
 import AdvancedLayerControls, { type CanvasLayer } from './AdvancedLayerControls';
 import ToolPanel, { type CanvasTool } from './ToolPanel';
+import { AnalysisPanel } from './AnalysisPanel';
 import { db } from '@/lib/db/schema';
 import { cn } from '@/lib/utils';
 import type { HistoryEntry } from '@/types/annotations';
@@ -505,25 +506,38 @@ const ImageAnalyzer: React.FC = () => {
         </div>
 
         {/* Desktop Side Panel */}
-        <div className="hidden lg:block space-y-4 h-full overflow-y-auto pr-2">
-          <ToolPanel
-            activeTool={activeTool}
-            onToolChange={setActiveTool}
-            disabled={session?.locked}
-            selectedLandmarkType={selectedLandmarkType}
-            onLandmarkTypeChange={setSelectedLandmarkType}
-          />
+        <div className="hidden lg:block h-full overflow-hidden pr-2">
+          <div className="flex flex-col h-full space-y-3">
+            {/* Fixed Analysis and Tools Section - Always visible */}
+            <div className="flex-shrink-0 space-y-3">
+              <AnalysisPanel
+                circinateAnalysis={macularEdemaResult?.circinateAnalysis}
+                circinateVisible={layers.find(l => l.id === 'macular-zones')?.visible ?? false}
+              />
+              
+              <ToolPanel
+                activeTool={activeTool}
+                onToolChange={setActiveTool}
+                disabled={session?.locked}
+                selectedLandmarkType={selectedLandmarkType}
+                onLandmarkTypeChange={setSelectedLandmarkType}
+              />
+            </div>
 
-          <AdvancedLayerControls
-            layers={layers}
-            onLayerUpdate={handleLayerUpdate}
-            aiDetections={aiDetections}
-            manualDetections={manualDetections}
-            measurements={allMeasurements || []}
-            onDetectionsUpdate={handleAnnotationAdded}
-            onMeasurementsUpdate={handleAnnotationAdded}
-            onAddToHistory={addToHistory}
-          />
+            {/* Scrollable Layers Section */}
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <AdvancedLayerControls
+                layers={layers}
+                onLayerUpdate={handleLayerUpdate}
+                aiDetections={aiDetections}
+                manualDetections={manualDetections}
+                measurements={allMeasurements || []}
+                onDetectionsUpdate={handleAnnotationAdded}
+                onMeasurementsUpdate={handleAnnotationAdded}
+                onAddToHistory={addToHistory}
+              />
+            </div>
+          </div>
         </div>
       </div>
 

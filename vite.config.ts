@@ -9,11 +9,11 @@ export default defineConfig(({ mode }) => ({
                                            VitePWA({
                                              registerType: 'autoUpdate',
                                              includeAssets: ['logo.svg', 'logo-default.svg', 'locales/**/*.json', 'clinical-guidelines/**/*.json'],
-                                             manifest: {
-                                               name: 'DIRD - Diabetic Retinopathy Detection',
-                                               short_name: 'DIRD',
-                                               description: 'Privacy-first AI-powered retinopathy analysis',
-                                               theme_color: '#20B5AE',
+      manifest: {
+        name: 'DIRD+ - Diabetic Retinopathy & DMAE Detection',
+        short_name: 'DIRD+',
+        description: 'AI-powered detection of Diabetic Retinopathy and Age-related Macular Degeneration',
+        theme_color: '#ffffff',
                                                icons: [
                                                  {
                                                    src: 'pwa-192x192.png',

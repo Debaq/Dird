@@ -14,6 +14,8 @@ import type { Detection } from '@/lib/db/schema';
 import type { SpatialCalibration } from '@/lib/analysis/spatial-calibrator';
 import { micronsToPixels } from '@/lib/analysis/spatial-calibrator';
 
+import type { CircinatePatternAnalysis } from '@/lib/analysis/macular-edema-detector';
+
 interface MacularZonesOverlayProps {
   visible: boolean;
   opacity: number;
@@ -25,10 +27,11 @@ interface MacularZonesOverlayProps {
     circinatePattern: boolean;
     description: string;
     calibration: SpatialCalibration;
+    circinateAnalysis?: CircinatePatternAnalysis;
   } | null;
   zoneRadiusUm: number; // Radius in micrometers (e.g., 500)
   showDiscDiameterZone?: boolean; // Show 1 DD zone (ETDRS)
-  showLegend?: boolean; // Show legend text panel
+  showLegend?: boolean; // Show legend text panel (deprecated - use panel instead)
 }
 
 /**
@@ -49,7 +52,7 @@ export function MacularZonesOverlay({
     return null;
   }
 
-  const { calibration, exudatesInZone, circinatePattern, detected, method, description } = macularEdemaResult;
+  const { calibration, exudatesInZone, circinatePattern, detected, method, description, circinateAnalysis } = macularEdemaResult;
 
   // Calculate fovea center
   const foveaCenter = {
@@ -70,6 +73,13 @@ export function MacularZonesOverlay({
   const highlightColor = 'rgba(255, 50, 50, 0.9)'; // Red for highlighted exudates
   const circinateLineColor = 'rgba(255, 100, 0, 0.6)'; // Orange for circinate pattern lines
   const labelColor = detected ? 'rgba(255, 165, 0, 1)' : 'rgba(100, 200, 100, 1)';
+
+  // Colors for fitted circle based on pattern type
+  const fittedCircleColor = circinateAnalysis?.isCompleteRing
+    ? 'rgba(0, 255, 100, 0.8)'      // Green for complete rings
+    : circinateAnalysis?.isPartialRing
+    ? 'rgba(255, 200, 0, 0.8)'      // Yellow for partial rings
+    : 'rgba(100, 100, 255, 0.5)';   // Blue for other patterns
 
   return (
     <Group listening={false} opacity={opacity}>
@@ -96,6 +106,19 @@ export function MacularZonesOverlay({
         dash={[8, 4]}
         listening={false}
       />
+
+      {/* Fitted circle overlay (if circinate analysis available) */}
+      {circinateAnalysis?.fittedCircle && (
+        <Circle
+          x={circinateAnalysis.fittedCircle.center.x}
+          y={circinateAnalysis.fittedCircle.center.y}
+          radius={circinateAnalysis.fittedCircle.radius}
+          stroke={fittedCircleColor}
+          strokeWidth={circinateAnalysis.isCompleteRing ? 3 : 2}
+          dash={circinateAnalysis.isPartialRing ? [10, 5] : [5, 5]}
+          listening={false}
+        />
+      )}
 
       {/* Highlight exudates within zone */}
       {exudatesInZone.map((exudate, index) => {

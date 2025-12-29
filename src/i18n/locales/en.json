@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "DIRD",
-    "tagline": "Diabetic Retinopathy Detection",
+    "name": "DIRD+",
+    "tagline": "Diabetic Retinopathy & AMD Detection",
     "longDescription": "Ophthalmological image analysis platform with edge-computing AI. All data remains on your device.",
     "start": "Start"
   },
@@ -12,7 +12,7 @@
     "creating": "Creating...",
     "saving": "Saving...",
     "saveChanges": "Save Changes",
-    "createSession": "Create Session",
+    "createStudy": "Create Study",
     "confirmDelete": "Are you sure you want to delete this?",
     "error": "Error",
     "success": "Success",
@@ -49,12 +49,12 @@
   },
   "errors": {
     "unknown": "Unknown error",
-    "exportSession": "Error exporting session.",
+    "exportStudy": "Error exporting study.",
     "deleteImage": "Error deleting image",
     "imageProcessing": "Error processing image",
     "exportPatient": "Error exporting patient.",
-    "deleteSession": "Error deleting session.",
-    "duplicateSession": "Error duplicating session.",
+    "deleteStudy": "Error deleting study.",
+    "duplicateStudy": "Error duplicating study.",
     "import": "Import Error",
     "deletePatient": "Error deleting patient.",
     "archivePatient": "Error {{action}} patient.",
@@ -65,8 +65,8 @@
   },
   "confirmations": {
     "deleteImage": "Are you sure you want to delete this image and all associated analyses?",
-    "deleteSession": "Are you sure you want to delete this session and all its data? This action is irreversible.",
-    "duplicateSession": "Are you sure you want to duplicate this session? This action will create a copy with the same elements but unlocked.",
+    "deleteStudy": "Are you sure you want to delete this study and all its data? This action is irreversible.",
+    "duplicateStudy": "Are you sure you want to duplicate this study? This action will create a copy with the same elements but unlocked.",
     "deletePatient": "Are you sure you want to delete this patient and all their data? This action is irreversible.",
     "archivePatient": "Are you sure you want to {{action}} this patient?"
   },
@@ -87,7 +87,7 @@
     "registeredOn": "Registered on",
     "showArchived": "Show archived",
     "searchPlaceholder": "Search by name or ID...",
-    "description": "Manage patients and their analysis sessions",
+    "description": "Manage patients and their analysis studies",
     "notFound": "No patients found",
     "empty": "No patients registered. Create one to start.",
     "fields": {
@@ -106,22 +106,22 @@
       "other": "Other"
     }
   },
-  "sessions": {
-    "title": "Sessions",
-    "session": "Session",
-    "create": "New Session",
-    "edit": "Edit Session",
-    "delete": "Delete Session",
-    "search": "Search sessions...",
-    "noSessions": "No sessions found",
-    "addFirst": "Add your first session",
-    "locked": "Session Locked",
+  "studies": {
+    "title": "Studies",
+    "study": "Study",
+    "create": "New Study",
+    "edit": "Edit Study",
+    "delete": "Delete Study",
+    "search": "Search studies...",
+    "noStudies": "No studies found",
+    "addFirst": "Add your first study",
+    "locked": "Study Locked",
     "unlock": "Unlock",
-    "compareTitle": "Session Comparison",
-    "compareAction": "Compare ({{count}}) Sessions",
-    "notesTitle": "Session Notes",
+    "compareTitle": "Study Comparison",
+    "compareAction": "Compare ({{count}}) Studies",
+    "notesTitle": "Study Notes",
     "galleryTitle": "Image Gallery",
-    "empty": "No sessions registered. Create one to start analysis.",
+    "empty": "No studies registered. Create one to start analysis.",
     "status": {
       "active": "Active"
     },
@@ -144,20 +144,20 @@
       "visualAcuity": "Visual Acuity"
     },
     "form": {
-      "name": "Session Name",
+      "name": "Study Name",
       "date": "Date",
       "notes": "Notes (optional)",
-      "notesPlaceholder": "Add notes about the session...",
-      "create": "Create Session",
-      "createDescription": "Complete info to create a new session",
-      "update": "Update Session",
-      "editDescription": "Update session info"
+      "notesPlaceholder": "Add notes about the study...",
+      "create": "Create Study",
+      "createDescription": "Complete info to create a new study",
+      "update": "Update Study",
+      "editDescription": "Update study info"
     }
   },
   "upload": {
     "selectEye": "Select eye:",
     "addImage": "Add Image",
-    "galleryEmpty": "No images in this session. Upload some to start analysis.",
+    "galleryEmpty": "No images in this study. Upload some to start analysis.",
     "eye": {
       "left": "LE (Left Eye)",
       "right": "RE (Right Eye)",
@@ -189,7 +189,11 @@
       "ruler": "Ruler",
       "pan": "Pan",
       "zoom": "Zoom",
+      "selectInstruction": "Click on an annotation to select it. You can drag to move or use handles to resize.",
       "bboxInstruction": "Click and drag to draw a detection box",
+      "eraserInstruction": "Click on any annotation or measurement to delete it permanently.",
+      "panInstruction": "Click and drag to move the image. You can also use the middle mouse button at any time.",
+      "zoomInstruction": "Click to zoom in. Hold Ctrl and click to zoom out. You can also use the mouse wheel.",
       "rulerInstruction": "Click origin point, then click destination to measure distance in Disc Diameters (DD)"
     },
     "layers": {
@@ -406,20 +410,20 @@
     "reportType": "Report Type",
     "evaluatorNotes": "Conclusions",
     "evaluatorNotesPlaceholder": "Draft your initial conclusions here (AI will refine and integrate them)...",
-    "finalWarning": "Note: The final report will lock the session and no more images or analyses can be added or removed.",
+    "finalWarning": "Note: The final report will lock the study and no more images or analyses can be added or removed.",
     "dialogDescription": "Ensure all findings have been reviewed before generating the report.",
-    "previewDescription": "Generates a draft for internal review. Includes watermark and does not lock the session for future edits.",
+    "previewDescription": "Generates a draft for internal review. Includes watermark and does not lock the study for future edits.",
     "previewButton": "Generate Draft",
-    "finalizeDescription": "Generates the official clinical report. Permanently locks the session to ensure data integrity.",
+    "finalizeDescription": "Generates the official clinical report. Permanently locks the study to ensure data integrity.",
     "importantNoteTitle": "Important:",
-    "importantNoteBody": "Generated reports are saved locally in the browser's database. You can access them from the \"Report\" tab of this session at any time.",
+    "importantNoteBody": "Generated reports are saved locally in the browser's database. You can access them from the \"Report\" tab of this study at any time.",
     "generated": "Report generated successfully",
     "processingWithAI": "Processing with AI...",
     "previewGenerated": "Draft report generated",
     "approveAndFinalize": "Approve and Finalize",
     "dialog": {
       "withAI": "With AI conclusion processing",
-      "previewExists": "A preview already exists for this session",
+      "previewExists": "A preview already exists for this study",
       "previewExistsDescription": "You can review the preview in the reports list. Choose an option below:",
       "regenerateTitle": "Regenerate Preview",
       "regenerateDescription": "Deletes current preview and generates a new one with updated notes.",
@@ -427,10 +431,10 @@
       "regenerateConfirmTitle": "Regenerate preview?",
       "regenerateConfirmDescription": "The current preview will be deleted and a new one will be generated. Do you want to continue?",
       "finalizeTitle": "Finalize Report",
-      "finalizeDescription": "Generates the final report and permanently locks the session. No further changes can be made.",
+      "finalizeDescription": "Generates the final report and permanently locks the study. No further changes can be made.",
       "finalizeButton": "Finalize",
       "warningTitle": "Warning:",
-      "warningBody": "Upon finalizing the report, the session will be locked and no further modifications can be made.",
+      "warningBody": "Upon finalizing the report, the study will be locked and no further modifications can be made.",
       "interactionRequired": "Interaction required:",
       "mustInteractFirst": "You must view, download or edit the preview first"
     },
@@ -450,7 +454,7 @@
       "findingsLabel": "Findings",
       "age": "Age",
       "background": "History",
-      "sessionNote": "Session Note",
+      "studyNote": "Study Note",
       "noImage": "No image",
       "noAdditionalObservations": "No additional observations.",
       "combinedTitle": "Evolutionary Report",
@@ -469,12 +473,12 @@
       "finalize": "Finalize",
       "finalizing": "Finalizing...",
       "goToAnalysis": "Go to Analysis",
-      "sessionPrefix": "Session #",
+      "studyPrefix": "Study #",
       "deleteConfirm": "Are you sure you want to delete this preliminary report? This action cannot be undone.",
       "deleteFinalError": "Final reports cannot be deleted.",
-      "finalizeConfirm": "Are you sure you want to finalize this report? This action will convert it to final and lock the session permanently.",
-      "finalizeSuccess": "Report finalized and downloaded successfully. The session has been locked.",
-      "finalizeSuccessDemo": "Report finalized and downloaded successfully. This is the demo session and remains open for demonstration.",
+      "finalizeConfirm": "Are you sure you want to finalize this report? This action will convert it to final and lock the study permanently.",
+      "finalizeSuccess": "Report finalized and downloaded successfully. The study has been locked.",
+      "finalizeSuccessDemo": "Report finalized and downloaded successfully. This is the demo study and remains open for demonstration.",
       "editModalTitle": "Edit Conclusions",
       "editModalPlaceholder": "Enter clinical conclusions and recommendations...",
       "searchPlaceholder": "Search in conclusions...",
@@ -483,8 +487,8 @@
       "foundCount_plural": "{{count}} reports found",
       "categories": {
         "all": "All categories",
-        "single": "Single sessions",
-        "combined": "Combined sessions"
+        "single": "Single studies",
+        "combined": "Combined studies"
       },
       "deleteSuccess": "Report deleted successfully",
       "editModalInfo": "By default, the AI-enhanced version is shown. You can toggle with your original draft.",
@@ -510,7 +514,7 @@
   },
   "export": {
     "patient": "Export Patient",
-    "session": "Export Session",
+    "study": "Export Study",
     "all": "Export All",
     "import": "Import .dird",
     "exporting": "Exporting...",
@@ -527,9 +531,9 @@
     "auto": "Automatic (System)"
   },
   "admin": {
-    "sessionClosed": "Session closed",
+    "studyClosed": "Study closed",
     "panelTitle": "Administration Panel",
-    "systemLabel": "DIRD - Management System",
+    "systemLabel": "DIRD+ - Management System",
     "logout": "Log Out",
     "tabs": {
       "installations": "Installations",
@@ -565,7 +569,7 @@
       "passwordLengthMessage": "Password must be at least 8 characters",
       "passwordMismatchMessage": "Passwords do not match",
       "securityNoteTitle": "Security Note",
-      "securityNoteText": "When changing your password, all active sessions will be closed and you will need to log in again.",
+      "securityNoteText": "When changing your password, all active studies will be closed and you will need to log in again.",
       "resetButton": "Clear",
       "submitButton": "Change Password",
       "updating": "Updating...",
@@ -714,7 +718,7 @@
       "confirmDialog": {
         "title": "Change Clinical Guideline?",
         "description": "Changing the active clinical guideline will affect all future classifications. Existing classifications will retain their original guideline.",
-        "warning": "Note: If you have sessions in progress, consider completing them before changing the guideline.",
+        "warning": "Note: If you have studies in progress, consider completing them before changing the guideline.",
         "cancel": "Cancel",
         "confirm": "Confirm Change"
       },
@@ -900,8 +904,8 @@
         "dlp": "Dyslipidemia",
         "medications": "Medications",
         "otherConditions": "Other Conditions",
-        "sessionDate": "Session Date",
-        "sessionNotes": "Session Notes"
+        "studyDate": "Study Date",
+        "studyNotes": "Study Notes"
       },
       "gallery": {
         "title": "Gallery Options",
@@ -980,7 +984,7 @@
       "info1": "• Models are downloaded from GitHub and cached for offline use",
       "info2": "• Each repository branch contains a different model version",
       "info3": "• If download fails, local model will be used as fallback",
-      "info4": "• Cache persists between sessions and can be cleared at any time",
+      "info4": "• Cache persists between studies and can be cleared at any time",
       "detectionModels": "Detection Models",
       "segmentationModels": "Segmentation Models",
       "downloadSuccess": "Detection model downloaded and loaded successfully",
@@ -1029,7 +1033,7 @@
       }
     },
     "about": {
-      "title": "About DIRD",
+      "title": "About DIRD+",
       "description": "Ophthalmological image analysis platform with edge-computing AI. All data remains on your device.",
       "version": "Version",
       "reset": "Reset Configuration",
@@ -1052,7 +1056,7 @@
   },
   "processing": {
     "title": "Processing Images",
-    "description": "Running AI analysis on session images",
+    "description": "Running AI analysis on study images",
     "complete": "Processing completed successfully",
     "inProgress": "Processing {{current}}/{{total}}...",
     "start": "Process with AI",
@@ -1149,7 +1153,7 @@
       },
       "workflow": {
         "title": "Workflow",
-        "step1": "Create a patient and analysis session",
+        "step1": "Create a patient and analysis study",
         "step2": "Upload fundus images (OD and OS)",
         "step3": "Run automatic AI analysis",
         "step4": "Review, edit and validate detections on interactive canvas",
