@@ -1,5 +1,5 @@
 import React from 'react';
-import { Square, Circle, Eraser, Move, ZoomIn, Hand, Ruler, Target } from 'lucide-react';
+import { Square, Eraser, Move, ZoomIn, MousePointer2, Ruler, Target } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { LandmarkType } from '@/types/annotations';
@@ -24,9 +24,8 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
   const { t } = useTranslation();
 
   const tools = [
-    { id: 'select' as CanvasTool, icon: Hand, label: t('canvas.tools.select') },
+    { id: 'select' as CanvasTool, icon: MousePointer2, label: t('canvas.tools.select') },
     { id: 'bbox' as CanvasTool, icon: Square, label: t('canvas.tools.bbox') },
-    { id: 'circle' as CanvasTool, icon: Circle, label: t('canvas.tools.circle') },
     { id: 'landmark' as CanvasTool, icon: Target, label: t('canvas.tools.landmark') || 'Landmarks' },
     { id: 'ruler' as CanvasTool, icon: Ruler, label: t('canvas.tools.ruler') },
     { id: 'eraser' as CanvasTool, icon: Eraser, label: t('canvas.tools.eraser') },
@@ -35,9 +34,9 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
   ];
 
   return (
-    <div className="bg-white rounded-lg border border-coal-200 p-4">
-      <h3 className="font-semibold text-coal-800 mb-3">{t('canvas.tools.title')}</h3>
-      <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-2 gap-2">
+    <div className="bg-white rounded-lg border border-coal-200 p-1.5">
+      <h3 className="font-semibold text-coal-800 mb-1.5 text-[10px] uppercase tracking-wider opacity-60 px-1">{t('canvas.tools.title')}</h3>
+      <div className="flex flex-wrap gap-1">
         {tools.map((tool) => {
           const Icon = tool.icon;
           const isActive = activeTool === tool.id;
@@ -47,25 +46,57 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
               key={tool.id}
               onClick={() => onToolChange(tool.id)}
               disabled={disabled}
+              title={tool.label}
               className={cn(
-                'flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-colors',
+                'flex items-center justify-center w-8 h-8 rounded-md border transition-all',
                 isActive
-                  ? 'border-primary-500 bg-primary-50 text-primary-700'
-                  : 'border-coal-200 hover:border-coal-300 text-smoke-600',
+                  ? 'border-primary-500 bg-primary-50 text-primary-700 shadow-sm'
+                  : 'border-coal-100 hover:border-coal-300 text-smoke-600 bg-white',
                 disabled && 'opacity-50 cursor-not-allowed'
               )}
             >
-              <Icon className="w-5 h-5 mb-1" />
-              <span className="text-xs font-medium">{tool.label}</span>
+              <Icon className="w-4 h-4" />
             </button>
           );
         })}
       </div>
 
+      {activeTool === 'select' && (
+        <div className="mt-2 p-2 bg-primary-50 rounded border border-primary-100">
+          <p className="text-[10px] leading-tight text-primary-800">
+            {t('canvas.tools.selectInstruction')}
+          </p>
+        </div>
+      )}
+
       {activeTool === 'bbox' && (
-        <div className="mt-4 p-3 bg-primary-50 rounded-lg">
-          <p className="text-xs text-primary-800">
+        <div className="mt-2 p-2 bg-primary-50 rounded border border-primary-100">
+          <p className="text-[10px] leading-tight text-primary-800">
             {t('canvas.tools.bboxInstruction')}
+          </p>
+        </div>
+      )}
+
+      {activeTool === 'eraser' && (
+        <div className="mt-2 p-2 bg-red-50 rounded border border-red-100">
+          <p className="text-[10px] leading-tight text-red-800">
+            {t('canvas.tools.eraserInstruction')}
+          </p>
+        </div>
+      )}
+
+      {activeTool === 'pan' && (
+        <div className="mt-2 p-2 bg-primary-50 rounded border border-primary-100">
+          <p className="text-[10px] leading-tight text-primary-800">
+            {t('canvas.tools.panInstruction')}
+          </p>
+        </div>
+      )}
+
+      {activeTool === 'zoom' && (
+        <div className="mt-2 p-2 bg-primary-50 rounded border border-primary-100">
+          <p className="text-[10px] leading-tight text-primary-800">
+            {t('canvas.tools.zoomInstruction')}
           </p>
         </div>
       )}

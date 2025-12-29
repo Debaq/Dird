@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "DIRD",
-    "tagline": "Detección de Retinopatía Diabética",
+    "name": "DIRD+",
+    "tagline": "Detección de Retinopatía Diabética y DMAE",
     "longDescription": "Plataforma de análisis de imágenes oftalmológicas con IA edge-computing. Todos los datos permanecen en tu dispositivo.",
     "start": "Comenzar"
   },
@@ -12,7 +12,7 @@
     "creating": "Creando...",
     "saving": "Guardando...",
     "saveChanges": "Guardar Cambios",
-    "createSession": "Crear Sesión",
+    "createSession": "Crear Estudio",
     "confirmDelete": "¿Estás seguro de que deseas eliminar esto?",
     "error": "Error",
     "success": "Éxito",
@@ -54,14 +54,14 @@
   },
   "errors": {
     "savePatient": "Error al guardar el paciente",
-    "saveSession": "Error al guardar la sesión",
+    "saveSession": "Error al guardar el estudio",
     "unknown": "Error desconocido",
-    "exportSession": "Error al exportar la sesión.",
+    "exportSession": "Error al exportar el estudio.",
     "deleteImage": "Error al eliminar la imagen",
     "imageProcessing": "Error al procesar la imagen",
     "exportPatient": "Error al exportar el paciente.",
-    "deleteSession": "Error al eliminar la sesión.",
-    "duplicateSession": "Error al duplicar la sesión.",
+    "deleteSession": "Error al eliminar el estudio.",
+    "duplicateSession": "Error al duplicar el estudio.",
     "import": "Error de Importación",
     "deletePatient": "Error al eliminar el paciente.",
     "archivePatient": "Error al {{action}} el paciente.",
@@ -73,8 +73,8 @@
   },
   "confirmations": {
     "deleteImage": "¿Estás seguro de que quieres eliminar esta imagen y todos sus análisis asociados?",
-    "deleteSession": "¿Estás seguro de que quieres eliminar esta sesión y todos sus datos? Esta acción es irreversible.",
-    "duplicateSession": "¿Estás seguro de que deseas duplicar esta sesión? Esta acción creará una copia con los mismos elementos pero desbloqueada.",
+    "deleteSession": "¿Estás seguro de que quieres eliminar este estudio y todos sus datos? Esta acción es irreversible.",
+    "duplicateSession": "¿Estás seguro de que deseas duplicar este estudio? Esta acción creará una copia con los mismos elementos pero desbloqueada.",
     "deletePatient": "¿Estás seguro de que quieres eliminar este paciente y todos sus datos? Esta acción es irreversible.",
     "archivePatient": "¿Estás seguro de que quieres {{action}} este paciente?",
     "deleteReportTitle": "Eliminar Informe",
@@ -97,10 +97,10 @@
     "registeredOn": "Registrado el",
     "showArchived": "Mostrar archivados",
     "searchPlaceholder": "Buscar por nombre o ID...",
-    "description": "Gestiona los pacientes y sus sesiones de análisis",
+    "description": "Gestiona los pacientes y sus estudios de análisis",
     "notFound": "No se encontraron pacientes",
     "empty": "No hay pacientes registrados. Crea uno para comenzar.",
-    "sessions": "sesiones",
+    "sessions": "estudios",
     "status": {
       "no_report": "Sin Informe",
       "preliminary": "Borrador"
@@ -153,28 +153,28 @@
     }
   },
   "sessions": {
-    "title": "Sesiones",
-    "session": "Sesión",
-    "sessionLabel": "Sesión ",
-    "create": "Nueva Sesión",
-    "edit": "Editar Sesión",
-    "delete": "Eliminar Sesión",
-    "search": "Buscar sesiones...",
-    "noSessions": "No se encontraron sesiones",
-    "addFirst": "Agrega tu primera sesión",
-    "locked": "Sesión Bloqueada",
+    "title": "Estudios",
+    "session": "Estudio",
+    "sessionLabel": "Estudio ",
+    "create": "Nuevo Estudio",
+    "edit": "Editar Estudio",
+    "delete": "Eliminar Estudio",
+    "search": "Buscar estudios...",
+    "noSessions": "No se encontraron estudios",
+    "addFirst": "Agrega tu primer estudio",
+    "locked": "Estudio Bloqueado",
     "unlock": "Desbloquear",
-    "compareTitle": "Comparación de Sesiones",
-    "compareAction": "Comparar ({{count}}) Sesiones",
-    "notesTitle": "Notas de la Sesión",
+    "compareTitle": "Comparación de Estudios",
+    "compareAction": "Comparar ({{count}}) Estudios",
+    "notesTitle": "Notas del Estudio",
     "galleryTitle": "Galería de Imágenes",
-    "empty": "No hay sesiones registradas. Crea una para comenzar el análisis.",
+    "empty": "No hay estudios registrados. Crea uno para comenzar el análisis.",
     "status": {
-      "active": "Activa"
+      "active": "Activo"
     },
     "tabs": {
       "images": "Imágenes",
-      "analysis": "Análisis AI",
+      "analysis": "Análisis IA",
       "report": "Reporte"
     },
     "fields": {
@@ -191,27 +191,27 @@
       "visualAcuity": "Agudeza Visual"
     },
     "form": {
-      "name": "Nombre de la sesión",
+      "name": "Nombre del estudio",
       "date": "Fecha",
       "notes": "Notas (opcional)",
-      "notesPlaceholder": "Agregar notas sobre la sesión...",
-      "create": "Crear Sesión",
-      "createDescription": "Completa la información para crear una nueva sesión",
-      "update": "Actualizar Sesión",
-      "editDescription": "Actualiza la información de la sesión"
+      "notesPlaceholder": "Agregar notas sobre el estudio...",
+      "create": "Crear Estudio",
+      "createDescription": "Completa la información para crear un nuevo estudio",
+      "update": "Actualizar Estudio",
+      "editDescription": "Actualiza la información del estudio"
     },
     "reportHistory": {
       "title": "Historial de Informes",
-      "description": "Todos los informes generados para esta sesión"
+      "description": "Todos los informes generados para este estudio"
     },
-    "duplicate": "Duplicar Sesión",
-    "duplicateSuccess": "Sesión duplicada exitosamente",
-    "compareSuccess": "Sesión combinada creada exitosamente"
+    "duplicate": "Duplicar Estudio",
+    "duplicateSuccess": "Estudio duplicado exitosamente",
+    "compareSuccess": "Estudio combinado creado exitosamente"
   },
   "upload": {
     "selectEye": "Seleccionar ojo:",
     "addImage": "Añadir Imagen",
-    "galleryEmpty": "No hay imágenes en esta sesión. Sube algunas para comenzar el análisis.",
+    "galleryEmpty": "No hay imágenes en esta estudio. Sube algunas para comenzar el análisis.",
     "eye": {
       "left": "OI (Izquierdo)",
       "right": "OD (Derecho)",
@@ -255,7 +255,11 @@
       "landmark": "Landmarks",
       "pan": "Desplazar",
       "zoom": "Zoom",
+      "selectInstruction": "Haz clic en una anotación para seleccionarla. Puedes arrastrar para mover o usar los puntos para redimensionar.",
       "bboxInstruction": "Haz clic y arrastra para dibujar una caja de detección",
+      "eraserInstruction": "Haz clic sobre cualquier anotación o medida para eliminarla permanentemente.",
+      "panInstruction": "Haz clic y arrastra para mover la imagen. También puedes usar el botón central del mouse en cualquier momento.",
+      "zoomInstruction": "Haz clic para acercar. Mantén Ctrl y haz clic para alejar. También puedes usar la rueda del mouse.",
       "rulerInstruction": "Haz clic en el punto de origen, luego en el destino para medir la distancia en Diámetros de Disco (DD)",
       "landmarkInstruction": "Haz clic para colocar referencias anatómicas (disco óptico o fóvea). Arrastra para reposicionar."
     },
@@ -333,6 +337,25 @@
     "segmentations": "Segmentaciones",
     "findingsFound": "{{count}} hallazgos detectados",
     "noFindings": "Sin hallazgos",
+    "panel": {
+      "title": "Análisis Avanzado",
+      "noAnalysisAvailable": "Sin análisis disponibles",
+      "hint": "Activa capas de análisis para ver métricas"
+    },
+    "circinate": {
+      "title": "Análisis de Patrón Circinado",
+      "completeRing": "Anillo Completo",
+      "partialRing": "Anillo Parcial",
+      "noRing": "Sin Patrón de Anillo",
+      "overallScore": "Score General",
+      "angularDispersion": "Dispersión Angular",
+      "radialConcentration": "Concentración Radial",
+      "completeness": "Completitud",
+      "circleFit": "Ajuste Circular",
+      "maxGap": "Brecha Máxima",
+      "fittedRadius": "Radio Ajustado",
+      "meanDistance": "Distancia Media"
+    },
     "classes": {
       "background": "Fondo",
       "optic_disc": "Disco Óptico",
@@ -487,20 +510,20 @@
     "reportType": "Tipo de Reporte",
     "evaluatorNotes": "Conclusiones",
     "evaluatorNotesPlaceholder": "Escriba sus conclusiones iniciales aquí (la IA las refinará e integrará)...",
-    "finalWarning": "Nota: El reporte final bloqueará la sesión y no se podrán añadir o eliminar imágenes ni análisis.",
+    "finalWarning": "Nota: El reporte final bloqueará la estudio y no se podrán añadir o eliminar imágenes ni análisis.",
     "dialogDescription": "Asegúrese de que todos los hallazgos han sido revisados antes de generar el informe.",
-    "previewDescription": "Genera un borrador para revisión interna. Incluye marca de agua y no bloquea la sesión para futuras ediciones.",
+    "previewDescription": "Genera un borrador para revisión interna. Incluye marca de agua y no bloquea la estudio para futuras ediciones.",
     "previewButton": "Generar Borrador",
-    "finalizeDescription": "Genera el informe clínico oficial. Bloquea la sesión permanentemente para garantizar la integridad de los datos.",
+    "finalizeDescription": "Genera el informe clínico oficial. Bloquea la estudio permanentemente para garantizar la integridad de los datos.",
     "importantNoteTitle": "Importante:",
-    "importantNoteBody": "Los informes generados se guardan localmente en la base de datos del navegador. Puede acceder a ellos desde la pestaña \"Reporte\" de esta sesión en cualquier momento.",
+    "importantNoteBody": "Los informes generados se guardan localmente en la base de datos del navegador. Puede acceder a ellos desde la pestaña \"Reporte\" de esta estudio en cualquier momento.",
     "generated": "Informe generado exitosamente",
     "processingWithAI": "Procesando con IA...",
     "previewGenerated": "Vista preliminar generada",
     "approveAndFinalize": "Aprobar y Finalizar",
     "dialog": {
       "withAI": "Con procesamiento IA de conclusión",
-      "previewExists": "Ya existe una vista previa para esta sesión",
+      "previewExists": "Ya existe una vista previa para esta estudio",
       "previewExistsDescription": "Puede revisar la vista previa en la lista de informes. Elija una opción a continuación:",
       "regenerateTitle": "Regenerar Preview",
       "regenerateDescription": "Elimina la vista previa actual y genera una nueva con las notas actualizadas.",
@@ -508,10 +531,10 @@
       "regenerateConfirmTitle": "¿Regenerar vista previa?",
       "regenerateConfirmDescription": "Se eliminará la vista previa actual y se generará una nueva. ¿Desea continuar?",
       "finalizeTitle": "Finalizar Informe",
-      "finalizeDescription": "Genera el informe final y bloquea la sesión permanentemente. No podrá realizar más cambios.",
+      "finalizeDescription": "Genera el informe final y bloquea la estudio permanentemente. No podrá realizar más cambios.",
       "finalizeButton": "Finalizar",
       "warningTitle": "Advertencia:",
-      "warningBody": "Al finalizar el informe, la sesión quedará bloqueada y no podrá realizar más modificaciones.",
+      "warningBody": "Al finalizar el informe, la estudio quedará bloqueada y no podrá realizar más modificaciones.",
       "interactionRequired": "Interacción requerida:",
       "mustInteractFirst": "Debe visualizar, descargar o editar el preview primero"
     },
@@ -531,7 +554,7 @@
       "findingsLabel": "Hallazgos",
       "age": "Edad",
       "background": "Antecedentes",
-      "sessionNote": "Nota Sesión",
+      "sessionNote": "Nota Estudio",
       "noImage": "Sin imagen",
       "noAdditionalObservations": "Sin observaciones adicionales.",
       "combinedTitle": "Informe Evolutivo",
@@ -550,12 +573,12 @@
       "finalize": "Finalizar",
       "finalizing": "Finalizando...",
       "goToAnalysis": "Ir a Análisis",
-      "sessionPrefix": "Sesión #",
+      "sessionPrefix": "Estudio #",
       "deleteConfirm": "¿Está seguro de que desea eliminar este informe preliminar? Esta acción no se puede deshacer.",
       "deleteFinalError": "No se pueden eliminar informes finales.",
-      "finalizeConfirm": "¿Está seguro de que desea finalizar este informe? Esta acción convertirá este informe en final y bloqueará la sesión permanentemente.",
-      "finalizeSuccess": "Informe finalizado y descargado correctamente. La sesión ha sido bloqueada.",
-      "finalizeSuccessDemo": "Informe finalizado y descargado correctamente. Esta es la sesión demo y permanece abierta para demostración.",
+      "finalizeConfirm": "¿Está seguro de que desea finalizar este informe? Esta acción convertirá este informe en final y bloqueará la estudio permanentemente.",
+      "finalizeSuccess": "Informe finalizado y descargado correctamente. La estudio ha sido bloqueada.",
+      "finalizeSuccessDemo": "Informe finalizado y descargado correctamente. Esta es la estudio demo y permanece abierta para demostración.",
       "editModalTitle": "Editar Conclusiones",
       "editModalPlaceholder": "Ingrese las conclusiones clínicas y recomendaciones...",
       "searchPlaceholder": "Buscar en conclusiones...",
@@ -564,8 +587,8 @@
       "foundCount_plural": "{{count}} informes encontrados",
       "categories": {
         "all": "Todas las categorías",
-        "single": "Sesiones únicas",
-        "combined": "Sesiones combinadas"
+        "single": "Estudios únicas",
+        "combined": "Estudios combinadas"
       },
       "deleteSuccess": "Informe eliminado exitosamente",
       "editModalInfo": "Por defecto se muestra la versión mejorada por IA. Puedes alternar con tu borrador original.",
@@ -591,7 +614,7 @@
   },
   "export": {
     "patient": "Exportar Paciente",
-    "session": "Exportar Sesión",
+    "session": "Exportar Estudio",
     "all": "Exportar Todo",
     "import": "Importar .dird",
     "exporting": "Exportando...",
@@ -599,7 +622,7 @@
     "errorPatient": "Error al exportar el paciente",
     "errorData": "Error al exportar los datos",
     "patientSuccess": "Paciente exportado exitosamente",
-    "sessionSuccess": "Sesión exportada exitosamente"
+    "sessionSuccess": "Estudio exportado exitosamente"
   },
   "import": {
     "title": "Importar .dird",
@@ -609,7 +632,7 @@
     "waitMessage": "Esto puede tardar unos momentos",
     "successTitle": "Importación Exitosa",
     "patientLabel": "Paciente: ",
-    "sessionsImported": "Sesiones importadas: ",
+    "sessionsImported": "Estudios importados: ",
     "imagesImported": "Imágenes importadas: ",
     "detectionsImported": "Detecciones importadas: ",
     "errorTitle": "Error de Importación",
@@ -621,10 +644,10 @@
     "auto": "Automático (Sistema)"
   },
   "admin": {
-    "sessionClosed": "Sesión cerrada",
+    "sessionClosed": "Estudio cerrado",
     "panelTitle": "Panel de Administración",
-    "systemLabel": "DIRD - Sistema de Gestión",
-    "logout": "Cerrar Sesión",
+    "systemLabel": "DIRD+ - Sistema de Gestión",
+    "logout": "Cerrar Estudio",
     "tabs": {
       "installations": "Instalaciones",
       "contributions": "Contribuciones",
@@ -638,14 +661,14 @@
       "title": "Acceso Administrativo",
       "usernameLabel": "Usuario",
       "passwordLabel": "Contraseña",
-      "submit": "Iniciar Sesión",
-      "loading": "Iniciando sesión...",
+      "submit": "Iniciar Estudio",
+      "loading": "Iniciando estudio...",
       "errors": {
         "missingCredentials": "Por favor ingresa usuario y contraseña",
-        "loginError": "Error al iniciar sesión",
+        "loginError": "Error al iniciar estudio",
         "invalidCredentials": "Credenciales incorrectas"
       },
-      "success": "Inicio de sesión exitoso"
+      "success": "Inicio de estudio exitoso"
     },
     "changePassword": {
       "title": "Cambiar Contraseña",
@@ -659,7 +682,7 @@
       "passwordLengthMessage": "La contraseña debe tener al menos 8 caracteres",
       "passwordMismatchMessage": "Las contraseñas no coinciden",
       "securityNoteTitle": "Nota de seguridad",
-      "securityNoteText": "Al cambiar tu contraseña, se cerrarán todas las sesiones activas y deberás iniciar sesión nuevamente.",
+      "securityNoteText": "Al cambiar tu contraseña, se cerrarán todas las estudios activas y deberás iniciar estudio nuevamente.",
       "resetButton": "Limpiar",
       "submitButton": "Cambiar Contraseña",
       "updating": "Actualizando...",
@@ -808,7 +831,7 @@
       "confirmDialog": {
         "title": "¿Cambiar Guía Clínica?",
         "description": "Cambiar la guía clínica activa afectará todas las clasificaciones futuras. Las clasificaciones existentes mantendrán su guía original.",
-        "warning": "Nota: Si tienes sesiones en progreso, considera completarlas antes de cambiar la guía.",
+        "warning": "Nota: Si tienes estudios en progreso, considera completarlas antes de cambiar la guía.",
         "cancel": "Cancelar",
         "confirm": "Confirmar Cambio"
       },
@@ -1006,8 +1029,8 @@
         "dlp": "Dislipidemia (DLP)",
         "medications": "Medicamentos",
         "otherConditions": "Otras Condiciones",
-        "sessionDate": "Fecha Sesión",
-        "sessionNotes": "Notas de Sesión"
+        "sessionDate": "Fecha Estudio",
+        "sessionNotes": "Notas de Estudio"
       },
       "gallery": {
         "title": "Opciones de Galería",
@@ -1087,7 +1110,7 @@
       "info1": "• Los modelos se descargan desde GitHub y se almacenan en cache para uso offline",
       "info2": "• Cada rama del repositorio contiene una versión diferente del modelo",
       "info3": "• Si la descarga falla, se usará el modelo local como fallback",
-      "info4": "• El cache persiste entre sesiones y se puede limpiar en cualquier momento",
+      "info4": "• El cache persiste entre estudios y se puede limpiar en cualquier momento",
       "detectionModels": "Modelos de Detección",
       "segmentationModels": "Modelos de Segmentación",
       "downloadSuccess": "Modelo de detección descargado y cargado exitosamente",
@@ -1169,7 +1192,7 @@
       }
     },
     "about": {
-      "title": "Acerca de DIRD",
+      "title": "Acerca de DIRD+",
       "description": "Plataforma de análisis de imágenes oftalmológicas con IA edge-computing. Todos los datos permanecen en tu dispositivo.",
       "version": "Versión",
       "reset": "Restablecer Configuración",
@@ -1192,7 +1215,7 @@
   },
   "processing": {
     "title": "Procesando Imágenes",
-    "description": "Ejecutando análisis de IA en las imágenes de la sesión",
+    "description": "Ejecutando análisis de IA en las imágenes de la estudio",
     "complete": "Procesamiento completado con éxito",
     "inProgress": "Procesando {{current}}/{{total}}...",
     "start": "Procesar con IA",
@@ -1299,7 +1322,7 @@
       },
       "workflow": {
         "title": "Flujo de Trabajo",
-        "step1": "Crea un paciente y una sesión de análisis",
+        "step1": "Crea un paciente y una estudio de análisis",
         "step2": "Sube imágenes de fondo de ojo (OD y OI)",
         "step3": "Ejecuta el análisis automático con IA",
         "step4": "Revisa, edita y valida las detecciones en el canvas interactivo",

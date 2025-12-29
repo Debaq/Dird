@@ -122,7 +122,7 @@ interface ConfigStore {
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
-  name: 'DIRD',
+  name: 'DIRD+',
   appearance: {
     primaryColor: '#20B5AE',
     logo: 'logo-default.svg',
@@ -159,8 +159,8 @@ export const DEFAULT_CONFIG: AppConfig = {
     cpuVendor: 'auto'
   },
   report: {
-    title: 'DIRD',
-    subtitle: 'Detección de Retinopatía Diabética',
+    title: 'DIRD+',
+    subtitle: 'Detección de Retinopatía Diabética y DMAE',
     useSystemLogo: true,
     customLogo: null,
     colors: {
@@ -285,7 +285,7 @@ export const useConfigStore = create<ConfigStore>()(
     }),
     {
       name: 'dird-config',
-      version: 7,
+      version: 8,
       migrate: (persistedState: any, version) => {
         let state = persistedState;
 
@@ -347,6 +347,18 @@ export const useConfigStore = create<ConfigStore>()(
            state = {
              ...state,
              aiConclusion: DEFAULT_CONFIG.aiConclusion
+           };
+        }
+
+        if (version < 8) {
+           state = {
+             ...state,
+             name: 'DIRD+',
+             report: {
+               ...state.report,
+               title: 'DIRD+',
+               subtitle: 'Detección de Retinopatía Diabética y DMAE'
+             }
            };
         }
 

@@ -477,8 +477,36 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       return;
     }
 
-    if (activeTool === 'pan' || activeTool === 'zoom') {
+    if (activeTool === 'pan') {
       setIsPanning(true);
+      return;
+    }
+
+    if (activeTool === 'zoom') {
+      const stage = stageRef.current;
+      if (stage) {
+        // Simple click-to-zoom logic
+        const oldScale = stageScale;
+        const pointer = stage.getPointerPosition();
+        
+        if (!pointer) return;
+        
+        const mousePointTo = {
+          x: (pointer.x - stage.x()) / oldScale,
+          y: (pointer.y - stage.y()) / oldScale,
+        };
+
+        // Zoom In (default) vs Zoom Out (Ctrl key)
+        const isZoomOut = e.evt.ctrlKey;
+        const zoomFactor = isZoomOut ? 1 / 1.5 : 1.5;
+        const newScale = Math.max(1, Math.min(5, oldScale * zoomFactor));
+        
+        setStageScale(newScale);
+        setStagePos({
+          x: pointer.x - mousePointTo.x * newScale,
+          y: pointer.y - mousePointTo.y * newScale,
+        });
+      }
       return;
     }
 
@@ -508,7 +536,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       return;
     }
 
-    if (activeTool === 'bbox' || activeTool === 'circle') {
+    if (activeTool === 'bbox') {
       // Don't start drawing if clicking on a shape (detection/annotation)
       // Only allow drawing on the background image or Stage itself
       const targetName = e.target.getClassName();
@@ -946,9 +974,14 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     }
   };
 
+  // State to track if Ctrl is pressed for cursor changes
+  const [isCtrlPressed, setIsCtrlPressed] = useState(false);
+
   // Manejar teclas de acceso rápido (Ctrl+Z para deshacer, Ctrl+Y o Ctrl+Shift+Z para rehacer, Flechas para mover)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Control') setIsCtrlPressed(true);
+
       // Escape to deselect and (via ImageAnalyzer) return to select tool
       if (e.key === 'Escape') {
         setSelectedAnnotation(null);
@@ -1024,6 +1057,8 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
     // Key up listener to commit history for keyboard moves
     const handleKeyUp = (e: KeyboardEvent) => {
+        if (e.key === 'Control') setIsCtrlPressed(false);
+        
         if (isKeyboardMoving.current && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
              if (selectedAnnotationId) {
                  recordMoveHistory(parseInt(selectedAnnotationId));
@@ -1066,13 +1101,13 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       case 'pan':
         return isPanning ? 'grabbing' : 'grab';
       case 'zoom':
-        return 'zoom-in';
+        return isCtrlPressed ? 'zoom-out' : 'zoom-in';
       case 'bbox':
-      case 'circle':
       case 'ruler':
         return 'crosshair';
       case 'eraser':
-        return 'not-allowed';
+        // Custom red X cursor for better clarity
+        return 'url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNlZjQ0NDQiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48bGluZSB4MT0iMTgiIHkxPSI2IiB4Mj0iNiIgeTI9IjE4Ij48L2xpbmU+PGxpbmUgeDE9IjYiIHkxPSI2IiB4Mj0iMTgiIHkyPSIxOCI+PC9saW5lPjwvc3ZnPg") 12 12, crosshair';
       case 'select':
         return 'pointer';
       default:
@@ -1146,7 +1181,15 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           y={stagePos.y}
           onWheel={handleWheel}
           onDragEnd={handleDragEnd}
-          draggable={activeTool === 'pan' || isPanning}
+          draggable={true}
+          onDragStart={(e) => {
+            // Only allow dragging if it's the pan tool OR middle mouse button
+            // In Konva, the original event is in e.evt
+            const isMiddleButton = e.evt && (e.evt.button === 1);
+            if (activeTool !== 'pan' && !isMiddleButton && !isPanning) {
+              e.target.stopDrag();
+            }
+          }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -1658,21 +1701,6 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
               dash={[10, 5]}
             />
           )}
-          {newAnnotation && newAnnotation.type === 'circle' && (
-            <Rect
-              x={newAnnotation.x * scale + imageOffset.x}
-              y={newAnnotation.y * scale + imageOffset.y}
-              width={newAnnotation.width * scale}
-              height={newAnnotation.height * scale}
-              cornerRadius={[
-                Math.abs(newAnnotation.width * scale) / 2,
-                Math.abs(newAnnotation.height * scale) / 2,
-              ]}
-              stroke="#FFD93D"
-              strokeWidth={2}
-              dash={[10, 5]}
-            />
-          )}
 
           {/* Annotation pending class selection */}
           {pendingAnnotation && (
@@ -1967,6 +1995,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                   circinatePattern: macularEdemaData.result.circinatePattern,
                   description: macularEdemaData.result.clinicalDescription || '',
                   calibration: macularEdemaData.result.calibration,
+                  circinateAnalysis: macularEdemaData.result.circinateAnalysis,
                 }}
                 zoneRadiusUm={macularEdemaData.zoneRadiusUm}
                 showDiscDiameterZone={false}
