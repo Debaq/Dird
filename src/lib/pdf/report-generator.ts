@@ -157,7 +157,7 @@ export class ReportGenerator {
     this.doc.setFontSize(22);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(...this.primaryColor);
-    const title = category === 'combined' ? 'Informe Evolutivo' : this.config.title;
+    const title = category === 'combined' ? i18n.t('reports.pdf.combinedTitle') : this.config.title;
     this.doc.text(title, textX, this.currentY + 5);
 
     this.doc.setFontSize(9);
@@ -177,7 +177,7 @@ export class ReportGenerator {
     this.doc.setFontSize(9);
     this.doc.setFont('helvetica', 'normal');
     this.doc.setTextColor(120, 120, 120);
-    this.doc.text(`Generado: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, this.pageWidth - this.margin, this.currentY + 10, { align: 'right' });
+    this.doc.text(`${i18n.t('reports.pdf.generatedOn')} ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, this.pageWidth - this.margin, this.currentY + 10, { align: 'right' });
 
     this.currentY += 18;
 
@@ -193,7 +193,7 @@ export class ReportGenerator {
     this.doc.setFontSize(11);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(...this.primaryColor);
-    this.doc.text('INFORMACIÓN CLÍNICA', this.margin, this.currentY);
+    this.doc.text(i18n.t('reports.pdf.clinicalInfo'), this.margin, this.currentY);
     this.currentY += 4;
 
     const fields = this.config.patientInfoFields || DEFAULT_CONFIG.report.patientInfoFields;
@@ -203,7 +203,7 @@ export class ReportGenerator {
 
     if (fields.name) leftColumn.push({ label: i18n.t('patients.name'), value: patient.name });
     if (fields.id) leftColumn.push({ label: i18n.t('patients.id'), value: patient.patientId });
-    if (fields.age) leftColumn.push({ label: 'Edad', value: `${this.calculateAge(patient.dateOfBirth)} años` });
+    if (fields.age) leftColumn.push({ label: i18n.t('reports.pdf.age'), value: `${this.calculateAge(patient.dateOfBirth)} ${i18n.t('patients.years')}` });
 
     // Merge columns into rows
     const body: any[] = [];
@@ -230,9 +230,9 @@ export class ReportGenerator {
     if (fields.otherConditions && patient.otherConditions) historyParts.push(`Otros: ${patient.otherConditions}`);
 
     if (fields.diabetes || fields.hta || fields.dlp || fields.medications || fields.otherConditions) {
-        const historyText = historyParts.join(', ') || 'Sin antecedentes relevantes';
+        const historyText = historyParts.join(', ') || i18n.t('reports.pdf.noRelevantHistory');
         body.push([
-            { content: 'Antecedentes', styles: { fontStyle: 'bold', textColor: this.primaryColor } },
+            { content: i18n.t('reports.pdf.background'), styles: { fontStyle: 'bold', textColor: this.primaryColor } },
             { content: historyText } 
         ]);
     }
@@ -257,7 +257,7 @@ export class ReportGenerator {
     this.doc.setFontSize(11);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(...this.primaryColor);
-    this.doc.text('INFORMACIÓN CLÍNICA', this.margin, this.currentY);
+    this.doc.text(i18n.t('reports.pdf.clinicalInfo'), this.margin, this.currentY);
     this.currentY += 4;
 
     const fields = this.config.patientInfoFields || DEFAULT_CONFIG.report.patientInfoFields;
@@ -268,7 +268,7 @@ export class ReportGenerator {
 
     if (fields.name) leftColumn.push({ label: i18n.t('patients.name'), value: patient.name });
     if (fields.id) leftColumn.push({ label: i18n.t('patients.id'), value: patient.patientId });
-    if (fields.age) leftColumn.push({ label: 'Edad', value: `${this.calculateAge(patient.dateOfBirth)} años` });
+    if (fields.age) leftColumn.push({ label: i18n.t('reports.pdf.age'), value: `${this.calculateAge(patient.dateOfBirth)} ${i18n.t('patients.years')}` });
 
     if (fields.sessionDate) rightColumn.push({ label: i18n.t('sessions.fields.date'), value: new Date(session.date).toLocaleString() });
     
@@ -276,7 +276,7 @@ export class ReportGenerator {
     rightColumn.push({ label: i18n.t('sessions.session'), value: `N° ${session.sessionNumber}` });
     
     // Model Info
-    rightColumn.push({ label: 'Modelo', value: session.modelVersions.detection || 'N/A' });
+    rightColumn.push({ label: i18n.t('reports.pdf.model'), value: session.modelVersions.detection || 'N/A' });
 
     // Merge columns into rows
     const body: any[] = [];
@@ -314,9 +314,9 @@ export class ReportGenerator {
     if (fields.otherConditions && patient.otherConditions) historyParts.push(`Otros: ${patient.otherConditions}`);
 
     if (fields.diabetes || fields.hta || fields.dlp || fields.medications || fields.otherConditions) {
-        const historyText = historyParts.join(', ') || 'Sin antecedentes relevantes';
+        const historyText = historyParts.join(', ') || i18n.t('reports.pdf.noRelevantHistory');
         body.push([
-            { content: 'Antecedentes', styles: { fontStyle: 'bold', textColor: this.primaryColor } },
+            { content: i18n.t('reports.pdf.background'), styles: { fontStyle: 'bold', textColor: this.primaryColor } },
             { content: historyText, colSpan: 3 }
         ]);
     }
@@ -324,7 +324,7 @@ export class ReportGenerator {
     // Session Notes
     if (fields.sessionNotes) {
         body.push([
-            { content: 'Nota Sesión', styles: { fontStyle: 'bold', textColor: this.primaryColor } },
+            { content: i18n.t('reports.pdf.sessionNote'), styles: { fontStyle: 'bold', textColor: this.primaryColor } },
             { content: session.notes || '-', colSpan: 3 }
         ]);
     }
@@ -353,7 +353,7 @@ export class ReportGenerator {
     this.doc.setFontSize(11);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(...this.primaryColor);
-    this.doc.text('RESUMEN DE HALLAZGOS Y ANÁLISIS POR CUADRANTES', this.margin, this.currentY);
+    this.doc.text(i18n.t('reports.pdf.findingsAndAnalysis'), this.margin, this.currentY);
     this.currentY += 6;
 
     const startY = this.currentY;
@@ -373,12 +373,12 @@ export class ReportGenerator {
     ]);
 
     if (findingsData.length === 0) {
-        findingsData.push(['Sin hallazgos', '-']);
+        findingsData.push([i18n.t('analysis.noFindings'), '-']);
     }
 
     autoTable(this.doc, {
       startY: startY,
-      head: [['Hallazgo', 'Total']],
+      head: [[i18n.t('reports.pdf.finding'), i18n.t('reports.pdf.total')]],
       body: findingsData,
       theme: 'striped',
       headStyles: { fillColor: this.primaryColor, fontSize: 9, fontStyle: 'bold' },
@@ -414,15 +414,15 @@ export class ReportGenerator {
     }
 
     const quadrantData = [
-        ['Superior Temporal (ST)', (statsOI.ST + statsOD.ST).toString()],
-        ['Inferior Temporal (IT)', (statsOI.IT + statsOD.IT).toString()],
-        ['Superior Nasal (SN)', (statsOI.SN + statsOD.SN).toString()],
-        ['Inferior Nasal (IN)', (statsOI.IN + statsOD.IN).toString()],
+        [i18n.t('analysis.drClassification.detailsModal.quadrantNames.superior-temporal') + ' (ST)', (statsOI.ST + statsOD.ST).toString()],
+        [i18n.t('analysis.drClassification.detailsModal.quadrantNames.inferior-temporal') + ' (IT)', (statsOI.IT + statsOD.IT).toString()],
+        [i18n.t('analysis.drClassification.detailsModal.quadrantNames.superior-nasal') + ' (SN)', (statsOI.SN + statsOD.SN).toString()],
+        [i18n.t('analysis.drClassification.detailsModal.quadrantNames.inferior-nasal') + ' (IN)', (statsOI.IN + statsOD.IN).toString()],
     ];
 
     autoTable(this.doc, {
       startY: startY, // Align top
-      head: [['Cuadrante', 'Total']],
+      head: [[i18n.t('reports.pdf.quadrant'), i18n.t('reports.pdf.total')]],
       body: quadrantData,
       theme: 'striped',
       headStyles: { fillColor: this.accentColor, fontSize: 9, fontStyle: 'bold' },
@@ -496,7 +496,7 @@ export class ReportGenerator {
     this.doc.setFontSize(11);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(...this.primaryColor);
-    this.doc.text('EVOLUCIÓN COMPARATIVA', this.margin, this.currentY);
+    this.doc.text(i18n.t('reports.pdf.comparativeEvolution'), this.margin, this.currentY);
     this.currentY += 6;
 
     // Sort sessions by date
@@ -563,7 +563,7 @@ export class ReportGenerator {
                  this.doc.setFontSize(8);
                  this.doc.setFont('helvetica', 'italic');
                  this.doc.setTextColor(150, 150, 150);
-                 this.doc.text('Sin imagen', startX, rowStartY + 10);
+                 this.doc.text(i18n.t('reports.pdf.noImage'), startX, rowStartY + 10);
                  maxRowHeight = Math.max(maxRowHeight, 20);
             }
 
@@ -741,7 +741,7 @@ export class ReportGenerator {
           if (imgDetections.length > 0) {
             this.doc.setFontSize(7);
             this.doc.setTextColor(...this.accentColor);
-            this.doc.text(`Hallazgos: ${imgDetections.length}`, x, contentY + renderHeight + 4);
+            this.doc.text(`${i18n.t('reports.pdf.findingsLabel')}: ${imgDetections.length}`, x, contentY + renderHeight + 4);
             return renderHeight + 10; // Total height used
           }
       }
@@ -973,7 +973,7 @@ export class ReportGenerator {
     this.doc.setFont('helvetica', 'normal');
     this.doc.setTextColor(0, 0, 0);
 
-    const text = notes || 'Sin observaciones adicionales.';
+    const text = notes || i18n.t('reports.pdf.noAdditionalObservations');
     const splitText = this.doc.splitTextToSize(text, boxWidth - 4); // padding
     const textHeight = splitText.length * 4;
     const boxHeight = Math.max(textHeight + 6, 20); // Min height
@@ -1011,7 +1011,7 @@ export class ReportGenerator {
       this.doc.setTextColor(150, 150, 150);
 
       const footerY = this.pageHeight - 8;
-      this.doc.text(`Generado por DIRD - AI Assistant`, this.margin, footerY);
+      this.doc.text(i18n.t('reports.pdf.footerText'), this.margin, footerY);
       this.doc.text(`${i}/${pageCount}`, this.pageWidth - this.margin, footerY, { align: 'right' });
     }
   }

@@ -4,7 +4,7 @@ import { FileText, Download, Calendar, ShieldCheck, Eye, Trash2, Edit3, CheckCir
 import { toast } from 'sonner';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useTranslation } from 'react-i18next';
-import { db } from '@/lib/db/schema';
+import { db, type Report } from '@/lib/db/schema';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import PDFViewerModal from './PDFViewerModal';
@@ -29,13 +29,22 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
 
   const session = useLiveQuery(() => db.sessions.get(sessionId), [sessionId]);
 
-  const handleDownload = async (pdfBlob: Blob, type: string, date: Date, reportSessionId: number, notes?: string) => {
+  const handleDownload = async (pdfBlob: Blob, type: string, date: Date, reportSessionId: number, notes?: string, reportId?: number) => {
     let blobToUse = pdfBlob;
     if (type === 'preview') {
       try {
         blobToUse = await regenerateSessionReportBlob(reportSessionId, notes);
       } catch (error) {
         console.error("Error regenerating preview report", error);
+      }
+
+      // Marcar el preview como descargado
+      if (reportId) {
+        try {
+          await db.reports.update(reportId, { previewDownloaded: true });
+        } catch (error) {
+          console.error("Error updating preview downloaded status", error);
+        }
       }
     }
     const url = URL.createObjectURL(blobToUse);
@@ -48,13 +57,22 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
     URL.revokeObjectURL(url);
   };
 
-  const handleViewPDF = async (pdfBlob: Blob, type: string, date: Date, reportSessionId: number, notes?: string) => {
+  const handleViewPDF = async (pdfBlob: Blob, type: string, date: Date, reportSessionId: number, notes?: string, reportId?: number) => {
     let blobToUse = pdfBlob;
     if (type === 'preview') {
       try {
         blobToUse = await regenerateSessionReportBlob(reportSessionId, notes);
       } catch (error) {
         console.error("Error regenerating preview report", error);
+      }
+
+      // Marcar el preview como visualizado
+      if (reportId) {
+        try {
+          await db.reports.update(reportId, { previewViewed: true });
+        } catch (error) {
+          console.error("Error updating preview viewed status", error);
+        }
       }
     }
     const title = `DIRD_Reporte_${type.toUpperCase()}_${new Date(date).toISOString().split('T')[0]}.pdf`;
@@ -65,7 +83,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
     setSelectedReport(null);
   };
 
-  const [editingReport, setEditingReport] = useState<{id: number, notes: string} | null>(null);
+  const [editingReport, setEditingReport] = useState<{id: number, notes: string, originalNotes?: string} | null>(null);
   const [finalizingReport, setFinalizingReport] = useState<number | null>(null);
 
   const handleDeleteReport = async (reportId: number, type: string) => {
@@ -189,8 +207,8 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
     }
   };
 
-  const startEditing = (reportId: number, currentNotes: string) => {
-    setEditingReport({id: reportId, notes: currentNotes});
+  const startEditing = (reportId: number, currentNotes: string, originalNotes?: string) => {
+    setEditingReport({id: reportId, notes: currentNotes, originalNotes});
   };
 
   const saveEditedNotes = async () => {
@@ -200,18 +218,25 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
       // Update only the notes in the database without regenerating the PDF
       await db.reports.update(editingReport.id, {
         evaluatorNotes: editingReport.notes,
+        conclusionEdited: true, // Marcar que se editó la conclusión
         generatedAt: new Date(), // Update the timestamp when notes are edited
       });
 
       setEditingReport(null);
+      toast.success(t('reports.list.updateSuccess') || 'Conclusión actualizada');
     } catch (error) {
       console.error('Error updating report notes:', error);
-      toast.error('Error al actualizar las conclusiones');
+      toast.error(t('reports.list.updateError'));
     }
   };
 
   const cancelEditing = () => {
     setEditingReport(null);
+  };
+
+  // Verifica si el usuario ha interactuado con el preview
+  const hasInteractedWithPreview = (report: Report) => {
+    return report.previewViewed || report.previewDownloaded || report.conclusionEdited;
   };
 
   if (!reports) return <div className="py-8 text-center">{t('ui.loading')}</div>;
@@ -243,14 +268,16 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
                 {report.type === 'final' ? <ShieldCheck className="w-6 h-6" /> : <FileText className="w-6 h-6" />}
               </div>
               <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <span className="font-bold text-coal-800">
-                    {report.type === 'final' ? t('reports.status.final') : t('reports.status.preliminary')}
-                  </span>
-                  <Badge variant={report.type === 'final' ? 'default' : 'secondary'} className="text-[10px] uppercase">
-                    {report.type}
-                  </Badge>
-                </div>
+                {report.type !== 'final' && (
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <span className="font-bold text-coal-800">
+                      {t('reports.status.preliminary')}
+                    </span>
+                    <Badge variant="secondary" className="text-[10px] uppercase">
+                      {report.type}
+                    </Badge>
+                  </div>
+                )}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs text-smoke-500">
                   <span className="flex items-center gap-1 whitespace-nowrap">
                     <Calendar className="w-3.5 h-3.5" />
@@ -265,7 +292,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
                 variant="ghost"
                 size="sm"
                 className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto justify-center"
-                onClick={() => handleViewPDF(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
+                onClick={() => handleViewPDF(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes, report.id)}
               >
                 <Eye className="w-4 h-4 mr-2" />
                 {t('reports.list.viewPDF')}
@@ -274,7 +301,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
                 variant="ghost"
                 size="sm"
                 className="hover:bg-primary-50 hover:text-primary-700 w-full sm:w-auto justify-center"
-                onClick={() => handleDownload(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes)}
+                onClick={() => handleDownload(report.pdfBlob, report.type, report.generatedAt, report.sessionId, report.evaluatorNotes, report.id)}
               >
                 <Download className="w-4 h-4 mr-2" />
                 {t('reports.list.downloadPDF')}
@@ -284,7 +311,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
                   variant="ghost"
                   size="sm"
                   className="hover:bg-amber-50 hover:text-amber-700 w-full sm:w-auto justify-center"
-                  onClick={() => report.id && startEditing(report.id, report.evaluatorNotes || '')}
+                  onClick={() => report.id && startEditing(report.id, report.evaluatorNotes || '', report.originalNotes)}
                 >
                   <Edit3 className="w-4 h-4 mr-2" />
                   {t('reports.list.edit')}
@@ -302,25 +329,34 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
                 </Button>
               )}
               {report.type === 'preview' && session && !session.locked && (
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="hover:bg-accent-600 hover:text-white w-full sm:w-auto bg-accent-500 text-white"
-                  onClick={() => report.id && handleFinalizeReport(report.id, report.sessionId, report.evaluatorNotes || '')}
-                  disabled={finalizingReport === report.id}
-                >
-                  {finalizingReport === report.id ? (
-                    <>
-                      <CheckCircle className="w-4 h-4 mr-2 animate-spin" />
-                      {t('reports.list.finalizing')}
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      {t('reports.list.finalize')}
-                    </>
+                <div className="relative w-full sm:w-auto group/tooltip">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="hover:bg-accent-600 hover:text-white w-full sm:w-auto bg-accent-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => report.id && handleFinalizeReport(report.id, report.sessionId, report.evaluatorNotes || '')}
+                    disabled={finalizingReport === report.id || !hasInteractedWithPreview(report)}
+                    title={!hasInteractedWithPreview(report) ? t('reports.list.mustInteractFirst', { defaultValue: 'Debe visualizar, descargar o editar el preview primero' }) : ''}
+                  >
+                    {finalizingReport === report.id ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2 animate-spin" />
+                        {t('reports.list.finalizing')}
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        {t('reports.list.finalize')}
+                      </>
+                    )}
+                  </Button>
+                  {!hasInteractedWithPreview(report) && (
+                    <div className="hidden group-hover/tooltip:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-coal-900 text-white text-xs rounded-lg whitespace-nowrap z-50 shadow-lg">
+                      {t('reports.list.mustInteractFirst', { defaultValue: 'Debe visualizar, descargar o editar el preview primero' })}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-4 border-transparent border-t-coal-900"></div>
+                    </div>
                   )}
-                </Button>
+                </div>
               )}
             </div>
           </div>
@@ -346,16 +382,48 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
         )}
 
         {editingReport && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl w-full max-w-md p-6">
-              <h3 className="text-lg font-semibold mb-4">{t('reports.list.editModalTitle')}</h3>
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+            <div className="bg-white dark:bg-dark-surface rounded-xl w-full max-w-2xl p-6 shadow-2xl">
+              <h3 className="text-lg font-semibold mb-2 text-coal-800 dark:text-dark-text">
+                {t('reports.list.editModalTitle')}
+              </h3>
+              
+              {editingReport.originalNotes && (
+                <div className="mb-4">
+                  <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded-md mb-3 border border-amber-100 flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4" />
+                    {t('reports.list.editModalInfo')}
+                  </div>
+                  <div className="flex gap-2">
+                     <Button
+                        variant={editingReport.notes !== editingReport.originalNotes ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => {
+                          // Note: Swapping logic could be improved here
+                        }}
+                        className="pointer-events-none" 
+                      >
+                        {t('reports.list.aiVersion')}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditingReport({...editingReport, notes: editingReport.originalNotes!})}
+                        disabled={editingReport.notes === editingReport.originalNotes}
+                      >
+                        {t('reports.list.restoreDraft')}
+                      </Button>
+                  </div>
+                </div>
+              )}
+
               <textarea
                 value={editingReport.notes}
                 onChange={(e) => setEditingReport({...editingReport, notes: e.target.value})}
-                className="w-full h-32 p-3 border border-coal-200 rounded-lg resize-none"
+                className="w-full h-64 p-4 border border-coal-200 dark:border-coal-600 rounded-lg resize-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-gray-50 dark:bg-coal-800 text-sm leading-relaxed"
                 placeholder={t('reports.list.editModalPlaceholder')}
               />
-              <div className="flex justify-end gap-2 mt-4">
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-coal-100 dark:border-coal-700">
                 <Button
                   variant="outline"
                   onClick={cancelEditing}
@@ -364,6 +432,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
                 </Button>
                 <Button
                   onClick={saveEditedNotes}
+                  className="min-w-[100px]"
                 >
                   {t('ui.save')}
                 </Button>

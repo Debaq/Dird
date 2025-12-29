@@ -38,6 +38,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
   const [evaluatorNotes, setEvaluatorNotes] = useState('');
   const [generating, setGenerating] = useState(false);
   const [previewGenerated, setPreviewGenerated] = useState(false);
+  const [hasInteractedWithPreview, setHasInteractedWithPreview] = useState(false);
   const { tokens, setTokens } = useTokenStore();
 
   const handleGenerateReport = async (type: ReportType) => {
@@ -184,12 +185,9 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
       }
 
       // Append system comment to notes
-      let finalNotes = evaluatorNotes;
-      if (systemComment) {
-        finalNotes = finalNotes 
-          ? `${finalNotes}\n\n[IA]: ${systemComment}`
-          : `[IA]: ${systemComment}`;
-      }
+      // The AI now integrates the user's notes, so we use the AI output as the primary content.
+      // We store the original user input in 'originalNotes' for reference.
+      const finalNotes = systemComment || evaluatorNotes;
 
       // 4. Generate PDF with the processed notes
       const pdfBlob = await generateSessionReport(sessionId, type, finalNotes);
@@ -204,6 +202,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         await db.reports.update(existingReport.id, {
           pdfBlob: pdfBlob,
           evaluatorNotes: finalNotes,
+          originalNotes: evaluatorNotes, // Save original draft
           generatedAt: new Date(),
         });
       } else {
@@ -214,6 +213,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
           reportCategory: 'single',
           pdfBlob: pdfBlob,
           evaluatorNotes: finalNotes,
+          originalNotes: evaluatorNotes, // Save original draft
           areasOfInterest: [], // Initialize empty
           generatedAt: new Date(),
         });
@@ -291,9 +291,16 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
     if (existingPreview) {
       // Preview already exists, show options to regenerate or finalize
       setPreviewGenerated(true);
+
+      // Check if user has interacted with the preview
+      const hasInteracted = existingPreview.previewViewed ||
+                           existingPreview.previewDownloaded ||
+                           existingPreview.conclusionEdited;
+      setHasInteractedWithPreview(hasInteracted || false);
     } else {
       // No preview yet, show only generate preview option
       setPreviewGenerated(false);
+      setHasInteractedWithPreview(false);
     }
   };
 
@@ -366,7 +373,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                         {t('reports.preview')}
                       </h4>
                       <p className="text-xs text-smoke-600">
-                        Con procesamiento IA de conclusión
+                        {t('reports.dialog.withAI')}
                       </p>
                     </div>
                   </div>
@@ -408,10 +415,10 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                   <CheckCircle className="w-6 h-6 text-green-500 mt-0.5 shrink-0" />
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-green-800 mb-1">
-                      ✓ Ya existe una vista previa para esta sesión
+                      ✓ {t('reports.dialog.previewExists')}
                     </p>
                     <p className="text-xs text-green-700 leading-relaxed">
-                      Puede revisar la vista previa en la lista de informes. Elija una opción a continuación:
+                      {t('reports.dialog.previewExistsDescription')}
                     </p>
                   </div>
                 </div>
@@ -424,11 +431,11 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                         <FileText className="w-4 h-4" />
                       </div>
                       <h4 className="font-bold text-coal-800 text-sm">
-                        Regenerar Preview
+                        {t('reports.dialog.regenerateTitle')}
                       </h4>
                     </div>
                     <p className="text-xs text-smoke-600 mb-4 flex-grow">
-                      Elimina la vista previa actual y genera una nueva con las notas actualizadas.
+                      {t('reports.dialog.regenerateDescription')}
                     </p>
                     <Button
                       variant="outline"
@@ -436,8 +443,8 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                       className="w-full border-amber-300 hover:bg-amber-100"
                       onClick={async () => {
                         const confirmed = await confirm({
-                          title: '¿Regenerar vista previa?',
-                          description: 'Se eliminará la vista previa actual y se generará una nueva. ¿Desea continuar?',
+                          title: t('reports.dialog.regenerateConfirmTitle'),
+                          description: t('reports.dialog.regenerateConfirmDescription'),
                           confirmText: t('common.confirm'),
                           cancelText: t('common.cancel'),
                           variant: 'warning',
@@ -455,7 +462,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                       ) : (
                         <>
                           <FileText className="w-3.5 h-3.5 mr-2" />
-                          Regenerar
+                          {t('reports.dialog.regenerateButton')}
                         </>
                       )}
                     </Button>
@@ -468,15 +475,22 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                         <Lock className="w-4 h-4" />
                       </div>
                       <h4 className="font-bold text-coal-800 text-sm">
-                        {t('reports.finalize')}
+                        {t('reports.dialog.finalizeTitle')}
                       </h4>
                     </div>
                     <p className="text-xs text-smoke-600 mb-4 flex-grow">
-                      Genera el informe final y bloquea la sesión permanentemente. No podrá realizar más cambios.
+                      {t('reports.dialog.finalizeDescription')}
                     </p>
+                    {!hasInteractedWithPreview && (
+                      <div className="mb-3 p-2 rounded-md bg-amber-50 border border-amber-200">
+                        <p className="text-[10px] text-amber-800 leading-tight">
+                          <strong>{t('reports.dialog.interactionRequired', { defaultValue: 'Interacción requerida:' })}</strong> {t('reports.dialog.mustInteractFirst', { defaultValue: 'Debe visualizar, descargar o editar el preview primero' })}
+                        </p>
+                      </div>
+                    )}
                     <Button
                       size="sm"
-                      className="w-full bg-accent-500 hover:bg-accent-600 text-white"
+                      className="w-full bg-accent-500 hover:bg-accent-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={async () => {
                         const confirmed = await confirm({
                           title: t('confirmations.finalizeReportTitle') || t('reports.finalize'),
@@ -490,14 +504,15 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                           handleGenerateReport('final');
                         }
                       }}
-                      disabled={generating}
+                      disabled={generating || !hasInteractedWithPreview}
+                      title={!hasInteractedWithPreview ? t('reports.dialog.mustInteractFirst', { defaultValue: 'Debe visualizar, descargar o editar el preview primero' }) : ''}
                     >
                       {generating ? (
                         t('ui.loading')
                       ) : (
                         <>
                           <CheckCircle className="w-3.5 h-3.5 mr-2" />
-                          Finalizar
+                          {t('reports.dialog.finalizeButton')}
                         </>
                       )}
                     </Button>
@@ -508,7 +523,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-100">
                   <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
                   <p className="text-[11px] text-amber-800 leading-tight">
-                    <strong>⚠️ Advertencia:</strong> Al finalizar el informe, la sesión quedará bloqueada y no podrá realizar más modificaciones.
+                    <strong>{t('reports.dialog.warningTitle')}</strong> {t('reports.dialog.warningBody')}
                   </p>
                 </div>
               </>
