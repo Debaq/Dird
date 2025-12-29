@@ -1,7 +1,8 @@
 import React from 'react';
-import { Square, Eraser, Move, ZoomIn, MousePointer2, Ruler, Target } from 'lucide-react';
+import { Square, Eraser, Move, ZoomIn, MousePointer2, Ruler, Target, List } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { useCanvasStore } from '@/stores/canvas-store';
 import type { LandmarkType } from '@/types/annotations';
 
 export type CanvasTool = 'select' | 'bbox' | 'circle' | 'eraser' | 'pan' | 'zoom' | 'ruler' | 'landmark';
@@ -22,6 +23,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
   onLandmarkTypeChange
 }) => {
   const { t } = useTranslation();
+  const { showClassList, toggleClassList } = useCanvasStore();
 
   const tools = [
     { id: 'select' as CanvasTool, icon: MousePointer2, label: t('canvas.tools.select') },
@@ -70,10 +72,27 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
       )}
 
       {activeTool === 'bbox' && (
-        <div className="mt-2 p-2 bg-primary-50 rounded border border-primary-100">
-          <p className="text-[10px] leading-tight text-primary-800">
-            {t('canvas.tools.bboxInstruction')}
-          </p>
+        <div className="mt-2 space-y-2">
+          <div className="p-2 bg-primary-50 rounded border border-primary-100">
+            <p className="text-[10px] leading-tight text-primary-800">
+              {t('canvas.tools.bboxInstruction')}
+            </p>
+          </div>
+          <button
+            onClick={toggleClassList}
+            disabled={disabled}
+            className={cn(
+              'w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md border text-xs font-medium transition-all',
+              showClassList
+                ? 'border-primary-500 bg-primary-50 text-primary-700 shadow-sm'
+                : 'border-coal-200 hover:border-coal-300 text-smoke-600 bg-white',
+              disabled && 'opacity-50 cursor-not-allowed'
+            )}
+            title={t('canvas.tools.toggleClassList') || 'Toggle quick class selection'}
+          >
+            <List className="w-4 h-4" />
+            <span>{showClassList ? (t('canvas.tools.hideClassList') || 'Hide Class List') : (t('canvas.tools.showClassList') || 'Show Class List')}</span>
+          </button>
         </div>
       )}
 

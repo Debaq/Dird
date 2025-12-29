@@ -264,8 +264,13 @@
       "panInstruction": "Haz clic y arrastra para mover la imagen. También puedes usar el botón central del mouse en cualquier momento.",
       "zoomInstruction": "Haz clic para acercar. Mantén Ctrl y haz clic para alejar. También puedes usar la rueda del mouse.",
       "rulerInstruction": "Haz clic en el punto de origen, luego en el destino para medir la distancia en Diámetros de Disco (DD)",
-      "landmarkInstruction": "Haz clic para colocar referencias anatómicas (disco óptico o fóvea). Arrastra para reposicionar."
+      "landmarkInstruction": "Haz clic para colocar referencias anatómicas (disco óptico o fóvea). Arrastra para reposicionar.",
+      "toggleClassList": "Alternar lista de clases rápida",
+      "showClassList": "Mostrar Lista de Clases",
+      "hideClassList": "Ocultar Lista de Clases"
     },
+    "quickClassSelection": "Selección Rápida de Clases",
+    "classPreSelected": "La próxima anotación será:",
     "layers": {
       "title": "Capas",
       "opacity": "Opacidad",

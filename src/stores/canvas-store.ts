@@ -15,11 +15,15 @@ interface CanvasStore {
   activeTool: ToolType;
   layers: CanvasLayer[];
   selectedAnnotationId: string | null;
+  showClassList: boolean;
+  preSelectedClass: string | null;
 
   setActiveTool: (tool: ToolType) => void;
   toggleLayerVisibility: (layerId: LayerType) => void;
   setLayerOpacity: (layerId: LayerType, opacity: number) => void;
   setSelectedAnnotation: (id: string | null) => void;
+  toggleClassList: () => void;
+  setPreSelectedClass: (className: string | null) => void;
   resetLayers: () => void;
 }
 
@@ -27,6 +31,8 @@ export const useCanvasStore = create<CanvasStore>((set) => ({
   activeTool: 'select',
   layers: DEFAULT_LAYERS,
   selectedAnnotationId: null,
+  showClassList: false,
+  preSelectedClass: null,
 
   setActiveTool: (tool) => set({ activeTool: tool }),
 
@@ -45,6 +51,10 @@ export const useCanvasStore = create<CanvasStore>((set) => ({
     })),
 
   setSelectedAnnotation: (id) => set({ selectedAnnotationId: id }),
+
+  toggleClassList: () => set((state) => ({ showClassList: !state.showClassList })),
+
+  setPreSelectedClass: (className) => set({ preSelectedClass: className }),
 
   resetLayers: () => set({ layers: DEFAULT_LAYERS })
 }));
