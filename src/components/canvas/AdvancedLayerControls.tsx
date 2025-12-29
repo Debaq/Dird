@@ -185,22 +185,51 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
     });
   };
 
+  const targetMarkLayers = ['detections-ai', 'manual-annotations'];
+  const areAnyMarksVisible = layers
+    .filter(l => targetMarkLayers.includes(l.id))
+    .some(l => l.visible !== false);
+
+  const handleToggleAllMarks = () => {
+    const newState = !areAnyMarksVisible;
+    targetMarkLayers.forEach(id => {
+      const layer = layers.find(l => l.id === id);
+      if (layer) {
+        onLayerUpdate(id, { visible: newState });
+      }
+    });
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-coal-200 dark:border-gray-700 p-4 h-full flex flex-col">
       <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <h3 className="font-semibold text-coal-800 dark:text-gray-100">{t('canvas.layers.title')}</h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleToggleAllLabels}
-          title={areAnyLabelsVisible ? t('canvas.layers.hideAllLabels') + ' (L)' : t('canvas.layers.showAllLabels') + ' (L)'}
-          className="h-8 px-2"
-        >
-          <div className="flex items-center gap-1.5 text-xs font-medium text-smoke-600 dark:text-gray-400">
-             <span>{areAnyLabelsVisible ? t('canvas.layers.hideAllLabels') + ' (L)' : t('canvas.layers.showAllLabels') + ' (L)'}</span>
-             <Tag className={cn("w-4 h-4", areAnyLabelsVisible ? "text-primary-500" : "text-smoke-400")} />
-          </div>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleToggleAllLabels}
+            title={areAnyLabelsVisible ? t('canvas.layers.hideAllLabels') + ' (L)' : t('canvas.layers.showAllLabels') + ' (L)'}
+            className="h-8 px-2"
+          >
+            <div className="flex items-center gap-1.5 text-xs font-medium text-smoke-600 dark:text-gray-400">
+               <span>{areAnyLabelsVisible ? t('canvas.layers.hideAllLabels') + ' (L)' : t('canvas.layers.showAllLabels') + ' (L)'}</span>
+               <Tag className={cn("w-4 h-4", areAnyLabelsVisible ? "text-primary-500" : "text-smoke-400")} />
+            </div>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleToggleAllMarks}
+            title={areAnyMarksVisible ? t('canvas.layers.hideAllMarks') + ' (M)' : t('canvas.layers.showAllMarks') + ' (M)'}
+            className="h-8 px-2"
+          >
+            <div className="flex items-center gap-1.5 text-xs font-medium text-smoke-600 dark:text-gray-400">
+               <span>{areAnyMarksVisible ? t('canvas.layers.hideAllMarks') + ' (M)' : t('canvas.layers.showAllMarks') + ' (M)'}</span>
+               {areAnyMarksVisible ? <Eye className="w-4 h-4 text-primary-500" /> : <EyeOff className="w-4 h-4 text-smoke-400" />}
+            </div>
+          </Button>
+        </div>
       </div>
       <div className="space-y-2 overflow-y-auto flex-1 pr-1 scrollbar-thin scrollbar-thumb-coal-200 dark:scrollbar-thumb-gray-700">
         {layers
