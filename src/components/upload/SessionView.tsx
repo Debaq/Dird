@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { ArrowLeft, Play, Lock, ChevronRight, Download, Plus } from 'lucide-react';
@@ -33,18 +33,45 @@ const CompactUploader: React.FC<{ sessionId: number; onUploadComplete: () => voi
         getHiddenInput,
     } = useImageUploader({ sessionId, onUploadComplete, onUploadStart });
     const { t } = useTranslation();
+    const [isLimitReached, setIsLimitReached] = useState(false);
+
+    // Check image count on component mount and when sessionId changes
+    useEffect(() => {
+        const fetchImageCount = async () => {
+            const count = await db.images.where('sessionId').equals(sessionId).count();
+            setIsLimitReached(count >= 20);
+        };
+
+        fetchImageCount();
+    }, [sessionId]);
 
     return (
         <>
             <div className="flex items-center gap-2">
                 {getHiddenInput()}
                 <div className="flex items-center gap-1 bg-coal-100 p-1 rounded-lg">
-                    <Button size="sm" variant={selectedEye === 'OI' ? 'default' : 'ghost'} onClick={() => setSelectedEye('OI')} className="text-xs">OI</Button>
-                    <Button size="sm" variant={selectedEye === 'OD' ? 'default' : 'ghost'} onClick={() => setSelectedEye('OD')} className="text-xs">OD</Button>
+                    <Button
+                        size="sm"
+                        variant={selectedEye === 'OI' ? 'default' : 'ghost'}
+                        onClick={() => setSelectedEye('OI')}
+                        className="text-xs"
+                        disabled={isLimitReached}
+                    >
+                        OI
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant={selectedEye === 'OD' ? 'default' : 'ghost'}
+                        onClick={() => setSelectedEye('OD')}
+                        className="text-xs"
+                        disabled={isLimitReached}
+                    >
+                        OD
+                    </Button>
                 </div>
-                <Button size="sm" onClick={triggerFileDialog}>
+                <Button size="sm" onClick={triggerFileDialog} disabled={isLimitReached}>
                     <Plus className="w-4 h-4 mr-2" />
-                    {t('upload.addImage')}
+                    {isLimitReached ? t('upload.photoLimitExceeded', { limit: 20 }) : t('upload.addImage')}
                 </Button>
             </div>
             <UploadProgressModal

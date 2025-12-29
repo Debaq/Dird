@@ -176,7 +176,10 @@
       "imagesUploaded": "Images uploaded",
       "imagesFailed": "{{count}} image(s) failed",
       "pleaseWait": "Please wait, this process may take a few moments..."
-    }
+    },
+    "photoLimitExceeded": "Maximum of {{limit}} photos per study reached. No more images can be uploaded.",
+    "photoLimitWarning": "Only {{available}} more images can be uploaded (maximum {{limit}} per study).",
+    "imagesCount": "{{count}} of {{limit}} images uploaded"
   },
   "canvas": {
     "tools": {
@@ -251,7 +254,9 @@
     "errors": {
       "saveAnnotationError": "Error saving annotation. Please try again.",
       "redetectionError": "Error running re-detection."
-    }
+    },
+    "undo": "Undo",
+    "redo": "Redo"
   },
   "analysis": {
     "title": "Image Analysis",

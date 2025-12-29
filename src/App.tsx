@@ -23,6 +23,7 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
 import { useMessagePolling } from '@/hooks/useMessagePolling';
 import { classManager } from '@/lib/classes/class-manager';
+import { waitForOpenCV } from '@/lib/ai/optic-disc-refiner';
 
 function App() {
   const { t } = useTranslation();
@@ -99,8 +100,22 @@ function App() {
       }
     };
 
+    const initOpenCV = async () => {
+      try {
+        // Esperar a que OpenCV esté listo (máximo 10 segundos)
+        const ready = await waitForOpenCV(10000);
+        if (!ready) {
+          console.warn('⚠️ OpenCV failed to initialize within timeout');
+        } else {
+          console.log('✅ OpenCV is ready');
+        }
+      } catch (error) {
+        console.error('❌ Error initializing OpenCV:', error);
+      }
+    };
+
     // Ejecutar en paralelo
-    Promise.all([setupDemoPatient(), loadTokens(), loadModelMetadata()]).catch((error) => {
+    Promise.all([setupDemoPatient(), loadTokens(), loadModelMetadata(), initOpenCV()]).catch((error) => {
       console.error('❌ Error al inicializar aplicación:', error);
       if (!cancelled) {
         setIsInitializing(false);

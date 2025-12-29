@@ -1,4 +1,4 @@
-export type LayerType = 'original' | 'detections-ai' | 'segmentations-ai' | 'manual-annotations' | 'quadrants';
+export type LayerType = 'original' | 'detections-ai' | 'segmentations-ai' | 'manual-annotations' | 'quadrants' | 'measurements' | 'macular-zones';
 
 export interface CanvasLayer {
   id: LayerType;

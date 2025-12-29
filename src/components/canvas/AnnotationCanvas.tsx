@@ -32,8 +32,11 @@ interface AnnotationCanvasProps {
   measurements?: any[];
   activeTool?: CanvasTool;
   layers?: CanvasLayer[];
+  onLayerUpdate?: (layerId: string, updates: Partial<CanvasLayer>) => void;
   onAnnotationAdded?: () => void;
   selectedLandmarkType?: 'optic_disc' | 'fovea';
+  selectedMeasurementId?: number | null;
+  onSelectMeasurement?: (id: number | null) => void;
   history?: {
     entries: HistoryEntry[];
     index: number;
@@ -52,8 +55,11 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   measurements = [],
   activeTool = 'select',
   layers = [],
+  onLayerUpdate,
   onAnnotationAdded,
   selectedLandmarkType = 'optic_disc',
+  selectedMeasurementId,
+  onSelectMeasurement,
   history,
 }) => {
   const { t, i18n } = useTranslation();
@@ -96,7 +102,6 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   // State for ruler tool
   const [rulerOrigin, setRulerOrigin] = useState<{ x: number; y: number } | null>(null);
   const [rulerDestination, setRulerDestination] = useState<{ x: number; y: number } | null>(null);
-  const [selectedMeasurementId, setSelectedMeasurementId] = useState<number | null>(null);
 
   // Temporary state for live measurement updates during drag
   const [tempMeasurementUpdates, setTempMeasurementUpdates] = useState<Map<number, { originX: number; originY: number; destinationX: number; destinationY: number }>>(new Map());
@@ -104,6 +109,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   // State for drag/move operations history optimization
   const dragStartAnnotation = useRef<any>(null);
   const isKeyboardMoving = useRef(false);
+  const lastKeyboardPos = useRef<{ x: number, y: number, width: number, height: number } | null>(null);
 
   // Landmarks and quadrant analysis
   const {
@@ -269,8 +275,41 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     dragStartAnnotation.current = null;
   }, [history]);
 
+  // Ref for debounced post-processing
+  const postProcessTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  /**
+   * Performs heavy tasks like optic disc refinement and DR re-classification
+   * with a debounce to avoid freezing the UI during movement.
+   */
+  const runPostProcessing = React.useCallback((imageId: number, detectionId: number, bbox: any, className: string) => {
+    if (postProcessTimeoutRef.current) {
+      clearTimeout(postProcessTimeoutRef.current);
+    }
+
+    postProcessTimeoutRef.current = setTimeout(async () => {
+      // 1. Regenerate optic disc segmentation if bbox was modified
+      if ((className === 'optic_disc' || className === 'optic disc') && imageElementRef.current) {
+        await updateOpticDiscSegmentation(imageElementRef.current, detectionId, bbox);
+      }
+
+      // 2. Re-classify DR after manual bbox modification
+      try {
+        await classifyAndSaveImage(imageId);
+      } catch (error) {
+        console.error('Error re-classifying after debounced update:', error);
+      }
+
+      onAnnotationAdded?.();
+      postProcessTimeoutRef.current = null;
+    }, 2500); // 2.5 seconds debounce - only runs after user stops moving
+  }, [onAnnotationAdded]);
+
+  // Ref for debouncing the database update itself
+  const dbUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Handle updates (drag/resize)
-  const handleAnnotationChange = React.useCallback(async (id: number, newAttrs: any) => {
+  const handleAnnotationChange = React.useCallback(async (id: number, newAttrs: any, isFinal = false) => {
     try {
       const detection = await db.detections.get(id);
       if (!detection) return;
@@ -293,39 +332,53 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         height: newAttrs.height / scale,
       };
 
-      if (detection.type === 'ai') {
-        await db.detections.update(id, {
-          bbox,
-          type: 'manual'
-        });
+      // Clear existing timeout for keyboard movements
+      if (dbUpdateTimeoutRef.current) {
+        clearTimeout(dbUpdateTimeoutRef.current);
+      }
+
+      if (isFinal) {
+        // onDragEnd o onTransformEnd - actualizar BD inmediatamente para evitar "saltos"
+        // Update basic detection data in DB (Visual update)
+        if (detection.type === 'ai') {
+          await db.detections.update(id, {
+            bbox,
+            type: 'manual'
+          });
+        } else {
+          await db.detections.update(id, {
+            bbox
+          });
+        }
+
+        // Trigger heavy post-processing with debounce (2.5s)
+        if (image.id) {
+          runPostProcessing(image.id, id, bbox, detection.class);
+        }
       } else {
-        await db.detections.update(id, {
-          bbox
-        });
+        // Movimiento con teclado - debounce la actualización de BD
+        dbUpdateTimeoutRef.current = setTimeout(async () => {
+          if (detection.type === 'ai') {
+            await db.detections.update(id, {
+              bbox,
+              type: 'manual'
+            });
+          } else {
+            await db.detections.update(id, {
+              bbox
+            });
+          }
+
+          if (image.id) {
+            runPostProcessing(image.id, id, bbox, detection.class);
+          }
+        }, 500);
       }
 
-      // Regenerate optic disc segmentation if bbox was modified
-      if ((detection.class === 'optic_disc' || detection.class === 'optic disc') && imageElementRef.current) {
-        const updated = await updateOpticDiscSegmentation(imageElementRef.current, id, bbox);
-        if (updated) {
-          console.log('Optic disc segmentation updated after bbox modification');
-        }
-      }
-
-      // Re-classify DR after manual bbox modification
-      if (image.id) {
-        try {
-          await classifyAndSaveImage(image.id);
-        } catch (error) {
-          console.error('Error re-classifying after manual bbox update:', error);
-        }
-      }
-
-      onAnnotationAdded?.();
     } catch (error) {
       console.error('Error updating annotation:', error);
     }
-  }, [image.id, imageOffset, onAnnotationAdded, scale]);
+  }, [image.id, imageOffset, scale, runPostProcessing]);
 
   const checkDeselect = (e: any) => {
     // deselect when clicked on empty area
@@ -334,6 +387,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     
     if (clickedOnEmpty || clickedOnImage) {
       setSelectedAnnotation(null);
+      onSelectMeasurement?.(null);
     }
   };
 
@@ -697,7 +751,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const handleDeleteMeasurement = async (measurementId: number) => {
     await db.measurements.update(measurementId, { visible: false });
     onAnnotationAdded?.();
-    setSelectedMeasurementId(null);
+    onSelectMeasurement?.(null);
   };
 
   // Delete a specific annotation
@@ -985,7 +1039,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       // Escape to deselect and (via ImageAnalyzer) return to select tool
       if (e.key === 'Escape') {
         setSelectedAnnotation(null);
-        setSelectedMeasurementId(null);
+        onSelectMeasurement?.(null);
       }
 
       // Delete selected annotation/measurement
@@ -996,15 +1050,32 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         }
       }
 
+      // Toggle labels with 'l'
+      if (e.key.toLowerCase() === 'l' && !e.ctrlKey && !e.metaKey) {
+        if (document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+          const targetLabelLayers = ['detections-ai', 'manual-annotations'];
+          const areAnyLabelsVisible = layers
+            .filter(l => targetLabelLayers.includes(l.id))
+            .some(l => l.showLabels !== false);
+          
+          const newState = !areAnyLabelsVisible;
+          targetLabelLayers.forEach(id => {
+            onLayerUpdate?.(id, { showLabels: newState });
+          });
+        }
+      }
+
       // Undo/Redo
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 'z' || e.key === 'Z') {
+          e.preventDefault();
           if (e.shiftKey) {
             history?.onRedo();
           } else {
             history?.onUndo();
           }
         } else if ((e.key === 'y' || e.key === 'Y') && !e.shiftKey) {
+          e.preventDefault();
           history?.onRedo();
         }
       }
@@ -1046,6 +1117,8 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         const canvasWidth = detection.bbox.width * scale;
         const canvasHeight = detection.bbox.height * scale;
 
+        lastKeyboardPos.current = { x: canvasX, y: canvasY, width: canvasWidth, height: canvasHeight };
+
         handleAnnotationChange(detection.id, {
           x: canvasX,
           y: canvasY,
@@ -1060,10 +1133,13 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         if (e.key === 'Control') setIsCtrlPressed(false);
         
         if (isKeyboardMoving.current && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-             if (selectedAnnotationId) {
-                 recordMoveHistory(parseInt(selectedAnnotationId));
+             if (selectedAnnotationId && lastKeyboardPos.current) {
+                 handleAnnotationChange(parseInt(selectedAnnotationId), lastKeyboardPos.current, true).then(() => {
+                    recordMoveHistory(parseInt(selectedAnnotationId));
+                 });
              }
              isKeyboardMoving.current = false;
+             lastKeyboardPos.current = null;
         }
     };
 
@@ -1079,13 +1155,15 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     selectedMeasurementId,
     detections, 
     manualAnnotations, 
+    layers,
+    onLayerUpdate,
     scale, 
     imageOffset, 
     handleDeleteSelected, 
     handleAnnotationChange, 
     recordMoveHistory,
     setSelectedAnnotation,
-    setSelectedMeasurementId
+    onSelectMeasurement
   ]);
 
   // Handle modal close/cancel
@@ -1132,7 +1210,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
             onClick={history?.onUndo}
             disabled={!history || history.index < 0}
             className={`p-2 rounded-lg ${!history || history.index < 0 ? 'bg-gray-200 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-100 shadow'}`}
-            title="Deshacer (Ctrl+Z)"
+            title={`${t('canvas.undo')} (Ctrl+Z)`}
           >
             <RotateCcw className="w-4 h-4" />
           </button>
@@ -1140,7 +1218,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
             onClick={history?.onRedo}
             disabled={!history || history.index >= history.entries.length - 1}
             className={`p-2 rounded-lg ${!history || history.index >= history.entries.length - 1 ? 'bg-gray-200 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-100 shadow'}`}
-            title="Rehacer (Ctrl+Y)"
+            title={`${t('canvas.redo')} (Ctrl+Y)`}
           >
             <RotateCw className="w-4 h-4" />
           </button>
@@ -1183,8 +1261,15 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           onDragEnd={handleDragEnd}
           draggable={true}
           onDragStart={(e) => {
-            // Only allow dragging if it's the pan tool OR middle mouse button
-            // In Konva, the original event is in e.evt
+            // Only allow dragging the Stage itself, not children (like Rects)
+            // If dragging a child element, let it handle its own drag
+            if (e.target !== e.target.getStage()) {
+              // A child is being dragged (like a detection box)
+              // Don't interfere - let the child handle it
+              return;
+            }
+
+            // Only allow dragging the Stage if it's the pan tool OR middle mouse button
             const isMiddleButton = e.evt && (e.evt.button === 1);
             if (activeTool !== 'pan' && !isMiddleButton && !isPanning) {
               e.target.stopDrag();
@@ -1325,7 +1410,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                         y: e.target.y(),
                         width: e.target.width() * e.target.scaleX(),
                         height: e.target.height() * e.target.scaleY()
-                      }).then(() => recordMoveHistory(detection.id!));
+                      }, true).then(() => recordMoveHistory(detection.id!));
                     }
                   }}
                   onTransformStart={() => detection.id && handleDragStart(detection.id)}
@@ -1342,7 +1427,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                         width: Math.max(5, node.width() * scaleX),
                         height: Math.max(5, node.height() * scaleY),
                         rotation: node.rotation()
-                      }).then(() => recordMoveHistory(detection.id!));
+                      }, true).then(() => recordMoveHistory(detection.id!));
                     }
                   }}
                 />
@@ -1375,7 +1460,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                           y: rect.y(),
                           width: rect.width() * rect.scaleX(),
                           height: rect.height() * rect.scaleY()
-                        }).then(() => recordMoveHistory(detection.id!));
+                        }, true).then(() => recordMoveHistory(detection.id!));
                       }
                     }}
                   />
@@ -1554,7 +1639,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                           y: e.target.y(),
                           width: e.target.width() * e.target.scaleX(),
                           height: e.target.height() * e.target.scaleY()
-                        }).then(() => recordMoveHistory(annotation.id!));
+                        }, true).then(() => recordMoveHistory(annotation.id!));
                       }
                     }}
                     onTransformStart={() => annotation.id && handleDragStart(annotation.id)}
@@ -1571,7 +1656,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                           width: Math.max(5, node.width() * scaleX),
                           height: Math.max(5, node.height() * scaleY),
                           rotation: node.rotation()
-                        }).then(() => recordMoveHistory(annotation.id!));
+                        }, true).then(() => recordMoveHistory(annotation.id!));
                       }
                     }}
                   />
@@ -1604,7 +1689,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                             y: rect.y(),
                             width: rect.width() * rect.scaleX(),
                             height: rect.height() * rect.scaleY()
-                          }).then(() => recordMoveHistory(annotation.id!));
+                          }, true).then(() => recordMoveHistory(annotation.id!));
                         }
                       }}
                     />
@@ -1765,7 +1850,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                       if (activeTool === 'eraser') {
                         handleDeleteMeasurement(measurement.id!);
                       } else if (activeTool === 'select') {
-                        setSelectedMeasurementId(measurement.id!);
+                        onSelectMeasurement?.(measurement.id!);
                       }
                     }}
                     hitStrokeWidth={10}
@@ -1804,7 +1889,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                       if (activeTool === 'eraser') {
                         handleDeleteMeasurement(measurement.id!);
                       } else if (activeTool === 'select') {
-                        setSelectedMeasurementId(measurement.id!);
+                        onSelectMeasurement?.(measurement.id!);
                       }
                     }}
                     hitStrokeWidth={15}
@@ -1834,7 +1919,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                       if (activeTool === 'eraser') {
                         handleDeleteMeasurement(measurement.id!);
                       } else if (activeTool === 'select') {
-                        setSelectedMeasurementId(measurement.id!);
+                        onSelectMeasurement?.(measurement.id!);
                       }
                     }}
                     hitStrokeWidth={10}
