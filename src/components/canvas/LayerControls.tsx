@@ -98,9 +98,6 @@ const LayerControls: React.FC<LayerControlsProps> = ({ layers, onLayerUpdate }) 
                     }
                     className="flex-1 h-1 bg-coal-200 rounded-lg appearance-none cursor-pointer"
                   />
-                  <span className="text-xs text-smoke-500 w-8 text-right">
-                    {Math.round(layer.opacity * 100)}%
-                  </span>
                 </div>
               )}
             </div>

@@ -19,6 +19,7 @@ import ToolPanel, { type CanvasTool } from './ToolPanel';
 import { AnalysisPanel } from './AnalysisPanel';
 import { db } from '@/lib/db/schema';
 import { cn } from '@/lib/utils';
+import { useCanvasStore } from '@/stores/canvas-store';
 import type { HistoryEntry } from '@/types/annotations';
 import { detectMacularEdema, findFovea } from '@/lib/analysis/macular-edema-detector';
 import { calibrateFromOpticDisc, createFallbackCalibration } from '@/lib/analysis/spatial-calibrator';
@@ -31,7 +32,7 @@ const DEFAULT_LAYERS: CanvasLayer[] = [
     visible: true,
     opacity: 1,
     locked: false,
-    zIndex: 1,
+    zIndex: 6,
     showLabels: true,
   },
   {
@@ -40,7 +41,7 @@ const DEFAULT_LAYERS: CanvasLayer[] = [
     visible: true,
     opacity: 1,
     locked: false,
-    zIndex: 2,
+    zIndex: 5,
     showLabels: true,
   },
   {
@@ -49,7 +50,7 @@ const DEFAULT_LAYERS: CanvasLayer[] = [
     visible: true,
     opacity: 1,
     locked: false,
-    zIndex: 3,
+    zIndex: 4,
   },
   {
     id: 'quadrants',
@@ -57,7 +58,7 @@ const DEFAULT_LAYERS: CanvasLayer[] = [
     visible: true,
     opacity: 0.5,
     locked: false,
-    zIndex: 4,
+    zIndex: 3,
   },
   {
     id: 'macular-zones',
@@ -65,7 +66,15 @@ const DEFAULT_LAYERS: CanvasLayer[] = [
     visible: true,
     opacity: 0.7,
     locked: false,
-    zIndex: 5,
+    zIndex: 2,
+  },
+  {
+    id: 'segmentations-ai',
+    name: 'canvas.layers.ai_segmentations',
+    visible: true,
+    opacity: 0.6,
+    locked: false,
+    zIndex: 1,
   },
 ];
 
@@ -80,6 +89,8 @@ const ImageAnalyzer: React.FC = () => {
   const [layers, setLayers] = useState<CanvasLayer[]>(DEFAULT_LAYERS);
   const [activeTool, setActiveTool] = useState<CanvasTool>('select');
   const [selectedLandmarkType, setSelectedLandmarkType] = useState<'optic_disc' | 'fovea'>('optic_disc');
+  const { selectedAnnotationId, setSelectedAnnotation } = useCanvasStore();
+  const [selectedMeasurementId, setSelectedMeasurementId] = useState<number | null>(null);
 
   // History State
   const [detectionHistory, setDetectionHistory] = useState<HistoryEntry[]>([]);
@@ -231,7 +242,10 @@ const ImageAnalyzer: React.FC = () => {
 
     try {
       const fovea = findFovea(allDetections);
-      if (!fovea) return null;
+      if (!fovea) {
+        console.log('🔍 No fovea found in detections');
+        return null;
+      }
 
       const opticDisc = allDetections.find(d =>
         d.class && typeof d.class === 'string' &&
@@ -255,7 +269,10 @@ const ImageAnalyzer: React.FC = () => {
         },
       };
 
-      return detectMacularEdema(allDetections, fovea, calibration, defaultCriteria);
+      const result = detectMacularEdema(allDetections, fovea, calibration, defaultCriteria);
+      console.log('🎯 Macular edema result:', result);
+      console.log('🔬 Circinate analysis:', result?.circinateAnalysis);
+      return result;
     } catch (error) {
       console.error('Error calculating macular edema:', error);
       return null;
@@ -447,6 +464,10 @@ const ImageAnalyzer: React.FC = () => {
                onDetectionsUpdate={handleAnnotationAdded}
                onMeasurementsUpdate={handleAnnotationAdded}
                onAddToHistory={addToHistory}
+               selectedAnnotationId={selectedAnnotationId}
+               selectedMeasurementId={selectedMeasurementId}
+               onSelectAnnotation={setSelectedAnnotation}
+               onSelectMeasurement={setSelectedMeasurementId}
              />
            </div>
          )}
@@ -467,7 +488,10 @@ const ImageAnalyzer: React.FC = () => {
                 measurements={allMeasurements || []}
                 activeTool={activeTool}
                 layers={layers}
+                onLayerUpdate={handleLayerUpdate}
                 selectedLandmarkType={selectedLandmarkType}
+                selectedMeasurementId={selectedMeasurementId}
+                onSelectMeasurement={setSelectedMeasurementId}
                 onAnnotationAdded={handleAnnotationAdded}
                 history={{
                   entries: detectionHistory,
@@ -525,7 +549,7 @@ const ImageAnalyzer: React.FC = () => {
             </div>
 
             {/* Scrollable Layers Section */}
-            <div className="flex-1 overflow-y-auto min-h-0">
+            <div className="flex-1 min-h-0 overflow-hidden">
               <AdvancedLayerControls
                 layers={layers}
                 onLayerUpdate={handleLayerUpdate}
@@ -535,6 +559,10 @@ const ImageAnalyzer: React.FC = () => {
                 onDetectionsUpdate={handleAnnotationAdded}
                 onMeasurementsUpdate={handleAnnotationAdded}
                 onAddToHistory={addToHistory}
+                selectedAnnotationId={selectedAnnotationId}
+                selectedMeasurementId={selectedMeasurementId}
+                onSelectAnnotation={setSelectedAnnotation}
+                onSelectMeasurement={setSelectedMeasurementId}
               />
             </div>
           </div>

@@ -5,6 +5,7 @@
  * Always visible to maintain consistent layout
  */
 
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity } from 'lucide-react';
@@ -27,6 +28,12 @@ export function AnalysisPanel({
   circinateVisible = true,
 }: AnalysisPanelProps) {
   const { t } = useTranslation();
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log('📊 AnalysisPanel - circinateAnalysis:', circinateAnalysis);
+    console.log('📊 AnalysisPanel - circinateVisible:', circinateVisible);
+  }, [circinateAnalysis, circinateVisible]);
 
   // Determine what to show
   const hasCircinateAnalysis = circinateAnalysis && circinateVisible;

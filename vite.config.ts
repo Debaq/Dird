@@ -110,6 +110,20 @@ export default defineConfig(({ mode }) => ({
                                                        statuses: [0, 200]
                                                      }
                                                    }
+                                                 },
+                                                 // OpenCV.js: CacheFirst
+                                                 {
+                                                   urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/npm\/@techstark\/opencv-js/,
+                                                   handler: 'CacheFirst',
+                                                   options: {
+                                                     cacheName: 'opencv-cache',
+                                                     expiration: {
+                                                       maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                                                     },
+                                                     cacheableResponse: {
+                                                       statuses: [0, 200]
+                                                     }
+                                                   }
                                                  }
                                                ]
                                              }

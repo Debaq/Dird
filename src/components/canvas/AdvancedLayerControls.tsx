@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Eye, EyeOff, Lock, Unlock, Tag, Edit3, Trash2, ArrowUpDown, Ruler
+  Eye, EyeOff, Lock, Unlock, Tag, Edit3, Trash2, Ruler
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
@@ -30,6 +30,10 @@ interface AdvancedLayerControlsProps {
   onDetectionsUpdate: () => void;
   onMeasurementsUpdate?: () => void;
   onAddToHistory?: (entry: HistoryEntry) => void;
+  selectedAnnotationId?: string | null;
+  selectedMeasurementId?: number | null;
+  onSelectAnnotation?: (id: string | null) => void;
+  onSelectMeasurement?: (id: number | null) => void;
 }
 
 const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
@@ -41,11 +45,30 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
   onDetectionsUpdate,
   onMeasurementsUpdate,
   onAddToHistory,
+  selectedAnnotationId,
+  selectedMeasurementId,
+  onSelectAnnotation,
+  onSelectMeasurement,
 }) => {
   const { t, i18n } = useTranslation();
   const [expandedLayers, setExpandedLayers] = useState<Record<string, boolean>>({});
   const [classModalOpen, setClassModalOpen] = useState(false);
   const [editingDetection, setEditingDetection] = useState<Detection | null>(null);
+
+  // Auto-expand layer when an element is selected
+  useEffect(() => {
+    if (selectedAnnotationId) {
+      const isAI = aiDetections.some(d => String(d.id) === selectedAnnotationId);
+      const isManual = manualDetections.some(d => String(d.id) === selectedAnnotationId);
+      
+      if (isAI) setExpandedLayers(prev => ({ ...prev, 'detections-ai': true }));
+      if (isManual) setExpandedLayers(prev => ({ ...prev, 'manual-annotations': true }));
+    }
+    
+    if (selectedMeasurementId) {
+      setExpandedLayers(prev => ({ ...prev, 'measurements': true }));
+    }
+  }, [selectedAnnotationId, selectedMeasurementId, aiDetections, manualDetections]);
 
   const toggleLayerExpansion = (layerId: string) => {
     setExpandedLayers(prev => ({
@@ -163,23 +186,23 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-coal-200 p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-coal-800">{t('canvas.layers.title')}</h3>
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-coal-200 dark:border-gray-700 p-4 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-3 flex-shrink-0">
+        <h3 className="font-semibold text-coal-800 dark:text-gray-100">{t('canvas.layers.title')}</h3>
         <Button
           variant="ghost"
           size="sm"
           onClick={handleToggleAllLabels}
-          title={areAnyLabelsVisible ? t('canvas.layers.hideAllLabels') : t('canvas.layers.showAllLabels')}
+          title={areAnyLabelsVisible ? t('canvas.layers.hideAllLabels') + ' (L)' : t('canvas.layers.showAllLabels') + ' (L)'}
           className="h-8 px-2"
         >
-          <div className="flex items-center gap-1.5 text-xs font-medium text-smoke-600">
-             <span>{areAnyLabelsVisible ? t('canvas.layers.hideAllLabels') : t('canvas.layers.showAllLabels')}</span>
+          <div className="flex items-center gap-1.5 text-xs font-medium text-smoke-600 dark:text-gray-400">
+             <span>{areAnyLabelsVisible ? t('canvas.layers.hideAllLabels') + ' (L)' : t('canvas.layers.showAllLabels') + ' (L)'}</span>
              <Tag className={cn("w-4 h-4", areAnyLabelsVisible ? "text-primary-500" : "text-smoke-400")} />
           </div>
         </Button>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2 overflow-y-auto flex-1 pr-1 scrollbar-thin scrollbar-thumb-coal-200 dark:scrollbar-thumb-gray-700">
         {layers
           .filter(l => l.id !== 'original')
           .sort((a, b) => b.zIndex - a.zIndex)
@@ -197,7 +220,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                   layer.visible ? 'border-coal-200 bg-white' : 'border-coal-100 bg-coal-50'
                 )}
               >
-                <div 
+                <div
                   className="flex items-center justify-between mb-2 cursor-pointer"
                   onClick={() => toggleLayerExpansion(layer.id)}
                 >
@@ -259,17 +282,6 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                         <Unlock className="w-4 h-4 text-coal-600" />
                       )}
                     </button>
-                    <button
-                      className="p-2 lg:p-1 hover:bg-coal-100 rounded"
-                      title={isExpanded ? t('canvas.layers.collapse') : t('canvas.layers.expand')}
-                    >
-                      <ArrowUpDown 
-                        className={cn(
-                          "w-4 h-4 transition-transform",
-                          isExpanded ? "rotate-180 text-primary-500" : "text-smoke-400"
-                        )} 
-                      />
-                    </button>
                   </div>
                 </div>
 
@@ -288,82 +300,108 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                       }
                       className="flex-1 h-1 bg-coal-200 rounded-lg appearance-none cursor-pointer"
                     />
-                    <span className="text-xs text-smoke-500 w-8 text-right">
-                      {Math.round(layer.opacity * 100)}%
-                    </span>
                   </div>
                 )}
 
                 {isExpanded && itemCount > 0 && (
                   <div className="mt-3 pt-3 border-t border-coal-100">
                     <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {layerDetections.map((detection) => (
-                        <div 
-                          key={detection.id} 
-                          className="p-2 bg-coal-50 rounded text-xs flex items-center justify-between group"
-                        >
-                          <div className="flex items-center">
-                            <div
-                              className="w-3 h-3 rounded-full mr-2"
-                              style={{ backgroundColor: classManager.getColorForClass(detection.class) }}
-                            />
-                            <span className="font-medium">{getClassName(detection.class, i18n.language)}</span>
-                            {detection.confidence && (
-                              <span className="text-smoke-500 ml-2">
-                                {Math.round(detection.confidence * 100)}%
-                              </span>
+                      {layerDetections.map((detection) => {
+                        const isSelected = selectedAnnotationId === String(detection.id);
+                        return (
+                          <div
+                            key={detection.id}
+                            onClick={() => onSelectAnnotation?.(String(detection.id))}
+                            className={cn(
+                              "p-2 rounded text-xs flex items-center justify-between group cursor-pointer transition-colors",
+                              isSelected 
+                                ? "bg-primary-50 border border-primary-200 shadow-sm" 
+                                : "bg-coal-50 hover:bg-coal-100 border border-transparent"
                             )}
-                          </div>
-                          
-                          <div className="flex items-center space-x-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditClick(detection)}
-                              title={layer.id === 'detections-ai' ? t('canvas.layers.convertAndEdit') : t('canvas.layers.editAnnotationClass')}
-                              className="h-8 lg:h-6 px-2"
-                            >
-                              <Edit3 className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDeleteDetection(detection.id!)}
-                              title={t('canvas.layers.deleteAnnotation')}
-                              className="h-8 lg:h-6 px-2"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                      {layerMeasurements.map((measurement) => (
-                        <div
-                          key={`measurement-${measurement.id}`}
-                          className="p-2 bg-coal-50 rounded text-xs flex items-center justify-between group"
-                        >
-                          <div className="flex items-center">
-                            <Ruler className="w-3 h-3 mr-2 text-emerald-600" />
-                            <span className="font-medium">
-                              {measurement.distanceDD
-                                ? `${measurement.distanceDD.toFixed(2)} DD`
-                                : `${measurement.distancePixels.toFixed(1)} px`}
-                            </span>
-                          </div>
+                          >
+                            <div className="flex items-center">
+                              <div
+                                className="w-3 h-3 rounded-full mr-2"
+                                style={{ backgroundColor: classManager.getColorForClass(detection.class) }}
+                              />
+                              <span className={cn("font-medium", isSelected && "text-primary-700")}>
+                                {getClassName(detection.class, i18n.language)}
+                              </span>
+                              {detection.confidence && (
+                                <span className="text-smoke-500 ml-2">
+                                  {Math.round(detection.confidence * 100)}%
+                                </span>
+                              )}
+                            </div>
 
-                          <div className="flex items-center space-x-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDeleteMeasurement(measurement.id!)}
-                              title={t('canvas.layers.deleteAnnotation')}
-                              className="h-8 lg:h-6 px-2"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
+                            <div className="flex items-center space-x-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditClick(detection);
+                                }}
+                                title={layer.id === 'detections-ai' ? t('canvas.layers.convertAndEdit') : t('canvas.layers.editAnnotationClass')}
+                                className="h-8 lg:h-6 px-2"
+                              >
+                                <Edit3 className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteDetection(detection.id!);
+                                }}
+                                title={t('canvas.layers.deleteAnnotation')}
+                                className="h-8 lg:h-6 px-2"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
+                      {layerMeasurements.map((measurement) => {
+                        const isSelected = selectedMeasurementId === measurement.id;
+                        return (
+                          <div
+                            key={`measurement-${measurement.id}`}
+                            onClick={() => onSelectMeasurement?.(measurement.id!)}
+                            className={cn(
+                              "p-2 rounded text-xs flex items-center justify-between group cursor-pointer transition-colors",
+                              isSelected 
+                                ? "bg-emerald-50 border border-emerald-200 shadow-sm" 
+                                : "bg-coal-50 hover:bg-coal-100 border border-transparent"
+                            )}
+                          >
+                            <div className="flex items-center">
+                              <Ruler className={cn("w-3 h-3 mr-2", isSelected ? "text-emerald-700" : "text-emerald-600")} />
+                              <span className={cn("font-medium", isSelected && "text-emerald-700")}>
+                                {measurement.distanceDD
+                                  ? `${measurement.distanceDD.toFixed(2)} DD`
+                                  : `${measurement.distancePixels.toFixed(1)} px`}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center space-x-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteMeasurement(measurement.id!);
+                                }}
+                                title={t('canvas.layers.deleteAnnotation')}
+                                className="h-8 lg:h-6 px-2"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

@@ -241,7 +241,10 @@
       "reprocessAI": "Reprocesar con IA",
       "moveToRight": "A Ojo Derecho",
       "moveToLeft": "A Ojo Izquierdo"
-    }
+    },
+    "photoLimitExceeded": "Límite de {{limit}} fotos por estudio alcanzado. No se pueden subir más imágenes.",
+    "photoLimitWarning": "Solo se pueden subir {{available}} imágenes más (máximo {{limit}} por estudio).",
+    "imagesCount": "{{count}} de {{limit}} imágenes subidas"
   },
   "canvas": {
     "tools": {
@@ -329,7 +332,9 @@
     "errors": {
       "saveAnnotationError": "Error al guardar la anotación. Por favor intenta de nuevo.",
       "redetectionError": "Error al ejecutar la re-detección."
-    }
+    },
+    "undo": "Deshacer",
+    "redo": "Rehacer"
   },
   "analysis": {
     "title": "Análisis de Imagen",
