@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useConfirm } from '@/hooks/useConfirm';
-import { Stage, Layer, Image as KonvaImage, Rect, Group, Text, Transformer, Circle, Line } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Transformer } from 'react-konva';
 import type { Image as ImageType, Detection } from '@/lib/db/schema';
 import type { HistoryEntry } from '@/types/annotations';
 import type { CanvasTool } from './ToolPanel';
@@ -15,13 +15,12 @@ import { CanvasQuickClassSelector } from './CanvasQuickClassSelector';
 import { MeasurementsCanvasLayer } from './layers/MeasurementsCanvasLayer';
 import { AIDetectionsCanvasLayer } from './layers/AIDetectionsCanvasLayer';
 import { ManualAnnotationsCanvasLayer } from './layers/ManualAnnotationsCanvasLayer';
+import { AnalysisCanvasLayer } from './layers/AnalysisCanvasLayer';
 import { getClassName } from '@/lib/ai/class-translations';
 import { useConfigStore } from '@/stores/config-store';
 import { useCanvasStore } from '@/stores/canvas-store';
 import { inferenceService } from '@/lib/ai/inference-service';
 import { updateOpticDiscSegmentation, deleteOpticDiscSegmentation } from '@/lib/ai/optic-disc-updater';
-import { QuadrantOverlay } from './QuadrantOverlay';
-import { MacularZonesOverlay } from './MacularZonesOverlay';
 import { useLandmarksAndQuadrants } from '@/hooks/useLandmarksAndQuadrants';
 import { classifyAndSaveImage } from '@/lib/analysis/image-classification-service';
 import { calibrateFromOpticDisc, createFallbackCalibration } from '@/lib/analysis/spatial-calibrator';
@@ -1589,45 +1588,19 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         />
 
         {/* Quadrant Grid Overlay */}
-        <Layer>
-          <Group
-            x={imageOffset.x}
-            y={imageOffset.y}
-            scaleX={scale}
-            scaleY={scale}
-          >
-            {/* Quadrant overlay */}
-            <QuadrantOverlay
-              visible={quadrantsLayer?.visible ?? true}
-              opacity={quadrantsLayer?.opacity ?? 0.5}
-              landmarks={landmarks}
-              imageWidth={konvaImage?.width || 0}
-              imageHeight={konvaImage?.height || 0}
-            />
-
-            {/* Macular zones overlay */}
-            {macularEdemaData && (
-              <MacularZonesOverlay
-                visible={macularZonesLayer?.visible ?? false}
-                opacity={macularZonesLayer?.opacity ?? 0.7}
-                fovea={macularEdemaData.fovea}
-                macularEdemaResult={{
-                  detected: macularEdemaData.result.detected,
-                  method: macularEdemaData.result.method,
-                  exudatesInZone: macularEdemaData.result.exudatesInZone,
-                  circinatePattern: macularEdemaData.result.circinatePattern,
-                  description: macularEdemaData.result.clinicalDescription || '',
-                  calibration: macularEdemaData.result.calibration,
-                  circinateAnalysis: macularEdemaData.result.circinateAnalysis,
-                }}
-                zoneRadiusUm={macularEdemaData.zoneRadiusUm}
-                showDiscDiameterZone={false}
-                showLegend={false}
-                showCircinateRings={circinateRingsLayer?.visible ?? false}
-              />
-            )}
-          </Group>
-        </Layer>
+        <AnalysisCanvasLayer
+          imageOffset={imageOffset}
+          scale={scale}
+          quadrantsVisible={quadrantsLayer?.visible ?? true}
+          quadrantsOpacity={quadrantsLayer?.opacity ?? 0.5}
+          landmarks={landmarks}
+          konvaImageWidth={konvaImage?.width || 0}
+          konvaImageHeight={konvaImage?.height || 0}
+          macularZonesVisible={macularZonesLayer?.visible ?? false}
+          macularZonesOpacity={macularZonesLayer?.opacity ?? 0.7}
+          macularEdemaData={macularEdemaData}
+          circinateRingsVisible={circinateRingsLayer?.visible ?? false}
+        />
 
         {/* Transformer Layer */}
         <Layer>
