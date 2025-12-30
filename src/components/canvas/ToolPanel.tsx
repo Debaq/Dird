@@ -1,11 +1,11 @@
 import React from 'react';
-import { Square, Eraser, Move, ZoomIn, MousePointer2, Ruler, Target, List } from 'lucide-react';
+import { Square, Eraser, Move, ZoomIn, MousePointer2, Ruler, Target, List, Eye } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { useCanvasStore } from '@/stores/canvas-store';
 import type { LandmarkType } from '@/types/annotations';
 
-export type CanvasTool = 'select' | 'bbox' | 'circle' | 'eraser' | 'pan' | 'zoom' | 'ruler' | 'landmark';
+export type CanvasTool = 'select' | 'bbox' | 'circle' | 'eraser' | 'pan' | 'zoom' | 'ruler' | 'landmark' | 'cup';
 
 interface ToolPanelProps {
   activeTool: CanvasTool;
@@ -29,6 +29,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
     { id: 'select' as CanvasTool, icon: MousePointer2, label: t('canvas.tools.select') },
     { id: 'bbox' as CanvasTool, icon: Square, label: t('canvas.tools.bbox') },
     { id: 'landmark' as CanvasTool, icon: Target, label: t('canvas.tools.landmark') || 'Landmarks' },
+    { id: 'cup' as CanvasTool, icon: Eye, label: 'Dibujar Copa' },
     { id: 'ruler' as CanvasTool, icon: Ruler, label: t('canvas.tools.ruler') },
     { id: 'eraser' as CanvasTool, icon: Eraser, label: t('canvas.tools.eraser') },
     { id: 'pan' as CanvasTool, icon: Move, label: t('canvas.tools.pan') },
@@ -170,6 +171,14 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {activeTool === 'cup' && (
+        <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-100">
+          <p className="text-[10px] leading-tight text-blue-800">
+            Haz clic para abrir el editor de copa del disco óptico
+          </p>
         </div>
       )}
     </div>

@@ -272,7 +272,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                         e.stopPropagation();
                         onLayerUpdate(layer.id, { visible: !layer.visible });
                       }}
-                      className="p-2 lg:p-1 hover:bg-coal-100 rounded"
+                      className="p-2 xl:p-1 hover:bg-coal-100 rounded"
                       title={layer.visible ? t('canvas.layers.hide') : t('canvas.layers.show')}
                     >
                       {layer.visible ? (
@@ -287,7 +287,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                           e.stopPropagation();
                           onLayerUpdate(layer.id, { showLabels: !layer.showLabels });
                         }}
-                        className="p-2 lg:p-1 hover:bg-coal-100 rounded"
+                        className="p-2 xl:p-1 hover:bg-coal-100 rounded"
                         title={layer.showLabels !== false ? t('canvas.layers.hideLabels') : t('canvas.layers.showLabels')}
                       >
                         <Tag className={cn(
@@ -301,7 +301,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                         e.stopPropagation();
                         onLayerUpdate(layer.id, { locked: !layer.locked });
                       }}
-                      className="p-2 lg:p-1 hover:bg-coal-100 rounded"
+                      className="p-2 xl:p-1 hover:bg-coal-100 rounded"
                       disabled={layer.id === 'original'}
                       title={layer.locked ? t('canvas.layers.unlock') : t('canvas.layers.lock')}
                     >
@@ -363,7 +363,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                               )}
                             </div>
 
-                            <div className="flex items-center space-x-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center space-x-1 opacity-100 xl:opacity-0 group-hover:opacity-100 transition-opacity">
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -372,7 +372,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                                   handleEditClick(detection);
                                 }}
                                 title={layer.id === 'detections-ai' ? t('canvas.layers.convertAndEdit') : t('canvas.layers.editAnnotationClass')}
-                                className="h-8 lg:h-6 px-2"
+                                className="h-8 xl:h-6 px-2"
                               >
                                 <Edit3 className="w-3 h-3" />
                               </Button>
@@ -384,7 +384,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                                   handleDeleteDetection(detection.id!);
                                 }}
                                 title={t('canvas.layers.deleteAnnotation')}
-                                className="h-8 lg:h-6 px-2"
+                                className="h-8 xl:h-6 px-2"
                               >
                                 <Trash2 className="w-3 h-3" />
                               </Button>
@@ -414,7 +414,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                               </span>
                             </div>
 
-                            <div className="flex items-center space-x-1 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center space-x-1 opacity-100 xl:opacity-0 group-hover:opacity-100 transition-opacity">
                               <Button
                                 size="sm"
                                 variant="destructive"
@@ -423,7 +423,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
                                   handleDeleteMeasurement(measurement.id!);
                                 }}
                                 title={t('canvas.layers.deleteAnnotation')}
-                                className="h-8 lg:h-6 px-2"
+                                className="h-8 xl:h-6 px-2"
                               >
                                 <Trash2 className="w-3 h-3" />
                               </Button>

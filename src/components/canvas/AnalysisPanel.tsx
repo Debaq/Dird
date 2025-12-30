@@ -9,13 +9,16 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity } from 'lucide-react';
-import type { CircinatePatternAnalysis } from '@/lib/analysis/macular-edema-detector';
+import type { CircinatePatternAnalysis, MacularEdemaResult } from '@/lib/analysis/macular-edema-detector';
 import { CircinateAnalysisContent } from './CircinateAnalysisPanel';
 
 interface AnalysisPanelProps {
   // Circinate pattern analysis
   circinateAnalysis?: CircinatePatternAnalysis | null;
   circinateVisible?: boolean;
+
+  // Macular edema detection
+  macularEdemaResult?: MacularEdemaResult | null;
 
   // Future analysis types can be added here:
   // quadrantAnalysis?: QuadrantAnalysis;
@@ -26,6 +29,7 @@ interface AnalysisPanelProps {
 export function AnalysisPanel({
   circinateAnalysis,
   circinateVisible = true,
+  macularEdemaResult,
 }: AnalysisPanelProps) {
   const { t } = useTranslation();
 
@@ -33,10 +37,13 @@ export function AnalysisPanel({
   React.useEffect(() => {
     console.log('📊 AnalysisPanel - circinateAnalysis:', circinateAnalysis);
     console.log('📊 AnalysisPanel - circinateVisible:', circinateVisible);
-  }, [circinateAnalysis, circinateVisible]);
+    console.log('📊 AnalysisPanel - macularEdemaResult:', macularEdemaResult);
+  }, [circinateAnalysis, circinateVisible, macularEdemaResult]);
 
   // Determine what to show
   const hasCircinateAnalysis = circinateAnalysis && circinateVisible;
+  const hasMacularEdemaDetection = macularEdemaResult?.detected;
+  const hasAnyAnalysis = hasCircinateAnalysis || hasMacularEdemaDetection;
 
   return (
     <Card className="bg-white dark:bg-gray-800 border-coal-200 dark:border-gray-700">
@@ -47,11 +54,22 @@ export function AnalysisPanel({
         </CardTitle>
       </CardHeader>
       <CardContent className="px-3 pb-3">
-        {hasCircinateAnalysis ? (
-          <CircinateAnalysisContent analysis={circinateAnalysis} />
-        ) : (
-          <EmptyAnalysisState />
+        {/* Macular edema detection alert */}
+        {hasMacularEdemaDetection && (
+          <div className="mb-3 p-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-md">
+            <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+              ⚠️ {macularEdemaResult.exudatesInZone.length} exudados cerca de fóvea. Verificar edema y anillos circinados.
+            </p>
+          </div>
         )}
+
+        {/* Circinate analysis */}
+        {hasCircinateAnalysis && (
+          <CircinateAnalysisContent analysis={circinateAnalysis} />
+        )}
+
+        {/* Empty state - only show if no analysis is available */}
+        {!hasAnyAnalysis && <EmptyAnalysisState />}
 
         {/* Future analysis types can be added here with conditional rendering */}
         {/* {hasQuadrantAnalysis && <QuadrantAnalysisContent />} */}

@@ -16,13 +16,18 @@ import {
 import AnnotationCanvas from './AnnotationCanvas';
 import AdvancedLayerControls, { type CanvasLayer } from './AdvancedLayerControls';
 import ToolPanel, { type CanvasTool } from './ToolPanel';
-import { AnalysisPanel } from './AnalysisPanel';
+import { AnalysisBadges } from './AnalysisBadges';
+import { OpticDiscCupDrawer } from './OpticDiscCupDrawer';
 import { db } from '@/lib/db/schema';
 import { cn } from '@/lib/utils';
 import { useCanvasStore } from '@/stores/canvas-store';
 import type { HistoryEntry } from '@/types/annotations';
 import { detectMacularEdema, findFovea } from '@/lib/analysis/macular-edema-detector';
 import { calibrateFromOpticDisc, createFallbackCalibration } from '@/lib/analysis/spatial-calibrator';
+import { analyzeHemorrhages } from '@/lib/analysis/hemorrhage-detector';
+import { analyzeMicroaneurysms } from '@/lib/analysis/microaneurysm-detector';
+import { analyzeOpticDiscCupping } from '@/lib/analysis/optic-disc-cupping-detector';
+import { useConfigStore } from '@/stores/config-store';
 
 const DEFAULT_LAYERS: CanvasLayer[] = [
   { id: 'original', name: 'canvas.layers.original', visible: true, opacity: 1, locked: true, zIndex: 0 },
@@ -86,6 +91,7 @@ const ImageAnalyzer: React.FC = () => {
   }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { config } = useConfigStore();
   const [layers, setLayers] = useState<CanvasLayer[]>(DEFAULT_LAYERS);
   const [activeTool, setActiveTool] = useState<CanvasTool>('select');
   const [selectedLandmarkType, setSelectedLandmarkType] = useState<'optic_disc' | 'fovea'>('optic_disc');
@@ -150,6 +156,7 @@ const ImageAnalyzer: React.FC = () => {
   const [showMobileLayers, setShowMobileLayers] = useState(false);
   const [showContributionDialog, setShowContributionDialog] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [cupDrawerOpen, setCupDrawerOpen] = useState(false);
 
 
   useEffect(() => {
@@ -279,6 +286,81 @@ const ImageAnalyzer: React.FC = () => {
     }
   }, [allDetections]);
 
+  // Analyze hemorrhages (only if enabled)
+  const hemorrhageAnalysisResult = React.useMemo(() => {
+    if (!config.advancedAnalysis?.hemorrhages) return null;
+    if (!allDetections || allDetections.length === 0) return null;
+
+    try {
+      const opticDisc = allDetections.find(d =>
+        d.class && typeof d.class === 'string' &&
+        ['optic_disc', 'optic disc'].includes(d.class.toLowerCase().trim())
+      );
+
+      const calibration = opticDisc
+        ? calibrateFromOpticDisc(opticDisc)
+        : createFallbackCalibration();
+
+      // Get image dimensions (use first detection for reference)
+      const imageWidth = image?.width || 1000;
+      const imageHeight = image?.height || 1000;
+
+      const result = analyzeHemorrhages(allDetections, calibration, imageWidth, imageHeight);
+      console.log('🩸 Hemorrhage analysis:', result);
+      return result;
+    } catch (error) {
+      console.error('Error analyzing hemorrhages:', error);
+      return null;
+    }
+  }, [allDetections, image, config.advancedAnalysis?.hemorrhages]);
+
+  // Analyze microaneurysms (only if enabled)
+  const microaneurysmAnalysisResult = React.useMemo(() => {
+    if (!config.advancedAnalysis?.microaneurysms) return null;
+    if (!allDetections || allDetections.length === 0) return null;
+
+    try {
+      const opticDisc = allDetections.find(d =>
+        d.class && typeof d.class === 'string' &&
+        ['optic_disc', 'optic disc'].includes(d.class.toLowerCase().trim())
+      );
+
+      const calibration = opticDisc
+        ? calibrateFromOpticDisc(opticDisc)
+        : createFallbackCalibration();
+
+      const result = analyzeMicroaneurysms(allDetections, calibration);
+      console.log('🔴 Microaneurysm analysis:', result);
+      return result;
+    } catch (error) {
+      console.error('Error analyzing microaneurysms:', error);
+      return null;
+    }
+  }, [allDetections, config.advancedAnalysis?.microaneurysms]);
+
+  // Analyze optic disc cupping (only if enabled)
+  const opticDiscCuppingResult = React.useMemo(() => {
+    if (!config.advancedAnalysis?.opticDiscCupping) return null;
+    if (!allDetections || allDetections.length === 0) return null;
+
+    try {
+      const opticDisc = allDetections.find(d =>
+        d.class && typeof d.class === 'string' &&
+        ['optic_disc', 'optic disc'].includes(d.class.toLowerCase().trim())
+      );
+
+      const calibration = opticDisc
+        ? calibrateFromOpticDisc(opticDisc)
+        : createFallbackCalibration();
+
+      const result = analyzeOpticDiscCupping(allDetections, calibration);
+      return result;
+    } catch (error) {
+      console.error('Error analyzing optic disc cupping:', error);
+      return null;
+    }
+  }, [allDetections, config.advancedAnalysis?.opticDiscCupping]);
+
   // Separar detecciones por tipo
   const aiDetections = allDetections?.filter((d) => d.type === 'ai') || [];
   const manualDetections = allDetections?.filter((d) => d.type === 'manual') || [];
@@ -291,6 +373,86 @@ const ImageAnalyzer: React.FC = () => {
     setLayers((prev) =>
       prev.map((layer) => (layer.id === layerId ? { ...layer, ...updates } : layer))
     );
+  };
+
+  // Find optic disc for cup drawer
+  const opticDiscDetection = allDetections?.find(d =>
+    d.class && typeof d.class === 'string' &&
+    ['optic_disc', 'optic disc', 'disc', 'disco optico', 'disco óptico'].some(term =>
+      d.class!.toLowerCase().trim().includes(term)
+    )
+  ) || null;
+
+  // Find existing optic cup detection
+  const opticCupDetection = allDetections?.find(d =>
+    d.class && typeof d.class === 'string' &&
+    ['optic_cup', 'optic cup', 'cup', 'copa optica', 'copa óptica'].some(term =>
+      d.class!.toLowerCase().trim().includes(term)
+    )
+  ) || null;
+
+  // Handle cup drawer - open when cup tool is selected
+  useEffect(() => {
+    if (activeTool === 'cup') {
+      setCupDrawerOpen(true);
+    }
+  }, [activeTool]);
+
+  const handleSaveCup = async (data: {
+    cupBbox: { x: number; y: number; width: number; height: number };
+    discPoints?: {
+      superior: { x: number; y: number };
+      inferior: { x: number; y: number };
+      nasal: { x: number; y: number };
+      temporal: { x: number; y: number };
+    };
+    paintedPixels: string[];
+  }) => {
+    if (!imageId) return;
+
+    try {
+      // Save or update cup as manual detection
+      if (opticCupDetection?.id) {
+        // Update existing cup
+        await db.detections.update(opticCupDetection.id, {
+          bbox: data.cupBbox,
+          metadata: {
+            ...opticCupDetection.metadata,
+            paintedPixels: data.paintedPixels,
+          },
+        });
+        console.log('✅ Cup updated successfully with', data.paintedPixels.length, 'pixels');
+      } else {
+        // Create new cup detection
+        await db.detections.add({
+          imageId: parseInt(imageId),
+          class: 'optic_cup',
+          bbox: data.cupBbox,
+          confidence: 1.0,
+          type: 'manual',
+          visible: true,
+          metadata: {
+            paintedPixels: data.paintedPixels,
+          },
+          createdAt: new Date(),
+        });
+        console.log('✅ Cup saved successfully with', data.paintedPixels.length, 'pixels');
+      }
+
+      // If disc points were provided, update the optic disc detection with the points
+      if (data.discPoints && opticDiscDetection?.id) {
+        await db.detections.update(opticDiscDetection.id, {
+          metadata: {
+            ...opticDiscDetection.metadata,
+            precisePoints: data.discPoints,
+          },
+        });
+
+        console.log('✅ Disc points saved to optic disc detection');
+      }
+    } catch (error) {
+      console.error('Error saving cup:', error);
+    }
   };
 
   const handleAnnotationAdded = () => {
@@ -345,32 +507,25 @@ const ImageAnalyzer: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-[100vh] lg:h-[calc(100vh-11rem)] relative bg-ice dark:bg-gray-900">
+    <div className="flex flex-col h-[100vh] xl:h-[calc(100vh-11rem)] relative bg-ice dark:bg-gray-900">
       {/* Header - Visible on Mobile (Portrait & Landscape) and Desktop */}
       <div className={cn(
         "flex items-center justify-between mb-2 flex-shrink-0",
         // Add padding on mobile because MainLayout(fullScreenOnMobile) removes it
-        "p-2 lg:p-0 lg:mb-6"
+        "p-2 xl:p-0 xl:mb-6"
       )}>
         <div className="flex items-center space-x-4 overflow-hidden">
           <Button
             variant="outline"
             size="icon"
             onClick={() => navigate(`/patients/${patientId}/sessions/${sessionId}`)}
-            className="flex-shrink-0 w-8 h-8 lg:w-10 lg:h-10"
+            className="flex-shrink-0 w-8 h-8 xl:w-10 xl:h-10"
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="min-w-0">
-            <h1 className="text-lg lg:text-3xl font-bold text-coal-800 dark:text-gray-100 truncate">{t('analysis.title')}</h1>
-            <div className="flex flex-col">
-              <p className="text-xs lg:text-sm text-smoke-500 dark:text-gray-400 mt-0.5 truncate">{image.filename}</p>
-              {macularEdemaResult?.detected && (
-                <div className="flex items-center gap-2 mt-1 text-xs font-medium text-amber-600 dark:text-amber-400">
-                  <span>⚠️ {macularEdemaResult.exudatesInZone.length} exudados cerca de fóvea. Verificar edema y anillos circinados.</span>
-                </div>
-              )}
-            </div>
+            <h1 className="text-lg xl:text-3xl font-bold text-coal-800 dark:text-gray-100 truncate">{t('analysis.title')}</h1>
+            <p className="text-xs xl:text-sm text-smoke-500 dark:text-gray-400 mt-0.5 truncate">{image.filename}</p>
           </div>
         </div>
 
@@ -408,7 +563,7 @@ const ImageAnalyzer: React.FC = () => {
         )}
 
         {/* Mobile Toolbar Icons */}
-        <div className="flex lg:hidden items-center space-x-1 ml-2 flex-shrink-0">
+        <div className="flex xl:hidden items-center space-x-1 ml-2 flex-shrink-0">
            <Button 
              variant={showMobileTools ? "secondary" : "ghost"}
              size="icon"
@@ -438,7 +593,7 @@ const ImageAnalyzer: React.FC = () => {
       </div>
 
       {/* Mobile Collapsible Panels */}
-      <div className="lg:hidden px-2 flex-shrink-0 relative z-10">
+      <div className="xl:hidden px-2 flex-shrink-0 relative z-10">
          {showMobileTools && (
            <div className="absolute top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg p-2 rounded-b-lg border-t border-coal-100 dark:border-gray-700">
               <ToolPanel
@@ -474,10 +629,10 @@ const ImageAnalyzer: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6 flex-grow overflow-hidden relative">
+      <div className="flex flex-col xl:grid xl:grid-cols-4 gap-6 flex-grow overflow-hidden relative">
         {/* Canvas Area */}
-        <div className="lg:col-span-3 h-full w-full">
-          <Card className="h-full flex flex-col border-0 lg:border shadow-none lg:shadow-sm bg-transparent lg:bg-white lg:dark:bg-gray-800 rounded-none lg:rounded-lg overflow-hidden">
+        <div className="xl:col-span-3 h-full w-full">
+          <Card className="h-full flex flex-col border-0 xl:border shadow-none xl:shadow-sm bg-transparent xl:bg-white xl:dark:bg-gray-800 rounded-none xl:rounded-lg overflow-hidden">
             <CardContent className="flex-grow p-0 h-full relative group">
               <AnnotationCanvas
                 image={image}
@@ -500,6 +655,15 @@ const ImageAnalyzer: React.FC = () => {
                   onUndo: handleUndo,
                   onRedo: handleRedo
                 }}
+              />
+
+              {/* Analysis Badges - floating over canvas */}
+              <AnalysisBadges
+                circinateAnalysis={config.advancedAnalysis?.circinatePattern ? macularEdemaResult?.circinateAnalysis : null}
+                macularEdemaResult={macularEdemaResult}
+                hemorrhageAnalysis={hemorrhageAnalysisResult}
+                microaneurysmAnalysis={microaneurysmAnalysisResult}
+                opticDiscCuppingAnalysis={opticDiscCuppingResult}
               />
 
               {sortedImages.length > 1 && (
@@ -530,15 +694,10 @@ const ImageAnalyzer: React.FC = () => {
         </div>
 
         {/* Desktop Side Panel */}
-        <div className="hidden lg:block h-full overflow-hidden pr-2">
+        <div className="hidden xl:block h-full overflow-hidden pr-2">
           <div className="flex flex-col h-full space-y-3">
-            {/* Fixed Analysis and Tools Section - Always visible */}
+            {/* Fixed Tools Section - Always visible */}
             <div className="flex-shrink-0 space-y-3">
-              <AnalysisPanel
-                circinateAnalysis={macularEdemaResult?.circinateAnalysis}
-                circinateVisible={layers.find(l => l.id === 'macular-zones')?.visible ?? false}
-              />
-              
               <ToolPanel
                 activeTool={activeTool}
                 onToolChange={setActiveTool}
@@ -568,6 +727,21 @@ const ImageAnalyzer: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Optic Disc Cup Drawer Modal */}
+      <OpticDiscCupDrawer
+        open={cupDrawerOpen}
+        onOpenChange={(open) => {
+          setCupDrawerOpen(open);
+          if (!open) {
+            setActiveTool('select'); // Return to select tool when closing
+          }
+        }}
+        opticDisc={opticDiscDetection}
+        opticCup={opticCupDetection}
+        imageBlob={image?.originalBlob || null}
+        onSaveCup={handleSaveCup}
+      />
 
       <Dialog open={showContributionDialog} onOpenChange={setShowContributionDialog}>
         <DialogContent className="sm:max-w-md">

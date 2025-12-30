@@ -60,6 +60,10 @@ export function MacularZonesOverlay({
     y: fovea.bbox.y + fovea.bbox.height / 2,
   };
 
+  // Get debug data for visualization
+  const debugData = circinateAnalysis?.debug;
+  const hasDebugData = debugData && debugData.allExudates.length > 0;
+
   // Convert zone radius from micrometers to pixels
   const zoneRadiusPixels = micronsToPixels(zoneRadiusUm, calibration);
 
@@ -109,15 +113,167 @@ export function MacularZonesOverlay({
 
       {/* Fitted circle overlay (if circinate analysis available) */}
       {circinateAnalysis?.fittedCircle && (
-        <Circle
-          x={circinateAnalysis.fittedCircle.center.x}
-          y={circinateAnalysis.fittedCircle.center.y}
-          radius={circinateAnalysis.fittedCircle.radius}
-          stroke={fittedCircleColor}
-          strokeWidth={circinateAnalysis.isCompleteRing ? 3 : 2}
-          dash={circinateAnalysis.isPartialRing ? [10, 5] : [5, 5]}
-          listening={false}
-        />
+        <Group>
+          {/* Fitted circle */}
+          <Circle
+            x={circinateAnalysis.fittedCircle.center.x}
+            y={circinateAnalysis.fittedCircle.center.y}
+            radius={circinateAnalysis.fittedCircle.radius}
+            stroke={fittedCircleColor}
+            strokeWidth={circinateAnalysis.isCompleteRing ? 3 : 2}
+            dash={circinateAnalysis.isPartialRing ? [10, 5] : [5, 5]}
+            listening={false}
+          />
+
+          {/* Center marker for fitted circle */}
+          <Circle
+            x={circinateAnalysis.fittedCircle.center.x}
+            y={circinateAnalysis.fittedCircle.center.y}
+            radius={5}
+            fill={fittedCircleColor}
+            listening={false}
+          />
+
+          {/* Cross marker at center */}
+          <Line
+            points={[
+              circinateAnalysis.fittedCircle.center.x - 8,
+              circinateAnalysis.fittedCircle.center.y,
+              circinateAnalysis.fittedCircle.center.x + 8,
+              circinateAnalysis.fittedCircle.center.y,
+            ]}
+            stroke={fittedCircleColor}
+            strokeWidth={2}
+            listening={false}
+          />
+          <Line
+            points={[
+              circinateAnalysis.fittedCircle.center.x,
+              circinateAnalysis.fittedCircle.center.y - 8,
+              circinateAnalysis.fittedCircle.center.x,
+              circinateAnalysis.fittedCircle.center.y + 8,
+            ]}
+            stroke={fittedCircleColor}
+            strokeWidth={2}
+            listening={false}
+          />
+        </Group>
+      )}
+
+      {/* DEBUG: Visualize all analyzed exudates with rays from optimal center */}
+      {hasDebugData && circinateAnalysis?.fittedCircle && debugData && (
+        <Group>
+          {debugData.allExudates.map((exudate, index) => {
+            const exudateCenter = {
+              x: exudate.bbox.x + exudate.bbox.width / 2,
+              y: exudate.bbox.y + exudate.bbox.height / 2,
+            };
+
+            const optimalCenter = circinateAnalysis.fittedCircle!.center;
+            const isOnCircle = debugData.exudatesOnCircle[index];
+            const wasExcludedFromFit = debugData.excludedFromFit.includes(index);
+
+            // Color based on whether exudate is on the circle and if it was excluded
+            let rayColor: string;
+            let markerColor: string;
+            let markerStroke: string;
+
+            if (wasExcludedFromFit) {
+              // Excluded from fit (outlier) - purple/magenta
+              rayColor = 'rgba(255, 0, 255, 0.5)';
+              markerColor = 'rgba(255, 0, 255, 0.8)';
+              markerStroke = 'rgba(255, 255, 0, 0.9)';
+            } else if (isOnCircle) {
+              // On circle - green
+              rayColor = 'rgba(0, 255, 0, 0.7)';
+              markerColor = 'rgba(0, 255, 0, 0.9)';
+              markerStroke = 'rgba(255, 255, 255, 0.8)';
+            } else {
+              // Off circle - red
+              rayColor = 'rgba(255, 0, 0, 0.5)';
+              markerColor = 'rgba(255, 0, 0, 0.7)';
+              markerStroke = 'rgba(0, 0, 0, 0.5)';
+            }
+
+            return (
+              <Group key={`debug-exudate-${index}`}>
+                {/* Ray from optimal center to exudate */}
+                <Line
+                  points={[
+                    optimalCenter.x,
+                    optimalCenter.y,
+                    exudateCenter.x,
+                    exudateCenter.y,
+                  ]}
+                  stroke={rayColor}
+                  strokeWidth={isOnCircle ? 2 : 1}
+                  dash={wasExcludedFromFit ? [5, 5] : undefined}
+                  opacity={0.6}
+                  listening={false}
+                />
+
+                {/* Marker at exudate center */}
+                <Circle
+                  x={exudateCenter.x}
+                  y={exudateCenter.y}
+                  radius={wasExcludedFromFit ? 8 : (isOnCircle ? 6 : 4)}
+                  fill={markerColor}
+                  stroke={markerStroke}
+                  strokeWidth={wasExcludedFromFit ? 3 : 1}
+                  listening={false}
+                />
+
+                {/* X mark for excluded exudates */}
+                {wasExcludedFromFit && (
+                  <Group>
+                    <Line
+                      points={[
+                        exudateCenter.x - 5,
+                        exudateCenter.y - 5,
+                        exudateCenter.x + 5,
+                        exudateCenter.y + 5,
+                      ]}
+                      stroke="rgba(255, 255, 0, 0.9)"
+                      strokeWidth={2}
+                      listening={false}
+                    />
+                    <Line
+                      points={[
+                        exudateCenter.x - 5,
+                        exudateCenter.y + 5,
+                        exudateCenter.x + 5,
+                        exudateCenter.y - 5,
+                      ]}
+                      stroke="rgba(255, 255, 0, 0.9)"
+                      strokeWidth={2}
+                      listening={false}
+                    />
+                  </Group>
+                )}
+              </Group>
+            );
+          })}
+
+          {/* Tolerance zone visualization (ring around the fitted circle) */}
+          <Circle
+            x={circinateAnalysis.fittedCircle.center.x}
+            y={circinateAnalysis.fittedCircle.center.y}
+            radius={circinateAnalysis.fittedCircle.radius + debugData.radiusTolerance}
+            stroke="rgba(150, 150, 150, 0.3)"
+            strokeWidth={1}
+            dash={[3, 3]}
+            listening={false}
+          />
+          <Circle
+            x={circinateAnalysis.fittedCircle.center.x}
+            y={circinateAnalysis.fittedCircle.center.y}
+            radius={circinateAnalysis.fittedCircle.radius - debugData.radiusTolerance}
+            stroke="rgba(150, 150, 150, 0.3)"
+            strokeWidth={1}
+            dash={[3, 3]}
+            listening={false}
+          />
+        </Group>
       )}
 
       {/* Highlight exudates within zone */}
@@ -126,6 +282,9 @@ export function MacularZonesOverlay({
           x: exudate.bbox.x + exudate.bbox.width / 2,
           y: exudate.bbox.y + exudate.bbox.height / 2,
         };
+
+        // Use fitted circle center if available, otherwise use fovea center
+        const patternCenter = circinateAnalysis?.fittedCircle?.center || foveaCenter;
 
         return (
           <Group key={`exudate-highlight-${index}`}>
@@ -139,10 +298,10 @@ export function MacularZonesOverlay({
               listening={false}
             />
 
-            {/* Line from fovea to exudate (if circinate pattern) */}
+            {/* Line from pattern center to exudate (if circinate pattern) */}
             {circinatePattern && (
               <Line
-                points={[foveaCenter.x, foveaCenter.y, exudateCenter.x, exudateCenter.y]}
+                points={[patternCenter.x, patternCenter.y, exudateCenter.x, exudateCenter.y]}
                 stroke={circinateLineColor}
                 strokeWidth={1}
                 opacity={0.4}
