@@ -32,6 +32,7 @@ interface MacularZonesOverlayProps {
   zoneRadiusUm: number; // Radius in micrometers (e.g., 500)
   showDiscDiameterZone?: boolean; // Show 1 DD zone (ETDRS)
   showLegend?: boolean; // Show legend text panel (deprecated - use panel instead)
+  showCircinateRings?: boolean; // Control circinate rings visibility separately
 }
 
 /**
@@ -45,6 +46,7 @@ export function MacularZonesOverlay({
   zoneRadiusUm,
   showDiscDiameterZone = false,
   showLegend = true,
+  showCircinateRings = false,
 }: MacularZonesOverlayProps) {
   const { t } = useTranslation();
 
@@ -111,8 +113,8 @@ export function MacularZonesOverlay({
         listening={false}
       />
 
-      {/* Fitted circle overlay (if circinate analysis available) */}
-      {circinateAnalysis?.fittedCircle && (
+      {/* Fitted circle overlay (if circinate analysis available and rings visible) */}
+      {showCircinateRings && circinateAnalysis?.fittedCircle && (
         <Group>
           {/* Fitted circle */}
           <Circle
@@ -161,7 +163,7 @@ export function MacularZonesOverlay({
       )}
 
       {/* DEBUG: Visualize all analyzed exudates with rays from optimal center */}
-      {hasDebugData && circinateAnalysis?.fittedCircle && debugData && (
+      {showCircinateRings && hasDebugData && circinateAnalysis?.fittedCircle && debugData && (
         <Group>
           {debugData.allExudates.map((exudate, index) => {
             const exudateCenter = {

@@ -18,6 +18,7 @@ import AdvancedLayerControls, { type CanvasLayer } from './AdvancedLayerControls
 import ToolPanel, { type CanvasTool } from './ToolPanel';
 import { AnalysisBadges } from './AnalysisBadges';
 import { OpticDiscCupDrawer } from './OpticDiscCupDrawer';
+import { ImageProcessingPanel } from './ImageProcessingPanel';
 import { db } from '@/lib/db/schema';
 import { cn } from '@/lib/utils';
 import { useCanvasStore } from '@/stores/canvas-store';
@@ -28,6 +29,7 @@ import { analyzeHemorrhages } from '@/lib/analysis/hemorrhage-detector';
 import { analyzeMicroaneurysms } from '@/lib/analysis/microaneurysm-detector';
 import { analyzeOpticDiscCupping } from '@/lib/analysis/optic-disc-cupping-detector';
 import { useConfigStore } from '@/stores/config-store';
+import { useImageProcessingStore } from '@/stores/image-processing-store';
 import { logger } from '@/utils/logger';
 
 const DEFAULT_LAYERS: CanvasLayer[] = [
@@ -72,6 +74,14 @@ const DEFAULT_LAYERS: CanvasLayer[] = [
     visible: true,
     opacity: 0.7,
     locked: false,
+    zIndex: 3,
+  },
+  {
+    id: 'circinate-rings',
+    name: 'canvas.layers.circinate_rings',
+    visible: false,
+    opacity: 0.7,
+    locked: false,
     zIndex: 2,
   },
   {
@@ -93,9 +103,11 @@ const ImageAnalyzer: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { config } = useConfigStore();
+  const { showOriginal, comparisonOpacity } = useImageProcessingStore();
   const [layers, setLayers] = useState<CanvasLayer[]>(DEFAULT_LAYERS);
   const [activeTool, setActiveTool] = useState<CanvasTool>('select');
   const [selectedLandmarkType, setSelectedLandmarkType] = useState<'optic_disc' | 'fovea'>('optic_disc');
+  const [processedImageCanvas, setProcessedImageCanvas] = useState<HTMLCanvasElement | null>(null);
   const { selectedAnnotationId, setSelectedAnnotation } = useCanvasStore();
   const [selectedMeasurementId, setSelectedMeasurementId] = useState<number | null>(null);
 
@@ -372,6 +384,51 @@ const ImageAnalyzer: React.FC = () => {
   const aiSegmentations = allSegmentations?.filter((s) => s.type === 'ai') || [];
   const manualSegmentations = allSegmentations?.filter((s) => s.type === 'manual') || [];
 
+  // Calculate circinate analysis for display
+  const circinateAnalysis = React.useMemo(() => {
+    const allDets = [...aiDetections, ...manualDetections];
+
+    if (allDets.length === 0) {
+      return null;
+    }
+
+    try {
+      const fovea = findFovea(allDets);
+      if (!fovea) {
+        return null;
+      }
+
+      const opticDisc = allDets.find(d =>
+        d.class && typeof d.class === 'string' &&
+        ['optic_disc', 'optic disc'].includes(d.class.toLowerCase().trim())
+      );
+
+      const calibration = opticDisc
+        ? calibrateFromOpticDisc(opticDisc)
+        : createFallbackCalibration();
+
+      const defaultCriteria = {
+        enabled: true,
+        method: 'EMCS',
+        hard_exudates_distance_um: 500,
+        min_exudates_for_flag: 1,
+        circinate_pattern_detection: true,
+        min_angular_dispersion: 0.5,
+        visual_zones: {
+          show_foveal_zone: true,
+          foveal_zone_radius_um: 500,
+        },
+      };
+
+      const result = detectMacularEdema(allDets, fovea, calibration, defaultCriteria);
+
+      return result.circinateAnalysis || null;
+    } catch (error) {
+      console.error('Error calculating circinate analysis:', error);
+      return null;
+    }
+  }, [aiDetections, manualDetections]);
+
   const handleLayerUpdate = (layerId: string, updates: Partial<CanvasLayer>) => {
     setLayers((prev) =>
       prev.map((layer) => (layer.id === layerId ? { ...layer, ...updates } : layer))
@@ -398,6 +455,13 @@ const ImageAnalyzer: React.FC = () => {
   useEffect(() => {
     if (activeTool === 'cup') {
       setCupDrawerOpen(true);
+    }
+  }, [activeTool]);
+
+  // Limpiar imagen procesada al cambiar de herramienta
+  useEffect(() => {
+    if (activeTool !== 'image-processing') {
+      setProcessedImageCanvas(null);
     }
   }, [activeTool]);
 
@@ -623,6 +687,7 @@ const ImageAnalyzer: React.FC = () => {
                onMeasurementsUpdate={handleAnnotationAdded}
                onAddToHistory={addToHistory}
                selectedAnnotationId={selectedAnnotationId}
+               circinateAnalysis={circinateAnalysis}
                selectedMeasurementId={selectedMeasurementId}
                onSelectAnnotation={setSelectedAnnotation}
                onSelectMeasurement={setSelectedMeasurementId}
@@ -651,6 +716,9 @@ const ImageAnalyzer: React.FC = () => {
                 selectedMeasurementId={selectedMeasurementId}
                 onSelectMeasurement={setSelectedMeasurementId}
                 onAnnotationAdded={handleAnnotationAdded}
+                processedImageCanvas={processedImageCanvas}
+                showOriginalOverlay={showOriginal}
+                comparisonOpacity={comparisonOpacity}
                 history={{
                   entries: detectionHistory,
                   index: historyIndex,
@@ -710,6 +778,17 @@ const ImageAnalyzer: React.FC = () => {
               />
             </div>
 
+            {/* Conditional: Image Processing Panel */}
+            {activeTool === 'image-processing' && (
+              <div className="flex-shrink-0">
+                <ImageProcessingPanel
+                  imageBlob={image?.originalBlob || null}
+                  onProcessedImage={setProcessedImageCanvas}
+                  disabled={session?.locked}
+                />
+              </div>
+            )}
+
             {/* Scrollable Layers Section */}
             <div className="flex-1 min-h-0 overflow-hidden">
               <AdvancedLayerControls
@@ -725,6 +804,7 @@ const ImageAnalyzer: React.FC = () => {
                 selectedMeasurementId={selectedMeasurementId}
                 onSelectAnnotation={setSelectedAnnotation}
                 onSelectMeasurement={setSelectedMeasurementId}
+                circinateAnalysis={circinateAnalysis}
               />
             </div>
           </div>

@@ -54,18 +54,6 @@ class Logger {
     return config.debug.categories[category];
   }
 
-  private isDebugEnabled(): boolean {
-    const state = useConfigStore.getState();
-    const config = state?.config;
-
-    // Safety check: if config or debug is not initialized yet, return false
-    if (!config || !config.debug) {
-      return false;
-    }
-
-    return config.debug.enabled;
-  }
-
   private formatMessage(category: LogCategory, message: string): string {
     const timestamp = new Date().toLocaleTimeString();
     const prefix = this.getCategoryPrefix(category);
