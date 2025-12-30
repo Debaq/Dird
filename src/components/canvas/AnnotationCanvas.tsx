@@ -12,6 +12,9 @@ import { classManager } from '@/lib/classes/class-manager';
 import ClassSelectionModal from './ClassSelectionModal';
 import { CanvasToolbar } from './CanvasToolbar';
 import { CanvasQuickClassSelector } from './CanvasQuickClassSelector';
+import { MeasurementsCanvasLayer } from './layers/MeasurementsCanvasLayer';
+import { AIDetectionsCanvasLayer } from './layers/AIDetectionsCanvasLayer';
+import { ManualAnnotationsCanvasLayer } from './layers/ManualAnnotationsCanvasLayer';
 import { getClassName } from '@/lib/ai/class-translations';
 import { useConfigStore } from '@/stores/config-store';
 import { useCanvasStore } from '@/stores/canvas-store';
@@ -1508,811 +1511,82 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         </Layer>
 
         {/* AI Detections Layer (includes AI segmentations) */}
-        <Layer
-          name="ai-detections-layer"
-          opacity={aiDetectionsLayer?.opacity ?? 1}
+        <AIDetectionsCanvasLayer
           visible={aiDetectionsLayer?.visible ?? true}
-          listening={true}
-        >
-          {!isCanvasReady && (
-            <Text
-              x={imageOffset.x + 20}
-              y={imageOffset.y + 20}
-              text={t('canvas.loadingDetections')}
-              fontSize={14}
-              fill="#20B5AE"
-              padding={8}
-              listening={false}
-            />
-          )}
-          {isCanvasReady && detections.length === 0 && (
-            <Text
-              x={imageOffset.x + 20}
-              y={imageOffset.y + 20}
-              text={t('canvas.noDetectionsOnImage')}
-              fontSize={14}
-              fill="#FF6B6B"
-              padding={8}
-              listening={false}
-            />
-          )}
-
-          {/* AI Segmentations (optic disc masks) - rendered BEFORE detections */}
-          {segmentations.map((seg) => {
-            const segImage = segmentationImages.get(seg.id!);
-            if (!segImage || !seg.visible) return null;
-
-            return (
-              <KonvaImage
-                key={`ai-seg-${seg.id}`}
-                image={segImage}
-                x={imageOffset.x}
-                y={imageOffset.y}
-                width={konvaImage?.width || 0}
-                height={konvaImage?.height || 0}
-                scaleX={scale}
-                scaleY={scale}
-                listening={false}
-                opacity={0.4}
-              />
-            );
-          })}
-
-          {/* AI Detections */}
-          {isCanvasReady && detections.map((detection, idx) => {
-            // Skip if class is not defined
-            if (!detection.class || typeof detection.class !== 'string') {
-              return null;
-            }
-
-            // Skip if bbox is invalid or has NaN values
-            if (!detection.bbox ||
-                typeof detection.bbox.x !== 'number' ||
-                typeof detection.bbox.y !== 'number' ||
-                typeof detection.bbox.width !== 'number' ||
-                typeof detection.bbox.height !== 'number' ||
-                !isFinite(detection.bbox.x) ||
-                !isFinite(detection.bbox.y) ||
-                !isFinite(detection.bbox.width) ||
-                !isFinite(detection.bbox.height)) {
-              console.warn('Skipping detection with invalid bbox:', detection);
-              return null;
-            }
-
-            // Check if this is a landmark class (optic_disc or fovea)
-            const className = detection.class.toLowerCase().trim();
-            const isLandmarkClass = className === 'optic_disc' || className === 'optic disc' || className === 'fovea';
-
-            // Calcular ancho del label basado en el texto
-            const translatedClass = getClassName(detection.class, i18n.language);
-            const labelText = `${translatedClass} ${Math.round((detection.confidence || 0) * 100)}%`;
-            const labelFontSize = 10;
-            const labelPadding = 6;
-            const labelWidth = labelText.length * (labelFontSize * 0.6) + labelPadding * 2;
-            const labelHeight = 16;
-            const showLabels = aiDetectionsLayer?.showLabels ?? true;
-
-            // Verificar si esta detección está siendo hover
-            const isHovered = detection.id === hoveredDetectionId;
-
-            // Obtener color efectivo (respetando rainbow mode y configuraciones)
-            const detectionColor = classManager.getColorForClass(detection.class);
-            const isSelected = selectedAnnotationId === String(detection.id);
-
-            return (
-              <Group key={`detection-${detection.id || idx}`}>
-                <Rect
-                  id={`det-${detection.id}`}
-                  x={detection.bbox.x * scale + imageOffset.x}
-                  y={detection.bbox.y * scale + imageOffset.y}
-                  width={detection.bbox.width * scale}
-                  height={detection.bbox.height * scale}
-                  fill={`${detectionColor}1A`}
-                  stroke={isHovered ? "#FFD700" : detectionColor}
-                  strokeWidth={isHovered ? 3 : 1.5}
-                  dash={isHovered ? [] : [8, 4]}
-                  hitStrokeWidth={10}
-                  perfectDrawEnabled={false}
-                  listening={activeTool !== 'bbox'}
-                  opacity={isLandmarkClass && !isSelected ? 0 : 1} // Invisible but interactive for landmarks
-                  draggable={activeTool === 'select' && isSelected}
-                  onMouseEnter={() => {
-                    if (detection.id) setHoveredDetectionId(detection.id);
-                  }}
-                  onMouseLeave={() => {
-                    setHoveredDetectionId(null);
-                  }}
-                  onDragStart={() => detection.id && handleDragStart(detection.id)}
-                  onClick={async (e) => {
-                    if (activeTool === 'eraser' && detection.id) {
-                      e.cancelBubble = true;
-                      await handleDeleteAnnotation(detection);
-                    } else if (activeTool === 'select' && detection.id) {
-                      setSelectedAnnotation(String(detection.id));
-                      e.cancelBubble = true;
-                    } else if (activeTool === 'zoom' && detection.id) {
-                      zoomToBbox(detection.bbox, isLandmarkClass);
-                      e.cancelBubble = true;
-                    }
-                  }}
-                  onDragEnd={(e) => {
-                    if (detection.id) {
-                      handleAnnotationChange(detection.id, {
-                        x: e.target.x(),
-                        y: e.target.y(),
-                        width: e.target.width() * e.target.scaleX(),
-                        height: e.target.height() * e.target.scaleY()
-                      }, true).then(() => recordMoveHistory(detection.id!));
-                    }
-                  }}
-                  onTransformStart={() => detection.id && handleDragStart(detection.id)}
-                  onTransformEnd={(e) => {
-                    if (detection.id) {
-                      const node = e.target;
-                      const scaleX = node.scaleX();
-                      const scaleY = node.scaleY();
-                      node.scaleX(1);
-                      node.scaleY(1);
-                      handleAnnotationChange(detection.id, {
-                        x: node.x(),
-                        y: node.y(),
-                        width: Math.max(5, node.width() * scaleX),
-                        height: Math.max(5, node.height() * scaleY),
-                        rotation: node.rotation()
-                      }, true).then(() => recordMoveHistory(detection.id!));
-                    }
-                  }}
-                />
-
-                {isSelected && !isLandmarkClass && (
-                  <Circle
-                    x={(detection.bbox.x * scale + imageOffset.x) + (detection.bbox.width * scale) / 2}
-                    y={(detection.bbox.y * scale + imageOffset.y) + (detection.bbox.height * scale) / 2}
-                    radius={5}
-                    fill="white"
-                    stroke="black"
-                    strokeWidth={1}
-                    draggable
-                    onDragStart={() => detection.id && handleDragStart(detection.id)}
-                    onDragMove={(e) => {
-                      const circle = e.target;
-                      const rect = stageRef.current?.findOne('#det-' + detection.id);
-                      if (rect) {
-                        const w = rect.width() * rect.scaleX();
-                        const h = rect.height() * rect.scaleY();
-                        rect.x(circle.x() - w / 2);
-                        rect.y(circle.y() - h / 2);
-                      }
-                    }}
-                    onDragEnd={() => {
-                      const rect = stageRef.current?.findOne('#det-' + detection.id);
-                      if (rect && detection.id) {
-                        handleAnnotationChange(detection.id, {
-                          x: rect.x(),
-                          y: rect.y(),
-                          width: rect.width() * rect.scaleX(),
-                          height: rect.height() * rect.scaleY()
-                        }, true).then(() => recordMoveHistory(detection.id!));
-                      }
-                    }}
-                  />
-                )}
-
-                {showLabels && !isLandmarkClass && (
-                  <Group listening={false}>
-                    <Rect
-                      x={detection.bbox.x * scale + imageOffset.x}
-                      y={(detection.bbox.y - labelHeight - 2) * scale + imageOffset.y}
-                      width={labelWidth}
-                      height={labelHeight}
-                      fill={isHovered ? "#FFD700" : detectionColor}
-                      cornerRadius={3}
-                    />
-                    <Text
-                      x={detection.bbox.x * scale + imageOffset.x + labelPadding}
-                      y={(detection.bbox.y - labelHeight) * scale + imageOffset.y}
-                      text={labelText}
-                      fontSize={labelFontSize}
-                      fill={isHovered ? "black" : "white"}
-                      fontStyle="bold"
-                    />
-                  </Group>
-                )}
-
-                {/* Render landmark circle if this is a landmark class */}
-                {isLandmarkClass && (() => {
-                  const landmark = landmarks.find(l => {
-                    const match = l.id.match(/ai-.*-(\d+)/);
-                    return match && parseInt(match[1]) === detection.id;
-                  });
-
-                  if (!landmark) return null;
-
-                  const centerX = (detection.bbox.x + detection.bbox.width / 2) * scale + imageOffset.x;
-                  const centerY = (detection.bbox.y + detection.bbox.height / 2) * scale + imageOffset.y;
-                  const radius = landmark.radius * scale;
-                  const isOpticDisc = landmark.type === 'optic_disc';
-                  const strokeColor = isOpticDisc ? '#E63946' : '#2A9D8F';
-
-                  return (
-                    <Group>
-                      {/* Outer ring */}
-                      <Circle
-                        x={centerX}
-                        y={centerY}
-                        radius={radius + 3}
-                        stroke={strokeColor}
-                        strokeWidth={2}
-                        opacity={0.8}
-                        listening={false}
-                      />
-                      {/* Main circle */}
-                      <Circle
-                        x={centerX}
-                        y={centerY}
-                        radius={radius}
-                        fill='transparent'
-                        opacity={0.8}
-                        stroke={strokeColor}
-                        strokeWidth={2}
-                        listening={false}
-                      />
-                      {/* Center dot */}
-                      <Circle
-                        x={centerX}
-                        y={centerY}
-                        radius={3}
-                        fill={strokeColor}
-                        opacity={1}
-                        listening={false}
-                      />
-                    </Group>
-                  );
-                })()}
-              </Group>
-            );
-          })}
-        </Layer>
+          opacity={aiDetectionsLayer?.opacity ?? 1}
+          detections={detections}
+          segmentations={segmentations}
+          segmentationImages={segmentationImages}
+          konvaImageWidth={konvaImage?.width || 0}
+          konvaImageHeight={konvaImage?.height || 0}
+          scale={scale}
+          imageOffset={imageOffset}
+          activeTool={activeTool}
+          selectedAnnotationId={selectedAnnotationId}
+          hoveredDetectionId={hoveredDetectionId}
+          showLabels={aiDetectionsLayer?.showLabels ?? true}
+          landmarks={landmarks}
+          isCanvasReady={isCanvasReady}
+          onHover={setHoveredDetectionId}
+          onSelect={(id) => setSelectedAnnotation(id)}
+          onDragStart={handleDragStart}
+          onUpdate={async (id, attrs, isFinal) => {
+             await handleAnnotationChange(id, attrs, isFinal);
+             if (isFinal) recordMoveHistory(id);
+          }}
+          onDelete={handleDeleteAnnotation}
+          onZoomToBbox={zoomToBbox}
+        />
 
         {/* Manual Annotations Layer (includes manual segmentations) */}
-        <Layer
-          name="manual-annotations-layer"
-          opacity={manualAnnotationsLayer?.opacity ?? 1}
+        <ManualAnnotationsCanvasLayer
           visible={manualAnnotationsLayer?.visible ?? true}
-          listening={true}
-        >
-          {/* Manual Segmentations (optic disc masks) - rendered BEFORE annotations */}
-          {manualSegmentations.map((seg) => {
-            const segImage = segmentationImages.get(seg.id!);
-            if (!segImage || !seg.visible) return null;
-
-            return (
-              <KonvaImage
-                key={`manual-seg-${seg.id}`}
-                image={segImage}
-                x={imageOffset.x}
-                y={imageOffset.y}
-                width={konvaImage?.width || 0}
-                height={konvaImage?.height || 0}
-                scaleX={scale}
-                scaleY={scale}
-                listening={false}
-                opacity={0.4}
-              />
-            );
-          })}
-
-          {/* Saved annotations from database */}
-          {isCanvasReady && manualAnnotations?.map((annotation, idx) => {
-            // Check if this is a landmark class (optic_disc or fovea)
-            const className = annotation.class?.toLowerCase().trim() || '';
-            const isLandmarkClass = className === 'optic_disc' || className === 'optic disc' || className === 'fovea';
-
-            // Para detecciones manuales de la base de datos, usamos bbox
-            const color = annotation.class
-              ? classManager.getColorForClass(annotation.class)
-              : '#FF6B6B'; // fallback color
-
-            // Obtener nombre traducido
-            const translatedClass = annotation.class ? getClassName(annotation.class, i18n.language) : '';
-
-            // Calcular ancho del label basado en el texto
-            const labelFontSize = 10;
-            const labelPadding = 6;
-            const labelWidth = translatedClass ? translatedClass.length * (labelFontSize * 0.6) + labelPadding * 2 : 0;
-            const labelHeight = 16;
-            const showLabels = manualAnnotationsLayer?.showLabels ?? true;
-
-            // Verificar si esta anotación está siendo hover
-            const isHovered = annotation.id === hoveredDetectionId;
-            const hoverColor = isHovered ? "#FFD700" : color;
-            const isSelected = selectedAnnotationId === String(annotation.id);
-
-            // Verificar si es una detección de la base de datos (tiene bbox)
-            if (annotation.bbox) {
-              // Skip if bbox has invalid or NaN values
-              if (typeof annotation.bbox.x !== 'number' ||
-                  typeof annotation.bbox.y !== 'number' ||
-                  typeof annotation.bbox.width !== 'number' ||
-                  typeof annotation.bbox.height !== 'number' ||
-                  !isFinite(annotation.bbox.x) ||
-                  !isFinite(annotation.bbox.y) ||
-                  !isFinite(annotation.bbox.width) ||
-                  !isFinite(annotation.bbox.height)) {
-                console.warn('Skipping manual annotation with invalid bbox:', annotation);
-                return null;
-              }
-
-              return (
-                <Group key={`manual-${annotation.id || idx}`}>
-                  {/* Caja de anotación */}
-                  <Rect
-                    id={`det-${annotation.id}`}
-                    x={annotation.bbox.x * scale + imageOffset.x}
-                    y={annotation.bbox.y * scale + imageOffset.y}
-                    width={annotation.bbox.width * scale}
-                    height={annotation.bbox.height * scale}
-                    fill={`${color}20`}
-                    stroke={hoverColor}
-                    strokeWidth={isHovered ? 3 : 1}
-                    strokeDash={isHovered ? [] : [4, 2]}
-                    hitStrokeWidth={10}
-                    perfectDrawEnabled={false}
-                    listening={activeTool !== 'bbox'}
-                    opacity={isLandmarkClass && !isSelected ? 0 : 1} // Invisible but interactive for landmarks
-                    draggable={activeTool === 'select' && isSelected}
-                    onMouseEnter={() => {
-                      if (annotation.id) setHoveredDetectionId(annotation.id);
-                    }}
-                    onMouseLeave={() => {
-                      setHoveredDetectionId(null);
-                    }}
-                    onDragStart={() => annotation.id && handleDragStart(annotation.id)}
-                                      onClick={async (e) => {
-                                        if (activeTool === 'eraser' && annotation.id) {
-                                          e.cancelBubble = true;
-                                          await handleDeleteAnnotation(annotation);
-                                        } else if (activeTool === 'select' && annotation.id) {
-                                          setSelectedAnnotation(String(annotation.id));
-                                          e.cancelBubble = true;
-                                        } else if (activeTool === 'zoom' && annotation.id) {
-                                          zoomToBbox(annotation.bbox, isLandmarkClass);
-                                          e.cancelBubble = true;
-                                        }
-                                      }}                    
-                    onDragEnd={(e) => {
-                      if (annotation.id) {
-                        handleAnnotationChange(annotation.id, {
-                          x: e.target.x(),
-                          y: e.target.y(),
-                          width: e.target.width() * e.target.scaleX(),
-                          height: e.target.height() * e.target.scaleY()
-                        }, true).then(() => recordMoveHistory(annotation.id!));
-                      }
-                    }}
-                    onTransformStart={() => annotation.id && handleDragStart(annotation.id)}
-                    onTransformEnd={(e) => {
-                      if (annotation.id) {
-                        const node = e.target;
-                        const scaleX = node.scaleX();
-                        const scaleY = node.scaleY();
-                        node.scaleX(1);
-                        node.scaleY(1);
-                        handleAnnotationChange(annotation.id, {
-                          x: node.x(),
-                          y: node.y(),
-                          width: Math.max(5, node.width() * scaleX),
-                          height: Math.max(5, node.height() * scaleY),
-                          rotation: node.rotation()
-                        }, true).then(() => recordMoveHistory(annotation.id!));
-                      }
-                    }}
-                  />
-
-                  {isSelected && !isLandmarkClass && (
-                    <Circle
-                      x={(annotation.bbox.x * scale + imageOffset.x) + (annotation.bbox.width * scale) / 2}
-                      y={(annotation.bbox.y * scale + imageOffset.y) + (annotation.bbox.height * scale) / 2}
-                      radius={5}
-                      fill="white"
-                      stroke="black"
-                      strokeWidth={1}
-                      draggable
-                      onDragStart={() => annotation.id && handleDragStart(annotation.id)}
-                      onDragMove={(e) => {
-                        const circle = e.target;
-                        const rect = stageRef.current?.findOne('#det-' + annotation.id);
-                        if (rect) {
-                          const w = rect.width() * rect.scaleX();
-                          const h = rect.height() * rect.scaleY();
-                          rect.x(circle.x() - w / 2);
-                          rect.y(circle.y() - h / 2);
-                        }
-                      }}
-                      onDragEnd={() => {
-                        const rect = stageRef.current?.findOne('#det-' + annotation.id);
-                        if (rect && annotation.id) {
-                          handleAnnotationChange(annotation.id, {
-                            x: rect.x(),
-                            y: rect.y(),
-                            width: rect.width() * rect.scaleX(),
-                            height: rect.height() * rect.scaleY()
-                          }, true).then(() => recordMoveHistory(annotation.id!));
-                        }
-                      }}
-                    />
-                  )}
-
-                  {/* Label con nombre de clase */}
-                  {annotation.class && showLabels && !isLandmarkClass && (
-                    <Group listening={false}>
-                      <Rect
-                        x={annotation.bbox.x * scale + imageOffset.x}
-                        y={(annotation.bbox.y - labelHeight - 2) * scale + imageOffset.y}
-                        width={labelWidth}
-                        height={labelHeight}
-                        fill={hoverColor}
-                        cornerRadius={3}
-                      />
-                      <Text
-                        x={annotation.bbox.x * scale + imageOffset.x + labelPadding}
-                        y={(annotation.bbox.y - labelHeight) * scale + imageOffset.y}
-                        text={translatedClass}
-                        fontSize={labelFontSize}
-                        fill={isHovered ? "black" : "white"}
-                        fontStyle="bold"
-                      />
-                    </Group>
-                  )}
-
-                  {/* Render landmark circle if this is a landmark class */}
-                  {isLandmarkClass && (() => {
-                    const landmark = landmarks.find(l => {
-                      const match = l.id.match(/manual-.*-(\d+)/);
-                      return match && parseInt(match[1]) === annotation.id;
-                    });
-
-                    if (!landmark) return null;
-
-                    const centerX = (annotation.bbox.x + annotation.bbox.width / 2) * scale + imageOffset.x;
-                    const centerY = (annotation.bbox.y + annotation.bbox.height / 2) * scale + imageOffset.y;
-                    const radius = landmark.radius * scale;
-                    const isOpticDisc = landmark.type === 'optic_disc';
-                    const color = isOpticDisc ? '#FF6B6B' : '#4ECDC4';
-                    const strokeColor = isOpticDisc ? '#E63946' : '#2A9D8F';
-
-                    return (
-                      <Group>
-                        {/* Outer ring */}
-                        <Circle
-                          x={centerX}
-                          y={centerY}
-                          radius={radius + 3}
-                          stroke={strokeColor}
-                          strokeWidth={2}
-                          opacity={0.8}
-                          listening={false}
-                        />
-                        {/* Main circle */}
-                        <Circle
-                          x={centerX}
-                          y={centerY}
-                          radius={radius}
-                          fill={isOpticDisc ? 'transparent' : color}
-                          opacity={0.5}
-                          stroke={strokeColor}
-                          strokeWidth={2}
-                          listening={false}
-                        />
-                        {/* Center dot */}
-                        <Circle
-                          x={centerX}
-                          y={centerY}
-                          radius={3}
-                          fill={strokeColor}
-                          opacity={1}
-                          listening={false}
-                        />
-                      </Group>
-                    );
-                  })()}
-                </Group>
-              );
-            }
-            return null;
-          })}
-
-          {/* New annotation being drawn */}
-          {newAnnotation && newAnnotation.type === 'bbox' &&
-           typeof newAnnotation.x === 'number' &&
-           typeof newAnnotation.y === 'number' &&
-           typeof newAnnotation.width === 'number' &&
-           typeof newAnnotation.height === 'number' &&
-           isFinite(newAnnotation.x) &&
-           isFinite(newAnnotation.y) &&
-           isFinite(newAnnotation.width) &&
-           isFinite(newAnnotation.height) && (
-            <Rect
-              x={newAnnotation.x * scale + imageOffset.x}
-              y={newAnnotation.y * scale + imageOffset.y}
-              width={newAnnotation.width * scale}
-              height={newAnnotation.height * scale}
-              stroke="#FF6B6B"
-              strokeWidth={2}
-              dash={[10, 5]}
-            />
-          )}
-
-          {/* Annotation pending class selection */}
-          {pendingAnnotation &&
-           typeof pendingAnnotation.x === 'number' &&
-           typeof pendingAnnotation.y === 'number' &&
-           typeof pendingAnnotation.width === 'number' &&
-           typeof pendingAnnotation.height === 'number' &&
-           isFinite(pendingAnnotation.x) &&
-           isFinite(pendingAnnotation.y) &&
-           isFinite(pendingAnnotation.width) &&
-           isFinite(pendingAnnotation.height) && (
-            <Rect
-              x={pendingAnnotation.x * scale + imageOffset.x}
-              y={pendingAnnotation.y * scale + imageOffset.y}
-              width={pendingAnnotation.width * scale}
-              height={pendingAnnotation.height * scale}
-              stroke="#20B5AE"
-              strokeWidth={2}
-              dash={[5, 2]}
-            />
-          )}
-        </Layer>
+          opacity={manualAnnotationsLayer?.opacity ?? 1}
+          manualAnnotations={manualAnnotations}
+          manualSegmentations={manualSegmentations}
+          segmentationImages={segmentationImages}
+          konvaImageWidth={konvaImage?.width || 0}
+          konvaImageHeight={konvaImage?.height || 0}
+          scale={scale}
+          imageOffset={imageOffset}
+          activeTool={activeTool}
+          selectedAnnotationId={selectedAnnotationId}
+          hoveredDetectionId={hoveredDetectionId}
+          showLabels={manualAnnotationsLayer?.showLabels ?? true}
+          landmarks={landmarks}
+          isCanvasReady={isCanvasReady}
+          newAnnotation={newAnnotation}
+          pendingAnnotation={pendingAnnotation}
+          onHover={setHoveredDetectionId}
+          onSelect={(id) => setSelectedAnnotation(id)}
+          onDragStart={handleDragStart}
+          onUpdate={async (id, attrs, isFinal) => {
+             await handleAnnotationChange(id, attrs, isFinal);
+             if (isFinal) recordMoveHistory(id);
+          }}
+          onDelete={handleDeleteAnnotation}
+          onZoomToBbox={zoomToBbox}
+        />
 
         {/* Ruler Measurements Layer */}
-        {(measurementsLayer?.visible ?? true) && (measurements.length > 0 || (activeTool === 'ruler' && rulerOrigin)) && (
-          <Layer
-            opacity={measurementsLayer?.opacity ?? 1}
-          >
-            {/* Saved measurements */}
-            {measurements.map((measurement) => {
-              // Use effective measurement (with temp updates if dragging)
-              const effectiveMeasurement = getEffectiveMeasurement(measurement);
-              const { distancePixels, distanceDD } = calculateMeasurementMetrics(
-                effectiveMeasurement.originX,
-                effectiveMeasurement.originY,
-                effectiveMeasurement.destinationX,
-                effectiveMeasurement.destinationY
-              );
-              const measurementText = distanceDD
-                ? `${distanceDD.toFixed(2)} DD`
-                : `${distancePixels.toFixed(1)} px`;
-              const midX = (effectiveMeasurement.originX + effectiveMeasurement.destinationX) / 2 * scale + imageOffset.x;
-              const midY = (effectiveMeasurement.originY + effectiveMeasurement.destinationY) / 2 * scale + imageOffset.y;
-              const isSelected = selectedMeasurementId === measurement.id;
-              const color = isSelected ? "#f59e0b" : "#10b981";
-
-              return (
-                <Group key={`measurement-${measurement.id}`}>
-                  {/* Origin marker */}
-                  <Circle
-                    x={effectiveMeasurement.originX * scale + imageOffset.x}
-                    y={effectiveMeasurement.originY * scale + imageOffset.y}
-                    radius={6 / stageScale}
-                    fill={color}
-                    stroke="#ffffff"
-                    strokeWidth={2 / stageScale}
-                    draggable={activeTool === 'select'}
-                    onDragMove={(e) => {
-                      const x = (e.target.x() - imageOffset.x) / scale;
-                      const y = (e.target.y() - imageOffset.y) / scale;
-                      handleMeasurementDragMove(measurement.id!, 'origin', { x, y });
-                    }}
-                    onDragEnd={(e) => {
-                      const x = (e.target.x() - imageOffset.x) / scale;
-                      const y = (e.target.y() - imageOffset.y) / scale;
-                      handleMeasurementDrag(measurement.id!, 'origin', { x, y });
-                    }}
-                    onClick={(e) => {
-                      e.cancelBubble = true;
-                      if (activeTool === 'eraser') {
-                        handleDeleteMeasurement(measurement.id!);
-                      } else if (activeTool === 'select') {
-                        onSelectMeasurement?.(measurement.id!);
-                      }
-                    }}
-                    hitStrokeWidth={10}
-                  />
-
-                  {/* Line */}
-                  <Line
-                    points={[
-                      effectiveMeasurement.originX * scale + imageOffset.x,
-                      effectiveMeasurement.originY * scale + imageOffset.y,
-                      effectiveMeasurement.destinationX * scale + imageOffset.x,
-                      effectiveMeasurement.destinationY * scale + imageOffset.y,
-                    ]}
-                    stroke={color}
-                    strokeWidth={3 / stageScale}
-                    dash={[10 / stageScale, 5 / stageScale]}
-                    draggable={activeTool === 'select'}
-                    onDragMove={(e) => {
-                      const dragDelta = {
-                        x: e.target.x() / scale,
-                        y: e.target.y() / scale
-                      };
-                      handleMeasurementDragMove(measurement.id!, 'line', { x: 0, y: 0 }, dragDelta);
-                    }}
-                    onDragEnd={(e) => {
-                      // Get drag delta in image coordinates
-                      const dragDelta = {
-                        x: e.target.x() / scale,
-                        y: e.target.y() / scale
-                      };
-                      handleMeasurementDrag(measurement.id!, 'line', { x: 0, y: 0 }, dragDelta);
-                      e.target.position({ x: 0, y: 0 });
-                    }}
-                    onClick={(e) => {
-                      e.cancelBubble = true;
-                      if (activeTool === 'eraser') {
-                        handleDeleteMeasurement(measurement.id!);
-                      } else if (activeTool === 'select') {
-                        onSelectMeasurement?.(measurement.id!);
-                      }
-                    }}
-                    hitStrokeWidth={15}
-                  />
-
-                  {/* Destination marker */}
-                  <Circle
-                    x={effectiveMeasurement.destinationX * scale + imageOffset.x}
-                    y={effectiveMeasurement.destinationY * scale + imageOffset.y}
-                    radius={6 / stageScale}
-                    fill={color}
-                    stroke="#ffffff"
-                    strokeWidth={2 / stageScale}
-                    draggable={activeTool === 'select'}
-                    onDragMove={(e) => {
-                      const x = (e.target.x() - imageOffset.x) / scale;
-                      const y = (e.target.y() - imageOffset.y) / scale;
-                      handleMeasurementDragMove(measurement.id!, 'destination', { x, y });
-                    }}
-                    onDragEnd={(e) => {
-                      const x = (e.target.x() - imageOffset.x) / scale;
-                      const y = (e.target.y() - imageOffset.y) / scale;
-                      handleMeasurementDrag(measurement.id!, 'destination', { x, y });
-                    }}
-                    onClick={(e) => {
-                      e.cancelBubble = true;
-                      if (activeTool === 'eraser') {
-                        handleDeleteMeasurement(measurement.id!);
-                      } else if (activeTool === 'select') {
-                        onSelectMeasurement?.(measurement.id!);
-                      }
-                    }}
-                    hitStrokeWidth={10}
-                  />
-
-                  {/* Measurement text background */}
-                  <Text
-                    x={midX}
-                    y={midY - 10 / stageScale}
-                    text={measurementText}
-                    fontSize={14 / stageScale}
-                    fontStyle="bold"
-                    fill="#ffffff"
-                    stroke="#000000"
-                    strokeWidth={3 / stageScale}
-                    offsetX={measurementText.length * 4 / stageScale}
-                    listening={false}
-                  />
-                  {/* Measurement text foreground */}
-                  <Text
-                    x={midX}
-                    y={midY - 10 / stageScale}
-                    text={measurementText}
-                    fontSize={14 / stageScale}
-                    fontStyle="bold"
-                    fill={color}
-                    offsetX={measurementText.length * 4 / stageScale}
-                    listening={false}
-                  />
-                </Group>
-              );
-            })}
-
-            {/* Current measurement in progress */}
-            {activeTool === 'ruler' && rulerOrigin && (
-              <>
-                {/* Origin point marker */}
-                <Circle
-                  x={rulerOrigin.x * scale + imageOffset.x}
-                  y={rulerOrigin.y * scale + imageOffset.y}
-                  radius={4 / stageScale}
-                  fill="#3b82f6"
-                  stroke="#ffffff"
-                  strokeWidth={2 / stageScale}
-                />
-
-                {/* Measurement line (only if destination is set) */}
-                {rulerDestination && (
-              <>
-                <Line
-                  points={[
-                    rulerOrigin.x * scale + imageOffset.x,
-                    rulerOrigin.y * scale + imageOffset.y,
-                    rulerDestination.x * scale + imageOffset.x,
-                    rulerDestination.y * scale + imageOffset.y,
-                  ]}
-                  stroke="#3b82f6"
-                  strokeWidth={2 / stageScale}
-                  dash={[10 / stageScale, 5 / stageScale]}
-                />
-
-                {/* Destination point marker */}
-                <Circle
-                  x={rulerDestination.x * scale + imageOffset.x}
-                  y={rulerDestination.y * scale + imageOffset.y}
-                  radius={4 / stageScale}
-                  fill="#3b82f6"
-                  stroke="#ffffff"
-                  strokeWidth={2 / stageScale}
-                />
-
-                {/* Measurement text */}
-                {(() => {
-                  // Calculate distance in pixels
-                  const dx = rulerDestination.x - rulerOrigin.x;
-                  const dy = rulerDestination.y - rulerOrigin.y;
-                  const distanceInPixels = Math.sqrt(dx * dx + dy * dy);
-
-                  // Find optic disc detection to get DD reference
-                  const opticDisc = detections.find(
-                    d => d.class === 'optic_disc' || d.class === 'optic disc'
-                  );
-
-                  let measurementText = `${distanceInPixels.toFixed(1)} px`;
-
-                  if (opticDisc) {
-                    // Calculate optic disc diameter (average of width and height for more accuracy)
-                    const discDiameter = (opticDisc.bbox.width + opticDisc.bbox.height) / 2;
-                    const distanceInDD = distanceInPixels / discDiameter;
-                    measurementText = `${distanceInDD.toFixed(2)} DD`;
-                  }
-
-                  // Position text at midpoint of line
-                  const midX = (rulerOrigin.x + rulerDestination.x) / 2 * scale + imageOffset.x;
-                  const midY = (rulerOrigin.y + rulerDestination.y) / 2 * scale + imageOffset.y;
-
-                  return (
-                    <>
-                      {/* Background for text */}
-                      <Text
-                        x={midX}
-                        y={midY - 10 / stageScale}
-                        text={measurementText}
-                        fontSize={14 / stageScale}
-                        fontStyle="bold"
-                        fill="#ffffff"
-                        stroke="#000000"
-                        strokeWidth={3 / stageScale}
-                        offsetX={measurementText.length * 4 / stageScale}
-                      />
-                      {/* Foreground text */}
-                      <Text
-                        x={midX}
-                        y={midY - 10 / stageScale}
-                        text={measurementText}
-                        fontSize={14 / stageScale}
-                        fontStyle="bold"
-                        fill="#3b82f6"
-                        offsetX={measurementText.length * 4 / stageScale}
-                      />
-                    </>
-                  );
-                })()}
-              </>
-                )}
-              </>
-            )}
-          </Layer>
-        )}
+        <MeasurementsCanvasLayer
+          visible={measurementsLayer?.visible ?? true}
+          opacity={measurementsLayer?.opacity ?? 1}
+          measurements={measurements}
+          detections={detections}
+          activeTool={activeTool}
+          rulerOrigin={rulerOrigin}
+          rulerDestination={rulerDestination}
+          scale={scale}
+          imageOffset={imageOffset}
+          stageScale={stageScale}
+          selectedMeasurementId={selectedMeasurementId}
+          tempMeasurementUpdates={tempMeasurementUpdates}
+          onSelect={onSelectMeasurement}
+          onDelete={handleDeleteMeasurement}
+          onDragMove={handleMeasurementDragMove}
+          onDragEnd={handleMeasurementDrag}
+        />
 
         {/* Quadrant Grid Overlay */}
         <Layer>
