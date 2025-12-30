@@ -1,11 +1,11 @@
 import React from 'react';
-import { Square, Eraser, Move, ZoomIn, MousePointer2, Ruler, Target, List, Eye } from 'lucide-react';
+import { Square, Eraser, Move, ZoomIn, MousePointer2, Ruler, Target, List, Eye, Wand2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { useCanvasStore } from '@/stores/canvas-store';
 import type { LandmarkType } from '@/types/annotations';
 
-export type CanvasTool = 'select' | 'bbox' | 'circle' | 'eraser' | 'pan' | 'zoom' | 'ruler' | 'landmark' | 'cup';
+export type CanvasTool = 'select' | 'bbox' | 'circle' | 'eraser' | 'pan' | 'zoom' | 'ruler' | 'landmark' | 'cup' | 'image-processing';
 
 interface ToolPanelProps {
   activeTool: CanvasTool;
@@ -31,6 +31,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
     { id: 'landmark' as CanvasTool, icon: Target, label: t('canvas.tools.landmark') || 'Landmarks' },
     { id: 'cup' as CanvasTool, icon: Eye, label: 'Dibujar Copa' },
     { id: 'ruler' as CanvasTool, icon: Ruler, label: t('canvas.tools.ruler') },
+    { id: 'image-processing' as CanvasTool, icon: Wand2, label: 'Procesamiento Avanzado' },
     { id: 'eraser' as CanvasTool, icon: Eraser, label: t('canvas.tools.eraser') },
     { id: 'pan' as CanvasTool, icon: Move, label: t('canvas.tools.pan') },
     { id: 'zoom' as CanvasTool, icon: ZoomIn, label: t('canvas.tools.zoom') },

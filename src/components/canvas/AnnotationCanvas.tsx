@@ -37,6 +37,9 @@ interface AnnotationCanvasProps {
   selectedLandmarkType?: 'optic_disc' | 'fovea';
   selectedMeasurementId?: number | null;
   onSelectMeasurement?: (id: number | null) => void;
+  processedImageCanvas?: HTMLCanvasElement | null;
+  showOriginalOverlay?: boolean;
+  comparisonOpacity?: number;
   history?: {
     entries: HistoryEntry[];
     index: number;
@@ -60,6 +63,9 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   selectedLandmarkType = 'optic_disc',
   selectedMeasurementId,
   onSelectMeasurement,
+  processedImageCanvas,
+  showOriginalOverlay = false,
+  comparisonOpacity = 0.5,
   history,
 }) => {
   const { t, i18n } = useTranslation();
@@ -80,11 +86,13 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   const measurementsLayer = layers.find(l => l.id === 'measurements');
   const quadrantsLayer = layers.find(l => l.id === 'quadrants');
   const macularZonesLayer = layers.find(l => l.id === 'macular-zones');
+  const circinateRingsLayer = layers.find(l => l.id === 'circinate-rings');
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
   const trRef = useRef<any>(null);
   const imageElementRef = useRef<HTMLImageElement | null>(null);
   const [konvaImage, setKonvaImage] = useState<HTMLImageElement | null>(null);
+  const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   const [segmentationImages, setSegmentationImages] = useState<Map<number, HTMLImageElement>>(new Map());
   const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
   const [scale, setScale] = useState(1);
@@ -418,27 +426,47 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     }
   };
 
-  // Load image
+  // Load image (use processed canvas if available)
   useEffect(() => {
     setIsCanvasReady(false); // Reset cuando cambia la imagen
 
-    const img = new window.Image();
+    // Siempre cargar la imagen original
+    const origImg = new window.Image();
     const url = URL.createObjectURL(image.originalBlob);
 
-    img.onload = () => {
-      setKonvaImage(img);
-      imageElementRef.current = img;
-      calculateScale(img.width, img.height);
+    origImg.onload = () => {
+      setOriginalImage(origImg);
       URL.revokeObjectURL(url);
 
-      // Dar un pequeño delay para que Konva termine de renderizar
-      setTimeout(() => {
-        setIsCanvasReady(true);
-      }, 100);
+      if (processedImageCanvas) {
+        // Si hay imagen procesada, cargarla también
+        const processedImg = new window.Image();
+        processedImg.onload = () => {
+          setKonvaImage(processedImg);
+          imageElementRef.current = processedImg;
+          calculateScale(processedImg.width, processedImg.height);
+
+          // Dar un pequeño delay para que Konva termine de renderizar
+          setTimeout(() => {
+            setIsCanvasReady(true);
+          }, 100);
+        };
+        processedImg.src = processedImageCanvas.toDataURL();
+      } else {
+        // Solo imagen original
+        setKonvaImage(origImg);
+        imageElementRef.current = origImg;
+        calculateScale(origImg.width, origImg.height);
+
+        // Dar un pequeño delay para que Konva termine de renderizar
+        setTimeout(() => {
+          setIsCanvasReady(true);
+        }, 100);
+      }
     };
 
-    img.src = url;
-  }, [image]);
+    origImg.src = url;
+  }, [image, processedImageCanvas]);
 
   // Load segmentation masks (both AI and manual)
   useEffect(() => {
@@ -1523,8 +1551,9 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
         >
-        {/* Original Image Layer */}
+        {/* Image Layer */}
         <Layer>
+          {/* Imagen procesada (o original si no hay procesada) */}
           <KonvaImage
             image={konvaImage}
             x={imageOffset.x}
@@ -1534,6 +1563,20 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
             scaleX={scale}
             scaleY={scale}
           />
+
+          {/* Imagen original superpuesta (solo si hay imagen procesada y showOriginalOverlay) */}
+          {processedImageCanvas && showOriginalOverlay && originalImage && (
+            <KonvaImage
+              image={originalImage}
+              x={imageOffset.x}
+              y={imageOffset.y}
+              width={originalImage.width}
+              height={originalImage.height}
+              scaleX={scale}
+              scaleY={scale}
+              opacity={comparisonOpacity}
+            />
+          )}
         </Layer>
 
         {/* AI Detections Layer (includes AI segmentations) */}
@@ -1642,7 +1685,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                   dash={isHovered ? [] : [8, 4]}
                   hitStrokeWidth={10}
                   perfectDrawEnabled={false}
-                  listening={true}
+                  listening={activeTool !== 'bbox'}
                   opacity={isLandmarkClass && !isSelected ? 0 : 1} // Invisible but interactive for landmarks
                   draggable={activeTool === 'select' && isSelected}
                   onMouseEnter={() => {
@@ -1887,7 +1930,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                     strokeDash={isHovered ? [] : [4, 2]}
                     hitStrokeWidth={10}
                     perfectDrawEnabled={false}
-                    listening={true}
+                    listening={activeTool !== 'bbox'}
                     opacity={isLandmarkClass && !isSelected ? 0 : 1} // Invisible but interactive for landmarks
                     draggable={activeTool === 'select' && isSelected}
                     onMouseEnter={() => {
@@ -2378,6 +2421,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
                 zoneRadiusUm={macularEdemaData.zoneRadiusUm}
                 showDiscDiameterZone={false}
                 showLegend={false}
+                showCircinateRings={circinateRingsLayer?.visible ?? false}
               />
             )}
           </Group>

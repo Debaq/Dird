@@ -10,6 +10,8 @@ import { classManager } from '@/lib/classes/class-manager';
 import { getClassName } from '@/lib/ai/class-translations';
 import ClassSelectionModal from './ClassSelectionModal';
 import type { HistoryEntry } from '@/types/annotations';
+import type { CircinatePatternAnalysis } from '@/lib/analysis/macular-edema-detector';
+import { CircinateRingsAnalysisSection } from './CircinateRingsAnalysisSection';
 
 export interface CanvasLayer {
   id: string;
@@ -34,6 +36,7 @@ interface AdvancedLayerControlsProps {
   selectedMeasurementId?: number | null;
   onSelectAnnotation?: (id: string | null) => void;
   onSelectMeasurement?: (id: number | null) => void;
+  circinateAnalysis?: CircinatePatternAnalysis | null;
 }
 
 const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
@@ -49,6 +52,7 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
   selectedMeasurementId,
   onSelectAnnotation,
   onSelectMeasurement,
+  circinateAnalysis,
 }) => {
   const { t, i18n } = useTranslation();
   const [expandedLayers, setExpandedLayers] = useState<Record<string, boolean>>({});
@@ -438,7 +442,23 @@ const AdvancedLayerControls: React.FC<AdvancedLayerControlsProps> = ({
             );
           })}
       </div>
-      
+
+      {/* Circinate Rings Analysis Section */}
+      {circinateAnalysis && (
+        <div className="mt-3 flex-shrink-0">
+          <CircinateRingsAnalysisSection
+            circinateAnalysis={circinateAnalysis}
+            layerVisible={layers.find(l => l.id === 'circinate-rings')?.visible ?? false}
+            onToggleLayer={() => {
+              const circinateLayer = layers.find(l => l.id === 'circinate-rings');
+              if (circinateLayer) {
+                onLayerUpdate('circinate-rings', { visible: !circinateLayer.visible });
+              }
+            }}
+          />
+        </div>
+      )}
+
       <ClassSelectionModal
         open={classModalOpen}
         onOpenChange={setClassModalOpen}

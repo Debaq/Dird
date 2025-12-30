@@ -1,4 +1,4 @@
-export type LayerType = 'original' | 'detections-ai' | 'segmentations-ai' | 'manual-annotations' | 'quadrants' | 'measurements' | 'macular-zones';
+export type LayerType = 'original' | 'detections-ai' | 'segmentations-ai' | 'manual-annotations' | 'quadrants' | 'measurements' | 'macular-zones' | 'circinate-rings';
 
 export interface CanvasLayer {
   id: LayerType;
@@ -9,7 +9,7 @@ export interface CanvasLayer {
   zIndex: number;
 }
 
-export type ToolType = 'select' | 'bbox' | 'segment' | 'eraser' | 'pan' | 'zoom' | 'landmark' | 'measure';
+export type ToolType = 'select' | 'bbox' | 'segment' | 'eraser' | 'pan' | 'zoom' | 'landmark' | 'measure' | 'image-processing';
 
 export type LandmarkType = 'optic_disc' | 'fovea';
 
