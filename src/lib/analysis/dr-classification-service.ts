@@ -10,6 +10,7 @@ import {
   formatClassificationText,
   type DRClassification
 } from './dr-classifier';
+import { logger } from '@/utils/logger';
 
 /**
  * Classify DR for a specific session
@@ -19,14 +20,14 @@ export async function classifySessionDR(sessionId: number): Promise<DRClassifica
     // Get session
     const session = await db.sessions.get(sessionId);
     if (!session) {
-      console.error('Session not found:', sessionId);
+      logger.database.error('Session not found', { sessionId });
       return null;
     }
 
     // Get patient
     const patient = await db.patients.get(session.patientId);
     if (!patient) {
-      console.error('Patient not found:', session.patientId);
+      logger.database.error('Patient not found', { patientId: session.patientId });
       return null;
     }
 
@@ -37,7 +38,7 @@ export async function classifySessionDR(sessionId: number): Promise<DRClassifica
       .toArray();
 
     if (images.length === 0) {
-      console.warn('No images found for session:', sessionId);
+      logger.drClassification.warn('No images found for session', { sessionId });
       return null;
     }
 
@@ -64,22 +65,17 @@ export async function classifySessionDR(sessionId: number): Promise<DRClassifica
     const classification = await classifyDiabeticRetinopathy(detectionsByEye, patient, activeGuideline);
 
     // Log results
-    console.log('\n' + '='.repeat(80));
-    console.log('DIABETIC RETINOPATHY CLASSIFICATION RESULT');
-    console.log('='.repeat(80));
-    console.log('\nSession ID:', sessionId);
-    console.log('Patient:', patient.name);
-    console.log('Session Date:', session.date);
-    console.log('\n' + formatClassificationText(classification));
-    console.log('\n' + '='.repeat(80));
-    console.log('RAW JSON DATA:');
-    console.log('='.repeat(80));
-    console.log(JSON.stringify(classification, null, 2));
-    console.log('='.repeat(80) + '\n');
+    logger.drClassification.log('DR Classification Result', {
+      sessionId,
+      patient: patient.name,
+      sessionDate: session.date,
+      classification: formatClassificationText(classification),
+      rawData: classification
+    });
 
     return classification;
   } catch (error) {
-    console.error('Error classifying DR:', error);
+    logger.drClassification.error('Error classifying DR', error);
     return null;
   }
 }
@@ -97,19 +93,19 @@ export async function classifyPatientDR(patientId: number): Promise<DRClassifica
       .sortBy('date');
 
     if (sessions.length === 0) {
-      console.warn('No sessions found for patient:', patientId);
+      logger.database.warn('No sessions found for patient', { patientId });
       return null;
     }
 
     const latestSession = sessions[0];
     if (!latestSession.id) {
-      console.error('Session has no ID');
+      logger.database.error('Session has no ID');
       return null;
     }
 
     return await classifySessionDR(latestSession.id);
   } catch (error) {
-    console.error('Error classifying patient DR:', error);
+    logger.drClassification.error('Error classifying patient DR', error);
     return null;
   }
 }
@@ -131,18 +127,15 @@ export async function compareSessionClassifications(
 
   // Log comparison
   if (classifications.length > 1) {
-    console.log('\n' + '='.repeat(80));
-    console.log('TEMPORAL COMPARISON');
-    console.log('='.repeat(80));
+    const comparisonData = classifications.map((c, idx) => ({
+      sessionNumber: idx + 1,
+      date: new Date(c.timestamp).toLocaleDateString(),
+      overall: c.overallSeverity,
+      OD: c.rightEye?.severity,
+      OI: c.leftEye?.severity
+    }));
 
-    classifications.forEach((c, idx) => {
-      console.log(`\nSession ${idx + 1} (${new Date(c.timestamp).toLocaleDateString()}):`);
-      console.log(`  Overall: ${c.overallSeverity}`);
-      if (c.rightEye) console.log(`  OD: ${c.rightEye.severity}`);
-      if (c.leftEye) console.log(`  OI: ${c.leftEye.severity}`);
-    });
-
-    console.log('='.repeat(80) + '\n');
+    logger.drClassification.log('Temporal Comparison', { sessions: comparisonData });
   }
 
   return classifications;
@@ -184,11 +177,7 @@ export async function getGlobalStatistics(): Promise<{
     }
   }
 
-  console.log('\n' + '='.repeat(80));
-  console.log('GLOBAL DR STATISTICS');
-  console.log('='.repeat(80));
-  console.log(JSON.stringify(stats, null, 2));
-  console.log('='.repeat(80) + '\n');
+  logger.drClassification.log('Global DR Statistics', stats);
 
   return stats;
 }

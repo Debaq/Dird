@@ -7,6 +7,7 @@ import { db } from '../db/schema';
 import type { ImageClassification } from '../db/schema';
 import { useConfigStore } from '@/stores/config-store';
 import { classifyImageDR, type ImageDRClassification } from './image-dr-classifier';
+import { logger } from '@/utils/logger';
 
 /**
  * Save or update classification for an image
@@ -107,7 +108,7 @@ export async function classifyAndSaveImage(
     // Get image
     const image = await db.images.get(imageId);
     if (!image) {
-      console.error('Image not found:', imageId);
+      logger.database.error('Image not found', { imageId });
       return null;
     }
 
@@ -137,7 +138,10 @@ export async function classifyAndSaveImage(
       await db.images.update(imageId, {
         eyeType: classification.eyeType as 'OD' | 'OI'
       });
-      console.log(`🔄 Auto-detected and updated image eyeType: "${image.eyeType}" → "${classification.eyeType}"`);
+      logger.imageProcessing.log('Auto-detected and updated image eyeType', {
+        from: image.eyeType,
+        to: classification.eyeType
+      });
     }
 
     // Save classification

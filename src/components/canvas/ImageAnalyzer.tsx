@@ -28,6 +28,7 @@ import { analyzeHemorrhages } from '@/lib/analysis/hemorrhage-detector';
 import { analyzeMicroaneurysms } from '@/lib/analysis/microaneurysm-detector';
 import { analyzeOpticDiscCupping } from '@/lib/analysis/optic-disc-cupping-detector';
 import { useConfigStore } from '@/stores/config-store';
+import { logger } from '@/utils/logger';
 
 const DEFAULT_LAYERS: CanvasLayer[] = [
   { id: 'original', name: 'canvas.layers.original', visible: true, opacity: 1, locked: true, zIndex: 0 },
@@ -126,7 +127,7 @@ const ImageAnalyzer: React.FC = () => {
       }
       setHistoryIndex(prev => prev - 1);
     } catch (error) {
-      console.error('Error in undo:', error);
+      logger.canvas.error('Error in undo', error);
     }
   };
 
@@ -147,7 +148,7 @@ const ImageAnalyzer: React.FC = () => {
       }
       setHistoryIndex(prev => prev + 1);
     } catch (error) {
-      console.error('Error in redo:', error);
+      logger.canvas.error('Error in redo', error);
     }
   };
 
@@ -250,7 +251,7 @@ const ImageAnalyzer: React.FC = () => {
     try {
       const fovea = findFovea(allDetections);
       if (!fovea) {
-        console.log('🔍 No fovea found in detections');
+        logger.imageProcessing.log('No fovea found in detections');
         return null;
       }
 
@@ -277,11 +278,13 @@ const ImageAnalyzer: React.FC = () => {
       };
 
       const result = detectMacularEdema(allDetections, fovea, calibration, defaultCriteria);
-      console.log('🎯 Macular edema result:', result);
-      console.log('🔬 Circinate analysis:', result?.circinateAnalysis);
+      logger.imageProcessing.log('Macular edema result', {
+        result,
+        circinateAnalysis: result?.circinateAnalysis
+      });
       return result;
     } catch (error) {
-      console.error('Error calculating macular edema:', error);
+      logger.imageProcessing.error('Error calculating macular edema', error);
       return null;
     }
   }, [allDetections]);
@@ -306,10 +309,10 @@ const ImageAnalyzer: React.FC = () => {
       const imageHeight = image?.height || 1000;
 
       const result = analyzeHemorrhages(allDetections, calibration, imageWidth, imageHeight);
-      console.log('🩸 Hemorrhage analysis:', result);
+      logger.imageProcessing.log('Hemorrhage analysis', result);
       return result;
     } catch (error) {
-      console.error('Error analyzing hemorrhages:', error);
+      logger.imageProcessing.error('Error analyzing hemorrhages', error);
       return null;
     }
   }, [allDetections, image, config.advancedAnalysis?.hemorrhages]);
@@ -330,10 +333,10 @@ const ImageAnalyzer: React.FC = () => {
         : createFallbackCalibration();
 
       const result = analyzeMicroaneurysms(allDetections, calibration);
-      console.log('🔴 Microaneurysm analysis:', result);
+      logger.imageProcessing.log('Microaneurysm analysis', result);
       return result;
     } catch (error) {
-      console.error('Error analyzing microaneurysms:', error);
+      logger.imageProcessing.error('Error analyzing microaneurysms', error);
       return null;
     }
   }, [allDetections, config.advancedAnalysis?.microaneurysms]);
@@ -356,7 +359,7 @@ const ImageAnalyzer: React.FC = () => {
       const result = analyzeOpticDiscCupping(allDetections, calibration);
       return result;
     } catch (error) {
-      console.error('Error analyzing optic disc cupping:', error);
+      logger.imageProcessing.error('Error analyzing optic disc cupping', error);
       return null;
     }
   }, [allDetections, config.advancedAnalysis?.opticDiscCupping]);
@@ -448,10 +451,10 @@ const ImageAnalyzer: React.FC = () => {
           },
         });
 
-        console.log('✅ Disc points saved to optic disc detection');
+        logger.canvas.log('Disc points saved to optic disc detection');
       }
     } catch (error) {
-      console.error('Error saving cup:', error);
+      logger.canvas.error('Error saving cup', error);
     }
   };
 

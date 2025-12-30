@@ -1,4 +1,5 @@
 import type { ModelMetadata } from './model-metadata';
+import { logger } from '@/utils/logger';
 
 export type DownloadProgressCallback = (progress: number) => void;
 
@@ -51,7 +52,7 @@ export class ModelDownloader {
    */
   async listAvailableModels(branch: string = 'main'): Promise<AvailableModel[]> {
     try {
-      console.log(`Fetching available models from GitHub (branch: ${branch})...`);
+      logger.ai.log('Fetching available models from GitHub', { branch });
 
       const response = await fetch(`${GITHUB_API_URL}?ref=${branch}`);
       if (!response.ok) {
@@ -89,11 +90,11 @@ export class ModelDownloader {
         }
       }
 
-      console.log(`Found ${models.length} available models:`, models);
+      logger.ai.log('Found available models', { count: models.length, models });
       return models;
 
     } catch (error) {
-      console.error('Error listing models:', error);
+      logger.ai.error('Error listing models', error);
       throw error;
     }
   }
@@ -139,17 +140,21 @@ export class ModelDownloader {
   ): Promise<{ modelUrl: string; metadata: ModelMetadata }> {
     // First, try to find the latest model in the repository
     try {
-      console.log(`Looking for latest ${modelType} model...`);
+      logger.ai.log('Looking for latest model', { modelType });
       const latestModel = await this.findLatestModel(modelType);
 
       if (latestModel) {
-        console.log(`Found latest ${modelType} model: ${latestModel.name} (v${latestModel.version})`);
+        logger.ai.log('Found latest model', {
+          modelType,
+          name: latestModel.name,
+          version: latestModel.version
+        });
         return await this.downloadFromUrls(latestModel.onnxUrl, latestModel.jsonUrl, onProgress);
       }
 
-      console.warn(`No ${modelType} model found in repository, trying fallback...`);
+      logger.ai.warn('No model found in repository, trying fallback', { modelType });
     } catch (error) {
-      console.warn('Error searching for models, using fallback:', error);
+      logger.ai.warn('Error searching for models, using fallback', error);
     }
 
     // Fallback to configured source
@@ -174,7 +179,7 @@ export class ModelDownloader {
     metadataUrl: string,
     onProgress?: DownloadProgressCallback
   ): Promise<{ modelUrl: string; metadata: ModelMetadata }> {
-    console.log(`Downloading model from: ${modelUrl}`);
+    logger.ai.log('Downloading model from URL', { modelUrl });
 
     try {
       // Check cache first
@@ -198,7 +203,7 @@ export class ModelDownloader {
 
       // Download model if not cached
       if (!modelResponse) {
-        console.log('Model not in cache, downloading...');
+        logger.ai.log('Model not in cache, downloading...');
         
         // Use fetch with ReadableStream for progress
         const response = await fetch(modelUrl);
@@ -252,7 +257,7 @@ export class ModelDownloader {
         // If it's in cache, the subsequent fetch in ONNX manager will hit the cache.
         
       } else {
-        console.log('Model loaded from cache');
+        logger.ai.log('Model loaded from cache');
         onProgress?.(100);
       }
 
@@ -261,7 +266,7 @@ export class ModelDownloader {
         metadata,
       };
     } catch (error) {
-      console.error('Error downloading from URLs:', error);
+      logger.ai.error('Error downloading from URLs', error);
       throw error;
     }
   }
@@ -291,7 +296,7 @@ export class ModelDownloader {
     const modelPath = `${import.meta.env.BASE_URL}${source.path.startsWith('/') ? source.path.slice(1) : source.path}`;
     const metadataPath = modelPath.replace('.onnx', '.json');
 
-    console.log(`Loading model from local: ${modelPath}`);
+    logger.ai.log('Loading model from local', { modelPath });
 
     try {
       const metadataResponse = await fetch(metadataPath);
@@ -310,7 +315,7 @@ export class ModelDownloader {
         metadata,
       };
     } catch (error) {
-      console.error('Error loading local model:', error);
+      logger.ai.error('Error loading local model', error);
       throw error;
     }
   }
@@ -321,9 +326,9 @@ export class ModelDownloader {
   async clearCache(): Promise<void> {
     try {
       await caches.delete(CACHE_NAME);
-      console.log('Model cache cleared');
+      logger.ai.log('Model cache cleared');
     } catch (error) {
-      console.error('Error clearing cache:', error);
+      logger.ai.error('Error clearing cache', error);
     }
   }
 

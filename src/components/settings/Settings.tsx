@@ -15,7 +15,10 @@ import {
   FileText,
   Lock,
   BookOpen,
-  Microscope
+  Microscope,
+  Bug,
+  Trash2,
+  Wrench
 } from 'lucide-react';
 import { useConfigStore, type ModelSource } from '@/stores/config-store';
 import { apiInferenceService } from '@/lib/ai/api-inference-service';
@@ -35,6 +38,8 @@ import { getCurrentVersion, type VersionInfo } from '@/utils/version';
 import { changeLanguage } from '@/i18n/config';
 import { getAssetPath } from '@/utils/assets';
 import { AdminLogin } from '@/components/admin/AdminLogin';
+import { cleanupInvalidAnnotations } from '@/lib/db/actions';
+import { toast } from 'sonner';
 
 export function Settings() {
   const { t } = useTranslation();
@@ -43,6 +48,7 @@ export function Settings() {
     updateAppearance,
     updateProcessing,
     updateAdvancedAnalysis,
+    updateDebug,
     updateAPIModels,
     updateLocalModels,
     setModelSource,
@@ -62,6 +68,7 @@ export function Settings() {
   const [updateCheckMessage, setUpdateCheckMessage] = useState<string | null>(null);
   const [isReloading, setIsReloading] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [isCleaningAnnotations, setIsCleaningAnnotations] = useState(false);
 
   // Tabs scroll logic
   const tabsListRef = useRef<HTMLDivElement>(null);
@@ -188,6 +195,31 @@ export function Settings() {
     }
   };
 
+  const handleCleanupInvalidAnnotations = async () => {
+    setIsCleaningAnnotations(true);
+
+    try {
+      const deletedCount = await cleanupInvalidAnnotations();
+
+      if (deletedCount > 0) {
+        toast.success(`Se eliminaron ${deletedCount} anotación(es) inválida(s)`, {
+          description: 'Las anotaciones con valores NaN o inválidos han sido limpiadas de la base de datos.'
+        });
+      } else {
+        toast.info('No se encontraron anotaciones inválidas', {
+          description: 'La base de datos está limpia.'
+        });
+      }
+    } catch (error) {
+      console.error('Error cleaning invalid annotations:', error);
+      toast.error('Error al limpiar anotaciones', {
+        description: error instanceof Error ? error.message : 'Ocurrió un error desconocido.'
+      });
+    } finally {
+      setIsCleaningAnnotations(false);
+    }
+  };
+
   return (
     <div className="container mx-auto py-6 max-w-5xl dark:text-gray-100">
       <div className="mb-6">
@@ -241,6 +273,10 @@ export function Settings() {
             <TabsTrigger value="guidelines" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <BookOpen className="h-4 w-4 mr-2" />
               Clinical Guidelines
+            </TabsTrigger>
+            <TabsTrigger value="debug" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
+              <Bug className="h-4 w-4 mr-2" />
+              Depuración
             </TabsTrigger>
             <TabsTrigger value="pwa" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <Download className="h-4 w-4 mr-2" />
@@ -829,6 +865,272 @@ export function Settings() {
         <TabsContent value="guidelines">
           <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
             <GuidelineSelector />
+          </Card>
+        </TabsContent>
+
+        {/* Debug Tab */}
+        <TabsContent value="debug">
+          <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
+            <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-2">
+              Depuración
+            </h2>
+            <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mb-6">
+              Controla qué categorías de logs deseas ver en la consola del navegador durante el desarrollo.
+            </p>
+
+            {!config.debug ? (
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md">
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  La configuración de depuración no está disponible. Por favor, resetea la configuración desde la pestaña "Acerca de".
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Master Switch */}
+                <div className="flex items-center justify-between p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md">
+                  <div>
+                    <Label className="font-semibold dark:text-dark-text">
+                      Activar Depuración
+                    </Label>
+                    <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
+                      Interruptor maestro. Si está desactivado, no se mostrará ningún log.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.debug.enabled}
+                    onCheckedChange={(checked) => updateDebug({ enabled: checked })}
+                  />
+                </div>
+
+              {/* Category Controls */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-coal-800 dark:text-dark-text">
+                  Categorías de Logs
+                </h3>
+
+                {/* API */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="font-medium dark:text-dark-text">
+                      API & Red
+                    </Label>
+                    <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
+                      Llamadas a APIs, peticiones de red, respuestas HTTP
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.debug.categories.api}
+                    onCheckedChange={(checked) =>
+                      updateDebug({ categories: { ...config.debug.categories, api: checked } })
+                    }
+                    disabled={!config.debug.enabled}
+                  />
+                </div>
+
+                {/* AI */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="font-medium dark:text-dark-text">
+                      Inteligencia Artificial
+                    </Label>
+                    <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
+                      Inferencia de modelos, carga de modelos ONNX, predicciones
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.debug.categories.ai}
+                    onCheckedChange={(checked) =>
+                      updateDebug({ categories: { ...config.debug.categories, ai: checked } })
+                    }
+                    disabled={!config.debug.enabled}
+                  />
+                </div>
+
+                {/* Image Processing */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="font-medium dark:text-dark-text">
+                      Procesamiento de Imágenes
+                    </Label>
+                    <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
+                      Análisis de imágenes, transformaciones, detecciones
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.debug.categories.imageProcessing}
+                    onCheckedChange={(checked) =>
+                      updateDebug({ categories: { ...config.debug.categories, imageProcessing: checked } })
+                    }
+                    disabled={!config.debug.enabled}
+                  />
+                </div>
+
+                {/* Clinical Guidelines */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="font-medium dark:text-dark-text">
+                      Guías Clínicas
+                    </Label>
+                    <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
+                      Procesamiento de guías clínicas, aplicación de criterios
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.debug.categories.clinicalGuidelines}
+                    onCheckedChange={(checked) =>
+                      updateDebug({ categories: { ...config.debug.categories, clinicalGuidelines: checked } })
+                    }
+                    disabled={!config.debug.enabled}
+                  />
+                </div>
+
+                {/* Database */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="font-medium dark:text-dark-text">
+                      Base de Datos
+                    </Label>
+                    <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
+                      Operaciones de IndexedDB, queries, transacciones
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.debug.categories.database}
+                    onCheckedChange={(checked) =>
+                      updateDebug({ categories: { ...config.debug.categories, database: checked } })
+                    }
+                    disabled={!config.debug.enabled}
+                  />
+                </div>
+
+                {/* DR Classification */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="font-medium dark:text-dark-text">
+                      Clasificación DR
+                    </Label>
+                    <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
+                      Lógica de clasificación de retinopatía diabética
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.debug.categories.drClassification}
+                    onCheckedChange={(checked) =>
+                      updateDebug({ categories: { ...config.debug.categories, drClassification: checked } })
+                    }
+                    disabled={!config.debug.enabled}
+                  />
+                </div>
+
+                {/* Canvas */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="font-medium dark:text-dark-text">
+                      Canvas
+                    </Label>
+                    <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
+                      Operaciones de canvas, anotaciones, dibujo
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.debug.categories.canvas}
+                    onCheckedChange={(checked) =>
+                      updateDebug({ categories: { ...config.debug.categories, canvas: checked } })
+                    }
+                    disabled={!config.debug.enabled}
+                  />
+                </div>
+
+                {/* General */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="font-medium dark:text-dark-text">
+                      General
+                    </Label>
+                    <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
+                      Logs generales de la aplicación
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.debug.categories.general}
+                    onCheckedChange={(checked) =>
+                      updateDebug({ categories: { ...config.debug.categories, general: checked } })
+                    }
+                    disabled={!config.debug.enabled}
+                  />
+                </div>
+              </div>
+
+              {/* Info Box */}
+              <div className="bg-ice p-4 rounded-md dark:bg-dark-surface dark:border dark:border-coal-600">
+                <h3 className="font-semibold text-coal-800 dark:text-dark-text mb-2">
+                  Nota sobre Depuración
+                </h3>
+                <ul className="space-y-2 text-sm text-smoke-600 dark:text-dark-textSecondary">
+                  <li className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
+                    <span>Los logs solo aparecen en la consola del navegador (F12)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
+                    <span>Los errores siempre se muestran en modo desarrollo</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
+                    <span>En producción, todos los logs están desactivados por defecto</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
+                    <span>Esta configuración es útil para diagnosticar problemas</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Maintenance Tools */}
+              <div className="space-y-4 pt-6 border-t border-smoke-200 dark:border-coal-700">
+                <div className="flex items-center gap-2 mb-4">
+                  <Wrench className="h-5 w-5 text-coal-800 dark:text-dark-text" />
+                  <h3 className="text-lg font-semibold text-coal-800 dark:text-dark-text">
+                    Herramientas de Mantenimiento
+                  </h3>
+                </div>
+
+                {/* Cleanup Invalid Annotations */}
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md p-4">
+                  <div className="flex items-start gap-3">
+                    <Trash2 className="h-5 w-5 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-coal-800 dark:text-dark-text mb-1">
+                        Limpiar Anotaciones Inválidas
+                      </h4>
+                      <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mb-3">
+                        Elimina anotaciones con valores NaN, Infinity o inválidos que pueden causar advertencias en el canvas.
+                      </p>
+                      <Button
+                        onClick={handleCleanupInvalidAnnotations}
+                        disabled={isCleaningAnnotations}
+                        variant="outline"
+                        size="sm"
+                        className="w-full dark:border-amber-600 dark:text-amber-300 dark:hover:bg-amber-900/30"
+                      >
+                        {isCleaningAnnotations ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Limpiando...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Ejecutar Limpieza
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            )}
           </Card>
         </TabsContent>
 

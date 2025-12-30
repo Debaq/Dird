@@ -142,3 +142,52 @@ export async function deletePatient(patientId: number): Promise<void> {
 export async function updateImageEyeType(imageId: number, newEyeType: 'OI' | 'OD'): Promise<void> {
   await db.images.update(imageId, { eyeType: newEyeType });
 }
+
+/**
+ * Limpia anotaciones inválidas de la base de datos.
+ * Elimina detecciones que tengan bbox con valores NaN, Infinity o inválidos.
+ * Retorna el número de detecciones eliminadas.
+ */
+export async function cleanupInvalidAnnotations(): Promise<number> {
+  let deletedCount = 0;
+
+  await db.transaction('rw', [db.detections], async () => {
+    // Obtener todas las detecciones
+    const allDetections = await db.detections.toArray();
+
+    // Filtrar detecciones con bbox inválido
+    const invalidDetections = allDetections.filter(detection => {
+      if (!detection.bbox) {
+        return true; // Sin bbox es inválido
+      }
+
+      const { x, y, width, height } = detection.bbox;
+
+      // Verificar si algún valor es inválido
+      return (
+        typeof x !== 'number' ||
+        typeof y !== 'number' ||
+        typeof width !== 'number' ||
+        typeof height !== 'number' ||
+        !isFinite(x) ||
+        !isFinite(y) ||
+        !isFinite(width) ||
+        !isFinite(height) ||
+        width <= 0 ||
+        height <= 0
+      );
+    });
+
+    // Eliminar detecciones inválidas
+    for (const detection of invalidDetections) {
+      if (detection.id) {
+        await db.detections.delete(detection.id);
+        deletedCount++;
+        console.log('Deleted invalid detection:', detection);
+      }
+    }
+  });
+
+  console.log(`Cleanup complete: ${deletedCount} invalid detections removed`);
+  return deletedCount;
+}

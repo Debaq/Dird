@@ -98,6 +98,20 @@ export interface AdvancedAnalysisConfig {
   opticDiscCupping: boolean; // Excavación del disco óptico (cup/disc ratio)
 }
 
+export interface DebugConfig {
+  enabled: boolean; // Master switch - si está off, ningún log se muestra
+  categories: {
+    api: boolean; // API calls, network requests
+    ai: boolean; // AI inference, model loading
+    imageProcessing: boolean; // Image analysis, transformations
+    clinicalGuidelines: boolean; // Clinical guideline processing
+    database: boolean; // Database operations
+    drClassification: boolean; // DR classification logic
+    canvas: boolean; // Canvas operations, annotations
+    general: boolean; // General application logs
+  };
+}
+
 export interface AppConfig {
   name: string;
   appearance: AppearanceConfig;
@@ -108,6 +122,7 @@ export interface AppConfig {
   report: ReportConfig;
   aiConclusion: AIConclusionSettings;
   advancedAnalysis: AdvancedAnalysisConfig;
+  debug: DebugConfig;
   activeGuideline: string; // ID of active clinical guideline
   pwa: {
     installPromptShown: boolean;
@@ -123,6 +138,7 @@ interface ConfigStore {
   updateReportConfig: (updates: Partial<ReportConfig>) => void;
   updateAIConclusion: (updates: Partial<AIConclusionSettings>) => void;
   updateAdvancedAnalysis: (updates: Partial<AdvancedAnalysisConfig>) => void;
+  updateDebug: (updates: Partial<DebugConfig>) => void;
   updateAPIModels: (updates: Partial<APIModelConfig>) => void;
   updateLocalModels: (updates: Partial<LocalModelConfig>) => void;
   setModelSource: (source: ModelSource) => void;
@@ -221,6 +237,19 @@ export const DEFAULT_CONFIG: AppConfig = {
     microaneurysms: true,
     opticDiscCupping: true
   },
+  debug: {
+    enabled: false, // Desactivado por defecto para producción
+    categories: {
+      api: false,
+      ai: false,
+      imageProcessing: false,
+      clinicalGuidelines: false,
+      database: false,
+      drClassification: false,
+      canvas: false,
+      general: false
+    }
+  },
   activeGuideline: 'icdr_2024', // Default to ICDR International standard
   pwa: {
     installPromptShown: false,
@@ -234,9 +263,16 @@ export const useConfigStore = create<ConfigStore>()(
       config: DEFAULT_CONFIG,
 
       updateConfig: (updates) =>
-        set((state) => ({
-          config: { ...state.config, ...updates }
-        })),
+        set((state) => {
+          // Ensure debug config exists
+          const currentConfig = state.config;
+          if (!currentConfig.debug) {
+            currentConfig.debug = DEFAULT_CONFIG.debug;
+          }
+          return {
+            config: { ...currentConfig, ...updates }
+          };
+        }),
 
       updateAppearance: (updates) =>
         set((state) => ({
@@ -278,6 +314,20 @@ export const useConfigStore = create<ConfigStore>()(
           }
         })),
 
+      updateDebug: (updates) =>
+        set((state) => ({
+          config: {
+            ...state.config,
+            debug: {
+              ...state.config.debug,
+              ...updates,
+              ...(updates.categories && {
+                categories: { ...state.config.debug.categories, ...updates.categories }
+              })
+            }
+          }
+        })),
+
       updateAPIModels: (updates) =>
         set((state) => ({
           config: {
@@ -308,7 +358,7 @@ export const useConfigStore = create<ConfigStore>()(
     }),
     {
       name: 'dird-config',
-      version: 10,
+      version: 11,
       migrate: (persistedState: any, version) => {
         let state = persistedState;
 
@@ -403,6 +453,14 @@ export const useConfigStore = create<ConfigStore>()(
           };
         }
 
+        if (version < 11) {
+          // Add debug configuration
+          state = {
+            ...state,
+            debug: DEFAULT_CONFIG.debug
+          };
+        }
+
         // Final safety check: Ensure advancedAnalysis exists
         if (!state.advancedAnalysis) {
           state = {
@@ -411,7 +469,21 @@ export const useConfigStore = create<ConfigStore>()(
           };
         }
 
+        // Final safety check: Ensure debug exists
+        if (!state.debug) {
+          state = {
+            ...state,
+            debug: DEFAULT_CONFIG.debug
+          };
+        }
+
         return state;
+      },
+      onRehydrateStorage: () => (state) => {
+        // After rehydration, ensure debug config exists
+        if (state && state.config && !state.config.debug) {
+          state.config.debug = DEFAULT_CONFIG.debug;
+        }
       },
     }
   )
