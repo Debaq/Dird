@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useConfirm } from '@/hooks/useConfirm';
 import { Stage, Layer, Image as KonvaImage, Rect, Group, Text, Transformer, Circle, Line } from 'react-konva';
-import { RotateCcw, RotateCw, Brain, Loader2, Maximize } from 'lucide-react';
 import type { Image as ImageType, Detection } from '@/lib/db/schema';
 import type { HistoryEntry } from '@/types/annotations';
 import type { CanvasTool } from './ToolPanel';
@@ -11,6 +10,8 @@ import type { CanvasLayer } from './LayerControls';
 import { db } from '@/lib/db/schema';
 import { classManager } from '@/lib/classes/class-manager';
 import ClassSelectionModal from './ClassSelectionModal';
+import { CanvasToolbar } from './CanvasToolbar';
+import { CanvasQuickClassSelector } from './CanvasQuickClassSelector';
 import { getClassName } from '@/lib/ai/class-translations';
 import { useConfigStore } from '@/stores/config-store';
 import { useCanvasStore } from '@/stores/canvas-store';
@@ -1427,92 +1428,19 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   return (
     <>
       <div className="relative w-full">
-        <div className="absolute top-2 left-2 z-10 flex space-x-2">
-          <button
-            onClick={history?.onUndo}
-            disabled={!history || history.index < 0}
-            className={`p-2 rounded-lg ${!history || history.index < 0 ? 'bg-gray-200 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-100 shadow'}`}
-            title={`${t('canvas.undo')} (Ctrl+Z)`}
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-          <button
-            onClick={history?.onRedo}
-            disabled={!history || history.index >= history.entries.length - 1}
-            className={`p-2 rounded-lg ${!history || history.index >= history.entries.length - 1 ? 'bg-gray-200 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-100 shadow'}`}
-            title={`${t('canvas.redo')} (Ctrl+Y)`}
-          >
-            <RotateCw className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleReDetect}
-            disabled={isProcessing}
-            className={`p-2 rounded-lg ${isProcessing ? 'bg-gray-200 text-gray-400' : 'bg-white text-primary-600 hover:bg-primary-50 shadow'}`}
-            title="Re-detectar (IA)"
-          >
-            {isProcessing ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Brain className="w-4 h-4" />
-            )}
-          </button>
-          <button
-            onClick={handleResetZoom}
-            className="p-2 rounded-lg bg-white text-gray-700 hover:bg-gray-100 shadow"
-            title={t('canvas.resetZoom')}
-          >
-            <Maximize className="w-4 h-4" />
-          </button>
-        </div>
+        <CanvasToolbar
+          history={history}
+          onReDetect={handleReDetect}
+          isProcessing={isProcessing}
+          onResetZoom={handleResetZoom}
+        />
 
-        {/* Quick class selection list */}
         {showClassList && activeTool === 'bbox' && (
-          <div className="absolute top-14 left-2 z-10 bg-white rounded-lg shadow-lg border border-coal-200 p-1.5 max-w-xs">
-            <div className="text-[9px] font-semibold text-coal-600 mb-1 uppercase tracking-wider px-1">
-              {t('canvas.quickClassSelection') || 'Quick Class Selection'}
-            </div>
-            <div className="space-y-0.5">
-              {availableClasses.map((cls, index) => {
-                // Get shortcut key: 1-9 for indices 0-8, q,w,e,r,t,y,u,i,o,p for indices 9-18
-                const shortcutKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
-                const shortcutKey = index < 19 ? shortcutKeys[index] : '';
-                const isSelected = preSelectedClass === cls.name;
-                return (
-                  <button
-                    key={cls.name}
-                    onClick={() => setPreSelectedClass(isSelected ? null : cls.name)}
-                    className={`w-full text-left px-1.5 py-0.5 rounded text-[10px] transition-all flex items-center gap-1.5 ${
-                      isSelected
-                        ? 'bg-primary-100 border border-primary-500 text-primary-700 shadow-sm'
-                        : 'hover:bg-coal-50 border border-transparent text-coal-700'
-                    }`}
-                    title={shortcutKey ? `Press ${shortcutKey} to select` : cls.displayName}
-                  >
-                    {shortcutKey && (
-                      <span className="font-mono font-bold text-[9px] text-coal-500 min-w-[16px]">
-                        [{shortcutKey}]
-                      </span>
-                    )}
-                    <div
-                      className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
-                      style={{ backgroundColor: cls.color }}
-                    />
-                    <span className="flex-1 truncate leading-tight">{cls.displayName}</span>
-                  </button>
-                );
-              })}
-            </div>
-            {preSelectedClass && (
-              <div className="mt-1 pt-1 border-t border-coal-200">
-                <div className="text-[9px] text-primary-600 px-1">
-                  {t('canvas.classPreSelected') || 'Next annotation will be:'}{' '}
-                  <span className="font-semibold">
-                    {availableClasses.find(c => c.name === preSelectedClass)?.displayName}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
+          <CanvasQuickClassSelector
+            availableClasses={availableClasses}
+            preSelectedClass={preSelectedClass}
+            onSelectClass={(name) => setPreSelectedClass(name)}
+          />
         )}
       </div>
       <div
