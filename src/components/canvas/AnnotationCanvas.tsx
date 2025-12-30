@@ -346,6 +346,12 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       }
 
       // Convert to image coordinates
+      // Proteger contra división por cero o valores inválidos
+      if (!scale || !isFinite(scale) || scale <= 0) {
+        console.warn('Invalid scale in handleAnnotationChange:', scale);
+        return;
+      }
+
       const bbox = {
         x: (newAttrs.x - imageOffset.x) / scale,
         y: (newAttrs.y - imageOffset.y) / scale,
@@ -465,6 +471,13 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     const containerWidth = containerRef.current.clientWidth;
     const containerHeight = containerRef.current.clientHeight || 600;
 
+    // Validate dimensions to prevent NaN values
+    if (!imgWidth || !imgHeight || !isFinite(imgWidth) || !isFinite(imgHeight) ||
+        !containerWidth || !containerHeight || !isFinite(containerWidth) || !isFinite(containerHeight)) {
+      console.warn('Invalid dimensions for scale calculation:', { imgWidth, imgHeight, containerWidth, containerHeight });
+      return;
+    }
+
     // Calculate scale to cover container maintaining aspect ratio
     const scaleX = containerWidth / imgWidth;
     const scaleY = containerHeight / imgHeight;
@@ -472,11 +485,23 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     // Use the SMALLER scale to ensure image fits 100% within container (contain behavior)
     const newScale = Math.min(scaleX, scaleY);
 
+    // Validate newScale
+    if (!isFinite(newScale) || newScale <= 0) {
+      console.warn('Invalid scale calculated:', newScale);
+      return;
+    }
+
     // Calculate offset to center the image
     const scaledWidth = imgWidth * newScale;
     const scaledHeight = imgHeight * newScale;
     const offsetX = (containerWidth - scaledWidth) / 2;
     const offsetY = (containerHeight - scaledHeight) / 2;
+
+    // Validate offsets
+    if (!isFinite(offsetX) || !isFinite(offsetY)) {
+      console.warn('Invalid offsets calculated:', { offsetX, offsetY });
+      return;
+    }
 
     setScale(newScale);
     setImageOffset({ x: offsetX, y: offsetY });
@@ -733,7 +758,10 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         let distanceDD: number | undefined;
         if (opticDisc) {
           const discDiameter = (opticDisc.bbox.width + opticDisc.bbox.height) / 2;
-          distanceDD = distancePixels / discDiameter;
+          // Proteger contra división por cero
+          if (discDiameter > 0 && isFinite(discDiameter)) {
+            distanceDD = distancePixels / discDiameter;
+          }
         }
 
         // Save to database
@@ -901,7 +929,10 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     );
     if (opticDisc) {
       const discDiameter = (opticDisc.bbox.width + opticDisc.bbox.height) / 2;
-      distanceDD = distancePixels / discDiameter;
+      // Proteger contra división por cero
+      if (discDiameter > 0 && isFinite(discDiameter)) {
+        distanceDD = distancePixels / discDiameter;
+      }
     }
 
     return { distancePixels, distanceDD };
@@ -1011,6 +1042,24 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   // Función auxiliar para guardar anotación con bbox y clase
   const saveAnnotationWithClass = async (bbox: any, className: string) => {
     if (!image.id) return;
+
+    // Validar que el bbox tenga valores válidos antes de guardar
+    if (
+      typeof bbox.x !== 'number' ||
+      typeof bbox.y !== 'number' ||
+      typeof bbox.width !== 'number' ||
+      typeof bbox.height !== 'number' ||
+      !isFinite(bbox.x) ||
+      !isFinite(bbox.y) ||
+      !isFinite(bbox.width) ||
+      !isFinite(bbox.height) ||
+      bbox.width <= 0 ||
+      bbox.height <= 0
+    ) {
+      console.error('Intento de guardar anotación con bbox inválido:', bbox);
+      toast.error(t('canvas.errors.invalidBboxError'));
+      return;
+    }
 
     try {
       const newDetectionData: Detection = {
@@ -1545,6 +1594,20 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
               return null;
             }
 
+            // Skip if bbox is invalid or has NaN values
+            if (!detection.bbox ||
+                typeof detection.bbox.x !== 'number' ||
+                typeof detection.bbox.y !== 'number' ||
+                typeof detection.bbox.width !== 'number' ||
+                typeof detection.bbox.height !== 'number' ||
+                !isFinite(detection.bbox.x) ||
+                !isFinite(detection.bbox.y) ||
+                !isFinite(detection.bbox.width) ||
+                !isFinite(detection.bbox.height)) {
+              console.warn('Skipping detection with invalid bbox:', detection);
+              return null;
+            }
+
             // Check if this is a landmark class (optic_disc or fovea)
             const className = detection.class.toLowerCase().trim();
             const isLandmarkClass = className === 'optic_disc' || className === 'optic disc' || className === 'fovea';
@@ -1796,6 +1859,19 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
             // Verificar si es una detección de la base de datos (tiene bbox)
             if (annotation.bbox) {
+              // Skip if bbox has invalid or NaN values
+              if (typeof annotation.bbox.x !== 'number' ||
+                  typeof annotation.bbox.y !== 'number' ||
+                  typeof annotation.bbox.width !== 'number' ||
+                  typeof annotation.bbox.height !== 'number' ||
+                  !isFinite(annotation.bbox.x) ||
+                  !isFinite(annotation.bbox.y) ||
+                  !isFinite(annotation.bbox.width) ||
+                  !isFinite(annotation.bbox.height)) {
+                console.warn('Skipping manual annotation with invalid bbox:', annotation);
+                return null;
+              }
+
               return (
                 <Group key={`manual-${annotation.id || idx}`}>
                   {/* Caja de anotación */}
@@ -1976,7 +2052,15 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           })}
 
           {/* New annotation being drawn */}
-          {newAnnotation && newAnnotation.type === 'bbox' && (
+          {newAnnotation && newAnnotation.type === 'bbox' &&
+           typeof newAnnotation.x === 'number' &&
+           typeof newAnnotation.y === 'number' &&
+           typeof newAnnotation.width === 'number' &&
+           typeof newAnnotation.height === 'number' &&
+           isFinite(newAnnotation.x) &&
+           isFinite(newAnnotation.y) &&
+           isFinite(newAnnotation.width) &&
+           isFinite(newAnnotation.height) && (
             <Rect
               x={newAnnotation.x * scale + imageOffset.x}
               y={newAnnotation.y * scale + imageOffset.y}
@@ -1989,7 +2073,15 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           )}
 
           {/* Annotation pending class selection */}
-          {pendingAnnotation && (
+          {pendingAnnotation &&
+           typeof pendingAnnotation.x === 'number' &&
+           typeof pendingAnnotation.y === 'number' &&
+           typeof pendingAnnotation.width === 'number' &&
+           typeof pendingAnnotation.height === 'number' &&
+           isFinite(pendingAnnotation.x) &&
+           isFinite(pendingAnnotation.y) &&
+           isFinite(pendingAnnotation.width) &&
+           isFinite(pendingAnnotation.height) && (
             <Rect
               x={pendingAnnotation.x * scale + imageOffset.x}
               y={pendingAnnotation.y * scale + imageOffset.y}

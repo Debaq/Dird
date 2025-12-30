@@ -338,7 +338,8 @@
     },
     "errors": {
       "saveAnnotationError": "Error al guardar la anotación. Por favor intenta de nuevo.",
-      "redetectionError": "Error al ejecutar la re-detección."
+      "redetectionError": "Error al ejecutar la re-detección.",
+      "invalidBboxError": "La anotación tiene valores inválidos. Por favor intenta de nuevo."
     },
     "undo": "Deshacer",
     "redo": "Rehacer"

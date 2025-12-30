@@ -76,7 +76,10 @@ export function calibrateFromOpticDisc(
   // Use average of width and height for better accuracy
   const avgDiameterPixels = (opticDisc.bbox.width + opticDisc.bbox.height) / 2;
 
-  // Validate reasonable size
+  // Validate reasonable size and prevent division by zero
+  if (!isFinite(avgDiameterPixels) || avgDiameterPixels <= 0) {
+    throw new Error('Invalid optic disc diameter - cannot calibrate');
+  }
   if (avgDiameterPixels < 10) {
     warnings.push('Optic disc detection very small - calibration may be inaccurate');
   }

@@ -260,7 +260,8 @@
     },
     "errors": {
       "saveAnnotationError": "Error saving annotation. Please try again.",
-      "redetectionError": "Error running re-detection."
+      "redetectionError": "Error running re-detection.",
+      "invalidBboxError": "The annotation has invalid values. Please try again."
     },
     "undo": "Undo",
     "redo": "Redo"

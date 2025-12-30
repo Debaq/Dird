@@ -62,8 +62,11 @@ export const API_ENDPOINTS = {
 /**
  * Log configuration on startup (only in development)
  */
+import { logger } from '@/utils/logger';
+
 if (import.meta.env.DEV) {
-  console.log('🔧 API Configuration:');
-  console.log('  Base URL:', API_BASE_URL);
-  console.log('  Environment:', import.meta.env.MODE);
+  logger.api.log('API Configuration', {
+    baseURL: API_BASE_URL,
+    environment: import.meta.env.MODE
+  });
 }

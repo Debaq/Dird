@@ -12,6 +12,7 @@ import { classManager } from '../classes/class-manager';
 import { calibrateFromOpticDisc, createFallbackCalibration, type SpatialCalibration } from './spatial-calibrator';
 import { detectMacularEdema, findFovea, type MacularEdemaResult } from './macular-edema-detector';
 import { loadGuideline } from '../clinical-guidelines/guideline-loader';
+import { logger } from '@/utils/logger';
 
 export type DRSeverityLevel =
   | 'no_dr'
@@ -157,7 +158,7 @@ export function countRawLesions(detections: Detection[]): Record<string, number>
   detections.forEach(detection => {
     // Skip if class is not defined
     if (!detection.class || typeof detection.class !== 'string') {
-      console.warn('Detection without valid class property:', detection);
+      logger.drClassification.warn('Detection without valid class property', detection);
       return;
     }
 
@@ -487,7 +488,7 @@ export async function classifyImageDR(
       baseConfidence
     );
   } catch (error) {
-    console.error('Error classifying with guideline:', error);
+    logger.drClassification.error('Error classifying with guideline', error);
     // Fallback removed to prevent bad clinical decisions
     throw new Error(`Guideline classification error: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -604,9 +605,9 @@ export async function classifyImageDR(
           criteria.unshift(emcsWarning);
 
           // Add specific warning about vision threat
-          warnings.unshift(`🔴 AMENAZA A LA VISIÓN: ${macularEdemaResult.method} detectado - Requiere evaluación oftalmológica urgente`);
+          warnings.unshift(`AMENAZA A LA VISIÓN: ${macularEdemaResult.method} detectado - Requiere evaluación oftalmológica urgente`);
 
-          console.log(`[DR Classifier] ${macularEdemaResult.method} detected:`, {
+          logger.drClassification.log(`${macularEdemaResult.method} detected`, {
             exudatesCount: macularEdemaResult.exudatesInZone.length,
             circinatePattern: macularEdemaResult.circinatePattern,
             description: macularEdemaResult.clinicalDescription
@@ -627,7 +628,7 @@ export async function classifyImageDR(
       }
     }
   } catch (error) {
-    console.error('Error detecting macular edema:', error);
+    logger.drClassification.error('Error detecting macular edema', error);
     warnings.push('Macular edema detection failed - analysis incomplete');
   }
 
