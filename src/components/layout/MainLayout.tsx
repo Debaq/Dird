@@ -41,7 +41,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
       <header
         className={cn(
           "text-white shadow-strong dark:bg-gray-800",
-          fullScreenOnMobile ? "hidden lg:block" : ""
+          fullScreenOnMobile ? "hidden xl:block" : ""
         )}
         style={{ backgroundColor: useConfigStore().config.appearance.primaryColor }}
       >
@@ -84,7 +84,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
       <nav 
         className={cn(
           "bg-white border-b border-coal-200 shadow-light dark:bg-gray-800 dark:border-gray-700 overflow-x-auto scrollbar-hide",
-          fullScreenOnMobile ? "hidden lg:block" : ""
+          fullScreenOnMobile ? "hidden xl:block" : ""
         )}
       >
         <div className="container mx-auto px-4">
@@ -129,7 +129,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
         className={cn(
           "flex-grow dark:bg-gray-900",
           fullScreenOnMobile
-            ? "lg:container lg:mx-auto lg:px-4 lg:py-6"
+            ? "xl:container xl:mx-auto xl:px-4 xl:py-6"
             : "container mx-auto px-4 py-6"
         )}
       >

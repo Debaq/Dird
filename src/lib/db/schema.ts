@@ -64,6 +64,7 @@ export interface Detection {
   confidence?: number;
   customLabel?: string;
   visible: boolean;
+  metadata?: Record<string, any>; // For storing additional data like painted pixels, precise points, etc.
   createdAt: Date;
 }
 

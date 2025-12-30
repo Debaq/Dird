@@ -98,6 +98,32 @@ export interface CircinatePatternAnalysis {
     max: number;
     coefficientOfVariation: number;
   };
+
+  /** Clinical information */
+  clinical?: {
+    /** Number of exudates forming the ring */
+    exudatesInRing: number;
+    /** Total number of exudates analyzed */
+    totalExudates: number;
+    /** Distance from ring center to fovea (in micrometers) */
+    distanceToFoveaMicrons: number;
+  };
+
+  /** Debug information for visualization */
+  debug?: {
+    /** All exudates that were analyzed */
+    allExudates: Detection[];
+    /** Distance from each exudate to the fitted circle */
+    distancesToCircle: number[];
+    /** Which exudates are on the circle (within tolerance) */
+    exudatesOnCircle: boolean[];
+    /** Circle adherence score (% of exudates on circle) */
+    circleAdherence: number;
+    /** Tolerance used for "on circle" determination (in pixels) */
+    radiusTolerance: number;
+    /** Indices of exudates that were excluded from circle fit (outliers) */
+    excludedFromFit: number[];
+  };
 }
 
 /**
@@ -252,9 +278,23 @@ export function calculateRadialConcentration(distances: number[]): {
   const coefficientOfVariation = mean > 0 ? stdDev / mean : 0;
 
   // Convert CV to concentration score (0-1)
+  // Adaptive threshold based on number of points
+  // With few exudates (3-5), allow higher CV as it's normal to have more variability
+  // With many exudates (>8), be more strict
+  let maxAcceptableCV: number;
+  if (distances.length <= 4) {
+    maxAcceptableCV = 1.0;  // Very lenient with 3-4 exudates
+  } else if (distances.length <= 6) {
+    maxAcceptableCV = 0.8;  // Moderately lenient with 5-6 exudates
+  } else if (distances.length <= 8) {
+    maxAcceptableCV = 0.6;  // Standard with 7-8 exudates
+  } else {
+    maxAcceptableCV = 0.5;  // Strict with many exudates
+  }
+
   // CV < 0.15 = excellent concentration (score ~1)
-  // CV > 0.5 = poor concentration (score ~0)
-  const concentration = Math.max(0, Math.min(1, 1 - (coefficientOfVariation / 0.5)));
+  // CV > maxAcceptableCV = poor concentration (score ~0)
+  const concentration = Math.max(0, Math.min(1, 1 - (coefficientOfVariation / maxAcceptableCV)));
 
   return {
     concentration,
@@ -311,13 +351,32 @@ export function calculateAngularGaps(angles: number[]): {
   const maxGapDegrees = (maxGapRadians * 180) / Math.PI;
 
   // Calculate completeness score based on max gap
-  // Gaps < 60° = complete ring (score ~1)
-  // Gaps > 120° = incomplete ring (score ~0)
-  const maxAcceptableGapRadians = (120 * Math.PI) / 180; // 120 degrees
+  // Adaptive thresholds based on number of exudates
+  // With few exudates, gaps are naturally larger (e.g., 4 points = 90° expected gap)
+  let maxAcceptableGapDegrees: number;
+  let completeThresholdDegrees: number;
+
+  if (angles.length <= 4) {
+    // With 3-4 exudates, expect gaps of ~90-120°
+    maxAcceptableGapDegrees = 200;  // Very lenient
+    completeThresholdDegrees = 150; // Accept gaps up to 150° as "complete"
+  } else if (angles.length <= 6) {
+    // With 5-6 exudates, expect gaps of ~60-72°
+    maxAcceptableGapDegrees = 150;  // Moderately lenient
+    completeThresholdDegrees = 120;
+  } else if (angles.length <= 8) {
+    // With 7-8 exudates, expect gaps of ~45-51°
+    maxAcceptableGapDegrees = 120;  // Standard
+    completeThresholdDegrees = 90;
+  } else {
+    // With many exudates, be strict
+    maxAcceptableGapDegrees = 100;  // Strict
+    completeThresholdDegrees = 75;
+  }
+
+  const maxAcceptableGapRadians = (maxAcceptableGapDegrees * Math.PI) / 180;
   const completeness = Math.max(0, Math.min(1, 1 - (maxGapRadians / maxAcceptableGapRadians)));
 
-  // Consider complete if max gap < 90 degrees
-  const completeThresholdDegrees = 90;
   const isComplete = maxGapDegrees < completeThresholdDegrees;
 
   return {
@@ -428,11 +487,126 @@ export function fitCircleToPoints(points: Point[]): {
 }
 
 /**
+ * Find the best circle configuration by trying multiple subsets
+ * This handles outliers that can distort the circle fit
+ *
+ * @param exudates - All exudates to analyze
+ * @param centers - Center points of all exudates
+ * @returns Best configuration with circle fit and indices of exudates used
+ */
+function findBestCircleConfiguration(
+  exudates: Detection[],
+  centers: Point[]
+): {
+  circleFit: NonNullable<ReturnType<typeof fitCircleToPoints>>;
+  usedIndices: number[];
+  excludedIndices: number[];
+  adherence: number;
+} | null {
+  if (exudates.length < 3) {
+    return null;
+  }
+
+  interface Configuration {
+    circleFit: NonNullable<ReturnType<typeof fitCircleToPoints>>;
+    usedIndices: number[];
+    excludedIndices: number[];
+    adherence: number;
+    score: number;
+  }
+
+  const configurations: Configuration[] = [];
+
+  // Configuration 1: Use ALL exudates
+  const fullCircleFit = fitCircleToPoints(centers);
+  if (fullCircleFit) {
+    const radiusTolerance = fullCircleFit.radius * 0.20;
+    let onCircleCount = 0;
+
+    for (const center of centers) {
+      const dx = center.x - fullCircleFit.center.x;
+      const dy = center.y - fullCircleFit.center.y;
+      const distToCenter = Math.sqrt(dx * dx + dy * dy);
+      const distFromCircle = Math.abs(distToCenter - fullCircleFit.radius);
+
+      if (distFromCircle <= radiusTolerance) {
+        onCircleCount++;
+      }
+    }
+
+    const adherence = onCircleCount / exudates.length;
+    // Score: prioritize adherence, but also consider fit quality
+    const score = adherence * 0.7 + fullCircleFit.fitQuality * 0.3;
+
+    configurations.push({
+      circleFit: fullCircleFit,
+      usedIndices: Array.from({ length: exudates.length }, (_, i) => i),
+      excludedIndices: [],
+      adherence,
+      score,
+    });
+  }
+
+  // Configuration 2+: If we have 4+ exudates, try removing each one
+  // This handles outliers that distort the fit
+  if (exudates.length >= 4) {
+    for (let skipIndex = 0; skipIndex < exudates.length; skipIndex++) {
+      const subsetCenters = centers.filter((_, i) => i !== skipIndex);
+      const subsetCircleFit = fitCircleToPoints(subsetCenters);
+
+      if (!subsetCircleFit) continue;
+
+      const radiusTolerance = subsetCircleFit.radius * 0.20;
+      let onCircleCount = 0;
+
+      // Check ALL exudates against this circle (including the excluded one)
+      for (const center of centers) {
+        const dx = center.x - subsetCircleFit.center.x;
+        const dy = center.y - subsetCircleFit.center.y;
+        const distToCenter = Math.sqrt(dx * dx + dy * dy);
+        const distFromCircle = Math.abs(distToCenter - subsetCircleFit.radius);
+
+        if (distFromCircle <= radiusTolerance) {
+          onCircleCount++;
+        }
+      }
+
+      const adherence = onCircleCount / exudates.length;
+      // Bonus for using more exudates in the fit (prefer not excluding)
+      const usageBonus = (exudates.length - 1) / exudates.length * 0.1;
+      const score = adherence * 0.7 + subsetCircleFit.fitQuality * 0.3 + usageBonus;
+
+      configurations.push({
+        circleFit: subsetCircleFit,
+        usedIndices: centers.map((_, i) => i).filter(i => i !== skipIndex),
+        excludedIndices: [skipIndex],
+        adherence,
+        score,
+      });
+    }
+  }
+
+  // Find the best configuration
+  if (configurations.length === 0) {
+    return null;
+  }
+
+  configurations.sort((a, b) => b.score - a.score);
+  return configurations[0];
+}
+
+/**
  * Comprehensive circinate pattern analysis
- * Combines multiple metrics to detect both complete and partial rings
+ * Uses geometric circle fitting to find optimal center and evaluate pattern
+ *
+ * Algorithm:
+ * 1. Try multiple circle configurations (all exudates, or excluding outliers)
+ * 2. Choose the configuration with highest adherence
+ * 3. Count how many exudates lie near the best circle
+ * 4. Evaluate angular coverage and gaps
  *
  * @param exudates - Hard exudate detections
- * @param foveaCenter - Center point of fovea
+ * @param foveaCenter - Center point of fovea (used for clinical distance measurement)
  * @param calibration - Spatial calibration for distance conversion
  * @returns Detailed circinate pattern analysis
  */
@@ -445,83 +619,174 @@ export function analyzeCircinatePattern(
     return null;
   }
 
-  // Calculate angles for each exudate
-  const angles = exudates.map(exudate => {
-    const center = getDetectionCenter(exudate);
-    const dx = center.x - foveaCenter.x;
-    const dy = center.y - foveaCenter.y;
+  // Get exudate centers
+  const centers = exudates.map(e => getDetectionCenter(e));
+
+  // Step 1: Find the best circle configuration (handles outliers)
+  const bestConfig = findBestCircleConfiguration(exudates, centers);
+
+  if (!bestConfig) {
+    return null;
+  }
+
+  const circleFit = bestConfig.circleFit;
+
+  // Use the fitted circle center as the optimal center (not the fovea!)
+  const optimalCenter = circleFit.center;
+  const optimalRadius = circleFit.radius;
+
+  // Step 2: Calculate how many exudates lie near the fitted circle
+  // Tolerance: exudate is "on the circle" if within 20% of radius
+  const radiusTolerance = optimalRadius * 0.20;
+
+  let exudatesOnCircleCount = 0;
+  const distancesFromCircle: number[] = [];
+  const exudatesOnCircleFlags: boolean[] = [];
+
+  for (const center of centers) {
+    const dx = center.x - optimalCenter.x;
+    const dy = center.y - optimalCenter.y;
+    const distToCenter = Math.sqrt(dx * dx + dy * dy);
+    const distFromCircle = Math.abs(distToCenter - optimalRadius);
+
+    distancesFromCircle.push(distFromCircle);
+
+    const isOnCircle = distFromCircle <= radiusTolerance;
+    exudatesOnCircleFlags.push(isOnCircle);
+
+    if (isOnCircle) {
+      exudatesOnCircleCount++;
+    }
+  }
+
+  // Circle adherence score: % of exudates near the circle
+  const circleAdherence = exudatesOnCircleCount / exudates.length;
+
+  // Step 3: Calculate angular coverage from optimal center
+  const angles = centers.map(center => {
+    const dx = center.x - optimalCenter.x;
+    const dy = center.y - optimalCenter.y;
     return Math.atan2(dy, dx);
   });
 
-  // Calculate distances from fovea (in micrometers)
-  const distances = exudates.map(exudate =>
-    calculateMinimumDetectionDistanceToPoint(exudate, foveaCenter, calibration)
-  );
-
-  // Get exudate centers for circle fitting
-  const centers = exudates.map(e => getDetectionCenter(e));
-
-  // 1. Angular dispersion (existing metric)
-  const angularDispersion = calculateAngularDispersion(exudates, foveaCenter);
-
-  // 2. Radial concentration (NEW)
-  const radialAnalysis = calculateRadialConcentration(distances);
-
-  // 3. Angular gaps analysis (NEW - improved)
   const gapAnalysis = calculateAngularGaps(angles);
 
-  // 4. Circle fitting (NEW)
-  const circleFit = fitCircleToPoints(centers);
+  // Angular dispersion from optimal center
+  const angularDispersion = calculateAngularDispersion(exudates, optimalCenter);
 
-  // Calculate overall circinate score
-  // Weighted combination of all metrics
+  // Step 4: Calculate radial concentration from optimal center
+  const distancesFromOptimalCenter = centers.map(center => {
+    const dx = center.x - optimalCenter.x;
+    const dy = center.y - optimalCenter.y;
+    return Math.sqrt(dx * dx + dy * dy) * calibration.micronsPerPixel;
+  });
+
+  const radialAnalysis = calculateRadialConcentration(distancesFromOptimalCenter);
+
+  // Step 5: Calculate overall score
+  // Simpler formula focused on what matters:
+  // - How many exudates follow the circle?
+  // - How good is the circle fit?
+  // - Is there good angular coverage?
+
   const weights = {
-    angularDispersion: 0.30,    // Distribution around fovea
-    radialConcentration: 0.25,   // Consistency of distance
-    completeness: 0.25,          // No large gaps
-    circleFitQuality: 0.20       // Geometric fit
+    circleAdherence: 0.40,     // Most important: do exudates follow a circle?
+    circleFitQuality: 0.30,    // How well does the circle fit?
+    angularDispersion: 0.20,   // Are exudates spread around?
+    completeness: 0.10         // Are there big gaps?
   };
 
-  const circleFitQuality = circleFit ? circleFit.fitQuality : 0;
-
   const overallScore =
+    (circleAdherence * weights.circleAdherence) +
+    (circleFit.fitQuality * weights.circleFitQuality) +
     (angularDispersion * weights.angularDispersion) +
-    (radialAnalysis.concentration * weights.radialConcentration) +
-    (gapAnalysis.completeness * weights.completeness) +
-    (circleFitQuality * weights.circleFitQuality);
+    (gapAnalysis.completeness * weights.completeness);
 
-  // Determine if complete or partial ring
-  // Complete ring: high score AND no large gaps
-  const isCompleteRing = overallScore >= 0.7 && gapAnalysis.isComplete;
+  // Step 6: Determine pattern classification
+  // Adaptive thresholds based on number of exudates
+  let isCompleteRing = false;
+  let isPartialRing = false;
 
-  // Partial ring: decent score but has gaps, OR good individual metrics
-  const isPartialRing = !isCompleteRing && (
-    (overallScore >= 0.4 && overallScore < 0.7) ||
-    (angularDispersion >= 0.5 && radialAnalysis.concentration >= 0.6) ||
-    (gapAnalysis.completeness >= 0.5)
-  );
+  if (exudates.length <= 4) {
+    // With 3-4 exudates: focus on circle adherence and fit quality
+    isCompleteRing = (
+      circleAdherence >= 0.75 &&  // At least 3/4 exudates on circle
+      circleFit.fitQuality >= 0.6 &&
+      gapAnalysis.maxGapDegrees < 150
+    );
+
+    isPartialRing = !isCompleteRing && (
+      circleAdherence >= 0.5 ||  // At least half on circle
+      (circleFit.fitQuality >= 0.4 && angularDispersion >= 0.3)
+    );
+  } else if (exudates.length <= 6) {
+    // With 5-6 exudates: moderate criteria
+    isCompleteRing = (
+      circleAdherence >= 0.80 &&
+      circleFit.fitQuality >= 0.7 &&
+      gapAnalysis.maxGapDegrees < 120
+    );
+
+    isPartialRing = !isCompleteRing && (
+      circleAdherence >= 0.6 ||
+      (circleFit.fitQuality >= 0.5 && angularDispersion >= 0.4)
+    );
+  } else {
+    // With 7+ exudates: stricter criteria
+    isCompleteRing = (
+      circleAdherence >= 0.85 &&
+      circleFit.fitQuality >= 0.75 &&
+      gapAnalysis.maxGapDegrees < 90
+    );
+
+    isPartialRing = !isCompleteRing && (
+      circleAdherence >= 0.7 ||
+      (circleFit.fitQuality >= 0.6 && angularDispersion >= 0.5)
+    );
+  }
+
+  // Calculate clinical metrics
+  const exudatesInRing = exudatesOnCircleFlags.filter(Boolean).length;
+
+  // Distance from ring center to fovea
+  const dx = optimalCenter.x - foveaCenter.x;
+  const dy = optimalCenter.y - foveaCenter.y;
+  const distanceToFoveaMicrons = Math.sqrt(dx * dx + dy * dy) * calibration.micronsPerPixel;
 
   return {
     overallScore,
     angularDispersion,
     radialConcentration: radialAnalysis.concentration,
-    circleFitQuality,
+    circleFitQuality: circleFit.fitQuality,
     completeness: gapAnalysis.completeness,
     maxAngularGapDegrees: gapAnalysis.maxGapDegrees,
     isCompleteRing,
     isPartialRing,
-    fittedCircle: circleFit ? {
-      center: circleFit.center,
-      radius: circleFit.radius,
-      radiusMicrons: circleFit.radius * calibration.micronsPerPixel,
+    fittedCircle: {
+      center: optimalCenter,  // Using optimal center, not fovea
+      radius: optimalRadius,
+      radiusMicrons: optimalRadius * calibration.micronsPerPixel,
       meanFitError: circleFit.meanError
-    } : undefined,
+    },
     radialStats: {
       mean: radialAnalysis.mean,
       stdDev: radialAnalysis.stdDev,
-      min: Math.min(...distances),
-      max: Math.max(...distances),
+      min: Math.min(...distancesFromOptimalCenter),
+      max: Math.max(...distancesFromOptimalCenter),
       coefficientOfVariation: radialAnalysis.coefficientOfVariation
+    },
+    clinical: {
+      exudatesInRing,
+      totalExudates: exudates.length,
+      distanceToFoveaMicrons
+    },
+    debug: {
+      allExudates: exudates,
+      distancesToCircle: distancesFromCircle,
+      exudatesOnCircle: exudatesOnCircleFlags,
+      circleAdherence: circleAdherence,
+      radiusTolerance: radiusTolerance,
+      excludedFromFit: bestConfig.excludedIndices
     }
   };
 }
@@ -681,14 +946,16 @@ export function detectMacularEdema(
   const hasEnoughExudates = exudatesInZone.length >= minRequired;
 
   // Detect circinate pattern if enabled
+  // IMPORTANT: Circinate rings are analyzed using ALL hard exudates in the image,
+  // not just those within the macular edema zone. Rings can form at any distance.
   let circinatePattern = false;
   let angularDispersion: number | undefined;
   let circinateAnalysis: CircinatePatternAnalysis | undefined;
 
-  if (criteria.circinate_pattern_detection && exudatesInZone.length > 0) {
-    // Use advanced analysis if enough exudates
-    if (exudatesInZone.length >= 3) {
-      circinateAnalysis = analyzeCircinatePattern(exudatesInZone, foveaCenter, calibration) || undefined;
+  if (criteria.circinate_pattern_detection && allHardExudates.length > 0) {
+    // Use advanced analysis if enough exudates in the entire image
+    if (allHardExudates.length >= 3) {
+      circinateAnalysis = analyzeCircinatePattern(allHardExudates, foveaCenter, calibration) || undefined;
 
       if (circinateAnalysis) {
         angularDispersion = circinateAnalysis.angularDispersion;
@@ -710,7 +977,7 @@ export function detectMacularEdema(
     } else {
       // Fallback to simple dispersion for < 3 exudates
       const minDispersion = criteria.min_angular_dispersion || 0.5;
-      const circinateResult = detectCircinatePattern(exudatesInZone, foveaCenter, minDispersion);
+      const circinateResult = detectCircinatePattern(allHardExudates, foveaCenter, minDispersion);
       circinatePattern = circinateResult.isCircinate;
       angularDispersion = circinateResult.dispersion;
 

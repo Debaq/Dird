@@ -14,7 +14,8 @@ import {
   ChevronRight,
   FileText,
   Lock,
-  BookOpen
+  BookOpen,
+  Microscope
 } from 'lucide-react';
 import { useConfigStore, type ModelSource } from '@/stores/config-store';
 import { apiInferenceService } from '@/lib/ai/api-inference-service';
@@ -41,6 +42,7 @@ export function Settings() {
     config,
     updateAppearance,
     updateProcessing,
+    updateAdvancedAnalysis,
     updateAPIModels,
     updateLocalModels,
     setModelSource,
@@ -231,6 +233,10 @@ export function Settings() {
             <TabsTrigger value="processing" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <Gauge className="h-4 w-4 mr-2" />
               {t('settings.tabs.processing')}
+            </TabsTrigger>
+            <TabsTrigger value="analysis" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
+              <Microscope className="h-4 w-4 mr-2" />
+              Análisis Avanzado
             </TabsTrigger>
             <TabsTrigger value="guidelines" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <BookOpen className="h-4 w-4 mr-2" />
@@ -735,6 +741,84 @@ export function Settings() {
                   value={[config.processing.batchSize]}
                   onValueChange={([value]) => updateProcessing({ batchSize: value })}
                   className="mt-3"
+                />
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+
+        {/* Advanced Analysis Tab */}
+        <TabsContent value="analysis">
+          <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
+            <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-2">
+              Análisis Avanzado
+            </h2>
+            <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mb-6">
+              Configura qué análisis automáticos deseas activar en el canvas.
+            </p>
+
+            <div className="space-y-6">
+              {/* Circinate Pattern */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="font-semibold dark:text-dark-text">
+                    Patrones Circinados
+                  </Label>
+                  <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
+                    Detecta anillos circinados de exudados duros alrededor de la fóvea
+                  </p>
+                </div>
+                <Switch
+                  checked={config.advancedAnalysis?.circinatePattern ?? true}
+                  onCheckedChange={(checked) => updateAdvancedAnalysis({ circinatePattern: checked })}
+                />
+              </div>
+
+              {/* Hemorrhages */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="font-semibold dark:text-dark-text">
+                    Hemorragias Retinianas
+                  </Label>
+                  <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
+                    Analiza hemorragias y su distribución por cuadrantes
+                  </p>
+                </div>
+                <Switch
+                  checked={config.advancedAnalysis?.hemorrhages ?? true}
+                  onCheckedChange={(checked) => updateAdvancedAnalysis({ hemorrhages: checked })}
+                />
+              </div>
+
+              {/* Microaneurysms */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="font-semibold dark:text-dark-text">
+                    Microaneurismas
+                  </Label>
+                  <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
+                    Detecta y cuenta microaneurismas con análisis de distribución
+                  </p>
+                </div>
+                <Switch
+                  checked={config.advancedAnalysis?.microaneurysms ?? true}
+                  onCheckedChange={(checked) => updateAdvancedAnalysis({ microaneurysms: checked })}
+                />
+              </div>
+
+              {/* Optic Disc Cupping */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="font-semibold dark:text-dark-text">
+                    Excavación del Disco Óptico
+                  </Label>
+                  <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
+                    Calcula la relación copa/disco (C/D ratio) y distancias del anillo neuroretiniano
+                  </p>
+                </div>
+                <Switch
+                  checked={config.advancedAnalysis?.opticDiscCupping ?? true}
+                  onCheckedChange={(checked) => updateAdvancedAnalysis({ opticDiscCupping: checked })}
                 />
               </div>
             </div>

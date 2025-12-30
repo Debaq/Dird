@@ -91,6 +91,13 @@ export interface AIConclusionSettings {
   customPrompt: string;
 }
 
+export interface AdvancedAnalysisConfig {
+  circinatePattern: boolean; // Análisis de anillos circinados
+  hemorrhages: boolean; // Detección de hemorragias
+  microaneurysms: boolean; // Detección de microaneurismas
+  opticDiscCupping: boolean; // Excavación del disco óptico (cup/disc ratio)
+}
+
 export interface AppConfig {
   name: string;
   appearance: AppearanceConfig;
@@ -100,6 +107,7 @@ export interface AppConfig {
   processing: ProcessingConfig;
   report: ReportConfig;
   aiConclusion: AIConclusionSettings;
+  advancedAnalysis: AdvancedAnalysisConfig;
   activeGuideline: string; // ID of active clinical guideline
   pwa: {
     installPromptShown: boolean;
@@ -114,6 +122,7 @@ interface ConfigStore {
   updateProcessing: (updates: Partial<ProcessingConfig>) => void;
   updateReportConfig: (updates: Partial<ReportConfig>) => void;
   updateAIConclusion: (updates: Partial<AIConclusionSettings>) => void;
+  updateAdvancedAnalysis: (updates: Partial<AdvancedAnalysisConfig>) => void;
   updateAPIModels: (updates: Partial<APIModelConfig>) => void;
   updateLocalModels: (updates: Partial<LocalModelConfig>) => void;
   setModelSource: (source: ModelSource) => void;
@@ -206,6 +215,12 @@ export const DEFAULT_CONFIG: AppConfig = {
     riskFactors: true,
     customPrompt: ''
   },
+  advancedAnalysis: {
+    circinatePattern: true,
+    hemorrhages: true,
+    microaneurysms: true,
+    opticDiscCupping: true
+  },
   activeGuideline: 'icdr_2024', // Default to ICDR International standard
   pwa: {
     installPromptShown: false,
@@ -255,6 +270,14 @@ export const useConfigStore = create<ConfigStore>()(
           }
         })),
 
+      updateAdvancedAnalysis: (updates) =>
+        set((state) => ({
+          config: {
+            ...state.config,
+            advancedAnalysis: { ...state.config.advancedAnalysis, ...updates }
+          }
+        })),
+
       updateAPIModels: (updates) =>
         set((state) => ({
           config: {
@@ -285,7 +308,7 @@ export const useConfigStore = create<ConfigStore>()(
     }),
     {
       name: 'dird-config',
-      version: 8,
+      version: 10,
       migrate: (persistedState: any, version) => {
         let state = persistedState;
 
@@ -360,6 +383,32 @@ export const useConfigStore = create<ConfigStore>()(
                subtitle: 'Detección de Retinopatía Diabética y DMAE'
              }
            };
+        }
+
+        if (version < 9) {
+           state = {
+             ...state,
+             advancedAnalysis: DEFAULT_CONFIG.advancedAnalysis
+           };
+        }
+
+        if (version < 10) {
+          // Force re-apply advancedAnalysis to ensure all properties exist
+          state = {
+            ...state,
+            advancedAnalysis: {
+              ...DEFAULT_CONFIG.advancedAnalysis,
+              ...(state.advancedAnalysis || {})
+            }
+          };
+        }
+
+        // Final safety check: Ensure advancedAnalysis exists
+        if (!state.advancedAnalysis) {
+          state = {
+            ...state,
+            advancedAnalysis: DEFAULT_CONFIG.advancedAnalysis
+          };
         }
 
         return state;
