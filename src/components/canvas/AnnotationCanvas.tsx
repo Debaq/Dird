@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -12,11 +12,8 @@ import { classManager } from '@/lib/classes/class-manager';
 import ClassSelectionModal from './ClassSelectionModal';
 import { CanvasToolbar } from './CanvasToolbar';
 import { CanvasQuickClassSelector } from './CanvasQuickClassSelector';
-import { MeasurementsCanvasLayer } from './layers/MeasurementsCanvasLayer';
-import { AIDetectionsCanvasLayer } from './layers/AIDetectionsCanvasLayer';
-import { ManualAnnotationsCanvasLayer } from './layers/ManualAnnotationsCanvasLayer';
-import { AnalysisCanvasLayer } from './layers/AnalysisCanvasLayer';
-import { getClassName } from '@/lib/ai/class-translations';
+import { AnnotationsCanvasLayer } from './layers/AnnotationsCanvasLayer';
+import { OverlaysCanvasLayer } from './layers/OverlaysCanvasLayer';
 import { useConfigStore } from '@/stores/config-store';
 import { useCanvasStore } from '@/stores/canvas-store';
 import { inferenceService } from '@/lib/ai/inference-service';
@@ -25,6 +22,7 @@ import { useLandmarksAndQuadrants } from '@/hooks/useLandmarksAndQuadrants';
 import { classifyAndSaveImage } from '@/lib/analysis/image-classification-service';
 import { calibrateFromOpticDisc, createFallbackCalibration } from '@/lib/analysis/spatial-calibrator';
 import { detectMacularEdema, findFovea, findHardExudates } from '@/lib/analysis/macular-edema-detector';
+import * as CANVAS from './canvas-constants';
 
 interface AnnotationCanvasProps {
   image: ImageType;
@@ -71,7 +69,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   comparisonOpacity = 0.5,
   history,
 }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { confirm, ConfirmDialogComponent } = useConfirm();
   const { config } = useConfigStore();
   const { selectedAnnotationId, setSelectedAnnotation, showClassList, preSelectedClass, setPreSelectedClass } = useCanvasStore();
@@ -314,7 +312,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
    * Performs heavy tasks like optic disc refinement and DR re-classification
    * with a debounce to avoid freezing the UI during movement.
    */
-  const runPostProcessing = React.useCallback((imageId: number, detectionId: number, bbox: any, className: string) => {
+  const runPostProcessing = useCallback((imageId: number, detectionId: number, bbox: any, className: string) => {
     if (postProcessTimeoutRef.current) {
       clearTimeout(postProcessTimeoutRef.current);
     }
@@ -334,11 +332,23 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
       onAnnotationAdded?.();
       postProcessTimeoutRef.current = null;
-    }, 2500); // 2.5 seconds debounce - only runs after user stops moving
+    }, CANVAS.DEBOUNCE_POST_PROCESSING_MS);
   }, [onAnnotationAdded]);
 
   // Ref for debouncing the database update itself
   const dbUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (postProcessTimeoutRef.current) {
+        clearTimeout(postProcessTimeoutRef.current);
+      }
+      if (dbUpdateTimeoutRef.current) {
+        clearTimeout(dbUpdateTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Handle updates (drag/resize)
   const handleAnnotationChange = React.useCallback(async (id: number, newAttrs: any, isFinal = false) => {
@@ -410,7 +420,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           if (image.id) {
             runPostProcessing(image.id, id, bbox, detection.class);
           }
-        }, 500);
+        }, CANVAS.DEBOUNCE_DB_UPDATE_MS);
       }
 
     } catch (error) {
@@ -452,7 +462,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           // Dar un pequeño delay para que Konva termine de renderizar
           setTimeout(() => {
             setIsCanvasReady(true);
-          }, 100);
+          }, CANVAS.CANVAS_READY_DELAY_MS);
         };
         processedImg.src = processedImageCanvas.toDataURL();
       } else {
@@ -464,7 +474,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         // Dar un pequeño delay para que Konva termine de renderizar
         setTimeout(() => {
           setIsCanvasReady(true);
-        }, 100);
+        }, CANVAS.CANVAS_READY_DELAY_MS);
       }
     };
 
@@ -575,9 +585,9 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       y: (pointer.y - stage.y()) / oldScale,
     };
 
-    const newScale = e.evt.deltaY > 0 ? oldScale * 0.9 : oldScale * 1.1;
+    const newScale = e.evt.deltaY > 0 ? oldScale * CANVAS.ZOOM_WHEEL_FACTOR : oldScale / CANVAS.ZOOM_WHEEL_FACTOR;
     // Minimum zoom is 1.0 (the initial contain size), maximum is 5x
-    const clampedScale = Math.max(1.0, Math.min(5, newScale));
+    const clampedScale = Math.max(CANVAS.MIN_ZOOM_SCALE, Math.min(CANVAS.MAX_ZOOM_SCALE, newScale));
 
     setStageScale(clampedScale);
     setStagePos({
@@ -623,13 +633,13 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     const centerY = (effectiveBbox.y + effectiveBbox.height / 2) * scale + imageOffset.y;
 
     // Calculate zoom level to fit bbox with some margin
-    const marginFactor = isLandmark ? 2.0 : 2.5;
+    const marginFactor = isLandmark ? CANVAS.ZOOM_TO_LANDMARK_MARGIN_FACTOR : CANVAS.ZOOM_TO_BBOX_MARGIN_FACTOR;
     const targetZoomX = stageSize.width / (effectiveBbox.width * scale * marginFactor);
     const targetZoomY = stageSize.height / (effectiveBbox.height * scale * marginFactor);
     const targetZoom = Math.min(targetZoomX, targetZoomY);
 
     // Clamp zoom between 1 and 5
-    const newScale = Math.max(1.5, Math.min(5, targetZoom));
+    const newScale = Math.max(CANVAS.ZOOM_TO_BBOX_MIN_SCALE, Math.min(CANVAS.MAX_ZOOM_SCALE, targetZoom));
 
     // Calculate new position to center the bbox
     const newX = stageSize.width / 2 - centerX * newScale;
@@ -663,8 +673,8 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         const clickedOnImage = e.target.getClassName() === 'Image';
 
         // If already zoomed and clicking on empty area, reset zoom
-        if ((clickedOnEmpty || clickedOnImage) && stageScale > 1.1) {
-          setStageScale(1);
+        if ((clickedOnEmpty || clickedOnImage) && stageScale > CANVAS.ZOOM_ACTIVE_THRESHOLD) {
+          setStageScale(CANVAS.MIN_ZOOM_SCALE);
           setStagePos({ x: 0, y: 0 });
           return;
         }
@@ -682,8 +692,8 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
         // Zoom In (default) vs Zoom Out (Ctrl key)
         const isZoomOut = e.evt.ctrlKey;
-        const zoomFactor = isZoomOut ? 1 / 1.5 : 1.5;
-        const newScale = Math.max(1, Math.min(5, oldScale * zoomFactor));
+        const zoomFactor = isZoomOut ? 1 / CANVAS.ZOOM_CLICK_FACTOR : CANVAS.ZOOM_CLICK_FACTOR;
+        const newScale = Math.max(CANVAS.MIN_ZOOM_SCALE, Math.min(CANVAS.MAX_ZOOM_SCALE, oldScale * zoomFactor));
 
         setStageScale(newScale);
         setStagePos({
@@ -716,7 +726,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       const y = (canvasY - imageOffset.y) / scale;
 
       // Add or update landmark
-      addOrUpdateLandmark(selectedLandmarkType, x, y, 30);
+      addOrUpdateLandmark(selectedLandmarkType, x, y, CANVAS.DEFAULT_LANDMARK_RADIUS);
       return;
     }
 
@@ -862,7 +872,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       };
 
       // Minimum size threshold adjusted for zoom level (smaller threshold when zoomed in)
-      const minSize = 5 / stageScale;
+      const minSize = CANVAS.MIN_BBOX_SIZE_PX / stageScale;
 
       // Only save if the annotation has some size
       if (clampedBbox.width > minSize && clampedBbox.height > minSize) {
@@ -939,35 +949,6 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
     }
   }, [selectedAnnotationId, selectedMeasurementId, detections, manualAnnotations, handleDeleteAnnotation, handleDeleteMeasurement]);
 
-  // Helper to get effective measurement (with temp updates if dragging)
-  const getEffectiveMeasurement = (measurement: any) => {
-    const tempUpdate = tempMeasurementUpdates.get(measurement.id);
-    if (tempUpdate) {
-      return { ...measurement, ...tempUpdate };
-    }
-    return measurement;
-  };
-
-  // Helper to calculate measurement distance and DD
-  const calculateMeasurementMetrics = (originX: number, originY: number, destX: number, destY: number) => {
-    const dx = destX - originX;
-    const dy = destY - originY;
-    const distancePixels = Math.sqrt(dx * dx + dy * dy);
-
-    let distanceDD: number | undefined;
-    const opticDisc = detections.find(
-      d => d.class === 'optic_disc' || d.class === 'optic disc'
-    );
-    if (opticDisc) {
-      const discDiameter = (opticDisc.bbox.width + opticDisc.bbox.height) / 2;
-      // Proteger contra división por cero
-      if (discDiameter > 0 && isFinite(discDiameter)) {
-        distanceDD = distancePixels / discDiameter;
-      }
-    }
-
-    return { distancePixels, distanceDD };
-  };
 
   // Update measurement position during drag (temporary, visual only)
   const handleMeasurementDragMove = (
@@ -1002,6 +983,27 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
       newMap.set(measurementId, { originX, originY, destinationX, destinationY });
       return newMap;
     });
+  };
+
+  // Helper to calculate measurement distance and DD
+  const calculateMeasurementMetrics = (originX: number, originY: number, destX: number, destY: number) => {
+    const dx = destX - originX;
+    const dy = destY - originY;
+    const distancePixels = Math.sqrt(dx * dx + dy * dy);
+
+    let distanceDD: number | undefined;
+    const opticDisc = detections.find(
+      d => d.class === 'optic_disc' || d.class === 'optic disc'
+    );
+    if (opticDisc) {
+      const discDiameter = (opticDisc.bbox.width + opticDisc.bbox.height) / 2;
+      // Proteger contra división por cero
+      if (discDiameter > 0 && isFinite(discDiameter)) {
+        distanceDD = distancePixels / discDiameter;
+      }
+    }
+
+    return { distancePixels, distanceDD };
   };
 
   // Update measurement position permanently (on drag end)
@@ -1310,7 +1312,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
 
         // Move by 1 pixel relative to image resolution (finer control)
         // Adjust delta based on shift key for faster movement (e.g., 10 pixels)
-        const delta = e.shiftKey ? 10 : 1;
+        const delta = e.shiftKey ? CANVAS.KEYBOARD_MOVE_DELTA_FAST : CANVAS.KEYBOARD_MOVE_DELTA_NORMAL;
         
         let newX = detection.bbox.x;
         let newY = detection.bbox.y;
@@ -1401,7 +1403,7 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           return 'crosshair';
         }
         // Si ya estás con zoom y no estás sobre una detección, mostrar que puedes resetear
-        if (stageScale > 1.1 && !isCtrlPressed) {
+        if (stageScale > CANVAS.ZOOM_ACTIVE_THRESHOLD && !isCtrlPressed) {
           return 'zoom-out';
         }
         return isCtrlPressed ? 'zoom-out' : 'zoom-in';
@@ -1509,38 +1511,14 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           )}
         </Layer>
 
-        {/* AI Detections Layer (includes AI segmentations) */}
-        <AIDetectionsCanvasLayer
-          visible={aiDetectionsLayer?.visible ?? true}
-          opacity={aiDetectionsLayer?.opacity ?? 1}
+        {/* Consolidated Annotations Layer (AI + Manual detections & segmentations) */}
+        <AnnotationsCanvasLayer
+          aiDetectionsVisible={aiDetectionsLayer?.visible ?? true}
+          aiDetectionsOpacity={aiDetectionsLayer?.opacity ?? 1}
           detections={detections}
           segmentations={segmentations}
-          segmentationImages={segmentationImages}
-          konvaImageWidth={konvaImage?.width || 0}
-          konvaImageHeight={konvaImage?.height || 0}
-          scale={scale}
-          imageOffset={imageOffset}
-          activeTool={activeTool}
-          selectedAnnotationId={selectedAnnotationId}
-          hoveredDetectionId={hoveredDetectionId}
-          showLabels={aiDetectionsLayer?.showLabels ?? true}
-          landmarks={landmarks}
-          isCanvasReady={isCanvasReady}
-          onHover={setHoveredDetectionId}
-          onSelect={(id) => setSelectedAnnotation(id)}
-          onDragStart={handleDragStart}
-          onUpdate={async (id, attrs, isFinal) => {
-             await handleAnnotationChange(id, attrs, isFinal);
-             if (isFinal) recordMoveHistory(id);
-          }}
-          onDelete={handleDeleteAnnotation}
-          onZoomToBbox={zoomToBbox}
-        />
-
-        {/* Manual Annotations Layer (includes manual segmentations) */}
-        <ManualAnnotationsCanvasLayer
-          visible={manualAnnotationsLayer?.visible ?? true}
-          opacity={manualAnnotationsLayer?.opacity ?? 1}
+          manualAnnotationsVisible={manualAnnotationsLayer?.visible ?? true}
+          manualAnnotationsOpacity={manualAnnotationsLayer?.opacity ?? 1}
           manualAnnotations={manualAnnotations}
           manualSegmentations={manualSegmentations}
           segmentationImages={segmentationImages}
@@ -1551,7 +1529,8 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           activeTool={activeTool}
           selectedAnnotationId={selectedAnnotationId}
           hoveredDetectionId={hoveredDetectionId}
-          showLabels={manualAnnotationsLayer?.showLabels ?? true}
+          showAILabels={aiDetectionsLayer?.showLabels ?? true}
+          showManualLabels={manualAnnotationsLayer?.showLabels ?? true}
           landmarks={landmarks}
           isCanvasReady={isCanvasReady}
           newAnnotation={newAnnotation}
@@ -1567,39 +1546,33 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           onZoomToBbox={zoomToBbox}
         />
 
-        {/* Ruler Measurements Layer */}
-        <MeasurementsCanvasLayer
-          visible={measurementsLayer?.visible ?? true}
-          opacity={measurementsLayer?.opacity ?? 1}
+        {/* Consolidated Overlays Layer (Measurements + Analysis) */}
+        <OverlaysCanvasLayer
+          measurementsVisible={measurementsLayer?.visible ?? true}
+          measurementsOpacity={measurementsLayer?.opacity ?? 1}
           measurements={measurements}
           detections={detections}
           activeTool={activeTool}
           rulerOrigin={rulerOrigin}
           rulerDestination={rulerDestination}
-          scale={scale}
-          imageOffset={imageOffset}
-          stageScale={stageScale}
-          selectedMeasurementId={selectedMeasurementId}
+          selectedMeasurementId={selectedMeasurementId ?? null}
           tempMeasurementUpdates={tempMeasurementUpdates}
-          onSelect={onSelectMeasurement}
-          onDelete={handleDeleteMeasurement}
-          onDragMove={handleMeasurementDragMove}
-          onDragEnd={handleMeasurementDrag}
-        />
-
-        {/* Quadrant Grid Overlay */}
-        <AnalysisCanvasLayer
-          imageOffset={imageOffset}
-          scale={scale}
+          onSelectMeasurement={onSelectMeasurement ?? (() => {})}
+          onDeleteMeasurement={handleDeleteMeasurement}
+          onMeasurementDragMove={handleMeasurementDragMove}
+          onMeasurementDragEnd={handleMeasurementDrag}
           quadrantsVisible={quadrantsLayer?.visible ?? true}
           quadrantsOpacity={quadrantsLayer?.opacity ?? 0.5}
+          macularZonesVisible={macularZonesLayer?.visible ?? false}
+          macularZonesOpacity={macularZonesLayer?.opacity ?? 0.7}
+          circinateRingsVisible={circinateRingsLayer?.visible ?? false}
           landmarks={landmarks}
           konvaImageWidth={konvaImage?.width || 0}
           konvaImageHeight={konvaImage?.height || 0}
-          macularZonesVisible={macularZonesLayer?.visible ?? false}
-          macularZonesOpacity={macularZonesLayer?.opacity ?? 0.7}
           macularEdemaData={macularEdemaData}
-          circinateRingsVisible={circinateRingsLayer?.visible ?? false}
+          scale={scale}
+          imageOffset={imageOffset}
+          stageScale={stageScale}
         />
 
         {/* Transformer Layer */}

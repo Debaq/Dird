@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Layer, Group, Circle, Line, Text } from 'react-konva';
 import type { CanvasTool } from '../ToolPanel';
 

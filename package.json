@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/generate-version.cjs && tsc && vite build",
+    "build": "node scripts/generate-version.cjs && tsc && vite build && node scripts/generate-htaccess.cjs",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "check-config": "node scripts/check-config.cjs"
@@ -29,6 +29,7 @@
     "i18next": "^24.2.0",
     "i18next-browser-languagedetector": "^8.0.2",
     "i18next-http-backend": "^2.6.2",
+    "js-dos": "^8.3.20",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "jszip": "^3.10.1",

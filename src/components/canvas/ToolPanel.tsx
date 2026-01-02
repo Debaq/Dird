@@ -29,9 +29,9 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
     { id: 'select' as CanvasTool, icon: MousePointer2, label: t('canvas.tools.select') },
     { id: 'bbox' as CanvasTool, icon: Square, label: t('canvas.tools.bbox') },
     { id: 'landmark' as CanvasTool, icon: Target, label: t('canvas.tools.landmark') || 'Landmarks' },
-    { id: 'cup' as CanvasTool, icon: Eye, label: 'Dibujar Copa' },
+    { id: 'cup' as CanvasTool, icon: Eye, label: t('canvas.tools.cup') || 'Dibujar Copa' },
     { id: 'ruler' as CanvasTool, icon: Ruler, label: t('canvas.tools.ruler') },
-    { id: 'image-processing' as CanvasTool, icon: Wand2, label: 'Procesamiento Avanzado' },
+    { id: 'image-processing' as CanvasTool, icon: Wand2, label: t('canvas.tools.imageProcessing') || 'Procesamiento Avanzado' },
     { id: 'eraser' as CanvasTool, icon: Eraser, label: t('canvas.tools.eraser') },
     { id: 'pan' as CanvasTool, icon: Move, label: t('canvas.tools.pan') },
     { id: 'zoom' as CanvasTool, icon: ZoomIn, label: t('canvas.tools.zoom') },
@@ -178,7 +178,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
       {activeTool === 'cup' && (
         <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-100">
           <p className="text-[10px] leading-tight text-blue-800">
-            Haz clic para abrir el editor de copa del disco óptico
+            {t('canvas.tools.cupInstruction') || 'Haz clic para abrir el editor de copa del disco óptico'}
           </p>
         </div>
       )}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Landmark, LandmarkType } from '@/types/annotations';
 import type { Detection } from '@/lib/db/schema';
 import { db } from '@/lib/db/schema';
@@ -20,12 +20,7 @@ export function useLandmarksAndQuadrants({
   const [landmarks, setLandmarks] = useState<Landmark[]>([]);
   const [selectedLandmarkType, setSelectedLandmarkType] = useState<LandmarkType>('optic_disc');
 
-  // Load landmarks from detections (AI) and manual placements (from database)
-  useEffect(() => {
-    loadLandmarks();
-  }, [imageId, detections]);
-
-  const loadLandmarks = async () => {
+  const loadLandmarks = useCallback(async () => {
     const newLandmarks: Landmark[] = [];
 
     // 1. Load landmarks from AI detections
@@ -81,7 +76,12 @@ export function useLandmarksAndQuadrants({
     }
 
     setLandmarks(newLandmarks);
-  };
+  }, [imageId, detections]);
+
+  // Load landmarks from detections (AI) and manual placements (from database)
+  useEffect(() => {
+    loadLandmarks();
+  }, [loadLandmarks]);
 
   // Calculate quadrant analysis
   const quadrantAnalysis: QuadrantAnalysis | null = useMemo(() => {
