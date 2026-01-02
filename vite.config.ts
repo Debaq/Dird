@@ -11,7 +11,7 @@ import path from 'path';
 //   '/dird/'      → para tmeduca.org/dird/
 //   '/'           → para raíz del dominio
 // ============================================
-const DEPLOY_BASE_URL = '/academia/';
+const DEPLOY_BASE_URL = '/dird/';
 // ============================================
 
 export default defineConfig(({ mode }) => ({
