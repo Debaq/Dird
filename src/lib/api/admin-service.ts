@@ -378,3 +378,44 @@ export async function getActiveBeacons(): Promise<Beacon[]> {
     throw error;
   }
 }
+
+/**
+ * Download contributions as .tix file (Annotix format)
+ */
+export async function downloadTixPackage(
+  installationToken?: string
+): Promise<void> {
+  try {
+    const url = new URL(API_ENDPOINTS.ADMIN_DOWNLOAD_TIX);
+    if (installationToken) {
+      url.searchParams.append('installation_token', installationToken);
+    }
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    // Get the blob
+    const blob = await response.blob();
+
+    // Create download link
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = `dird_contributions_${
+      installationToken ? installationToken.substring(0, 8) : 'all'
+    }_${new Date().toISOString().split('T')[0]}.tix`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+  } catch (error) {
+    console.error('Download TIX error:', error);
+    throw error;
+  }
+}

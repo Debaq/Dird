@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { Github, Coffee, Send, Image as ImageIcon, MessageSquare, BookOpen, BrainCircuit, AlertTriangle } from 'lucide-react';
+import { Github, Coffee, Send, Image as ImageIcon, MessageSquare, BookOpen, BrainCircuit, AlertTriangle, Star } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { db, type Image, type PendingContribution, type ImageClassification } from '@/lib/db/schema';
 import { API_ENDPOINTS } from '@/config/api';
 import { getInstallationToken } from '@/lib/utils/installation';
+import { paintedPixelsToMask } from '@/lib/utils/segmentation-converter';
 
 const ImageThumbnail: React.FC<{ image: Image }> = ({ image }) => {
   const [src, setSrc] = useState<string>('');
@@ -89,6 +90,52 @@ const ContributionMenu: React.FC = () => {
     setComment('');
   };
 
+  const handleMarkAllModified = async () => {
+    try {
+      // Get all images
+      const allImages = await db.images.toArray();
+
+      let markedCount = 0;
+      for (const img of allImages) {
+        // Check if image has manual detections or manual segmentations
+        const manualDetections = await db.detections
+          .where({ imageId: img.id!, type: 'manual' })
+          .count();
+
+        const manualSegmentations = await db.segmentations
+          .where({ imageId: img.id!, type: 'manual' })
+          .count();
+
+        const hasManualAnnotations = manualDetections > 0 || manualSegmentations > 0;
+
+        if (hasManualAnnotations) {
+          // Check if already marked
+          const existing = await db.pendingContributions
+            .where({ type: 'image', referenceId: img.id! })
+            .first();
+
+          if (!existing) {
+            await db.pendingContributions.add({
+              type: 'image',
+              referenceId: img.id!,
+              status: 'pending',
+              createdAt: new Date(),
+            });
+            markedCount++;
+          }
+        }
+      }
+
+      if (markedCount > 0) {
+        toast.success(`${markedCount} imágenes modificadas marcadas para contribuir`);
+      } else {
+        toast.info('No se encontraron imágenes con modificaciones manuales');
+      }
+    } catch (error) {
+      toast.error('Error al marcar imágenes');
+    }
+  };
+
   const handleSubmitContributions = async () => {
     if (!acceptedTerms) return;
     if (totalContributions === 0) return;
@@ -108,14 +155,102 @@ const ContributionMenu: React.FC = () => {
           const img = await db.images.get(contrib.referenceId);
           if (!img) throw new Error('Image not found');
 
+          // Get session info for metadata
+          const session = await db.sessions.get(img.sessionId);
+
+          // Gather all annotations for this image
           const detections = await db.detections.where('imageId').equals(img.id!).toArray();
+          const segmentations = await db.segmentations.where('imageId').equals(img.id!).toArray();
+          const measurements = await db.measurements.where('imageId').equals(img.id!).toArray();
+          const classification = await db.imageClassifications.where('imageId').equals(img.id!).first();
+
+          // Convert painted pixels from detections to segmentations
+          const paintedSegmentations: any[] = [];
+          for (const detection of detections) {
+            if (detection.metadata?.paintedPixels && Array.isArray(detection.metadata.paintedPixels)) {
+              const maskData = paintedPixelsToMask(
+                detection.metadata.paintedPixels,
+                img.width,
+                img.height
+              );
+
+              if (maskData) {
+                paintedSegmentations.push({
+                  type: 'manual',
+                  class: detection.class, // optic_disc or optic_cup
+                  maskData: maskData,
+                  confidence: null,
+                  customLabel: `Painted ${detection.class}`,
+                  source: 'painted_pixels'
+                });
+              }
+            }
+          }
+
+          // Build complete annotation data
+          const annotationData = {
+            image: {
+              filename: img.filename,
+              eyeType: img.eyeType,
+              width: img.width,
+              height: img.height,
+              uploadedAt: img.uploadedAt
+            },
+            detections: detections.map(d => ({
+              type: d.type,
+              bbox: d.bbox,
+              class: d.class,
+              confidence: d.confidence,
+              customLabel: d.customLabel,
+              metadata: d.metadata
+            })),
+            segmentations: [
+              ...segmentations.map(s => ({
+                type: s.type,
+                class: s.class,
+                maskData: s.maskData,
+                confidence: s.confidence,
+                customLabel: s.customLabel
+              })),
+              ...paintedSegmentations
+            ],
+            measurements: measurements.map(m => ({
+              originX: m.originX,
+              originY: m.originY,
+              destinationX: m.destinationX,
+              destinationY: m.destinationY,
+              distancePixels: m.distancePixels,
+              distanceDD: m.distanceDD
+            })),
+            classification: classification ? {
+              eyeType: classification.eyeType,
+              severity: classification.severity,
+              confidence: classification.confidence,
+              lesions: classification.lesions,
+              guideline: classification.guideline,
+              guidelineName: classification.guidelineName,
+              guidelineVersion: classification.guidelineVersion,
+              treatments: classification.treatments,
+              followupDays: classification.followupDays,
+              urgency: classification.urgency,
+              manuallyModified: classification.manuallyModified
+            } : null
+          };
 
           const formData = new FormData();
           formData.append('type', 'image');
           formData.append('installation_token', installationToken);
+
+          // Add session metadata
+          if (session) {
+            formData.append('session_id', session.id!.toString());
+            formData.append('session_name', session.name || `Session ${session.sessionNumber}`);
+            formData.append('session_date', session.date.toISOString());
+          }
+
           formData.append('image', img.originalBlob, img.filename);
 
-          const jsonBlob = new Blob([JSON.stringify(detections, null, 2)], { type: 'application/json' });
+          const jsonBlob = new Blob([JSON.stringify(annotationData, null, 2)], { type: 'application/json' });
           formData.append('json', jsonBlob, `${img.filename.split('.')[0]}.json`);
 
           const response = await fetch(API_ENDPOINTS.CONTRIBUTE, {
@@ -284,6 +419,28 @@ const ContributionMenu: React.FC = () => {
             {t('contribution.donation.button')}
           </Button>
         </a>
+      </Card>
+
+      {/* Quick Action: Mark All Modified */}
+      <Card className="p-6 mb-8 dark:bg-dark-surface dark:border-coal-700 border-l-4 border-l-blue-500">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-coal-800 dark:text-dark-text mb-2 flex items-center gap-2">
+              <Star className="h-5 w-5 text-blue-600" />
+              Marcar Todas las Modificadas
+            </h2>
+            <p className="text-sm text-smoke-600 dark:text-gray-400">
+              Marca automáticamente todas las imágenes que tienen anotaciones manuales (detecciones, segmentaciones pintadas o modificaciones).
+            </p>
+          </div>
+          <Button
+            onClick={handleMarkAllModified}
+            className="bg-blue-500 hover:bg-blue-600 text-white ml-4"
+          >
+            <ImageIcon className="h-4 w-4 mr-2" />
+            Marcar Todas
+          </Button>
+        </div>
       </Card>
 
       {/* Pending Contributions Section */}

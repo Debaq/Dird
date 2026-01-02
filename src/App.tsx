@@ -24,10 +24,15 @@ import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
 import { useMessagePolling } from '@/hooks/useMessagePolling';
 import { classManager } from '@/lib/classes/class-manager';
 import { waitForOpenCV } from '@/lib/ai/optic-disc-refiner';
+import { DoomEasterEgg } from '@/components/ui/DoomEasterEgg';
 
 function App() {
   const { t } = useTranslation();
-  const basename = import.meta.env.PROD ? '/dird' : '/';
+  // Usa VITE_BASE_URL de las variables de entorno, con fallback a BASE_URL (de vite.config)
+  // En desarrollo siempre usa '/'
+  const basename = import.meta.env.PROD
+    ? (import.meta.env.BASE_URL || '/dird')
+    : '/';
   const [isInitializing, setIsInitializing] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress>({
     step: 'init',
@@ -150,6 +155,7 @@ function App() {
         closeButton
         duration={4000}
       />
+      <DoomEasterEgg />
       <LanguageSync />
       <DocumentTitleSync />
       <Routes>

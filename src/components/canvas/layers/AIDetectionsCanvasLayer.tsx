@@ -235,69 +235,21 @@ export const AIDetectionsCanvasLayer: React.FC<AIDetectionsCanvasLayerProps> = (
                     rect.y(circle.y() - h / 2);
                   }
                 }}
-                onDragEnd={() => {
-                  // We need to find the rect to get its new position
-                  // But we don't have direct ref access easily here without context
-                  // Actually, the `rect` in onDragMove was accessed via stage
-                  // We can do the same here
-                  // However, onUpdate expects the final rect attrs.
-                  // This part is tricky without the ref to the specific node easily.
-                  // But wait, the Rect itself is updated by the drag move of the circle?
-                  // Yes, lines 205-207: rect.x(...), rect.y(...)
-                  // So we just need to read the rect's properties.
-                  // We can use a query selector on the stage or pass a ref...
-                  // Or simpler: The user interaction updates the RECT node directly.
-                  // So we can find the rect node using ID.
+                onDragEnd={(e) => {
+                  const circle = e.target;
+                  const stage = circle.getStage();
+                  const rect = stage?.findOne('#det-' + detection.id);
+                  if (rect && detection.id) {
+                    onUpdate(detection.id, {
+                      x: rect.x(),
+                      y: rect.y(),
+                      width: rect.width() * rect.scaleX(),
+                      height: rect.height() * rect.scaleY()
+                    }, true);
+                  }
                 }}
               />
             )}
-            
-             {/* 
-             Fix for Circle DragEnd:
-             In the original code, `stageRef.current?.findOne('#det-' + detection.id)` was used.
-             Here we don't have stageRef. 
-             But `e.target` is the Circle. `e.target.getStage()` gives us the stage.
-             So we can do:
-             */}
-             {isSelected && !isLandmarkClass && (
-               /* Re-rendering the circle to attach the correct onDragEnd handler */
-               <Circle
-                  key={`handle-${detection.id}`} 
-                  /* using key to ensure it's treated as the same element if needed, though usually not needed strictly for this fix */
-                  x={(detection.bbox.x * scale + imageOffset.x) + (detection.bbox.width * scale) / 2}
-                  y={(detection.bbox.y * scale + imageOffset.y) + (detection.bbox.height * scale) / 2}
-                  radius={5}
-                  fill="white"
-                  stroke="black"
-                  strokeWidth={1}
-                  draggable
-                  onDragStart={() => detection.id && onDragStart(detection.id)}
-                  onDragMove={(e) => {
-                    const circle = e.target;
-                    const stage = circle.getStage();
-                    const rect = stage?.findOne('#det-' + detection.id);
-                    if (rect) {
-                      const w = rect.width() * rect.scaleX();
-                      const h = rect.height() * rect.scaleY();
-                      rect.x(circle.x() - w / 2);
-                      rect.y(circle.y() - h / 2);
-                    }
-                  }}
-                  onDragEnd={(e) => {
-                    const circle = e.target;
-                    const stage = circle.getStage();
-                    const rect = stage?.findOne('#det-' + detection.id);
-                    if (rect && detection.id) {
-                      onUpdate(detection.id, {
-                        x: rect.x(),
-                        y: rect.y(),
-                        width: rect.width() * rect.scaleX(),
-                        height: rect.height() * rect.scaleY()
-                      }, true);
-                    }
-                  }}
-               />
-             )}
 
 
             {showLabels && !isLandmarkClass && (

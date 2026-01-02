@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { RefreshCw, Download, Image as ImageIcon, FileJson, BookOpen, BrainCircuit } from 'lucide-react';
+import { RefreshCw, Download, Image as ImageIcon, FileJson, BookOpen, BrainCircuit, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getContributions } from '@/lib/api/admin-service';
+import { getContributions, downloadTixPackage } from '@/lib/api/admin-service';
 import { API_BASE_URL } from '@/config/api';
 import type { Contribution } from '@/types/admin';
 
@@ -11,6 +11,7 @@ export function ContributionsList() {
   const [contributions, setContributions] = useState<Contribution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isDownloadingTix, setIsDownloadingTix] = useState(false);
 
   const loadContributions = async (showToast = false) => {
     try {
@@ -26,6 +27,19 @@ export function ContributionsList() {
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
+    }
+  };
+
+  const handleDownloadTix = async (installationToken?: string) => {
+    try {
+      setIsDownloadingTix(true);
+      await downloadTixPackage(installationToken);
+      toast.success('Paquete .tix descargado exitosamente');
+    } catch (error) {
+      toast.error('Error al descargar paquete .tix');
+      console.error(error);
+    } finally {
+      setIsDownloadingTix(false);
     }
   };
 
@@ -107,16 +121,33 @@ export function ContributionsList() {
             Total: {contributions.length}
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => loadContributions(true)}
-          disabled={isRefreshing}
-          className="gap-2"
-        >
-          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Actualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleDownloadTix()}
+            disabled={isDownloadingTix || contributions.length === 0}
+            className="gap-2"
+            title="Descargar todas las contribuciones en formato .tix (Annotix)"
+          >
+            {isDownloadingTix ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <Package className="w-4 h-4" />
+            )}
+            Exportar .tix
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => loadContributions(true)}
+            disabled={isRefreshing}
+            className="gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Actualizar
+          </Button>
+        </div>
       </div>
 
       {contributions.length === 0 ? (
@@ -256,9 +287,10 @@ export function ContributionsList() {
         <div className="text-sm text-smoke-700 dark:text-dark-textSecondary">
           <strong>ℹ️ Información:</strong>
           <ul className="list-disc ml-5 mt-1 space-y-1">
-            <li><strong>Imágenes:</strong> Incluyen la imagen original y un JSON con anotaciones.</li>
+            <li><strong>Imágenes:</strong> Incluyen la imagen original y un JSON con anotaciones (detecciones, segmentaciones, clasificación y mediciones).</li>
             <li><strong>Protocolos:</strong> Archivos de configuración de guías clínicas (JSON).</li>
             <li><strong>Conclusiones:</strong> Resultados de IA con correcciones del usuario (JSON).</li>
+            <li><strong>Exportar .tix:</strong> Genera un archivo ZIP compatible con Annotix que incluye todas las imágenes originales + annotations.json con metadata del proyecto y anotaciones completas.</li>
           </ul>
         </div>
       </div>

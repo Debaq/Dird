@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowLeft, Layers, Wrench, Coffee, Star, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Layers, Wrench, Coffee, Star, Heart, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -31,6 +32,8 @@ import { analyzeOpticDiscCupping } from '@/lib/analysis/optic-disc-cupping-detec
 import { useConfigStore } from '@/stores/config-store';
 import { useImageProcessingStore } from '@/stores/image-processing-store';
 import { logger } from '@/utils/logger';
+import { useAdvancedEditorMode } from '@/hooks/useAdvancedEditorMode';
+import { AdvancedEditorLayout, AdvancedEditorDialog } from './advanced-editor';
 
 const DEFAULT_LAYERS: CanvasLayer[] = [
   { id: 'original', name: 'canvas.layers.original', visible: true, opacity: 1, locked: true, zIndex: 0 },
@@ -110,6 +113,18 @@ const ImageAnalyzer: React.FC = () => {
   const [processedImageCanvas, setProcessedImageCanvas] = useState<HTMLCanvasElement | null>(null);
   const { selectedAnnotationId, setSelectedAnnotation } = useCanvasStore();
   const [selectedMeasurementId, setSelectedMeasurementId] = useState<number | null>(null);
+
+  // Advanced Editor Mode
+  const advancedEditor = useAdvancedEditorMode();
+  const [showAdvancedDialog, setShowAdvancedDialog] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(window.matchMedia('(min-width: 1280px)').matches);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 1280px)');
+    const handleChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   // History State
   const [detectionHistory, setDetectionHistory] = useState<HistoryEntry[]>([]);
@@ -534,7 +549,7 @@ const ImageAnalyzer: React.FC = () => {
     [image?.id]
   );
 
-  const handleMark = async () => {
+  const handleMarkImage = async () => {
     if (!image) return;
 
     // Check if already exists
@@ -550,17 +565,78 @@ const ImageAnalyzer: React.FC = () => {
       status: 'pending',
       createdAt: new Date(),
     });
+    toast.success(t('contribution.dialog.imageMarked'));
     setShowContributionDialog(false);
+  };
+
+  const handleMarkSession = async () => {
+    if (!session) return;
+
+    try {
+      // Get all images from this session
+      const sessionImages = await db.images.where('sessionId').equals(session.id!).toArray();
+
+      let markedCount = 0;
+      for (const img of sessionImages) {
+        // Check if already marked
+        const existing = await db.pendingContributions
+          .where({ type: 'image', referenceId: img.id! })
+          .first();
+
+        if (!existing) {
+          await db.pendingContributions.add({
+            type: 'image',
+            referenceId: img.id!,
+            status: 'pending',
+            createdAt: new Date(),
+          });
+          markedCount++;
+        }
+      }
+
+      toast.success(t('contribution.dialog.sessionMarked', { count: markedCount }));
+      setShowContributionDialog(false);
+    } catch (error) {
+      toast.error('Error al marcar sesión');
+    }
   };
 
   const handleUnmark = async () => {
     if (!image || !existingContribution) return;
     await db.pendingContributions.delete(existingContribution.id!);
+    toast.success(t('contribution.dialog.unmarked'));
     setShowContributionDialog(false);
   };
 
   const isMarkedForContribution = existingContribution && existingContribution.status === 'pending';
   const showContributionPrompt = manualDetections.length > 0 || isMarkedForContribution;
+
+  // Handle tool change with advanced mode detection
+  const handleToolChange = (tool: CanvasTool) => {
+    if (tool === 'image-processing' && isDesktop && !advancedEditor.state.isActive) {
+      setShowAdvancedDialog(true);
+      return;
+    }
+    setActiveTool(tool);
+  };
+
+  // Advanced mode handlers
+  const handleAdvancedModeConfirm = () => {
+    setShowAdvancedDialog(false);
+    advancedEditor.enterAdvancedMode();
+    setActiveTool('image-processing');
+  };
+
+  const handleAdvancedModeCancel = () => {
+    setShowAdvancedDialog(false);
+    // Activar la herramienta de procesamiento normal
+    setActiveTool('image-processing');
+  };
+
+  const handleAdvancedModeExit = () => {
+    advancedEditor.exitAdvancedMode();
+    setActiveTool('select');
+  };
 
   if (!image) {
     return (
@@ -573,14 +649,18 @@ const ImageAnalyzer: React.FC = () => {
     );
   }
 
-  return (
-    <div className="flex flex-col h-[100vh] xl:h-[calc(100vh-11rem)] relative bg-ice dark:bg-gray-900">
+  const mainContent = (
+    <div className={cn(
+      "flex flex-col h-[100vh] xl:h-[calc(100vh-11rem)] relative bg-ice dark:bg-gray-900",
+      advancedEditor.state.isActive && "h-full xl:h-full"
+    )}>
       {/* Header - Visible on Mobile (Portrait & Landscape) and Desktop */}
-      <div className={cn(
-        "flex items-center justify-between mb-2 flex-shrink-0",
-        // Add padding on mobile because MainLayout(fullScreenOnMobile) removes it
-        "p-2 xl:p-0 xl:mb-6"
-      )}>
+      {!advancedEditor.state.isActive && (
+        <div className={cn(
+          "flex items-center justify-between mb-2 flex-shrink-0",
+          // Add padding on mobile because MainLayout(fullScreenOnMobile) removes it
+          "p-2 xl:p-0 xl:mb-6"
+        )}>
         <div className="flex items-center space-x-4 overflow-hidden">
           <Button
             variant="outline"
@@ -658,16 +738,16 @@ const ImageAnalyzer: React.FC = () => {
            </Button>
         </div>
       </div>
+      )}
 
       {/* Mobile Collapsible Panels */}
+      {!advancedEditor.state.isActive && (
       <div className="xl:hidden px-2 flex-shrink-0 relative z-10">
          {showMobileTools && (
            <div className="absolute top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg p-2 rounded-b-lg border-t border-coal-100 dark:border-gray-700">
               <ToolPanel
                 activeTool={activeTool}
-                onToolChange={(tool) => {
-                  setActiveTool(tool);
-                }}
+                onToolChange={handleToolChange}
                 disabled={session?.locked}
                 selectedLandmarkType={selectedLandmarkType}
                 onLandmarkTypeChange={setSelectedLandmarkType}
@@ -695,6 +775,7 @@ const ImageAnalyzer: React.FC = () => {
            </div>
          )}
       </div>
+      )}
 
       {/* Main Content */}
       <div className="flex flex-col xl:grid xl:grid-cols-4 gap-6 flex-grow overflow-hidden relative">
@@ -765,13 +846,14 @@ const ImageAnalyzer: React.FC = () => {
         </div>
 
         {/* Desktop Side Panel */}
-        <div className="hidden xl:block h-full overflow-hidden pr-2">
+        {!advancedEditor.state.isActive && (
+          <div className="hidden xl:block h-full overflow-hidden pr-2">
           <div className="flex flex-col h-full space-y-3">
             {/* Fixed Tools Section - Always visible */}
             <div className="flex-shrink-0 space-y-3">
               <ToolPanel
                 activeTool={activeTool}
-                onToolChange={setActiveTool}
+                onToolChange={handleToolChange}
                 disabled={session?.locked}
                 selectedLandmarkType={selectedLandmarkType}
                 onLandmarkTypeChange={setSelectedLandmarkType}
@@ -809,6 +891,7 @@ const ImageAnalyzer: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* Optic Disc Cup Drawer Modal */}
@@ -827,7 +910,7 @@ const ImageAnalyzer: React.FC = () => {
       />
 
       <Dialog open={showContributionDialog} onOpenChange={setShowContributionDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-amber-600">
               <Star className="w-5 h-5 fill-current" />
@@ -837,37 +920,104 @@ const ImageAnalyzer: React.FC = () => {
               {t('contribution.dialog.description')}
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-3">
+          <div className="py-4 space-y-4">
             <p className="text-sm text-smoke-600 dark:text-gray-300">
               {t('contribution.dialog.body1')}
             </p>
             <p className="text-sm text-smoke-600 dark:text-gray-300 italic">
               {t('contribution.dialog.body2')}
             </p>
+
+            {!isMarkedForContribution && (
+              <div className="border-t border-smoke-200 dark:border-coal-700 pt-4 space-y-3">
+                <p className="text-sm font-medium text-coal-800 dark:text-gray-200">
+                  {t('contribution.dialog.selectLevel')}
+                </p>
+
+                <div className="space-y-2">
+                  <Button
+                    className="w-full justify-start gap-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200"
+                    onClick={handleMarkImage}
+                  >
+                    <ImageIcon className="w-4 h-4" />
+                    {t('contribution.dialog.markThisImage')}
+                  </Button>
+
+                  <Button
+                    className="w-full justify-start gap-2 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200"
+                    onClick={handleMarkSession}
+                  >
+                    <Star className="w-4 h-4" />
+                    {t('contribution.dialog.markWholeSession')}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowContributionDialog(false)}>
               {t('ui.cancel')}
             </Button>
-            {isMarkedForContribution ? (
+            {isMarkedForContribution && (
               <Button
                 variant="destructive"
                 onClick={handleUnmark}
               >
                 {t('contribution.dialog.unmark')}
               </Button>
-            ) : (
-              <Button 
-                className="bg-amber-500 hover:bg-amber-600 text-white"
-                onClick={handleMark}
-              >
-                {t('contribution.dialog.mark')}
-              </Button>
             )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
+  );
+
+  return (
+    <>
+      <AdvancedEditorDialog
+        isOpen={showAdvancedDialog}
+        onConfirm={handleAdvancedModeConfirm}
+        onCancel={handleAdvancedModeCancel}
+      />
+
+      <AdvancedEditorLayout
+        isActive={advancedEditor.state.isActive}
+        activeTool={activeTool}
+        layers={layers}
+        canUndo={historyIndex >= 0}
+        canRedo={historyIndex < detectionHistory.length - 1}
+        showGrid={advancedEditor.state.showGrid}
+        showRulers={advancedEditor.state.showRulers}
+        snapEnabled={advancedEditor.state.snapToGrid}
+        showMiniMap={advancedEditor.state.showMiniMap}
+        showLeftPanel={advancedEditor.state.showLeftPanel}
+        showRightPanel={advancedEditor.state.showRightPanel}
+        imageUrl={image?.originalBlob ? URL.createObjectURL(image.originalBlob) : undefined}
+        onExit={handleAdvancedModeExit}
+        onToolChange={handleToolChange}
+        onLayerToggle={(layerId) => {
+          handleLayerUpdate(layerId, {
+            visible: !layers.find(l => l.id === layerId)?.visible
+          });
+        }}
+        onLayerOpacityChange={(layerId, opacity) => {
+          handleLayerUpdate(layerId, { opacity });
+        }}
+        onLayerLockToggle={(layerId) => {
+          handleLayerUpdate(layerId, {
+            locked: !layers.find(l => l.id === layerId)?.locked
+          });
+        }}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        onToggleGrid={advancedEditor.toggleGrid}
+        onToggleRulers={advancedEditor.toggleRulers}
+        onToggleSnap={advancedEditor.toggleSnapToGrid}
+        onToggleMiniMap={advancedEditor.toggleMiniMap}
+      >
+        {mainContent}
+      </AdvancedEditorLayout>
+    </>
   );
 };
 

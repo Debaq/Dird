@@ -19,7 +19,12 @@ try {
 
     $type = $_POST['type'] ?? 'image';
     $installationToken = $_POST['installation_token'] ?? 'unknown';
-    
+
+    // Session metadata (if provided)
+    $sessionId = $_POST['session_id'] ?? null;
+    $sessionName = $_POST['session_name'] ?? null;
+    $sessionDate = $_POST['session_date'] ?? null;
+
     // Metadata file path
     $metadataFile = __DIR__ . '/data/contributions_metadata.json';
     $metadata = ['contributions' => []];
@@ -34,6 +39,9 @@ try {
         'type' => $type,
         'installation_token' => $installationToken,
         'uploaded_at' => date('Y-m-d H:i:s'),
+        'session_id' => $sessionId,
+        'session_name' => $sessionName,
+        'session_date' => $sessionDate,
     ];
 
     if ($type === 'image') {

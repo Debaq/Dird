@@ -3,6 +3,17 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
+// ============================================
+// 🎯 CONFIGURACIÓN DE DEPLOY
+// ============================================
+// Cambiar esta línea según dónde despliegues:
+//   '/academia/'  → para tmeduca.org/academia/
+//   '/dird/'      → para tmeduca.org/dird/
+//   '/'           → para raíz del dominio
+// ============================================
+const DEPLOY_BASE_URL = '/academia/';
+// ============================================
+
 export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
@@ -162,5 +173,6 @@ export default defineConfig(({ mode }) => ({
     }
   },
   assetsInclude: ['**/*.wasm'],
-  base: mode === 'production' ? '/dird/' : '/',
+  // Base URL: usa DEPLOY_BASE_URL en producción, '/' en desarrollo
+  base: mode === 'production' ? DEPLOY_BASE_URL : '/',
 }));
