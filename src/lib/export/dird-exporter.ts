@@ -1,12 +1,14 @@
 import JSZip from 'jszip';
 import { db } from '@/lib/db/schema';
-import type { Patient, Session, Detection, Segmentation } from '@/lib/db/schema';
+import type { Patient, Session, Detection, Segmentation, Measurement } from '@/lib/db/schema';
 
 export interface DirdExportMetadata {
   export_version: string;
   exported_at: string;
-  patient: Patient;
-  sessions: Session[];
+  export_type: 'full' | 'patient' | 'session';
+  patient?: Patient;
+  sessions?: Session[];
+  
 }
 
 export async function exportPatient(patientId: number): Promise<Blob> {
@@ -23,9 +25,10 @@ export async function exportPatient(patientId: number): Promise<Blob> {
   const metadata: DirdExportMetadata = {
     export_version: '1.0.1',
     exported_at: new Date().toISOString(),
+    export_type: 'patient',
     patient,
-    sessions,
-  };
+    sessions
+    };
 
   zip.file('metadata.json', JSON.stringify(metadata, null, 2));
 
@@ -45,24 +48,41 @@ export async function exportPatient(patientId: number): Promise<Blob> {
       }
     }
 
-    // Get detections for all images in this session
+    // Image metadata
+    const imagesMetadata = images.map(img => ({
+      id: img.id,
+      filename: img.filename,
+      eyeType: img.eyeType,
+    }))
+
+    sessionFolder.file('images_metadata.json', JSON.stringify(imagesMetadata, null, 2));
+
+    // Get detections / segmentations / measurements for all images in this session
     const allDetections: Detection[] = [];
     const allSegmentations: Segmentation[] = [];
+    const allMeasurements: Measurement[] = [];
+
 
     for (const image of images) {
       const detections = await db.detections.where('imageId').equals(image.id!).toArray();
       const segmentations = await db.segmentations.where('imageId').equals(image.id!).toArray();
+      const measurements = await db.measurements.where('imageId').equals(image.id!).toArray();
       allDetections.push(...detections);
       allSegmentations.push(...segmentations);
+      allMeasurements.push(...measurements);
     }
 
-    // Save detections and segmentations as JSON
+    // Save detections, measurements and segmentations as JSON
     if (allDetections.length > 0) {
       sessionFolder.file('detections.json', JSON.stringify(allDetections, null, 2));
     }
 
     if (allSegmentations.length > 0) {
       sessionFolder.file('segmentations.json', JSON.stringify(allSegmentations, null, 2));
+    }
+
+    if (allMeasurements.length > 0) {
+      sessionFolder.file('measurements.json', JSON.stringify(allMeasurements, null, 2));
     }
 
     // Get reports for this session
@@ -75,6 +95,8 @@ export async function exportPatient(patientId: number): Promise<Blob> {
           reportsFolder.file(reportName, report.pdfBlob);
         }
       }
+    } else {
+      console.log('no reports found for session', session.id);
     }
   }
 
@@ -89,14 +111,11 @@ export async function exportSession(sessionId: number): Promise<Blob> {
   const session = await db.sessions.get(sessionId);
   if (!session) throw new Error('Session not found');
 
-  const patient = await db.patients.get(session.patientId);
-  if (!patient) throw new Error('Patient not found for session');
-
   const metadata: DirdExportMetadata = {
     export_version: '1.0.1',
     exported_at: new Date().toISOString(),
-    patient,
-    sessions: [session],
+    export_type: 'session',
+    sessions: [session]
   };
 
   zip.file('metadata.json', JSON.stringify(metadata, null, 2));
@@ -109,13 +128,25 @@ export async function exportSession(sessionId: number): Promise<Blob> {
     }
   }
 
+  // Image metadata
+  const imagesMetadata = images.map(img => ({
+    id: img.id,
+    filename: img.filename,
+    eyeType: img.eyeType,
+  }))
+
+  zip.file('images_metadata.json', JSON.stringify(imagesMetadata, null, 2));
+
   const allDetections: Detection[] = [];
   const allSegmentations: Segmentation[] = [];
+  const allMeasurements: Measurement[] = [];
   for (const image of images) {
     const detections = await db.detections.where('imageId').equals(image.id!).toArray();
     allDetections.push(...detections);
     const segmentations = await db.segmentations.where('imageId').equals(image.id!).toArray();
     allSegmentations.push(...segmentations);
+    const measurements = await db.measurements.where('imageId').equals(image.id!).toArray();
+    allMeasurements.push(...measurements);
   }
 
   if (allDetections.length > 0) {
@@ -123,6 +154,9 @@ export async function exportSession(sessionId: number): Promise<Blob> {
   }
   if (allSegmentations.length > 0) {
     zip.file('segmentations.json', JSON.stringify(allSegmentations, null, 2));
+  }
+  if (allMeasurements.length > 0) {
+    zip.file('measurements.json', JSON.stringify(allMeasurements, null, 2));
   }
 
   const reports = await db.reports.where('sessionId').equals(sessionId).toArray();
@@ -142,27 +176,78 @@ export async function exportSession(sessionId: number): Promise<Blob> {
 export async function exportAllData(): Promise<Blob> {
   const zip = new JSZip();
 
+  const metadata: DirdExportMetadata = {
+    export_version: '1.0.1',
+    exported_at: new Date().toISOString(),
+    export_type: 'full',
+  };
+
+
+  zip.file('metadata.json', JSON.stringify(metadata, null, 2));
+
   // Get all patients
   const patients = await db.patients.toArray();
 
   for (const patient of patients) {
-    const patientBlob = await exportPatient(patient.id!);
-    const patientZip = await JSZip.loadAsync(patientBlob);
+    const patientFolder = zip.folder(`paciente_${patient.patientId}`);
+    if (!patientFolder) continue;
 
-    // Add to main zip with patient folder
-    const patientFolderName = `paciente_${patient.patientId}`;
-    const patientFolder = zip.folder(patientFolderName);
+    const sessions = await db.sessions.where('patientId').equals(patient.id!).toArray();
 
-    if (patientFolder) {
-      // Copy all files from patient zip to main zip
-      const files = Object.keys(patientZip.files);
-      for (const filename of files) {
-        const file = patientZip.files[filename];
-        if (!file.dir) {
-          const content = await file.async('blob');
-          patientFolder.file(filename, content);
+    const patientMetadata: DirdExportMetadata = {
+      export_version: '1.0.1',
+      exported_at: new Date().toISOString(),
+      export_type: 'patient',
+      patient, sessions
+    };
+
+    patientFolder.file('metadata.json', JSON.stringify(patientMetadata, null, 2));
+
+    for (const session of sessions) {
+      const sessionFolder = patientFolder.folder(`sessions/session_${String(session.sessionNumber).padStart(3, '0')}`);
+      if (!sessionFolder) continue;
+
+      const images = await db.images.where('sessionId').equals(session.id!).toArray();
+
+      const imagesFolder = sessionFolder.folder('images');
+      if (imagesFolder) {
+        for (const image of images) {
+          imagesFolder.file(image.filename, image.originalBlob);
         }
       }
+
+      const imagesMetadata = images.map(img => ({
+        id: img.id,
+        filename: img.filename,
+        eyeType: img.eyeType
+      }));
+
+      sessionFolder.file('images_metadata.json', JSON.stringify(imagesMetadata, null, 2));
+
+      const allDetections: Detection[] = [];
+      const allSegmentations: Segmentation[] = [];
+      const allMeasurements: Measurement[] = [];
+
+      for (const image of images) {
+        allDetections.push(...(await db.detections.where('imageId').equals(image.id!).toArray()));
+        allSegmentations.push(...(await db.segmentations.where('imageId').equals(image.id!).toArray()));
+        allMeasurements.push(...(await db.measurements.where('imageId').equals(image.id!).toArray()));
+      }
+
+      if (allDetections.length > 0) {sessionFolder.file('detections.json', JSON.stringify(allDetections, null, 2));}
+      if (allSegmentations.length > 0) {sessionFolder.file('segmentations.json', JSON.stringify(allSegmentations, null, 2));}
+      if (allMeasurements.length > 0) {sessionFolder.file('measurements.json', JSON.stringify(allMeasurements, null, 2));}
+
+      const reports = await db.reports.where('sessionId').equals(session.id!).toArray();
+      if (reports.length > 0) {
+        const reportsFolder = sessionFolder.folder('reports');
+        if (reportsFolder) {
+          for (const report of reports) {
+            reportsFolder.file(`report_${report.type}.pdf`, report.pdfBlob);
+          }
+        }
+      }
+
     }
   }
 
