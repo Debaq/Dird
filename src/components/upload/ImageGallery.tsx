@@ -12,7 +12,7 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Trash2, Brain, GripVertical, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import { inferenceService } from '@/lib/ai/inference-service';
 import { db } from '@/lib/db/schema';
+
 
 interface ImageGalleryProps {
   images: ImageType[];
@@ -58,6 +59,7 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
     const [isReprocessing, setIsReprocessing] = React.useState(false);
     const [imageError, setImageError] = React.useState(false);
     const { t } = useTranslation();
+  
 
     React.useEffect(() => {
       if (image.id) {
@@ -297,6 +299,8 @@ const SortableImageCard: React.FC<SortableImageCardProps> = (props) => {
 const ImageGallery: React.FC<ImageGalleryProps> = ({ images, patientId, sessionId, onDelete, isLocked, refreshKey }) => {
   const [thumbnails, setThumbnails] = useState<Map<number, string>>(new Map());
   const [activeImage, setActiveImage] = useState<ImageType | null>(null);
+  const [oiOrder, setOiOrder] = useState<number[]>([]);
+  const [odOrder, setOdOrder] = useState<number[]>([]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -306,6 +310,21 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, patientId, sessionI
     })
   );
   const { t } = useTranslation();
+  
+  useEffect(() => {
+    const oi = images
+      .filter(i => i.eyeType === 'OI')
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      .map(i => i.id!);
+  
+    const od = images
+      .filter(i => i.eyeType === 'OD')
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      .map(i => i.id!);
+  
+    setOiOrder(oi);
+    setOdOrder(od);
+  }, [images]);
 
   useEffect(() => {
     const newThumbnails = new Map<number, string>();
@@ -375,10 +394,12 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, patientId, sessionI
   }, [images]);
 
   const { oiImages, odImages } = useMemo(() => {
-    const oi = images.filter(img => img.eyeType === 'OI');
-    const od = images.filter(img => img.eyeType === 'OD');
-    return { oiImages: oi, odImages: od };
-  }, [images]);
+    const byId = new Map(images.map(i => [i.id!, i]));
+    return {
+      oiImages: oiOrder.map(id => byId.get(id)!).filter(Boolean),
+      odImages: odOrder.map(id => byId.get(id)!).filter(Boolean),
+    };
+  }, [images, oiOrder, odOrder]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -397,25 +418,33 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, patientId, sessionI
     setActiveImage(null);
     const { active, over } = event;
 
-    if (!over) {
-      return;
-    }
+    if (!over || active.id === over.id) return;
 
     const activeImage = images.find(img => img.id === active.id);
-    if (!activeImage) {
-      return;
+    const overImg = images.find(img => img.id === over.id);
+    if (!activeImage || !overImg) return;
+
+    const isOI = activeImage.eyeType === 'OI';
+
+    const currentOrder = isOI ? oiOrder: odOrder;
+    const from = currentOrder.indexOf(active.id as number);
+    const to = currentOrder.indexOf(over.id as number);
+    if (from === -1 || to === -1) return;
+
+    const nextOrder = arrayMove(currentOrder, from, to);
+
+    if (isOI) { 
+      setOiOrder(nextOrder);
+    } else {
+      setOdOrder(nextOrder);
     }
 
-    let targetEye: 'OI' | 'OD' | null = null;
-    if (over.id === 'OI' || oiImages.some(i => i.id === over.id)) {
-      targetEye = 'OI';
-    } else if (over.id === 'OD' || odImages.some(i => i.id === over.id)) {
-      targetEye = 'OD';
-    }
+    await db.transaction('rw', db.images, async () => {
 
-    if (targetEye && activeImage.eyeType !== targetEye) {
-      handleMove(activeImage.id!, targetEye);
-    }
+      for (let i = 0; i < nextOrder.length; i++) {
+        await db.images.update(nextOrder[i], {order: i});
+      }
+    });
   };
 
   const DroppableColumn: React.FC<{ id: 'OI' | 'OD'; title: string; imageList: ImageType[]; className: string; }> = ({ id, title, imageList, className }) => {
