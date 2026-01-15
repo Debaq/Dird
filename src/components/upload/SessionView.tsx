@@ -278,7 +278,7 @@ const SessionView: React.FC = () => {
           </Card>
         )}
 
-        {showLargeDropzone && (
+        {(
             <ImageDropzone
               sessionId={parseInt(sessionId!)}
               onUploadComplete={handleUploadComplete}

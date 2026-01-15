@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowLeft, Plus, Calendar, Lock, Unlock, Download, Pencil, Trash2, Copy, ArrowRightLeft, CheckSquare } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar, Lock, Unlock, Pencil, Trash2, Copy, ArrowRightLeft, CheckSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SessionForm from './SessionForm';
@@ -159,7 +159,7 @@ const PatientDetails: React.FC = () => {
         </div>
         <div className="flex flex-wrap gap-2">         
 
-          <ExportImportSessions patientId={patient.id} patientName={patient.name} onImportComplete={() => {/* Refresh handled by useLiveQuery */}} />
+          <ExportImportSessions patientId={patient.id} onImportComplete={() => {/* Refresh handled by useLiveQuery */}} />
 
           <Button
             onClick={() => {
