@@ -42,6 +42,7 @@ export interface Image {
   sessionId: number;
   filename: string;
   eyeType: 'OI' | 'OD';
+  order: number; // Ordenar imagenes y actualizar su orden en una sesion
   originalBlob: Blob;
   processedBlob?: Blob;
   width: number;
