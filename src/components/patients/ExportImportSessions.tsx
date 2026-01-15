@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Download, Upload, Database } from 'lucide-react';
+import { Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -21,13 +21,11 @@ import type { ImportResult } from '@/lib/export/dird-importer';
 
 interface ExportImportSessionsProps {
   patientId?: number;
-  patientName?: string;
   onImportComplete?: () => void;
 }
 
 const ExportImportSessions: React.FC<ExportImportSessionsProps> = ({
   patientId,
-  patientName,
   onImportComplete,
 }) => {
   const { t } = useTranslation();

@@ -232,13 +232,13 @@ const DraggableImageCard = React.forwardRef<HTMLDivElement, DraggableImageCardPr
             >
               {image.eyeType === 'OI' ? (
                 <>
+                  <ArrowLeft className="w-3 h-3" />
                   <span className="text-[10px] mr-1">{t('upload.gallery.moveToRight')}</span>
-                  <ArrowRight className="w-3 h-3" />
                 </>
               ) : (
                 <>
-                  <ArrowLeft className="w-3 h-3 mr-1" />
                   <span className="text-[10px]">{t('upload.gallery.moveToLeft')}</span>
+                  <ArrowRight className="w-3 h-3 mr-1" />
                 </>
               )}
             </Button>
