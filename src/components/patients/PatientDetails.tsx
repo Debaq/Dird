@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SessionForm from './SessionForm';
 import PatientForm from './PatientForm';
 import { db, Session, Patient } from '@/lib/db/schema';
-import { exportPatient, downloadDirdFile } from '@/lib/export/dird-exporter';
+import ExportImportSessions from './ExportImportSessions';
 import { duplicateSession } from '@/lib/db/actions';
 import { createCombinedSession } from '@/lib/db/combinedSessions';
 
@@ -21,7 +21,6 @@ const PatientDetails: React.FC = () => {
   const { confirm, ConfirmDialogComponent } = useConfirm();
   const [showSessionForm, setShowSessionForm] = useState(false);
   const [showPatientForm, setShowPatientForm] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
   const [isDuplicating, setIsDuplicating] = useState<number | null>(null);
   const [sessionToEdit, setSessionToEdit] = useState<Session | undefined>();
   const [patientToEdit, setPatientToEdit] = useState<Patient | undefined>();
@@ -39,21 +38,6 @@ const PatientDetails: React.FC = () => {
     () => (patientId ? db.sessions.where('patientId').equals(parseInt(patientId)).toArray() : []),
     [patientId]
   );
-
-  const handleExportPatient = async () => {
-    if (!patient) return;
-    setIsExporting(true);
-    try {
-      const blob = await exportPatient(patient.id!);
-      downloadDirdFile(blob, `dird_export_patient_${patient.patientId}`);
-      toast.success(t('export.patientSuccess'));
-    } catch (error) {
-      console.error('Error exporting patient:', error);
-      toast.error(t('errors.exportPatient'));
-    } finally {
-      setIsExporting(false);
-    }
-  };
 
   const handleDeleteSession = async (sessionId: number) => {
     const confirmed = await confirm({
@@ -173,9 +157,11 @@ const PatientDetails: React.FC = () => {
             <p className="text-smoke-500 mt-1">{t('patients.idLabel')}{patient.patientId}</p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">         
+
+          <ExportImportSessions patientId={patient.id} patientName={patient.name} onImportComplete={() => {/* Refresh handled by useLiveQuery */}} />
+
           <Button
-            variant="outline"
             onClick={() => {
               setPatientToEdit(patient);
               setShowPatientForm(true);
@@ -184,14 +170,6 @@ const PatientDetails: React.FC = () => {
           >
             <Pencil className="w-4 h-4 mr-2" />
             {t('patients.edit')}
-          </Button>
-          <Button 
-            onClick={handleExportPatient} 
-            disabled={isExporting}
-            className="flex-1 md:flex-none"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            {isExporting ? t('export.exporting') : t('export.patient')}
           </Button>
         </div>
       </div>
