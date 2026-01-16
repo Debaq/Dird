@@ -74,18 +74,18 @@ const ImageDropzone: React.FC<ImageDropzoneProps> = ({ sessionId, onUploadComple
         <span className="text-sm font-medium text-coal-700">{t('upload.selectEye')}</span>
         <div className="flex gap-2">
           <Button
-            variant={selectedEye === 'OI' ? 'default' : 'outline'}
-            onClick={() => setSelectedEye('OI')}
-            disabled={isLimitReached}
-          >
-            {t('upload.eye.left')}
-          </Button>
-          <Button
             variant={selectedEye === 'OD' ? 'default' : 'outline'}
             onClick={() => setSelectedEye('OD')}
             disabled={isLimitReached}
           >
             {t('upload.eye.right')}
+          </Button>          
+          <Button
+            variant={selectedEye === 'OI' ? 'default' : 'outline'}
+            onClick={() => setSelectedEye('OI')}
+            disabled={isLimitReached}
+          >
+            {t('upload.eye.left')}
           </Button>
         </div>
       </div>
