@@ -152,6 +152,7 @@ const SessionView: React.FC = () => {
   const handleUploadComplete = () => {
     setIsUploading(false);
     setRefreshKey((prev) => prev + 1);
+    setSessionViewTab('images');
   };
 
   const handleUploadStart = () => {
