@@ -250,6 +250,9 @@ export const useImageUploader = ({ sessionId, onUploadComplete: _onUploadComplet
 
   const clearUploadState = useCallback(() => {
     setUploadingFiles([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   }, []);
 
   const getRootProps = () => ({
