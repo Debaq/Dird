@@ -120,7 +120,11 @@ function App() {
     };
 
     // Ejecutar en paralelo
-    Promise.all([setupDemoPatient(), loadTokens(), loadModelMetadata(), initOpenCV()]).catch((error) => {
+    Promise.all([loadTokens(), loadModelMetadata(), initOpenCV()]).then(() => {
+      if (!cancelled) {
+        setIsInitializing(false);
+      }
+    }).catch((error) => {
       console.error('❌ Error al inicializar aplicación:', error);
       if (!cancelled) {
         setIsInitializing(false);
