@@ -231,7 +231,7 @@ const SessionView: React.FC = () => {
     return new Date(date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  const showLargeDropzone = (images.length === 0 || isUploading) && !session.locked;
+  const showLargeDropzone = !session.locked;
 
   return (
     <>
@@ -259,14 +259,10 @@ const SessionView: React.FC = () => {
               <Download className="w-4 h-4 mr-2" />
               {isExporting ? t('export.exporting') : t('export.session')}
             </Button>
-            {session.locked ? (
+            {session.locked && (
               <span className="flex items-center text-sm text-accent-600 bg-accent-50 px-3 py-1 rounded-full whitespace-nowrap">
                 <Lock className="w-4 h-4 mr-1" />{t('sessions.locked')}
               </span>
-            ) : (
-              <div className="flex-1 md:flex-none">
-                <ReportGenerator sessionId={parseInt(sessionId!)} onReportGenerated={() => setRefreshKey((prev) => prev + 1)} />
-              </div>
             )}
           </div>
         </div>
@@ -278,7 +274,7 @@ const SessionView: React.FC = () => {
           </Card>
         )}
 
-        {(
+        {showLargeDropzone && (
             <ImageDropzone
               sessionId={parseInt(sessionId!)}
               onUploadComplete={handleUploadComplete}
@@ -299,13 +295,15 @@ const SessionView: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <CardTitle>{t('sessions.galleryTitle')}</CardTitle>
                   <div className="flex flex-wrap items-center gap-2">
-                      {images.length > 0 && !session.locked && (
+
+                      {/*images.length > 0 && !session.locked && (
                           <CompactUploader
                             sessionId={parseInt(sessionId!)}
                             onUploadComplete={handleUploadComplete}
                             onUploadStart={handleUploadStart}
                           />
-                      )}
+                      )*/}
+                      
                       {images.length > 0 && !session.locked && (
                           <Button
                               onClick={handleProcessWithAI}
