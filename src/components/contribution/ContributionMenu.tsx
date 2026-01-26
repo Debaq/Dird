@@ -245,7 +245,8 @@ const ContributionMenu: React.FC = () => {
           if (session) {
             formData.append('session_id', session.id!.toString());
             formData.append('session_name', session.name || `Session ${session.sessionNumber}`);
-            formData.append('session_date', session.date.toISOString());
+            formData.append('session_date', session.date.toString());
+            console.log(session.date.toString());
           }
 
           formData.append('image', img.originalBlob, img.filename);
@@ -263,6 +264,7 @@ const ContributionMenu: React.FC = () => {
           await db.pendingContributions.update(contrib.id!, { status: 'submitted' });
           successCount++;
         } catch (err) {
+          console.log(err);
           errorCount++;
         }
 
@@ -292,6 +294,7 @@ const ContributionMenu: React.FC = () => {
           await db.pendingContributions.update(contrib.id!, { status: 'submitted' });
           successCount++;
         } catch (err) {
+          console.log(err);
           errorCount++;
         }
 
@@ -323,6 +326,7 @@ const ContributionMenu: React.FC = () => {
           successCount++;
         } catch (err) {
           errorCount++;
+          console.log(err);
         }
 
         currentProgress++;
