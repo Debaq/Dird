@@ -246,7 +246,6 @@ const ContributionMenu: React.FC = () => {
             formData.append('session_id', session.id!.toString());
             formData.append('session_name', session.name || `Session ${session.sessionNumber}`);
             formData.append('session_date', session.date.toString());
-            console.log(session.date.toString());
           }
 
           formData.append('image', img.originalBlob, img.filename);
