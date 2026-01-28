@@ -407,9 +407,11 @@ export async function downloadTixPackage(
     const downloadUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = downloadUrl;
+    
     link.download = `dird_contributions_${
-      installationToken ? installationToken.substring(0, 8) : 'all'
+    installationToken ? installationToken.substring(0, 8) : 'all'
     }_${new Date().toISOString().split('T')[0]}.tix`;
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
