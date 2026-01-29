@@ -10,6 +10,7 @@ DIRD+ is a privacy-first, edge-computing web application for ophthalmological im
 - **Offline-First**: PWA with IndexedDB persistence, .dird export format (ZIP-based)
 - **Internationalization**: Spanish base, extensible i18n architecture
 
+# Table of Contents
 
 * [INSTALLATION](#installation)
     * [APP INSTALLATION](#app-installation)
@@ -18,24 +19,18 @@ DIRD+ is a privacy-first, edge-computing web application for ophthalmological im
     * [CREATING AND MANAGING PATIENTS](#creating-and-managing-patients)
     * [CREATING AND MANAGING SESSIONS](#creating-and-managing-sessions)
     * [WORKING INSIDE A SESSION](#working-inside-a-session)
-        * [ANALYZE AN IMAGE](#analyze-images)
-        * [MOVING AND MANAGING IMAGES](#moving-and-managing-images)
-        * [VIEW SESSION AND IMAGE STATISTICS](#view-session-and-image-statistics)
     * [CREATING AND MANAGING REPORTS](#creating-and-managing-reports)
     * [EXPORT AND IMPORT](#exports-and-imports)
+    * [IMAGE VIEWER](#image-viewer)
 * [CONFIGURATION]
-    * []
-* [CONTRIBUTIONS]
-    * [ANNOTATIONS]
-    * [DONATIONS (KO-FI)]
+* [CONTRIBUTIONS](#contributions)
+* [DONATIONS](#donations)
     
 
 # Usage
 
 ## Creating and managing patients
-When opening the app, you are taken to the Patients view. This is the main page of the system.
-
-Here you can **create, edit or archive** patients.
+When opening the app, the main page of the system will be the patient's list.
 
 Press **Create a patient** to create a patient, and fill up the necessary fields.
 
@@ -93,7 +88,7 @@ can be viewed by pressing the **AI ANALYSIS** tab which will redirect to the sta
 
 ## Creating and managing reports
 Reports are generated for one session, and are pdf's. They can be generated while inside a session, on the **reports** tab, by pressing the **Generate Report** button.
-After pressing the button, we'll see a survey with "Additional Notes", and the button to generate the report. After adding any notes deeemed necessary, press **Generate Preview** to generate a preview report.
+After pressing the button, a survey with "Additional Notes" and the button to generate the report will be shown. After adding any notes deeemed necessary, press **Generate Preview** to generate a preview report.
 
 Reports can be **regenerated** by pressing the "Generate Report" again, and then pressing the left button **regenerate preview report**. Report notes can be edited this way as well.
 
@@ -115,10 +110,43 @@ can be hidden by going to the **configuration** tab on top of the screen, then g
 
 ## Exports and imports
 **Patients** and individual **Patient Sessions** can be imported and exported. All exports and imports use a **.dird file**.
-Patient files contain every information used on a patient instance, such as images, sessions, etc.
-Session files contain information specific to the session, like session images, session reports, etc.
 
-To export a **patient**, click on a patient and click on **Export Patient**. This will download a **.dird file** which can then be used to **import a patient** on the patient page by clicking **import .dird**.
+* Patient files contain every information used on a patient instance, such as images, sessions, etc.
+* Session files contain information specific to the session, like session images, session reports, etc.
 
-To export a **session**, click on one of the sessions inside a patient, then click on **Export Session**. This will download a **.dird file**, which can then be used to **import a session** inside a patient page by clicking **Import Session**.
+To **export a patient**, click on a patient and click on **Export Patient**. This will download a **.dird file** which can then be used to **import a patient** on the patient page by clicking **import .dird**.
 
+To **export a session**, click on one of the sessions inside a patient, then click on **Export Session**. This will download a **.dird file**, which can then be used to **import a session** inside a patient page by clicking **Import Session**.
+
+
+## Image viewer
+
+
+# CONTRIBUTIONS
+
+### What are contributions?
+Contributions help improve the YOLO identification model, by marking what the model didn't already identify.
+
+Contributions, as of now, are manual annotations made inside the image viewer. Manual annotations are either detection boxes, or landmarks. It's important to note that every contribution marked, includes every single annotation, both manual and AI. Every contribution is made anonymously.
+
+### Mark an image
+
+To mark an image for contribution, press the star icon on the top right. This button will appear once any manual annotation is made. You can either mark the whole session or the singular image. 
+
+### Unmark an image
+
+To unmark a contribution, press on the star button and click "Don't contribute".
+
+It's worth noting that to reflect any changes in manual annotations inside contributions, re-marking will be necessary.
+
+### Send Contribution
+
+To send a contribution, navigate to the "Contribute" tab on the dashboard at the top of the page.
+
+You can choose to mark all un-marked images that had some form of manual annotations, or go with the ones already marked. Accept the terms and click on send.
+
+# DONATIONS
+
+We have our own [ko-fi page](https://ko-fi.com/tecmedhub) if you wish to support us!
+
+Alternatively, link to our ko-fi page is located under the "Contribute" tab.
