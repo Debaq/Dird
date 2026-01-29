@@ -260,7 +260,7 @@ const ContributionMenu: React.FC = () => {
 
           if (!response.ok) throw new Error(`Failed to upload ${img.filename}`);
 
-          await db.pendingContributions.update(contrib.id!, { status: 'submitted' });
+          await db.pendingContributions.delete(contrib.id)
           successCount++;
         } catch (err) {
           console.log(err);
