@@ -59,7 +59,7 @@ export function LeftToolsPanel({
       className="fixed left-0 top-12 bottom-0 w-16 bg-gradient-to-r from-gray-900 via-gray-900/95 to-gray-900/80 backdrop-blur-xl border-r border-gray-800/50 shadow-2xl z-40 flex flex-col"
     >
       {/* Tools */}
-      <div className="flex-1 overflow-y-auto py-4 px-2 space-y-1 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-2 space-y-1 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
         {TOOLS.map((tool) => {
           const Icon = tool.icon;
           const isActive = activeTool === tool.id;
@@ -91,7 +91,7 @@ export function LeftToolsPanel({
               {isActive && (
                 <motion.div
                   layoutId="activeToolIndicator"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-500 rounded-r-full"
+                  className="absolute right-0 top-2 bottom-2 w-1 bg-blue-500 rounded-l-full"
                 />
               )}
             </motion.button>
