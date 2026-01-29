@@ -450,6 +450,15 @@ const ImageAnalyzer: React.FC = () => {
     );
   };
 
+  const handleLayerReorder = (oldIndex: number, newIndex: number) => {
+    setLayers((prev) => {
+      const newLayers = [...prev];
+      const [movedLayer] = newLayers.splice(oldIndex, 1);
+      newLayers.splice(newIndex, 0, movedLayer);
+      return newLayers;
+    });
+  };
+
   // Find optic disc for cup drawer
   const opticDiscDetection = allDetections?.find(d =>
     d.class && typeof d.class === 'string' &&
@@ -613,9 +622,19 @@ const ImageAnalyzer: React.FC = () => {
 
   // Handle tool change with advanced mode detection
   const handleToolChange = (tool: CanvasTool) => {
-    if (tool === 'image-processing' && isDesktop && !advancedEditor.state.isActive) {
-      setShowAdvancedDialog(true);
-      return;
+    if (tool === 'image-processing') {
+      if (isDesktop && !advancedEditor.state.isActive) {
+        setShowAdvancedDialog(true);
+        return;
+      }
+      // Dim original layer when processing tool is active
+      handleLayerUpdate('original', { opacity: 0.4 });
+    } else {
+      // Restore original layer opacity when switching away
+      const originalLayer = layers.find(l => l.id === 'original');
+      if (originalLayer && originalLayer.opacity !== 1) {
+        handleLayerUpdate('original', { opacity: 1 });
+      }
     }
     setActiveTool(tool);
   };
@@ -652,7 +671,7 @@ const ImageAnalyzer: React.FC = () => {
   const mainContent = (
     <div className={cn(
       "flex flex-col h-[100vh] xl:h-[calc(100vh-11rem)] relative bg-ice dark:bg-gray-900",
-      advancedEditor.state.isActive && "h-full xl:h-full"
+      advancedEditor.state.isActive && "h-full xl:h-full bg-transparent dark:bg-transparent"
     )}>
       {/* Header - Visible on Mobile (Portrait & Landscape) and Desktop */}
       {!advancedEditor.state.isActive && (
@@ -778,10 +797,19 @@ const ImageAnalyzer: React.FC = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex flex-col xl:grid xl:grid-cols-4 gap-6 flex-grow overflow-hidden relative">
+      <div className={cn(
+        "flex flex-col xl:grid xl:grid-cols-4 gap-6 flex-grow overflow-hidden relative",
+        advancedEditor.state.isActive && "xl:flex xl:gap-0"
+      )}>
         {/* Canvas Area */}
-        <div className="xl:col-span-3 h-full w-full">
-          <Card className="h-full flex flex-col border-0 xl:border shadow-none xl:shadow-sm bg-transparent xl:bg-white xl:dark:bg-gray-800 rounded-none xl:rounded-lg overflow-hidden">
+        <div className={cn(
+          "xl:col-span-3 h-full w-full",
+          advancedEditor.state.isActive && "xl:col-span-4"
+        )}>
+          <Card className={cn(
+            "h-full flex flex-col border-0 xl:border shadow-none xl:shadow-sm bg-transparent xl:bg-white xl:dark:bg-gray-800 rounded-none xl:rounded-lg overflow-hidden",
+            advancedEditor.state.isActive && "xl:border-0 xl:shadow-none xl:bg-transparent xl:rounded-none"
+          )}>
             <CardContent className="flex-grow p-0 h-full relative group">
               <AnnotationCanvas
                 image={image}
@@ -1008,12 +1036,44 @@ const ImageAnalyzer: React.FC = () => {
             locked: !layers.find(l => l.id === layerId)?.locked
           });
         }}
+        onLayerReorder={handleLayerReorder}
         onUndo={handleUndo}
         onRedo={handleRedo}
         onToggleGrid={advancedEditor.toggleGrid}
         onToggleRulers={advancedEditor.toggleRulers}
         onToggleSnap={advancedEditor.toggleSnapToGrid}
         onToggleMiniMap={advancedEditor.toggleMiniMap}
+        layerData={{
+          'detections-ai': aiDetections,
+          'manual-annotations': manualDetections,
+          'measurements': allMeasurements || [],
+        }}
+        onSelectAnnotation={(layerId, id) => {
+          if (layerId === 'measurements') {
+            setSelectedMeasurementId(id as number);
+          } else {
+            setSelectedAnnotation(String(id));
+          }
+        }}
+        onDeleteAnnotation={async (layerId, id) => {
+          try {
+            if (layerId === 'measurements') {
+              await db.measurements.delete(id as number);
+            } else {
+              const detection = allDetections?.find(d => d.id === id);
+              if (detection) {
+                addToHistory({ type: 'delete', detection });
+                await db.detections.delete(id as string);
+              }
+            }
+          } catch (error) {
+            logger.canvas.error('Error deleting item', error);
+          }
+        }}
+        selectedLandmarkType={selectedLandmarkType}
+        onLandmarkTypeChange={setSelectedLandmarkType}
+        imageBlob={image?.originalBlob || null}
+        onProcessedImage={setProcessedImageCanvas}
       >
         {mainContent}
       </AdvancedEditorLayout>

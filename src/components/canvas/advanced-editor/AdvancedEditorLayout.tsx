@@ -22,7 +22,14 @@ interface AdvancedEditorLayoutProps {
   showLeftPanel?: boolean;
   showRightPanel?: boolean;
   imageUrl?: string;
+  imageBlob?: Blob | null;
+  onProcessedImage?: (canvas: HTMLCanvasElement | null) => void;
   canvasPreview?: string;
+  layerData?: Record<string, any[]>;
+  onSelectAnnotation?: (layerId: string, id: string | number) => void;
+  onDeleteAnnotation?: (layerId: string, id: string | number) => void;
+  selectedLandmarkType?: 'optic_disc' | 'fovea';
+  onLandmarkTypeChange?: (type: 'optic_disc' | 'fovea') => void;
 
   // Handlers
   onExit: () => void;
@@ -30,6 +37,7 @@ interface AdvancedEditorLayoutProps {
   onLayerToggle: (layerId: string) => void;
   onLayerOpacityChange: (layerId: string, opacity: number) => void;
   onLayerLockToggle: (layerId: string) => void;
+  onLayerReorder?: (oldIndex: number, newIndex: number) => void;
   onSave?: () => void;
   onUndo?: () => void;
   onRedo?: () => void;
@@ -55,12 +63,20 @@ export function AdvancedEditorLayout({
   showLeftPanel = true,
   showRightPanel = true,
   imageUrl,
+  imageBlob,
+  onProcessedImage,
   canvasPreview,
+  layerData,
+  onSelectAnnotation,
+  onDeleteAnnotation,
+  selectedLandmarkType,
+  onLandmarkTypeChange,
   onExit,
   onToolChange,
   onLayerToggle,
   onLayerOpacityChange,
   onLayerLockToggle,
+  onLayerReorder,
   onSave,
   onUndo,
   onRedo,
@@ -77,9 +93,9 @@ export function AdvancedEditorLayout({
     if (!isActive) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Esc to exit
+      // Esc to deselect tool (back to select)
       if (e.key === 'Escape') {
-        onExit();
+        onToolChange('select');
         return;
       }
 
@@ -215,7 +231,15 @@ export function AdvancedEditorLayout({
             onLayerToggle={onLayerToggle}
             onLayerOpacityChange={onLayerOpacityChange}
             onLayerLockToggle={onLayerLockToggle}
+            onLayerReorder={onLayerReorder}
             imageUrl={imageUrl}
+            layerData={layerData}
+            onSelectAnnotation={onSelectAnnotation}
+            onDeleteAnnotation={onDeleteAnnotation}
+            selectedLandmarkType={selectedLandmarkType}
+            onLandmarkTypeChange={onLandmarkTypeChange}
+            imageBlob={imageBlob}
+            onProcessedImage={onProcessedImage}
           />
         )}
 

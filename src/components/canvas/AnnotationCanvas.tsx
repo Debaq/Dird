@@ -81,13 +81,6 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
   // CRÍTICO: Solo mostrar detecciones cuando todo esté listo
   const [isCanvasReady, setIsCanvasReady] = useState(false);
 
-  // Obtener configuración de capas
-  const aiDetectionsLayer = layers.find(l => l.id === 'detections-ai');
-  const manualAnnotationsLayer = layers.find(l => l.id === 'manual-annotations');
-  const measurementsLayer = layers.find(l => l.id === 'measurements');
-  const quadrantsLayer = layers.find(l => l.id === 'quadrants');
-  const macularZonesLayer = layers.find(l => l.id === 'macular-zones');
-  const circinateRingsLayer = layers.find(l => l.id === 'circinate-rings');
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<any>(null);
   const trRef = useRef<any>(null);
@@ -1483,97 +1476,110 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
         >
-        {/* Image Layer */}
-        <Layer>
-          {/* Imagen procesada (o original si no hay procesada) */}
-          <KonvaImage
-            image={konvaImage}
-            x={imageOffset.x}
-            y={imageOffset.y}
-            width={konvaImage.width}
-            height={konvaImage.height}
-            scaleX={scale}
-            scaleY={scale}
-          />
+          {layers.map((layer) => {
+            if (layer.id === 'original') {
+              return (
+                <Layer key={layer.id} visible={layer.visible} opacity={layer.opacity}>
+                  <KonvaImage
+                    image={konvaImage}
+                    x={imageOffset.x}
+                    y={imageOffset.y}
+                    width={konvaImage.width}
+                    height={konvaImage.height}
+                    scaleX={scale}
+                    scaleY={scale}
+                  />
+                  {processedImageCanvas && showOriginalOverlay && originalImage && (
+                    <KonvaImage
+                      image={originalImage}
+                      x={imageOffset.x}
+                      y={imageOffset.y}
+                      width={originalImage.width}
+                      height={originalImage.height}
+                      scaleX={scale}
+                      scaleY={scale}
+                      opacity={comparisonOpacity}
+                    />
+                  )}
+                </Layer>
+              );
+            }
 
-          {/* Imagen original superpuesta (solo si hay imagen procesada y showOriginalOverlay) */}
-          {processedImageCanvas && showOriginalOverlay && originalImage && (
-            <KonvaImage
-              image={originalImage}
-              x={imageOffset.x}
-              y={imageOffset.y}
-              width={originalImage.width}
-              height={originalImage.height}
-              scaleX={scale}
-              scaleY={scale}
-              opacity={comparisonOpacity}
-            />
-          )}
-        </Layer>
+            if (layer.id === 'detections-ai' || layer.id === 'manual-annotations') {
+              const isAI = layer.id === 'detections-ai';
+              return (
+                <AnnotationsCanvasLayer
+                  key={layer.id}
+                  aiDetectionsVisible={isAI && layer.visible}
+                  aiDetectionsOpacity={layer.opacity}
+                  detections={detections}
+                  segmentations={segmentations}
+                  manualAnnotationsVisible={!isAI && layer.visible}
+                  manualAnnotationsOpacity={layer.opacity}
+                  manualAnnotations={manualAnnotations}
+                  manualSegmentations={manualSegmentations}
+                  segmentationImages={segmentationImages}
+                  konvaImageWidth={konvaImage?.width || 0}
+                  konvaImageHeight={konvaImage?.height || 0}
+                  scale={scale}
+                  imageOffset={imageOffset}
+                  activeTool={activeTool}
+                  selectedAnnotationId={selectedAnnotationId}
+                  hoveredDetectionId={hoveredDetectionId}
+                  showAILabels={isAI ? (layer.showLabels ?? true) : false}
+                  showManualLabels={!isAI ? (layer.showLabels ?? true) : false}
+                  landmarks={landmarks}
+                  isCanvasReady={isCanvasReady}
+                  newAnnotation={newAnnotation}
+                  pendingAnnotation={pendingAnnotation}
+                  onHover={setHoveredDetectionId}
+                  onSelect={(id) => setSelectedAnnotation(id)}
+                  onDragStart={handleDragStart}
+                  onUpdate={async (id, attrs, isFinal) => {
+                    await handleAnnotationChange(id, attrs, isFinal);
+                    if (isFinal) recordMoveHistory(id);
+                  }}
+                  onDelete={handleDeleteAnnotation}
+                  onZoomToBbox={zoomToBbox}
+                />
+              );
+            }
 
-        {/* Consolidated Annotations Layer (AI + Manual detections & segmentations) */}
-        <AnnotationsCanvasLayer
-          aiDetectionsVisible={aiDetectionsLayer?.visible ?? true}
-          aiDetectionsOpacity={aiDetectionsLayer?.opacity ?? 1}
-          detections={detections}
-          segmentations={segmentations}
-          manualAnnotationsVisible={manualAnnotationsLayer?.visible ?? true}
-          manualAnnotationsOpacity={manualAnnotationsLayer?.opacity ?? 1}
-          manualAnnotations={manualAnnotations}
-          manualSegmentations={manualSegmentations}
-          segmentationImages={segmentationImages}
-          konvaImageWidth={konvaImage?.width || 0}
-          konvaImageHeight={konvaImage?.height || 0}
-          scale={scale}
-          imageOffset={imageOffset}
-          activeTool={activeTool}
-          selectedAnnotationId={selectedAnnotationId}
-          hoveredDetectionId={hoveredDetectionId}
-          showAILabels={aiDetectionsLayer?.showLabels ?? true}
-          showManualLabels={manualAnnotationsLayer?.showLabels ?? true}
-          landmarks={landmarks}
-          isCanvasReady={isCanvasReady}
-          newAnnotation={newAnnotation}
-          pendingAnnotation={pendingAnnotation}
-          onHover={setHoveredDetectionId}
-          onSelect={(id) => setSelectedAnnotation(id)}
-          onDragStart={handleDragStart}
-          onUpdate={async (id, attrs, isFinal) => {
-             await handleAnnotationChange(id, attrs, isFinal);
-             if (isFinal) recordMoveHistory(id);
-          }}
-          onDelete={handleDeleteAnnotation}
-          onZoomToBbox={zoomToBbox}
-        />
+            if (['measurements', 'quadrants', 'macular-zones', 'circinate-rings'].includes(layer.id)) {
+              return (
+                <OverlaysCanvasLayer
+                  key={layer.id}
+                  measurementsVisible={layer.id === 'measurements' && layer.visible}
+                  measurementsOpacity={layer.opacity}
+                  measurements={measurements}
+                  detections={detections}
+                  activeTool={activeTool}
+                  rulerOrigin={rulerOrigin}
+                  rulerDestination={rulerDestination}
+                  selectedMeasurementId={selectedMeasurementId ?? null}
+                  tempMeasurementUpdates={tempMeasurementUpdates}
+                  onSelectMeasurement={onSelectMeasurement ?? (() => {})}
+                  onDeleteMeasurement={handleDeleteMeasurement}
+                  onMeasurementDragMove={handleMeasurementDragMove}
+                  onMeasurementDragEnd={handleMeasurementDrag}
+                  quadrantsVisible={layer.id === 'quadrants' && layer.visible}
+                  quadrantsOpacity={layer.opacity}
+                  macularZonesVisible={layer.id === 'macular-zones' && layer.visible}
+                  macularZonesOpacity={layer.opacity}
+                  circinateRingsVisible={layer.id === 'circinate-rings' && layer.visible}
+                  landmarks={landmarks}
+                  konvaImageWidth={konvaImage?.width || 0}
+                  konvaImageHeight={konvaImage?.height || 0}
+                  macularEdemaData={macularEdemaData}
+                  scale={scale}
+                  imageOffset={imageOffset}
+                  stageScale={stageScale}
+                />
+              );
+            }
 
-        {/* Consolidated Overlays Layer (Measurements + Analysis) */}
-        <OverlaysCanvasLayer
-          measurementsVisible={measurementsLayer?.visible ?? true}
-          measurementsOpacity={measurementsLayer?.opacity ?? 1}
-          measurements={measurements}
-          detections={detections}
-          activeTool={activeTool}
-          rulerOrigin={rulerOrigin}
-          rulerDestination={rulerDestination}
-          selectedMeasurementId={selectedMeasurementId ?? null}
-          tempMeasurementUpdates={tempMeasurementUpdates}
-          onSelectMeasurement={onSelectMeasurement ?? (() => {})}
-          onDeleteMeasurement={handleDeleteMeasurement}
-          onMeasurementDragMove={handleMeasurementDragMove}
-          onMeasurementDragEnd={handleMeasurementDrag}
-          quadrantsVisible={quadrantsLayer?.visible ?? true}
-          quadrantsOpacity={quadrantsLayer?.opacity ?? 0.5}
-          macularZonesVisible={macularZonesLayer?.visible ?? false}
-          macularZonesOpacity={macularZonesLayer?.opacity ?? 0.7}
-          circinateRingsVisible={circinateRingsLayer?.visible ?? false}
-          landmarks={landmarks}
-          konvaImageWidth={konvaImage?.width || 0}
-          konvaImageHeight={konvaImage?.height || 0}
-          macularEdemaData={macularEdemaData}
-          scale={scale}
-          imageOffset={imageOffset}
-          stageScale={stageScale}
-        />
+            return null;
+          })}
 
         {/* Transformer Layer */}
         <Layer>
