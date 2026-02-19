@@ -15,7 +15,7 @@ import SessionComparison from '@/components/patients/SessionComparison';
 import ContributionMenu from '@/components/contribution/ContributionMenu';
 import AcademyView from '@/components/academy/AcademyView';
 import { db } from '@/lib/db/schema';
-import { initializeDemoPatient, demoPatientExists, type LoadingProgress } from '@/lib/db/demoPatient';
+import {type LoadingProgress } from '@/lib/db/demoPatient';
 import { DemoLoadingScreen } from '@/components/demo/DemoLoadingScreen';
 import { useTokenStore } from '@/stores/token-store';
 import { fetchTokens } from '@/lib/api/token-service';
@@ -34,7 +34,7 @@ function App() {
     ? (import.meta.env.BASE_URL || '/dird')
     : '/';
   const [isInitializing, setIsInitializing] = useState(true);
-  const [loadingProgress, setLoadingProgress] = useState<LoadingProgress>({
+  const [loadingProgress] = useState<LoadingProgress>({
     step: 'init',
     current: 0,
     total: 1,
@@ -62,28 +62,6 @@ function App() {
     };
 
     db.on('blocked', handleDbBlocked);
-
-    const setupDemoPatient = async () => {
-      try {
-        const exists = await demoPatientExists();
-
-        if (cancelled) return; // Si el componente se desmontó, salir
-
-        if (!exists) {
-          await initializeDemoPatient((progress) => {
-            if (!cancelled) {
-              setLoadingProgress(progress);
-            }
-          });
-        }
-      } catch (error) {
-        console.error('❌ Error initializing demo patient:', error);
-      } finally {
-        if (!cancelled) {
-          setIsInitializing(false);
-        }
-      }
-    };
 
     const loadTokens = async () => {
       try {
