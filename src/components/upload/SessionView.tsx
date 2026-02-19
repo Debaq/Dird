@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowLeft, Play, Lock, ChevronRight, Download } from 'lucide-react';
+import { ArrowLeft, Play, Lock, ChevronRight, Download, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useTranslation } from 'react-i18next';
@@ -15,11 +15,74 @@ import ImageGallery from './ImageGallery';
 import ReportGenerator from '../reports/ReportGenerator';
 import ReportsList from '../reports/ReportsList';
 import AnalysisView from './AnalysisView';
+import UploadProgressModal from './UploadProgressModal';
 import { db } from '@/lib/db/schema';
 import { exportSession, downloadDirdFile } from '@/lib/export/dird-exporter';
 import { inferenceService } from '@/lib/ai/inference-service';
+import { useImageUploader } from '@/hooks/useImageUploader';
 import { usePatientStore } from '@/stores/patient-store';
 
+
+const CompactUploader: React.FC<{ sessionId: number; onUploadComplete: () => void; onUploadStart: () => void }> = ({ sessionId, onUploadComplete, onUploadStart }) => {
+    const {
+        selectedEye,
+        setSelectedEye,
+        uploadingFiles,
+        clearUploadState,
+        triggerFileDialog,
+        getHiddenInput,
+    } = useImageUploader({ sessionId, onUploadComplete, onUploadStart });
+    const { t } = useTranslation();
+    const [isLimitReached, setIsLimitReached] = useState(false);
+
+    // Check image count on component mount and when sessionId changes
+    useEffect(() => {
+        const fetchImageCount = async () => {
+            const count = await db.images.where('sessionId').equals(sessionId).count();
+            setIsLimitReached(count >= 20);
+        };
+
+        fetchImageCount();
+    }, [sessionId]);
+
+    return (
+        <>
+            <div className="flex items-center gap-2">
+                {getHiddenInput()}
+                <div className="flex items-center gap-1 bg-coal-100 p-1 rounded-lg">
+
+                    <Button
+                        size="sm"
+                        variant={selectedEye === 'OD' ? 'default' : 'ghost'}
+                        onClick={() => setSelectedEye('OD')}
+                        className="text-xs"
+                        disabled={isLimitReached}
+                    >
+                        OD
+                    </Button>                    
+                    <Button
+                        size="sm"
+                        variant={selectedEye === 'OI' ? 'default' : 'ghost'}
+                        onClick={() => setSelectedEye('OI')}
+                        className="text-xs"
+                        disabled={isLimitReached}
+                    >
+                        OI
+                    </Button>
+                </div>
+                <Button size="sm" onClick={triggerFileDialog} disabled={isLimitReached}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    {isLimitReached ? t('upload.photoLimitExceeded', { limit: 20 }) : t('upload.addImage')}
+                </Button>
+            </div>
+            <UploadProgressModal
+                uploadingFiles={uploadingFiles}
+                onClose={clearUploadState}
+                onComplete={onUploadComplete}
+            />
+        </>
+    );
+};
 
 const SessionView: React.FC = () => {
   const { patientId, sessionId } = useParams<{ patientId: string; sessionId: string }>();
@@ -214,13 +277,6 @@ const SessionView: React.FC = () => {
           </Card>
         )}
 
-        {showLargeDropzone && (
-            <ImageDropzone
-              sessionId={parseInt(sessionId!)}
-              onUploadComplete={handleUploadComplete}
-              onUploadStart={handleUploadStart}
-            />
-        )}
 
         <Tabs value={sessionViewTab} onValueChange={setSessionViewTab} className="w-full">
           <TabsList className="w-full justify-start overflow-x-auto scrollbar-hide h-auto p-1 gap-1">
@@ -235,6 +291,14 @@ const SessionView: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <CardTitle>{t('sessions.galleryTitle')}</CardTitle>
                   <div className="flex flex-wrap items-center gap-2">
+
+                      {images.length > 0 && !session.locked && (
+                          <CompactUploader
+                            sessionId={parseInt(sessionId!)}
+                            onUploadComplete={handleUploadComplete}
+                            onUploadStart={handleUploadStart}
+                          />
+                      )}
                       
                       {images.length > 0 && !session.locked && (
                           <Button
@@ -252,6 +316,15 @@ const SessionView: React.FC = () => {
                       )}
                   </div>
                 </div>
+
+                {showLargeDropzone && images.length < 1 && (
+                  <ImageDropzone
+                    sessionId={parseInt(sessionId!)}
+                    onUploadComplete={handleUploadComplete}
+                    onUploadStart={handleUploadStart}
+                  />
+                )}
+
               </CardHeader>
               <CardContent>
                 <ImageGallery
