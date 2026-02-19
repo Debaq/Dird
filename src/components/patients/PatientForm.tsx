@@ -187,7 +187,7 @@ const PatientForm: React.FC<PatientFormProps> = ({
           <div className="space-y-4 pt-4 border-t border-coal-200">
             <h3 className="font-medium text-coal-700">{t('patients.form.medicalHistory')}</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-5">
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
