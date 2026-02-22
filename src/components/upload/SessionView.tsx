@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowLeft, Play, Lock, ChevronRight, Download, Plus } from 'lucide-react';
+import { ArrowLeft, Play, Lock, ChevronRight, Download, Plus, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useTranslation } from 'react-i18next';
@@ -15,8 +15,9 @@ import ImageGallery from './ImageGallery';
 import ReportGenerator from '../reports/ReportGenerator';
 import ReportsList from '../reports/ReportsList';
 import AnalysisView from './AnalysisView';
+import SessionForm from '@/components/patients/SessionForm';
 import UploadProgressModal from './UploadProgressModal';
-import { db } from '@/lib/db/schema';
+import { db, Session } from '@/lib/db/schema';
 import { exportSession, downloadDirdFile } from '@/lib/export/dird-exporter';
 import { inferenceService } from '@/lib/ai/inference-service';
 import { useImageUploader } from '@/hooks/useImageUploader';
@@ -95,6 +96,8 @@ const SessionView: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState({ current: 0, total: 0 });
   const [isUploading, setIsUploading] = useState(false);
+  const [sessionToEdit, setSessionToEdit] = useState<Session | undefined>();
+  const [showSessionForm, setShowSessionForm] = useState(false);
 
   const session = useLiveQuery(
     () => (sessionId ? db.sessions.get(parseInt(sessionId)) : undefined),
@@ -124,6 +127,11 @@ const SessionView: React.FC = () => {
     } finally {
       setIsExporting(false);
     }
+  };
+
+  const handleEditSession = (session: Session) => {
+    setSessionToEdit(session);
+    setShowSessionForm(true);
   };
 
   const handleDeleteImage = async (imageId: number) => {
@@ -262,6 +270,18 @@ const SessionView: React.FC = () => {
               <Download className="w-4 h-4 mr-2" />
               {isExporting ? t('export.exporting') : t('export.session')}
             </Button>
+
+            {!session.locked && ( // Solo mostrar editar y eliminar si no está bloqueado
+            <>
+              <Button variant="outline"  onClick={(e) => {
+                e.stopPropagation();
+                handleEditSession(session);}}
+                className="flex-1 md:flex-none">
+                <Pencil className="w-4 h-4 mr-2" />
+                {t('sessions.edit')}
+              </Button>
+            </>
+            )}
             {session.locked && (
               <span className="flex items-center text-sm text-accent-600 bg-accent-50 px-3 py-1 rounded-full whitespace-nowrap">
                 <Lock className="w-4 h-4 mr-1" />{t('sessions.locked')}
@@ -404,6 +424,17 @@ const SessionView: React.FC = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      <SessionForm
+        open={showSessionForm}
+        onOpenChange={setShowSessionForm}
+        patientId={patient.id!}
+        sessionToEdit={sessionToEdit}
+        onSuccess={() => {
+          setShowSessionForm(false);
+          setSessionToEdit(undefined);
+        }}
+      />
       {ConfirmDialogComponent}
     </>
   );
