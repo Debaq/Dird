@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
                                              registerType: 'autoUpdate',
                                              includeAssets: ['logo.svg', 'logo-default.svg', 'locales/**/*.json', 'clinical-guidelines/**/*.json'],
       manifest: {
-        name: 'DIRD+ - Diabetic Retinopathy & DMAE Detection',
+        name: 'DIRD+ - Diabetic Retinopathy Detection',
         short_name: 'DIRD+',
         description: 'AI-powered detection of Diabetic Retinopathy and Age-related Macular Degeneration',
         theme_color: '#ffffff',

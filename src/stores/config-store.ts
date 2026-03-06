@@ -185,7 +185,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   },
   report: {
     title: 'DIRD+',
-    subtitle: 'Detección de Retinopatía Diabética y DMAE',
+    subtitle: 'Detección de Retinopatía Diabética',
     useSystemLogo: true,
     customLogo: null,
     colors: {
@@ -430,7 +430,7 @@ export const useConfigStore = create<ConfigStore>()(
              report: {
                ...state.report,
                title: 'DIRD+',
-               subtitle: 'Detección de Retinopatía Diabética y DMAE'
+               subtitle: 'Detección de Retinopatía Diabética'
              }
            };
         }

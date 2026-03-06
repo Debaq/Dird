@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "DIRD+",
-    "tagline": "Detección de Retinopatía Diabética y DMAE",
+    "tagline": "Detección de Retinopatía Diabética",
     "longDescription": "Plataforma de análisis de imágenes oftalmológicas con IA edge-computing. Todos los datos permanecen en tu dispositivo.",
     "start": "Comenzar"
   },
