@@ -14,8 +14,6 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { regenerateSessionReportBlob } from '@/lib/pdf/report-generator';
 import { ReportGenerator } from '@/lib/pdf/report-generator';
-import { isDemoPreviewSession } from '@/lib/db/demoPatient';
-
 interface ReportItemProps {
   report: Report;
   onView: (blob: Blob, type: string, date: Date, sessionId: number, notes?: string) => void;
@@ -98,14 +96,11 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
         generatedAt: new Date(),
       });
 
-      // Lock the session (unless it's the demo preview session)
-      const isDemoPreview = await isDemoPreviewSession(report.sessionId);
-      if (!isDemoPreview) {
-        await db.sessions.update(report.sessionId, {
-          locked: true,
-          lockedAt: new Date(),
-        });
-      }
+      // Lock the session
+      await db.sessions.update(report.sessionId, {
+        locked: true,
+        lockedAt: new Date(),
+      });
 
       // Download the final report automatically
       const url = URL.createObjectURL(finalPdfBlob);
@@ -117,10 +112,7 @@ const ReportItem: React.FC<ReportItemProps> = ({ report, onView, onDownload }) =
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      const message = isDemoPreview
-        ? t('reports.list.finalizeSuccessDemo')
-        : t('reports.list.finalizeSuccess');
-      toast.success(message);
+      toast.success(t('reports.list.finalizeSuccess'));
     } catch (error) {
       console.error('Error finalizing report:', error);
       toast.error(t('errors.unknown'));

@@ -16,7 +16,6 @@ import {
 import { generateSessionReport } from '@/lib/pdf/report-generator';
 import type { ReportType } from '@/lib/pdf/report-generator';
 import { db } from '@/lib/db/schema';
-import { isDemoPreviewSession } from '@/lib/db/demoPatient';
 import { useTokenStore } from '@/stores/token-store';
 import { useConfigStore } from '@/stores/config-store';
 import { processConclusion, confirmProcessing } from '@/lib/api/token-service';
@@ -232,15 +231,12 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         URL.revokeObjectURL(url);
       }
 
-      // If final report, lock session (unless it's the demo preview session)
+      // If final report, lock session
       if (type === 'final') {
-        const isDemoPreview = await isDemoPreviewSession(sessionId);
-        if (!isDemoPreview) {
-          await db.sessions.update(sessionId, {
-            locked: true,
-            lockedAt: new Date(),
-          });
-        }
+        await db.sessions.update(sessionId, {
+          locked: true,
+          lockedAt: new Date(),
+        });
       }
 
       // Close dialog only if final report

@@ -125,12 +125,12 @@ function AnatomicalQuadrants({
   const itY = opticDisc.y + Math.sin(itAngle) * labelDistance;
 
   // SN label position
-  const snAngle = angle + Math.PI * 3 / 4;
+  const snAngle = angle - Math.PI * 3 / 4;
   const snX = opticDisc.x + Math.cos(snAngle) * labelDistance;
   const snY = opticDisc.y + Math.sin(snAngle) * labelDistance;
 
   // IN label position
-  const inAngle = angle - Math.PI * 3 / 4;
+  const inAngle = angle + Math.PI * 3 / 4;
   const inX = opticDisc.x + Math.cos(inAngle) * labelDistance;
   const inY = opticDisc.y + Math.sin(inAngle) * labelDistance;
 

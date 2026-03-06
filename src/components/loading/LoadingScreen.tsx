@@ -5,23 +5,22 @@ import { useTranslation } from 'react-i18next';
 import { getAssetPath } from '@/utils/assets';
 
 export interface LoadingProgress {
-  step: 'init' | 'patient' | 'model' | 'images' | 'report' | 'done';
+  step: 'init' | 'tokens' | 'model' | 'opencv' | 'done';
   current: number;
   total: number;
   message: string;
 }
 
-interface DemoLoadingScreenProps {
+interface LoadingScreenProps {
   progress: LoadingProgress;
 }
 
-export function DemoLoadingScreen({ progress }: DemoLoadingScreenProps) {
+export function LoadingScreen({ progress }: LoadingScreenProps) {
   const { t } = useTranslation();
   const [dots, setDots] = useState('');
   const [showLogo, setShowLogo] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Animación de puntos suspensivos
   useEffect(() => {
     const interval = setInterval(() => {
       setDots(prev => (prev.length >= 3 ? '' : prev + '.'));
@@ -30,27 +29,23 @@ export function DemoLoadingScreen({ progress }: DemoLoadingScreenProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Calcular porcentaje total
   const getProgressPercentage = (): number => {
     const stepWeights = {
-      init: 5,
-      patient: 10,
-      model: 15,   // Carga del modelo AI
-      images: 55,  // Las imágenes son el proceso más pesado
-      report: 10,
+      init: 10,
+      tokens: 20,
+      model: 35,
+      opencv: 30,
       done: 5,
     };
 
-    const stepOrder = ['init', 'patient', 'model', 'images', 'report', 'done'];
+    const stepOrder = ['init', 'tokens', 'model', 'opencv', 'done'];
     const currentStepIndex = stepOrder.indexOf(progress.step);
 
-    // Calcular progreso acumulado de pasos anteriores
     let accumulatedProgress = 0;
     for (let i = 0; i < currentStepIndex; i++) {
       accumulatedProgress += stepWeights[stepOrder[i] as keyof typeof stepWeights];
     }
 
-    // Calcular progreso del paso actual
     const currentStepWeight = stepWeights[progress.step];
     const currentStepProgress = progress.total > 0
       ? (progress.current / progress.total) * currentStepWeight
@@ -61,15 +56,13 @@ export function DemoLoadingScreen({ progress }: DemoLoadingScreenProps) {
 
   const percentage = getProgressPercentage();
 
-  // Detectar cuando el progreso pasa del 50% y cambiar al logo
   useEffect(() => {
     if (percentage >= 50 && !showLogo && !isTransitioning) {
       setIsTransitioning(true);
-      // Esperar a que termine la animación de rotación antes de cambiar el contenido
       setTimeout(() => {
         setShowLogo(true);
         setIsTransitioning(false);
-      }, 600); // Duración de la animación de rotación
+      }, 600);
     }
   }, [percentage, showLogo, isTransitioning]);
 
@@ -127,9 +120,9 @@ export function DemoLoadingScreen({ progress }: DemoLoadingScreenProps) {
                   </svg>
                 )}
               </div>
-              <CardTitle className="text-2xl">{t('demo.loading.title')}</CardTitle>
+              <CardTitle className="text-2xl">{t('loading.title')}</CardTitle>
               <CardDescription>
-                {t('demo.loading.subtitle')}
+                {t('loading.subtitle')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -145,18 +138,9 @@ export function DemoLoadingScreen({ progress }: DemoLoadingScreenProps) {
                 <Progress value={percentage} className="h-3" />
               </div>
 
-              {progress.step === 'images' && progress.total > 0 && (
-                <div className="text-center text-xs text-smoke-500 dark:text-gray-400">
-                  {t('demo.loading.imagesProgress', {
-                    current: progress.current,
-                    total: progress.total
-                  })}
-                </div>
-              )}
-
               <div className="rounded-lg bg-primary-50 p-3 dark:bg-gray-700">
                 <p className="text-xs text-coal-600 dark:text-gray-300">
-                  {t('demo.loading.firstTimeInfo')}
+                  {t('loading.info')}
                 </p>
               </div>
             </CardContent>

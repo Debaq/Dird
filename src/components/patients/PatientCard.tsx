@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Patient } from '@/lib/db/schema';
-import { isDemoPatient } from '@/lib/db/demoPatient';
 
 export type PatientReportStatus = 'no_report' | 'preliminary' | 'final' | 'none';
 
@@ -29,8 +28,6 @@ const PatientCard: React.FC<PatientCardProps> = ({
 }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const isDemo = isDemoPatient(patient.patientId);
-
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -136,15 +133,13 @@ const PatientCard: React.FC<PatientCardProps> = ({
             <Archive className="w-4 h-4" />
           )}
         </Button>
-        {!isDemo && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => { e.stopPropagation(); onDelete(patient.id!); }}
-          >
-            <Trash2 className="w-4 h-4 text-error-500" />
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => { e.stopPropagation(); onDelete(patient.id!); }}
+        >
+          <Trash2 className="w-4 h-4 text-error-500" />
+        </Button>
       </div>
     </Card>
   );

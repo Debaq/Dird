@@ -1,5 +1,4 @@
 import { db, Session, Image, Detection, Segmentation, Report } from './schema';
-import { DEMO_PATIENT_ID } from './demoPatient';
 
 export async function duplicateSession(sessionId: number): Promise<number> {
   let newSessionId: number | undefined;
@@ -102,12 +101,6 @@ export async function duplicateSession(sessionId: number): Promise<number> {
 }
 
 export async function deletePatient(patientId: number): Promise<void> {
-  // Protección: Verificar si es el paciente demo
-  const patient = await db.patients.get(patientId);
-  if (patient && patient.patientId === DEMO_PATIENT_ID) {
-    throw new Error('El paciente demo no puede ser eliminado. Solo puede ser archivado.');
-  }
-
   await db.transaction('rw', [db.patients, db.sessions, db.images, db.detections, db.segmentations, db.reports], async () => {
     // 1. Get all sessions for the patient
     const sessionsToDelete = await db.sessions.where('patientId').equals(patientId).toArray();

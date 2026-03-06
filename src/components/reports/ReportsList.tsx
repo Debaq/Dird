@@ -10,8 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import PDFViewerModal from './PDFViewerModal';
 import { regenerateSessionReportBlob } from '@/lib/pdf/report-generator';
 import { ReportGenerator } from '@/lib/pdf/report-generator';
-import { isDemoPreviewSession } from '@/lib/db/demoPatient';
-
 interface ReportsListProps {
   sessionId: number;
   refreshKey?: number;
@@ -176,14 +174,11 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
         generatedAt: new Date(),
       });
 
-      // Lock the session (unless it's the demo preview session)
-      const isDemoPreview = await isDemoPreviewSession(sessionId);
-      if (!isDemoPreview) {
-        await db.sessions.update(sessionId, {
-          locked: true,
-          lockedAt: new Date(),
-        });
-      }
+      // Lock the session
+      await db.sessions.update(sessionId, {
+        locked: true,
+        lockedAt: new Date(),
+      });
 
       // Download the final report automatically
       const url = URL.createObjectURL(finalPdfBlob);
@@ -195,10 +190,7 @@ const ReportsList: React.FC<ReportsListProps> = ({ sessionId, refreshKey }) => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      const message = isDemoPreview
-        ? t('reports.list.finalizeSuccessDemo')
-        : t('reports.list.finalizeSuccess');
-      toast.success(message);
+      toast.success(t('reports.list.finalizeSuccess'));
     } catch (error) {
       console.error('Error finalizing report:', error);
       toast.error(t('errors.unknown'));
