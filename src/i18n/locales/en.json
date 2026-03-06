@@ -492,7 +492,6 @@
       "deleteFinalError": "Final reports cannot be deleted.",
       "finalizeConfirm": "Are you sure you want to finalize this report? This action will convert it to final and lock the study permanently.",
       "finalizeSuccess": "Report finalized and downloaded successfully. The study has been locked.",
-      "finalizeSuccessDemo": "Report finalized and downloaded successfully. This is the demo study and remains open for demonstration.",
       "editModalTitle": "Edit Conclusions",
       "editModalPlaceholder": "Enter clinical conclusions and recommendations...",
       "searchPlaceholder": "Search in conclusions...",
@@ -1254,6 +1253,18 @@
       "description": "Detailed technical documentation about the classification system",
       "reviewButton": "Technical Review",
       "improvementsButton": "Planned Improvements"
+    }
+  },
+  "loading": {
+    "title": "Preparing DIRD",
+    "subtitle": "Loading required resources",
+    "info": "Loading the necessary components for the application to work.",
+    "steps": {
+      "init": "Initializing",
+      "tokens": "Verifying tokens",
+      "model": "Loading AI model",
+      "opencv": "Initializing OpenCV",
+      "done": "Complete"
     }
   }
 }

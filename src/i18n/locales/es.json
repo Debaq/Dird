@@ -621,7 +621,6 @@
       "deleteFinalError": "No se pueden eliminar informes finales.",
       "finalizeConfirm": "¿Está seguro de que desea finalizar este informe? Esta acción convertirá este informe en final y bloqueará la estudio permanentemente.",
       "finalizeSuccess": "Informe finalizado y descargado correctamente. La estudio ha sido bloqueada.",
-      "finalizeSuccessDemo": "Informe finalizado y descargado correctamente. Esta es la estudio demo y permanece abierta para demostración.",
       "editModalTitle": "Editar Conclusiones",
       "editModalPlaceholder": "Ingrese las conclusiones clínicas y recomendaciones...",
       "searchPlaceholder": "Buscar en conclusiones...",
@@ -1356,7 +1355,7 @@
     "description": "Aprende cómo funciona DIRD y cómo toma decisiones clínicas",
     "tutorial": {
       "title": "Tutorial Interactivo",
-      "description": "Un recorrido guiado por la aplicación y el paciente demo para aprender a usar todas las funcionalidades de DIRD.",
+      "description": "Un recorrido guiado por la aplicación para aprender a usar todas las funcionalidades de DIRD.",
       "startButton": "Iniciar Tutorial (Próximamente)"
     },
     "howItWorks": {
@@ -1460,21 +1459,16 @@
       "improvementsButton": "Mejoras Planificadas"
     }
   },
-  "demo": {
-    "loading": {
-      "title": "Preparando DIRD",
-      "subtitle": "Configurando el paciente demo por primera vez",
-      "imagesProgress": "Cargando imagen {{current}} de {{total}}",
-      "firstTimeInfo": "Esto solo ocurre la primera vez que abres la aplicación. Los datos se guardan localmente en tu dispositivo.",
-      "steps": {
-        "init": "Inicializando",
-        "patient": "Creando paciente demo",
-        "model": "Cargando modelo de IA",
-        "modelLoaded": "Modelo de IA cargado",
-        "images": "Cargando imágenes",
-        "report": "Cargando reportes",
-        "done": "Completado"
-      }
+  "loading": {
+    "title": "Preparando DIRD",
+    "subtitle": "Cargando recursos necesarios",
+    "info": "Cargando los componentes necesarios para el funcionamiento de la aplicación.",
+    "steps": {
+      "init": "Inicializando",
+      "tokens": "Verificando tokens",
+      "model": "Cargando modelo de IA",
+      "opencv": "Inicializando OpenCV",
+      "done": "Completado"
     }
   }
 }
