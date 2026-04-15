@@ -854,7 +854,6 @@
       "appearance": "Apariencia",
       "models": "Modelos",
       "processing": "Procesamiento",
-      "pwa": "Instalación",
       "about": "Acerca de",
       "report": "Reporte"
     },
@@ -1229,19 +1228,6 @@
       "batchSize": "Tamaño de Lote",
       "batchSizeWithUnit": "Tamaño de Lote ({{size}})"
     },
-    "pwa": {
-      "title": "Progressive Web App (PWA)",
-      "status": "Estado de Instalación",
-      "install": "Instalar Aplicación",
-      "installDescription": "Instala DIRD como aplicación independiente para acceso rápido y funcionalidad offline.",
-      "benefits": {
-        "title": "Beneficios de Instalar",
-        "offline": "Funciona completamente offline después de la primera carga",
-        "faster": "Carga más rápido con caché optimizado",
-        "desktop": "Acceso directo desde tu escritorio o pantalla de inicio",
-        "privacy": "Mayor privacidad - todo el procesamiento es local"
-      }
-    },
     "about": {
       "title": "Acerca de DIRD+",
       "description": "Plataforma de análisis de imágenes oftalmológicas con IA edge-computing. Todos los datos permanecen en tu dispositivo.",
@@ -1253,15 +1239,6 @@
       "updateNow": "Actualizar Ahora",
       "noUpdates": "Tienes la versión más reciente",
       "checkError": "Error al verificar actualizaciones"
-    }
-  },
-  "pwa": {
-    "install": {
-      "title": "Instalar DIRD",
-      "description": "Instala la aplicación para acceso rápido y uso offline",
-      "button": "Instalar",
-      "installing": "Instalando...",
-      "installed": "Aplicación Instalada"
     }
   },
   "processing": {
