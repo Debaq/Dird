@@ -5,7 +5,6 @@ import {
   Palette,
   Cpu,
   Gauge,
-  Download,
   Info,
   Check,
   AlertCircle,
@@ -22,7 +21,6 @@ import {
 } from 'lucide-react';
 import { useConfigStore, type ModelSource } from '@/stores/config-store';
 import { apiInferenceService } from '@/lib/ai/api-inference-service';
-import { PWAInstallButton, PWAInstallStatus } from '@/components/pwa/PWAInstallButton';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -277,10 +275,6 @@ export function Settings() {
             <TabsTrigger value="debug" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <Bug className="h-4 w-4 mr-2" />
               Depuración
-            </TabsTrigger>
-            <TabsTrigger value="pwa" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
-              <Download className="h-4 w-4 mr-2" />
-              {t('settings.tabs.pwa')}
             </TabsTrigger>
             <TabsTrigger value="about" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <Info className="h-4 w-4 mr-2" />
@@ -1131,59 +1125,6 @@ export function Settings() {
               </div>
             </div>
             )}
-          </Card>
-        </TabsContent>
-
-        {/* PWA Tab */}
-        <TabsContent value="pwa">
-          <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
-            <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4">
-              {t('settings.pwa.title')}
-            </h2>
-
-            <div className="space-y-6">
-              {/* Install Status */}
-              <div>
-                <Label className="font-semibold dark:text-dark-text">{t('settings.pwa.status')}</Label>
-                <div className="mt-2 dark:text-dark-text">
-                  <PWAInstallStatus />
-                </div>
-              </div>
-
-              {/* Install Button */}
-              <div>
-                <Label className="font-semibold dark:text-dark-text">{t('settings.pwa.install')}</Label>
-                <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1 mb-3">
-                  {t('settings.pwa.installDescription')}
-                </p>
-                <PWAInstallButton variant="button" className="w-full" />
-              </div>
-
-              {/* PWA Info */}
-              <div className="bg-ice p-4 rounded-md dark:bg-dark-surface dark:border dark:border-coal-600">
-                <h3 className="font-semibold text-coal-800 dark:text-dark-text mb-2">
-                  {t('settings.pwa.benefits.title')}
-                </h3>
-                <ul className="space-y-2 text-sm text-smoke-600 dark:text-dark-textSecondary">
-                  <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
-                    <span>{t('settings.pwa.benefits.offline')}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
-                    <span>{t('settings.pwa.benefits.faster')}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
-                    <span>{t('settings.pwa.benefits.desktop')}</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
-                    <span>{t('settings.pwa.benefits.privacy')}</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
           </Card>
         </TabsContent>
 
