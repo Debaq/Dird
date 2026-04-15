@@ -29,6 +29,7 @@
 - [La Solución](#la-solución)
   - [Propuesta de Valor](#propuesta-de-valor)
   - [Flujo Clínico](#flujo-clínico)
+  - [Motor de Guías Clínicas Pluggable](#motor-de-guías-clínicas-pluggable--funcionalidad-única)
 - [Diferenciadores frente al Mercado](#diferenciadores-frente-al-mercado)
   - [Comparativa de Mercado](#comparativa-de-mercado)
   - [Por qué las Soluciones Existentes no han Cerrado la Brecha](#por-qué-las-soluciones-existentes-no-han-cerrado-la-brecha)
@@ -135,6 +136,91 @@ guía clínica           con conclusiones       portable entre
 ```
 
 **Todo ocurre en el navegador. Sin servidor. Sin internet (después de la primera carga).**
+
+### Motor de Guías Clínicas Pluggable — Funcionalidad Única
+
+DIRD+ incluye un **motor de clasificación clínica agnóstico a la guía**, una capacidad que ningún otro sistema de tamizaje de RD ofrece. Mientras todos los competidores (DART, IDx-DR, EyeArt, Google ARDA) implementan un criterio de clasificación fijo y cerrado — generalmente un resultado binario "referir / no referir" — DIRD+ permite que **cualquier guía clínica sea cargada como un archivo JSON sin modificar código**.
+
+#### Por qué es potente
+
+| Capacidad | Impacto |
+|-----------|---------|
+| **Guías como datos, no como código** | Agregar la guía de un nuevo país es crear un JSON y registrarlo. Sin desarrollo, sin esperar al proveedor |
+| **Clasificación detallada por severidad** | No solo "referir/no referir": DIRD+ clasifica en 5+ niveles (sin RD → leve → moderada → severa → proliferativa), con tratamientos, urgencia y plazo de seguimiento específicos por nivel |
+| **Análisis espacial por cuadrante** | Distribución de lesiones en 4 cuadrantes + centro macular. Evalúa la Regla 4-2-1 (criterio ICDR para RDNP severa) automáticamente |
+| **Múltiples guías simultáneas** | Clasificar la misma imagen según ICDR (internacional) y MINSAL (Chile) para comparar criterios. Útil en investigación y docencia |
+| **Protocolos de tratamiento integrados** | Cada nivel de severidad define acciones clínicas, urgencia (rutina/acelerada/urgente) e intervalo de seguimiento en días |
+| **Mapeo de clases IA → clínica** | Traduce las detecciones del modelo (microaneurysm, hemorrhage, cotton_wool_spot...) a categorías clínicas de la guía (microaneurismas, hemorragias, exudados...) |
+| **Corrección humana preservada** | El clínico puede modificar la clasificación generada. El sistema marca `manuallyModified: true` para trazabilidad |
+| **Validación automática** | Al cargar una guía, el sistema valida estructura, coherencia de niveles, reglas y protocolos. Reporta errores y advertencias |
+
+#### Guías actualmente implementadas
+
+| Guía | Origen | Uso |
+|------|--------|-----|
+| **ICDR 2024** | International Council of Ophthalmology | Estándar internacional de referencia |
+| **MINSAL Chile 2017** | Ministerio de Salud de Chile | Protocolo GES nacional chileno |
+
+#### Ejemplo de extensión
+
+Para agregar la guía de cualquier otro país (ej. México, Colombia, España):
+
+1. Crear `public/clinical-guidelines/mi_guia.json` con niveles de severidad, reglas de clasificación, protocolos de tratamiento y mapeo de clases
+2. Registrar en `public/clinical-guidelines/index.json`
+3. La aplicación la detecta automáticamente al recargar
+
+No requiere conocimiento de programación — solo conocimiento clínico para definir los criterios.
+
+#### Implicancia estratégica
+
+Este diseño convierte a DIRD+ en una **plataforma**, no solo una herramienta. Cada país, servicio de salud o grupo de investigación puede adaptar la clasificación a sus protocolos locales sin depender del desarrollador. Esto es especialmente relevante para:
+
+- **Escalamiento regional**: Una misma plataforma sirve para Chile (MINSAL), Perú, Colombia, México — cada uno con su guía
+- **Investigación**: Comparar cómo diferentes guías clasifican los mismos hallazgos
+- **Docencia**: Enseñar a residentes las diferencias entre criterios internacionales y locales
+- **Evolución clínica**: Cuando una guía se actualiza, basta actualizar el JSON — sin esperar una nueva versión del software
+
+#### Separación de Roles: Guía Clínica vs. LLM Externo
+
+Un principio de diseño fundamental de DIRD+ es la **separación estricta entre clasificación clínica y generación de texto narrativo**:
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    CLASIFICACIÓN (local, determinista)               │
+│                                                                      │
+│  Detecciones IA → Motor de Guía Clínica → Severidad + Tratamiento   │
+│  (ONNX local)     (JSON pluggable)         + Urgencia + Seguimiento │
+│                                                                      │
+│  La GUÍA CLÍNICA decide. Reglas explícitas, auditables,             │
+│  reproducibles. Sin IA generativa. Sin caja negra.                  │
+└──────────────────────────┬───────────────────────────────────────────┘
+                           │
+                           ▼ datos estructurados ya clasificados
+┌──────────────────────────────────────────────────────────────────────┐
+│                    NARRACIÓN (remota, opcional)                       │
+│                                                                      │
+│  Datos de clasificación → LLM externo → Texto de conclusión clínica │
+│  (severidad, lesiones,    (vía backend)   narrativo para el informe  │
+│   tratamientos, urgencia)                                            │
+│                                                                      │
+│  El LLM NARRA. Recibe la decisión ya tomada por la guía y la        │
+│  redacta como texto clínico legible. No clasifica. No diagnostica.  │
+│  El clínico puede editar el texto antes de finalizar el informe.    │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+**¿Por qué esta separación importa?**
+
+| Aspecto | Sin separación (otros sistemas) | DIRD+ |
+|---------|--------------------------------|-------|
+| **Trazabilidad** | "La IA dijo esto" — ¿qué IA? ¿qué criterio? | Clasificación trazable a reglas explícitas de la guía. El JSON es auditable |
+| **Reproducibilidad** | Misma imagen → diferentes resultados según el prompt | Misma imagen + misma guía = mismo resultado, siempre |
+| **Regulación** | Difícil demostrar que el LLM no alucina un diagnóstico | La clasificación no depende de IA generativa. El LLM solo redacta |
+| **Offline** | Si el LLM no está disponible, no hay conclusión | Sin LLM: la clasificación completa funciona igual. Solo falta el texto narrativo |
+| **Sesgo** | El LLM puede introducir sesgos en la clasificación | El LLM no tiene influencia sobre la severidad ni el tratamiento |
+| **Edición humana** | ¿El clínico edita la clasificación o el texto? | Clasificación y texto editables por separado. `manuallyModified` preserva trazabilidad |
+
+El LLM externo es un **servicio opcional de redacción**. DIRD+ funciona completamente sin él — la clasificación, severidad, tratamientos, urgencia y seguimiento se determinan localmente por la guía clínica.
 
 ---
 
