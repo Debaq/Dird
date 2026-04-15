@@ -1243,5 +1243,62 @@
       "opencv": "Initializing OpenCV",
       "done": "Complete"
     }
+  },
+  "clinical": {
+    "warnings": {
+      "quadrantUnavailable": "Quadrant analysis unavailable - Rule 4-2-1 precision reduced",
+      "rule421NotEvaluated": "Rule 4-2-1 could not be fully evaluated",
+      "rightEyeUnavailable": "Right eye (OD) data not available",
+      "leftEyeUnavailable": "Left eye (OI) data not available",
+      "aiDisclaimer": "This is an AI-assisted suggestion, not a definitive diagnosis",
+      "clinicalCorrelation": "Clinical correlation and expert review required",
+      "quadrantApproximated": "Quadrant-based analysis (4-2-1 rule) is approximated"
+    },
+    "rule421": {
+      "quadrantsMet": "{{name}}: {{met}}/{{required}} quadrants met"
+    },
+    "recommendations": {
+      "pdr": {
+        "urgentReferral": "URGENT: Immediate referral to retina specialist required",
+        "considerPRP": "Consider pan-retinal photocoagulation (PRP)",
+        "followup": "Follow-up within 2-4 weeks"
+      },
+      "severe_npdr": {
+        "urgentReferral": "Urgent referral to retina specialist",
+        "followup": "Follow-up within 1-2 months",
+        "considerTherapy": "Consider PRP or anti-VEGF therapy"
+      },
+      "moderate_npdr": {
+        "refer": "Refer to ophthalmologist",
+        "followup": "Follow-up every 3-6 months",
+        "optimizeGlycemic": "Optimize glycemic control"
+      },
+      "mild_npdr": {
+        "annualExam": "Annual dilated eye examination",
+        "monitorGlucose": "Monitor blood glucose levels",
+        "continueDM": "Continue diabetes management"
+      },
+      "no_dr": {
+        "annualScreening": "Annual screening recommended",
+        "maintainGlycemic": "Maintain good glycemic control"
+      },
+      "riskFactors": {
+        "hypertension": "Blood pressure control is essential",
+        "dyslipidemia": "Lipid management recommended",
+        "longDuration": "Long diabetes duration increases progression risk",
+        "type1": "Type 1 diabetes requires vigilant monitoring"
+      }
+    },
+    "format": {
+      "title": "DIABETIC RETINOPATHY CLASSIFICATION",
+      "protocol": "Protocol",
+      "overallSeverity": "Overall Severity",
+      "rightEye": "Right Eye (OD)",
+      "leftEye": "Left Eye (OI)",
+      "confidence": "Confidence",
+      "criteria": "Criteria",
+      "recommendations": "Recommendations",
+      "warnings": "Warnings"
+    }
   }
 }

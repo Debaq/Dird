@@ -16,6 +16,23 @@ import type {
 } from '@/types/clinical-guidelines';
 import { loadGuideline } from './guideline-loader';
 import { classManager } from '../classes/class-manager';
+import i18n from '@/i18n/config';
+
+// ============================================================================
+// Localization Helpers
+// ============================================================================
+
+/**
+ * Pick the localized field from a guideline object based on current i18n language.
+ * Fields follow the pattern: field_es (Spanish), field (English/default).
+ */
+function getLocalizedField<T>(obj: Record<string, any>, field: string, fallback: T): T {
+  const lang = i18n.language;
+  if (lang === 'es' && `${field}_es` in obj && obj[`${field}_es`] != null) {
+    return obj[`${field}_es`];
+  }
+  return obj[field] ?? fallback;
+}
 
 // ============================================================================
 // Class Mapping
@@ -305,7 +322,11 @@ function calculateRule421CriteriaMet(
     if (quadrantsWithCriterion >= min_quadrants) {
       criteriaMet++;
       details.push(
-        `${name}: ${quadrantsWithCriterion}/${min_quadrants} cuadrantes cumplidos`
+        i18n.t('clinical.rule421.quadrantsMet', {
+          name,
+          met: quadrantsWithCriterion,
+          required: min_quadrants,
+        })
       );
     }
   });
@@ -380,20 +401,20 @@ export async function classifyWithGuideline(
     console.warn(`No treatment protocol found for severity: ${matchedSeverity}`);
   }
 
-  // Determine language for labels (use Spanish if available, fallback to English)
-  const severityLabel = severityLevel.name_es || severityLevel.name;
-  const actions = protocol?.actions_es || protocol?.actions || [];
-  const rationale = protocol?.rationale_es || protocol?.rationale || '';
+  // Determine language for labels based on active i18n language
+  const severityLabel = getLocalizedField(severityLevel, 'name', severityLevel.name);
+  const actions = protocol ? getLocalizedField(protocol, 'actions', protocol.actions || []) : [];
+  const rationale = protocol ? getLocalizedField(protocol, 'rationale', protocol.rationale || '') : '';
 
   // Build warnings
   const warnings: string[] = [];
 
   if (!quadrantLesions) {
-    warnings.push('Análisis de cuadrantes no disponible - precisión de regla 4-2-1 reducida');
+    warnings.push(i18n.t('clinical.warnings.quadrantUnavailable'));
   }
 
   if (rule421Result.criteriaMet > 0 && !quadrantLesions) {
-    warnings.push('Regla 4-2-1 no pudo ser completamente evaluada');
+    warnings.push(i18n.t('clinical.warnings.rule421NotEvaluated'));
   }
 
   // Build result
