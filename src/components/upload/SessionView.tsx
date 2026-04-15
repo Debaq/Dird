@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowLeft, Play, Lock, ChevronRight, Download, Plus } from 'lucide-react';
+import { ArrowLeft, Play, Lock, ChevronRight, Download, Plus, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useTranslation } from 'react-i18next';
@@ -15,8 +15,9 @@ import ImageGallery from './ImageGallery';
 import ReportGenerator from '../reports/ReportGenerator';
 import ReportsList from '../reports/ReportsList';
 import AnalysisView from './AnalysisView';
+import SessionForm from '@/components/patients/SessionForm';
 import UploadProgressModal from './UploadProgressModal';
-import { db } from '@/lib/db/schema';
+import { db, Session } from '@/lib/db/schema';
 import { exportSession, downloadDirdFile } from '@/lib/export/dird-exporter';
 import { inferenceService } from '@/lib/ai/inference-service';
 import { useImageUploader } from '@/hooks/useImageUploader';
@@ -50,15 +51,7 @@ const CompactUploader: React.FC<{ sessionId: number; onUploadComplete: () => voi
             <div className="flex items-center gap-2">
                 {getHiddenInput()}
                 <div className="flex items-center gap-1 bg-coal-100 p-1 rounded-lg">
-                    <Button
-                        size="sm"
-                        variant={selectedEye === 'OI' ? 'default' : 'ghost'}
-                        onClick={() => setSelectedEye('OI')}
-                        className="text-xs"
-                        disabled={isLimitReached}
-                    >
-                        OI
-                    </Button>
+
                     <Button
                         size="sm"
                         variant={selectedEye === 'OD' ? 'default' : 'ghost'}
@@ -67,6 +60,15 @@ const CompactUploader: React.FC<{ sessionId: number; onUploadComplete: () => voi
                         disabled={isLimitReached}
                     >
                         OD
+                    </Button>                    
+                    <Button
+                        size="sm"
+                        variant={selectedEye === 'OI' ? 'default' : 'ghost'}
+                        onClick={() => setSelectedEye('OI')}
+                        className="text-xs"
+                        disabled={isLimitReached}
+                    >
+                        OI
                     </Button>
                 </div>
                 <Button size="sm" onClick={triggerFileDialog} disabled={isLimitReached}>
@@ -94,6 +96,8 @@ const SessionView: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState({ current: 0, total: 0 });
   const [isUploading, setIsUploading] = useState(false);
+  const [sessionToEdit, setSessionToEdit] = useState<Session | undefined>();
+  const [showSessionForm, setShowSessionForm] = useState(false);
 
   const session = useLiveQuery(
     () => (sessionId ? db.sessions.get(parseInt(sessionId)) : undefined),
@@ -125,6 +129,11 @@ const SessionView: React.FC = () => {
     }
   };
 
+  const handleEditSession = (session: Session) => {
+    setSessionToEdit(session);
+    setShowSessionForm(true);
+  };
+
   const handleDeleteImage = async (imageId: number) => {
     const confirmed = await confirm({
       title: t('confirmations.deleteImageTitle') || t('upload.deleteImage'),
@@ -152,10 +161,12 @@ const SessionView: React.FC = () => {
   const handleUploadComplete = () => {
     setIsUploading(false);
     setRefreshKey((prev) => prev + 1);
+    setSessionViewTab('images');
   };
 
   const handleUploadStart = () => {
     setIsUploading(true);
+    return isUploading;
   };
 
   const handleProcessWithAI = async () => {
@@ -231,7 +242,7 @@ const SessionView: React.FC = () => {
     return new Date(date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  const showLargeDropzone = (images.length === 0 || isUploading) && !session.locked;
+  const showLargeDropzone = !session.locked;
 
   return (
     <>
@@ -259,14 +270,22 @@ const SessionView: React.FC = () => {
               <Download className="w-4 h-4 mr-2" />
               {isExporting ? t('export.exporting') : t('export.session')}
             </Button>
-            {session.locked ? (
+
+            {!session.locked && ( // Solo mostrar editar y eliminar si no está bloqueado
+            <>
+              <Button variant="outline"  onClick={(e) => {
+                e.stopPropagation();
+                handleEditSession(session);}}
+                className="flex-1 md:flex-none">
+                <Pencil className="w-4 h-4 mr-2" />
+                {t('sessions.edit')}
+              </Button>
+            </>
+            )}
+            {session.locked && (
               <span className="flex items-center text-sm text-accent-600 bg-accent-50 px-3 py-1 rounded-full whitespace-nowrap">
                 <Lock className="w-4 h-4 mr-1" />{t('sessions.locked')}
               </span>
-            ) : (
-              <div className="flex-1 md:flex-none">
-                <ReportGenerator sessionId={parseInt(sessionId!)} onReportGenerated={() => setRefreshKey((prev) => prev + 1)} />
-              </div>
             )}
           </div>
         </div>
@@ -278,13 +297,6 @@ const SessionView: React.FC = () => {
           </Card>
         )}
 
-        {showLargeDropzone && (
-            <ImageDropzone
-              sessionId={parseInt(sessionId!)}
-              onUploadComplete={handleUploadComplete}
-              onUploadStart={handleUploadStart}
-            />
-        )}
 
         <Tabs value={sessionViewTab} onValueChange={setSessionViewTab} className="w-full">
           <TabsList className="w-full justify-start overflow-x-auto scrollbar-hide h-auto p-1 gap-1">
@@ -299,6 +311,7 @@ const SessionView: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <CardTitle>{t('sessions.galleryTitle')}</CardTitle>
                   <div className="flex flex-wrap items-center gap-2">
+
                       {images.length > 0 && !session.locked && (
                           <CompactUploader
                             sessionId={parseInt(sessionId!)}
@@ -306,6 +319,7 @@ const SessionView: React.FC = () => {
                             onUploadStart={handleUploadStart}
                           />
                       )}
+                      
                       {images.length > 0 && !session.locked && (
                           <Button
                               onClick={handleProcessWithAI}
@@ -322,6 +336,15 @@ const SessionView: React.FC = () => {
                       )}
                   </div>
                 </div>
+
+                {showLargeDropzone && images.length < 1 && (
+                  <ImageDropzone
+                    sessionId={parseInt(sessionId!)}
+                    onUploadComplete={handleUploadComplete}
+                    onUploadStart={handleUploadStart}
+                  />
+                )}
+
               </CardHeader>
               <CardContent>
                 <ImageGallery
@@ -401,6 +424,17 @@ const SessionView: React.FC = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      <SessionForm
+        open={showSessionForm}
+        onOpenChange={setShowSessionForm}
+        patientId={patient.id!}
+        sessionToEdit={sessionToEdit}
+        onSuccess={() => {
+          setShowSessionForm(false);
+          setSessionToEdit(undefined);
+        }}
+      />
       {ConfirmDialogComponent}
     </>
   );

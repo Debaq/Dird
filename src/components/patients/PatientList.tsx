@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import PatientCard, { PatientReportStatus } from './PatientCard';
 import PatientForm from './PatientForm';
-import ExportImportControls from './ExportImportControls';
+import ExportImportPatients from './ExportImportPatients';
 import { db, Patient } from '@/lib/db/schema';
 import { deletePatient } from '@/lib/db/actions';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -122,7 +122,7 @@ const PatientList: React.FC = () => {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <ExportImportControls onImportComplete={() => {/* Refresh handled by useLiveQuery */}} />
+          <ExportImportPatients onImportComplete={() => {/* Refresh handled by useLiveQuery */}} />
           <Button
             onClick={() => {
               setPatientToEdit(undefined);
