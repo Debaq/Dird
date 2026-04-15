@@ -636,9 +636,14 @@ src/
 
 ### Módulo Academy
 
-* Contenido educativo integrado para capacitación en lectura de fondo de ojo
-* [PLACEHOLDER: describir qué tipo de contenido tiene — casos, guías, evaluaciones]
-* [PLACEHOLDER: indicar si es interactivo o solo consultivo]
+Sección educativa consultiva integrada en la aplicación, orientada a que el profesional de salud comprenda qué detecta la IA, cómo clasifica y qué guía clínica aplica:
+
+- **Escalas de clasificación de RD**: Tres tabs comparativas con ICDR (internacional), MINSAL 2017 (Chile/GES) y ETDRS (investigación), con niveles de severidad, conducta clínica y links a guías oficiales
+- **Clases detectables**: Catálogo visual de lesiones que el modelo detecta actualmente (microaneurismas, hemorragias, exudados duros/blandos, neovascularización) y clases en desarrollo (IRMA, arrosariamiento venoso, edema macular)
+- **Cómo funciona DIRD**: Explicación del flujo de trabajo y la arquitectura de privacidad
+- **Documentación técnica**: Acceso directo a revisión técnica del clasificador, roadmap de entrenamiento, mejoras sin reentrenar modelos, y guía clínica MINSAL 2017 (PDF original)
+- **Disclaimer clínico**: Aviso de que es herramienta de apoyo, no reemplazo del criterio profesional
+- **Tutorial interactivo**: Preparado para guía paso a paso (próximamente)
 
 ---
 
