@@ -1,170 +1,457 @@
-# DIRD+ — Plataforma de Detección de Retinopatía Diabética
+# DIRD+ — Plataforma de Detección de Retinopatía Diabética con IA Edge-Computing
 
 <p align="center">
-  <img src="public/logo.svg" alt="DIRD+ Logo" width="120" />
+  <img src="public/logo.svg" alt="DIRD+ Logo" width="140" />
 </p>
 
 <p align="center">
-  Plataforma web <em>privacy-first</em> de análisis oftalmológico con inteligencia artificial ejecutada completamente en el navegador.
+  <strong>Análisis oftalmológico con inteligencia artificial ejecutada íntegramente en el navegador.</strong><br>
+  Privacidad total. Sin dependencia de servidores. Sin costo por tamizaje.
+</p>
+
+<p align="center">
+  <a href="#el-problema">El Problema</a> · 
+  <a href="#la-solución">La Solución</a> · 
+  <a href="#diferenciadores">Diferenciadores</a> · 
+  <a href="#comparativa-de-mercado">Mercado</a> · 
+  <a href="#arquitectura-técnica">Arquitectura</a> · 
+  <a href="#referencias-científicas">Referencias</a>
 </p>
 
 ---
 
 ## Tabla de Contenidos
 
-- [Visión General](#visión-general)
-- [Propuesta de Valor](#propuesta-de-valor)
-- [Stack Tecnológico](#stack-tecnológico)
-- [Arquitectura](#arquitectura)
+- [El Problema](#el-problema)
+  - [Epidemiología Global](#epidemiología-global)
+  - [Contexto Chile](#contexto-chile)
+  - [La Brecha de Tamizaje](#la-brecha-de-tamizaje)
+- [La Solución](#la-solución)
+  - [Propuesta de Valor](#propuesta-de-valor)
+  - [Flujo Clínico](#flujo-clínico)
+- [Diferenciadores frente al Mercado](#diferenciadores-frente-al-mercado)
+  - [Comparativa de Mercado](#comparativa-de-mercado)
+  - [Por qué las Soluciones Existentes no han Cerrado la Brecha](#por-qué-las-soluciones-existentes-no-han-cerrado-la-brecha)
+  - [Ventaja Regulatoria: Soberanía de Datos](#ventaja-regulatoria-soberanía-de-datos)
+  - [Impacto Económico](#impacto-económico)
+- [Arquitectura Técnica](#arquitectura-técnica)
+  - [Diagrama de Arquitectura](#diagrama-de-arquitectura)
+  - [Stack Tecnológico](#stack-tecnológico)
+  - [Pipeline de Inferencia IA](#pipeline-de-inferencia-ia)
+  - [Sistema de Guías Clínicas Pluggable](#sistema-de-guías-clínicas-pluggable)
+  - [Esquema de Base de Datos](#esquema-de-base-de-datos)
+  - [Estructura del Proyecto](#estructura-del-proyecto)
 - [Funcionalidades](#funcionalidades)
-  - [Gestión de Pacientes y Sesiones](#gestión-de-pacientes-y-sesiones)
-  - [Análisis con IA en el Navegador](#análisis-con-ia-en-el-navegador)
-  - [Canvas Interactivo de Anotación](#canvas-interactivo-de-anotación)
-  - [Clasificación Clínica Multi-Guía](#clasificación-clínica-multi-guía)
-  - [Generación de Informes PDF](#generación-de-informes-pdf)
-  - [Comparación de Sesiones](#comparación-de-sesiones)
-  - [Exportación e Importación](#exportación-e-importación)
-  - [Sistema de Contribución](#sistema-de-contribución)
-  - [Academia](#academia)
-  - [Panel de Administración](#panel-de-administración)
-- [Instalación](#instalación)
-  - [Desarrollo Local](#desarrollo-local)
-  - [Build de Producción](#build-de-producción)
-- [Configuración](#configuración)
-- [Despliegue](#despliegue)
+- [Instalación y Despliegue](#instalación-y-despliegue)
 - [Guías Clínicas Soportadas](#guías-clínicas-soportadas)
-- [Licencia](#licencia)
+- [Hoja de Ruta](#hoja-de-ruta)
+- [Referencias Científicas](#referencias-científicas)
+- [Equipo y Afiliación](#equipo-y-afiliación)
 
 ---
 
-## Visión General
+## El Problema
 
-DIRD+ es una aplicación web diseñada para el análisis de imágenes de fondo de ojo (fundoscopía) utilizando modelos de visión artificial ejecutados **íntegramente en el navegador** mediante ONNX Runtime Web (WebAssembly). No requiere servidor para el procesamiento de imágenes — los datos del paciente nunca abandonan el dispositivo.
+### Epidemiología Global
 
-La plataforma permite a oftalmólogos, tecnólogos médicos e investigadores:
+La retinopatía diabética (RD) es la **principal causa de ceguera en adultos en edad laboral** (20-74 años) en países desarrollados (OMS, World Report on Vision, 2019). Más del **80% de esta ceguera es prevenible** con detección temprana y tratamiento oportuno.
 
-1. Gestionar pacientes y sesiones clínicas
-2. Subir imágenes de fondo de ojo y procesarlas con IA (detección + segmentación)
-3. Revisar y corregir hallazgos en un canvas interactivo multicapa
-4. Clasificar severidad de retinopatía diabética según guías clínicas oficiales
-5. Generar informes PDF configurables con conclusiones clínicas
-6. Exportar/importar datos completos en formato `.dird`
+| Indicador | Cifra | Fuente |
+|-----------|-------|--------|
+| Adultos con diabetes en el mundo | 537 millones (2021) | IDF Diabetes Atlas, 10ª ed. |
+| Proyección para 2045 | 783 millones | IDF, 2021 |
+| Prevalencia de RD entre diabéticos | 22-35% | Teo et al., *Ophthalmology*, 2021; Yau et al., *Diabetes Care*, 2012 |
+| Personas con algún grado de RD | ~103 millones (2020) | Teo et al., 2021 |
+| RD que amenaza la visión | 6-10% de diabéticos | Yau et al., 2012 |
+| Casos de ceguera por RD | ~860,000 | GBD 2020, *Lancet Global Health* |
+| Diabéticos sin diagnóstico | ~240 millones | IDF, 2021 |
+
+Sin tratamiento, aproximadamente el **50% de los pacientes con RD proliferativa quedan legalmente ciegos en 5 años** (National Eye Institute, NIH).
+
+### Contexto Chile
+
+Chile enfrenta una situación particularmente crítica:
+
+| Indicador | Cifra | Fuente |
+|-----------|-------|--------|
+| Prevalencia de diabetes en adultos | **12.3%** (~1.7 millones de personas) | Encuesta Nacional de Salud 2016-2017, MINSAL |
+| Sospecha de diabetes (incl. no diagnosticados) | 15.8% | ENS 2016-2017 |
+| Prevalencia en mayores de 65 años | >30% | ENS 2016-2017 |
+| Diabéticos con algún grado de RD estimados | 425,000 - 595,000 | Programa de Salud Cardiovascular, MINSAL |
+| Diabéticos que reciben tamizaje oftalmológico oportuno | **Solo 15-30%** | Programa de Salud Cardiovascular, MINSAL |
+| Oftalmólogos en el país | ~1,100 - 1,300 | Sociedad Chilena de Oftalmología |
+| Concentrados en Región Metropolitana | 60-65% | Superintendencia de Salud |
+| Densidad en regiones extremas | <3 por 100,000 hab. | Registro de Prestadores, Superintendencia de Salud |
+
+La Retinopatía Diabética está incluida en las **Garantías Explícitas en Salud (GES)** desde 2006, obligando al Estado a garantizar acceso a tamizaje y tratamiento. Sin embargo, las **listas de espera GES para oftalmología superan los plazos garantizados** en múltiples regiones, y la distribución inequitativa de especialistas deja a regiones como Aysén, Magallanes, Atacama y la Araucanía con cobertura insuficiente.
+
+### La Brecha de Tamizaje
+
+La OMS y la ADA recomiendan exámenes de fondo de ojo **al menos cada 1-2 años** para todo diabético. La realidad es otra:
+
+| País/Región | Tasa de tamizaje oportuno | Fuente |
+|-------------|--------------------------|--------|
+| Países de altos ingresos | 50-70% | Piyasena et al., *PLoS ONE*, 2019 |
+| Países de bajos/medianos ingresos | 10-30% | Piyasena et al., 2019 |
+| Chile (APS pública) | 15-30% | MINSAL |
+
+**Barreras principales:**
+- **Escasez de especialistas**: Déficit mundial estimado de >200,000 oftalmólogos (Resnikoff et al., *BJO*, 2020)
+- **Costo**: Examen con oftalmólogo: USD 50-200 en Latinoamérica
+- **Acceso geográfico**: Concentración urbana de especialistas
+- **Tiempos de espera**: 6-12 meses en sistema público chileno
+- **Conectividad**: 40-60% de establecimientos rurales con internet limitado (ITU, 2022)
 
 ---
 
-## Propuesta de Valor
+## La Solución
 
-| Aspecto | Detalle |
-|---------|---------|
-| **Privacidad total** | Inferencia IA en el navegador. Cero transmisión de imágenes a servidores externos |
-| **Persistencia local** | IndexedDB para almacenamiento completo de datos en el dispositivo |
-| **Sin dependencias de infraestructura** | No requiere GPU en servidor, ni API de IA externa para el análisis |
-| **Guías clínicas extensibles** | Sistema pluggable de guías (ICDR 2024, MINSAL Chile 2017). Agregar nuevas guías sin modificar código |
-| **Portabilidad** | Formato `.dird` (ZIP) permite mover pacientes completos entre instalaciones |
-| **Multilenguaje** | Español (base) e Inglés. Arquitectura i18n extensible |
+DIRD+ es una plataforma web que ejecuta modelos de visión artificial para detección de retinopatía diabética **íntegramente en el navegador** del usuario, mediante ONNX Runtime Web (WebAssembly). Las imágenes de fondo de ojo se procesan localmente — **los datos del paciente nunca abandonan el dispositivo**.
+
+### Propuesta de Valor
+
+| Aspecto | Qué ofrece DIRD+ | Por qué importa |
+|---------|-------------------|-----------------|
+| **Privacidad total** | Inferencia IA en el navegador. Cero transmisión de datos a servidores externos | Cumplimiento con Ley 21.096 y regulaciones de datos de salud sin esfuerzo adicional |
+| **Costo cero de operación** | Sin licencias, sin pago por tamizaje, sin hardware propietario | Viable para CESFAM rurales con presupuesto limitado |
+| **Funciona offline** | Modelos descargados una vez, almacenados en caché del navegador. IndexedDB local | Operativo en zonas sin conectividad estable |
+| **Guías clínicas adaptables** | Sistema pluggable: ICDR 2024 (internacional), MINSAL Chile 2017. Agregar nuevas guías sin modificar código | Adaptable a protocolos locales GES sin depender de proveedor extranjero |
+| **Código abierto** | Código fuente completo auditable. Algoritmos, umbrales y criterios verificables | Transparencia para reguladores, investigadores y clínicos |
+| **Portabilidad** | Formato `.dird` (ZIP) para exportar/importar pacientes completos | Interoperabilidad entre instalaciones sin vendor lock-in |
+
+### Flujo Clínico
+
+```
+1. CAPTURA             2. CARGA               3. ANÁLISIS IA          4. REVISIÓN
+Retinógrafo         →  Subir imágenes      →  Detección automática →  Canvas interactivo
+(cualquier cámara)     al navegador            de lesiones (ONNX)     multicapa con
+                       OD / OI                 + Segmentación         herramientas de
+                                                                      anotación
+
+5. CLASIFICACIÓN       6. INFORME             7. EXPORTACIÓN
+Severidad según     →  PDF configurable    →  Formato .dird
+guía clínica           con conclusiones       portable entre
+(ICDR/MINSAL)          y recomendaciones      instalaciones
+```
+
+**Todo ocurre en el navegador. Sin servidor. Sin internet (después de la primera carga).**
 
 ---
 
-## Stack Tecnológico
+## Diferenciadores frente al Mercado
 
-### Frontend
+### Comparativa de Mercado
+
+| Característica | IDx-DR (Digital Diagnostics) | Google ARDA | EyeArt (Eyenuk) | Phelcom Eyer (Brasil) | SELENA+ (Singapur) | **DIRD+** |
+|---|---|---|---|---|---|---|
+| **Procesamiento** | Cloud | Cloud | Cloud | Cloud | Cloud | **Edge (navegador)** |
+| **Datos salen del dispositivo** | Sí (USA) | Sí (Google Cloud) | Sí (USA) | Sí (Brasil) | Sí (Singapur) | **No** |
+| **Funciona offline** | No | No | No | No | No | **Sí** |
+| **Hardware requerido** | Topcon NW400 (~USD 15-25K) | Cámara de mesa (~USD 5-15K) | Cámara compatible (~USD 5-15K) | Smartphone + adaptador (~USD 3-5K) | Cámara de mesa (~USD 5-15K) | **Cualquier cámara existente** |
+| **Costo por tamizaje** | ~USD 40-55 | No disponible comercialmente | ~USD 8-15 | Suscripción | Integrado en sistema nacional | **USD 0** |
+| **Código abierto** | No | Parcial (papers) | No | No | No | **Sí** |
+| **Idioma español nativo** | No | No | No | Portugués/Inglés | No | **Sí** |
+| **Multi-guía clínica** | No (resultado binario) | No | No | No | No | **Sí (ICDR, MINSAL, extensible)** |
+| **Aprobación regulatoria** | FDA De Novo, CE | CE, Thai FDA | FDA 510(k), CE | ANVISA | HSA, CE | En desarrollo |
+| **Soberanía de datos** | No | No | No | No | Parcial | **Sí (100% local)** |
+
+**No existe otra plataforma que combine edge-computing en navegador + funcionamiento offline + código abierto + soporte multi-guía clínica para tamizaje de RD.**
+
+### Por qué las Soluciones Existentes no han Cerrado la Brecha
+
+Las soluciones comerciales de IA para RD existen desde 2018 (IDx-DR fue la primera con aprobación FDA). Sin embargo, la brecha de tamizaje persiste, especialmente en países de ingresos medios como Chile:
+
+| Barrera | Cómo afecta | Cómo DIRD+ la resuelve |
+|---------|-------------|------------------------|
+| **Dependencia de internet** | 95%+ de las soluciones requieren cloud. Las zonas rurales donde más se necesita screening son las de peor conectividad. Caso documentado: Google ARDA en Tailandia falló en clínicas rurales por problemas de red (Beede et al., *CHI*, 2020) | Funciona 100% offline tras primera carga |
+| **Costo por tamizaje** | USD 8-55 por screening se acumula. Para 1.7M de diabéticos chilenos: USD 13-93 millones/año solo en licencias de software | USD 0 por tamizaje |
+| **Hardware propietario** | IDx-DR exige cámara Topcon NW400 (~USD 25K). Crea vendor lock-in | Compatible con cualquier imagen de fondo de ojo |
+| **Idioma** | Mayoría de soluciones solo en inglés. Personal de APS chilena no domina inglés técnico | Interfaz y reportes en español nativo |
+| **Soberanía de datos** | Imágenes retinales (datos biométricos) enviadas a servidores en EE.UU., China o Singapur | Datos nunca abandonan el dispositivo |
+| **Adaptabilidad clínica** | Resultado binario (referir/no referir) sin adaptación a protocolos locales | Multi-guía: clasificación según MINSAL Chile, ICDR, o guías personalizadas |
+| **Vendor lock-in** | Si el proveedor sube precios o desaparece, el hospital pierde capacidad de screening | Open source. Datos exportables en formato abierto |
+
+### Ventaja Regulatoria: Soberanía de Datos
+
+La arquitectura edge-computing de DIRD+ otorga una ventaja regulatoria estructural que los competidores cloud no pueden replicar fácilmente:
+
+- **Chile — Ley 21.096**: Consagra la protección de datos personales como derecho constitucional. Los datos biométricos (imágenes retinales) son categoría especial.
+- **Chile — Ley 21.719** (2024): Nuevo marco de protección de datos personales con requisitos más estrictos para datos de salud, alineado con GDPR europeo.
+- **GDPR (Europa)**: Clasifica datos de salud como "categoría especial" con restricciones de transferencia transfronteriza (Art. 9, 44-49).
+- **Tendencia global**: Múltiples países adoptan legislación de soberanía de datos que exige procesamiento local de datos de salud (Vayena & Blasimme, *JLME*, 2018).
+
+DIRD+ cumple con todas estas regulaciones **por diseño**: no hay datos que proteger en tránsito porque nunca salen del dispositivo.
+
+### Impacto Económico
+
+Proyección comparativa para tamizaje a escala nacional en Chile (~1.7 millones de diabéticos):
+
+| Solución | Costo software/año | Hardware inicial | Total Año 1 |
+|----------|--------------------|--------------------|-------------|
+| IDx-DR | ~USD 68-93M | ~USD 25K × N cámaras | >USD 70M |
+| EyeArt | ~USD 13-25M | ~USD 10K × N cámaras | >USD 15M |
+| **DIRD+** | **USD 0** | **Usa cámaras existentes** | **~USD 0** |
+
+Estudios de costo-efectividad respaldan el tamizaje con IA:
+- Reducción del **40-60%** en costos vs. evaluación manual por graders (Tufail et al., *Ophthalmology*, 2017)
+- Costo por tamizaje con IA: **USD 2-15** vs. USD 50-200 con oftalmólogo presencial (Xie et al., *Lancet Digital Health*, 2020)
+- En Inglaterra, el programa nacional de tamizaje (ENSPDR) logró que la RD **dejara de ser la primera causa de ceguera** en edad laboral por primera vez en 2010 (Liew et al., *BMJ Open*, 2014)
+
+---
+
+## Arquitectura Técnica
+
+### Diagrama de Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        NAVEGADOR WEB                            │
+│                                                                 │
+│  ┌────────────────┐  ┌───────────────────┐  ┌───────────────┐  │
+│  │   React 18     │  │  ONNX Runtime Web │  │  IndexedDB    │  │
+│  │   TypeScript   │  │  (WebAssembly)    │  │  (Dexie v4)   │  │
+│  │                │  │                   │  │               │  │
+│  │  ┌──────────┐  │  │  Modelos ONNX:    │  │  9 tablas:    │  │
+│  │  │ Canvas   │  │  │  - Detección      │  │  - patients   │  │
+│  │  │ Konva    │◄─┼──┤  - Segmentación   │  │  - sessions   │  │
+│  │  │ multicapa│  │  │                   │  │  - images     │  │
+│  │  └──────────┘  │  │  Análisis:        │  │  - detections │  │
+│  │                │  │  - Clasificador DR │  │  - segments   │  │
+│  │  ┌──────────┐  │  │  - Cuadrantes     │  │  - reports    │  │
+│  │  │ PDF      │  │  │  - Edema macular  │  │  - measures   │  │
+│  │  │ jsPDF    │  │  │  - Copa/disco     │  │  - classif.   │  │
+│  │  └──────────┘  │  │                   │  │  - contrib.   │  │
+│  │                │  │  OpenCV.js (CDN)   │  │               │  │
+│  │  ┌──────────┐  │  │  Refinam. disco   │  │  16 versiones │  │
+│  │  │ Guías    │  │  │  óptico           │  │  de migración │  │
+│  │  │ Clínicas │  │  │                   │  │               │  │
+│  │  │ ICDR     │  │  │  Optimizaciones:  │  │  Export:      │  │
+│  │  │ MINSAL   │  │  │  - SIMD           │  │  .dird (ZIP)  │  │
+│  │  └──────────┘  │  │  - Multi-thread   │  │               │  │
+│  └────────────────┘  │  - CPU profiles   │  └───────────────┘  │
+│                      │    (Intel/AMD/ARM) │                     │
+│                      └───────────────────┘                     │
+│                                                                 │
+│         Toda la inferencia IA ocurre aquí ▲                     │
+└─────────────────────────────────────────────────────────────────┘
+                         │ (opcional)
+                         ▼
+              ┌─────────────────────┐
+              │  Backend PHP        │
+              │  - Gestión tokens   │
+              │  - Contribuciones   │
+              │  - Administración   │
+              │  - Mensajería       │
+              └─────────────────────┘
+```
+
+### Stack Tecnológico
+
+#### Frontend
 | Tecnología | Versión | Rol |
 |-----------|---------|-----|
 | React | 18.3 | Framework UI |
 | TypeScript | 5.7 | Tipado estático (strict mode) |
-| Vite | 6.0 | Build tool + dev server |
-| Tailwind CSS | 3.4 | Estilos utilitarios |
-| Radix UI | — | Componentes accesibles (Dialog, Tabs, Select, Switch, Slider) |
+| Vite | 6.0 | Build tool + HMR dev server |
+| Tailwind CSS | 3.4 | Sistema de estilos utilitarios |
+| Radix UI | — | Primitivas accesibles (Dialog, Tabs, Select, Switch, Slider) |
 | React Router | 6 | Navegación SPA |
-| Zustand | 5.0 | Estado global (config, canvas, tokens, pacientes) |
-| Framer Motion | 11 | Animaciones |
+| Zustand | 5.0 | Estado global (configuración, canvas, tokens, pacientes) |
+| Framer Motion | 11 | Animaciones y transiciones |
+| i18next | 24.2 | Internacionalización (español/inglés) |
 
-### IA e Inferencia
+#### IA e Inferencia
 | Tecnología | Versión | Rol |
 |-----------|---------|-----|
-| ONNX Runtime Web | 1.23 | Inferencia WebAssembly en navegador |
-| Modelos ONNX | — | Detección (bounding boxes) + Segmentación (máscaras) |
+| ONNX Runtime Web | 1.23 | Motor de inferencia WebAssembly |
+| Modelos ONNX | — | Detección (bounding boxes) + Segmentación (máscaras de píxeles) |
 | OpenCV.js | — | Refinamiento del disco óptico (CDN) |
 
-### Canvas y Visualización
+#### Canvas y Visualización
 | Tecnología | Versión | Rol |
 |-----------|---------|-----|
-| Konva | 10 | Motor canvas 2D |
-| React-Konva | 18.2 | Bindings React para Konva |
+| Konva | 10 | Motor canvas 2D de alto rendimiento |
+| React-Konva | 18.2 | Bindings declarativos React-Konva |
 
-### Almacenamiento
+#### Almacenamiento
 | Tecnología | Versión | Rol |
 |-----------|---------|-----|
-| Dexie | 4.0 | Wrapper IndexedDB (16 migraciones versionadas) |
-| JSZip | 3.10 | Formato `.dird` (ZIP con datos de paciente) |
+| Dexie | 4.0 | Wrapper IndexedDB con 16 migraciones versionadas |
+| JSZip | 3.10 | Formato `.dird` (ZIP portable con datos de paciente) |
 
-### Informes
+#### Informes
 | Tecnología | Versión | Rol |
 |-----------|---------|-----|
-| jsPDF | 2.5 | Generación PDF en cliente |
-| jspdf-autotable | 3.8 | Tablas en PDF |
+| jsPDF | 2.5 | Generación de PDF en cliente |
+| jspdf-autotable | 3.8 | Tablas clínicas en PDF |
 
-### Backend (opcional)
-| Tecnología | Rol |
-|-----------|-----|
-| PHP | API de tokens, contribuciones y administración |
+### Pipeline de Inferencia IA
 
----
-
-## Arquitectura
+El procesamiento de imágenes sigue un pipeline de 6 etapas ejecutado completamente en WebAssembly:
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                   NAVEGADOR                         │
-│                                                     │
-│  ┌──────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │  React   │  │ ONNX Runtime │  │  IndexedDB   │  │
-│  │  UI/SPA  │  │  (WASM)      │  │  (Dexie)     │  │
-│  │          │◄─┤  Modelos VA  │  │  Pacientes   │  │
-│  │  Canvas  │  │  Detección   │  │  Sesiones    │  │
-│  │  Konva   │  │  Segmentac.  │  │  Imágenes    │  │
-│  │          │  │              │  │  Detecciones  │  │
-│  │  PDF     │  │  OpenCV.js   │  │  Informes    │  │
-│  │  jsPDF   │  │  (CDN)       │  │              │  │
-│  └──────────┘  └──────────────┘  └──────────────┘  │
-│         │                                           │
-└─────────┼───────────────────────────────────────────┘
-          │ (opcional)
-          ▼
-┌─────────────────────┐
-│  Backend PHP        │
-│  - Tokens           │
-│  - Contribuciones   │
-│  - Administración   │
-└─────────────────────┘
+Imagen retinal (cualquier cámara)
+    │
+    ▼
+1. PREPROCESAMIENTO
+   Redimensionar a 640×640, normalizar valores de píxeles
+    │
+    ▼
+2. INFERENCIA ONNX
+   Modelo de detección → bounding boxes con clase y confianza
+   Modelo de segmentación → máscaras de píxeles por lesión
+   (Optimizado: SIMD habilitado, perfiles CPU Intel/AMD/ARM)
+    │
+    ▼
+3. POST-PROCESAMIENTO
+   Non-Maximum Suppression (IoU threshold: 0.45)
+   Filtrado por umbral de confianza configurable
+    │
+    ▼
+4. ANÁLISIS ESPACIAL
+   Distribución por cuadrantes (4 zonas + centro)
+   Detección de edema macular (patrón de exudados)
+   Análisis de microaneurismas, hemorragias
+   Relación copa/disco óptico (con OpenCV.js)
+   Calibración espacial desde disco óptico
+    │
+    ▼
+5. CLASIFICACIÓN CLÍNICA
+   Aplicar guía seleccionada (ICDR 2024 / MINSAL 2017)
+   Mapear lesiones detectadas → criterios de la guía
+   Evaluar Regla 4-2-1 para RD severa
+   Generar: severidad, tratamientos, seguimiento, urgencia
+    │
+    ▼
+6. ALMACENAMIENTO
+   Guardar en IndexedDB: detecciones, segmentaciones,
+   clasificación, mediciones
 ```
 
-### Estructura del proyecto
+**Clases detectables:**
+Microaneurismas, hemorragias (dot/blot), exudados duros, exudados blandos (cotton wool spots), neovascularización, disco óptico, fóvea.
+
+**Niveles de severidad (ICDR 2024):**
+Sin RD → RDNP leve → RDNP moderada → RDNP severa → RD proliferativa
+
+### Sistema de Guías Clínicas Pluggable
+
+DIRD+ implementa un motor de clasificación agnóstico a la guía clínica. Las guías son archivos JSON independientes que definen:
+
+```json
+{
+  "guideline_id": "icdr_2024",
+  "metadata": {
+    "name": "ICDR International 2024",
+    "country": "International",
+    "language": "en",
+    "status": "official"
+  },
+  "severity_levels": [
+    {
+      "id": "no_dr",
+      "name_es": "Sin RD Aparente",
+      "order": 0,
+      "color": "#22c55e"
+    },
+    {
+      "id": "mild_npdr",
+      "name_es": "RDNP Leve",
+      "order": 1,
+      "color": "#84cc16"
+    }
+  ],
+  "classification_rules": [
+    {
+      "severity": "mild_npdr",
+      "conditions": ["microaneurysms_only"],
+      "logic": "AND",
+      "priority": 1
+    }
+  ],
+  "rule_421": {
+    "enabled": true,
+    "criteria": [
+      "extensive_hemorrhages_4q",
+      "venous_beading_2q",
+      "irma_1q"
+    ]
+  },
+  "treatment_protocols": [
+    {
+      "severity": "severe_npdr",
+      "urgency": "accelerated",
+      "actions": ["referral_ophthalmology", "retinal_imaging"],
+      "followup_interval_days": 30
+    }
+  ],
+  "class_mapping": {
+    "microaneurysms": ["microaneurysm", "microhemorrhages"],
+    "hemorrhages": ["hemorrhage"],
+    "hardExudates": ["hard_exudate"],
+    "softExudates": ["cotton_wool_spot"],
+    "neovascularization": ["neovascularization"]
+  }
+}
+```
+
+**Para agregar una nueva guía clínica:**
+1. Crear archivo JSON en `public/clinical-guidelines/` siguiendo el esquema
+2. Registrar en `public/clinical-guidelines/index.json`
+3. La aplicación la detectará automáticamente — sin modificar código fuente
+
+### Esquema de Base de Datos
+
+IndexedDB local con 9 tablas y 16 versiones de migración:
+
+| Tabla | Campos clave | Propósito |
+|-------|-------------|-----------|
+| **patients** | patientId, name, diabetes (tipo/duración), HTA, DLP, medicamentos | Datos demográficos y clínicos |
+| **sessions** | patientId, date, modelVersions, locked, type (normal/combined) | Visitas clínicas |
+| **images** | sessionId, eyeType (OD/OI), originalBlob, order | Imágenes de fondo de ojo |
+| **detections** | imageId, type (ai/manual), bbox, class, confidence | Bounding boxes de lesiones |
+| **segmentations** | imageId, type (ai/manual), maskData, class, opacity | Máscaras de segmentación |
+| **imageClassifications** | imageId, severity, guideline, treatments[], followupDays, urgency, rationale, manuallyModified | Clasificación DR por guía clínica |
+| **reports** | sessionId, type (preview/final), pdfBlob, evaluatorNotes, conclusionEdited | Informes PDF generados |
+| **measurements** | imageId, origin, destination, distancePixels, distanceDD | Mediciones calibradas |
+| **pendingContributions** | type (image/conclusion), referenceId, status | Contribuciones al dataset compartido |
+
+### Estructura del Proyecto
 
 ```
 src/
-├── components/           # Componentes React
-│   ├── canvas/          # Canvas de anotación multicapa
-│   ├── patients/        # Gestión de pacientes
-│   ├── upload/          # Carga de imágenes
-│   ├── reports/         # Generación de informes
-│   ├── settings/        # Configuración
-│   ├── admin/           # Panel de administración
-│   ├── contribution/    # Contribución de datos
-│   ├── academy/         # Contenido educativo
-│   └── ui/              # Primitivas UI reutilizables
+├── components/
+│   ├── canvas/               # Canvas de anotación multicapa (Konva)
+│   │   └── advanced-editor/  # Editor avanzado con herramientas especializadas
+│   ├── patients/             # Gestión de pacientes, export/import
+│   ├── upload/               # Carga de imágenes, galería, vista de sesión
+│   ├── reports/              # Generación de informes PDF
+│   ├── settings/             # Configuración (modelos, procesamiento, apariencia)
+│   ├── admin/                # Panel de administración protegido
+│   ├── contribution/         # Contribución de datos al dataset compartido
+│   ├── academy/              # Contenido educativo
+│   ├── demo/                 # Paciente demo y pantalla de carga
+│   └── ui/                   # Primitivas UI reutilizables (Radix + Tailwind)
 ├── lib/
-│   ├── ai/              # Servicio de inferencia ONNX, descarga de modelos
-│   ├── analysis/        # Clasificadores DR, análisis por cuadrante, edema
-│   ├── clinical-guidelines/  # Motor de guías clínicas pluggable
-│   ├── db/              # Esquema Dexie (IndexedDB)
-│   ├── export/          # Import/export formato .dird
-│   ├── pdf/             # Renderizado de informes PDF
-│   └── classes/         # Gestor de clases de detección
-├── stores/              # Estado global (Zustand)
-├── i18n/                # Internacionalización (es/en)
-├── types/               # Interfaces TypeScript
-└── App.tsx              # Router principal
+│   ├── ai/                   # InferenceService, ONNXModelManager, ModelDownloader
+│   ├── analysis/             # ImageDRClassifier, QuadrantCalculator, EdemaDetector,
+│   │                         # HemorrhageDetector, MicroaneurysmDetector,
+│   │                         # OpticDiscCuppingDetector, SpatialCalibrator
+│   ├── clinical-guidelines/  # GuidelineLoader, MultiGuidelineClassifier
+│   ├── db/                   # Esquema Dexie, migraciones, paciente demo
+│   ├── export/               # DirdExporter, DirdImporter (formato .dird ZIP)
+│   ├── pdf/                  # Motor de renderizado de informes PDF
+│   ├── classes/              # ClassManager (metadatos de clases del modelo)
+│   └── api/                  # TokenService, AdminService
+├── stores/                   # Estado global Zustand
+│   ├── config-store.ts       # Configuración persistida (modelos, reportes, apariencia)
+│   ├── canvas-store.ts       # Estado del canvas (herramienta, clase, undo/redo)
+│   ├── token-store.ts        # Tokens disponibles para informes
+│   └── patient-store.ts      # Paciente actual seleccionado
+├── i18n/                     # Internacionalización (español/inglés)
+├── hooks/                    # Custom hooks (useImageUploader, useMessagePolling)
+├── types/                    # Interfaces TypeScript
+└── App.tsx                   # Router principal + inicialización paralela
 ```
 
 ---
@@ -172,89 +459,67 @@ src/
 ## Funcionalidades
 
 ### Gestión de Pacientes y Sesiones
-
-- **Pacientes**: Crear, editar, archivar y buscar por nombre o ID
-- **Datos clínicos**: Diabetes (tipo, duración), HTA, dislipidemia, medicamentos
-- **Sesiones**: Representan una visita clínica. Se pueden duplicar, editar y cerrar
-- **Cierre de sesión**: Un informe finalizado cierra la sesión, impidiendo modificaciones posteriores
+- Crear, editar, archivar y buscar pacientes por nombre o ID
+- Datos clínicos: diabetes (tipo, duración), HTA, dislipidemia, medicamentos
+- Sesiones como visitas clínicas: duplicar, editar, cerrar
+- Paciente demo precargado para evaluación del sistema
+- Sesiones combinadas para análisis longitudinal
 
 ### Análisis con IA en el Navegador
-
 - **Modelos duales**: Detección (bounding boxes) + Segmentación (máscaras de píxeles)
-- **Ejecución local**: ONNX Runtime Web con optimización SIMD y multi-thread
-- **Descarga progresiva**: Modelos descargados desde GitHub Releases, cacheados en el navegador
-- **Configuración de sensibilidad**: Umbral de confianza ajustable por modelo
+- **Ejecución local**: ONNX Runtime Web con SIMD y multi-thread
+- **Descarga progresiva**: Modelos desde GitHub Releases, cacheados en navegador
+- **Sensibilidad configurable**: Umbral de confianza ajustable por modelo
 - **Optimización por CPU**: Perfiles para Intel, AMD y ARM
-- **Procesamiento batch**: Procesar todas las imágenes de una sesión de una vez
+- **Procesamiento batch**: Todas las imágenes de una sesión en una ejecución
 
 ### Canvas Interactivo de Anotación
-
-Sistema multicapa para revisión y corrección de hallazgos IA:
-
-- **Capas**: Imagen original, detecciones IA, segmentaciones IA, anotaciones manuales, mediciones
+- **5 capas**: Imagen original, detecciones IA, segmentaciones IA, anotaciones manuales, mediciones
 - **Herramientas**: Selección, dibujo libre, polígono, medición (distancia/área), zoom, pan
 - **Controles por capa**: Visibilidad, opacidad, bloqueo
 - **Overlays clínicos**: Cuadrantes retinales, zona macular, área del disco óptico
-- **Edición**: Modificar, ocultar o agregar detecciones manualmente
+- **Corrección humana**: Modificar, ocultar o agregar detecciones sobre los resultados IA
 
 ### Clasificación Clínica Multi-Guía
-
-Motor de clasificación de severidad de retinopatía diabética:
-
-- **Análisis por cuadrante**: Distribución de lesiones en 4 zonas + centro
-- **Detectores especializados**:
-  - Hemorragias (dot/blot)
-  - Microaneurismas
-  - Edema macular
-  - Relación copa/disco óptico
-- **Resultado**: Severidad, tratamientos recomendados, plazo de seguimiento, nivel de urgencia
-- **Modificación manual**: El clínico puede ajustar la clasificación generada
+- Clasificación de severidad según guía clínica seleccionada
+- Análisis por cuadrante (4 zonas + centro) con distribución de lesiones
+- Detectores especializados: hemorragias, microaneurismas, edema macular, copa/disco
+- Evaluación de Regla 4-2-1 para RD severa
+- Resultado: severidad, tratamientos, plazo de seguimiento, nivel de urgencia, rationale
+- El clínico puede ajustar manualmente la clasificación generada
 
 ### Generación de Informes PDF
-
-- **Modo Preview**: Generar borrador sin consumir token
-- **Modo Final**: Informe definitivo (consume 1 token por informe)
-- **Secciones configurables**: Información del paciente, galería de imágenes, estadísticas, conclusión
-- **Galería personalizable**: Imágenes originales/anotadas, con/sin cuadrantes y mediciones
-- **Notas del evaluador**: Campo libre para observaciones clínicas
-- **Firma**: Soporte para firma del profesional
-- **Edición de conclusión**: Modificar la conclusión generada antes de finalizar
+- **Preview**: Borrador sin consumir token. **Final**: Informe definitivo
+- Secciones configurables: datos del paciente, galería, estadísticas, conclusión
+- Galería personalizable: imágenes originales/anotadas, con/sin cuadrantes y mediciones
+- Notas del evaluador, firma del profesional, edición de conclusión
+- Campos del paciente ocultables (nombre, edad, ID) para privacidad
 
 ### Comparación de Sesiones
-
-- Comparar estadísticas entre 2 o más sesiones del mismo paciente
-- Conteo de detecciones, severidad promedio, análisis de tendencia
-- Galerías de imágenes lado a lado
+- Comparar estadísticas entre 2+ sesiones del mismo paciente
+- Conteo de detecciones, severidad, análisis de tendencia temporal
+- Sesiones combinadas con trazabilidad de origen
 
 ### Exportación e Importación
-
-- **Formato `.dird`**: Archivo ZIP con toda la información del paciente o sesión
-- **Exportar paciente**: Incluye todas las sesiones, imágenes, detecciones e informes
-- **Exportar sesión**: Datos específicos de una sesión individual
-- **Importar**: Restaurar pacientes o sesiones en otra instalación
+- **Formato `.dird`**: ZIP con datos completos (paciente, sesiones, imágenes, detecciones, informes)
+- **3 niveles de exportación**: Paciente completo, sesión individual, datos totales
+- **Mapeo de IDs**: IDs se reasignan al importar, evitando conflictos
+- **Detección de colisiones**: Solicita confirmación antes de sobrescribir sesiones existentes
 
 ### Sistema de Contribución
-
-- Subir imágenes al dataset compartido para mejorar modelos
-- Enviar clasificaciones de retinopatía diabética
-- Seguimiento de contribuciones pendientes
-
-### Academia
-
-- Visor de contenido educativo sobre clasificación de retinopatía diabética
-- Guías de referencia clínica y ejemplos
+- Subir imágenes y clasificaciones al dataset compartido
+- Seguimiento de contribuciones pendientes y enviadas
+- Mejora colaborativa de modelos
 
 ### Panel de Administración
-
-- Autenticación por contraseña
 - Gestión de tokens por instalación
 - Visualización de contribuciones recibidas
-- Sistema de mensajería a instalaciones
+- Sistema de mensajería broadcast a instalaciones
 - Monitoreo de beacons (instalaciones activas)
 
 ---
 
-## Instalación
+## Instalación y Despliegue
 
 ### Desarrollo Local
 
@@ -270,59 +535,38 @@ npm install
 npm run dev
 ```
 
-El servidor de desarrollo usa `.env.development` y apunta al backend remoto de `tmeduca.org` por defecto.
-
 ### Build de Producción
 
 ```bash
 # Build completo (type-check + vite build + version.json + .htaccess)
 npm run build
 
-# Preview del build
+# Preview local del build
 npm run preview
 
-# Verificar configuración
+# Verificar configuración de API
 npm run check-config
 ```
 
----
-
-## Configuración
-
-La configuración se divide en dos niveles:
-
 ### Variables de Entorno
 
-| Variable | Descripción |
-|----------|-------------|
-| `VITE_API_BASE_URL` | URL absoluta del backend PHP |
-| `VITE_API_USE_RELATIVE` | `true` para usar ruta relativa al `BASE_URL` |
+| Variable | Descripción | Ejemplo |
+|----------|-------------|---------|
+| `VITE_API_BASE_URL` | URL absoluta del backend PHP | `https://tmeduca.org/dird/backend` |
+| `VITE_API_USE_RELATIVE` | Usar ruta relativa al BASE_URL | `true` |
 
-Ver [CONFIG.md](CONFIG.md) para detalles completos de configuración y despliegue.
-
-### Configuración en la Aplicación
-
-Accesible desde el menú **Configuración**:
-
-- **Modelos IA**: Rutas de modelos, sensibilidad de detección/segmentación
-- **Procesamiento**: Tamaño máximo de imagen, calidad de compresión, vendor de CPU, refinamiento de disco óptico
-- **Informes**: Secciones visibles, campos del paciente, configuración de galería, firma
-- **Apariencia**: Tema, idioma, color primario
-- **Guías Clínicas**: Selección de guía activa para clasificación
-
----
-
-## Despliegue
-
-### Estructura en servidor
+### Estructura de Despliegue
 
 ```
 /var/www/html/dird/
-├── index.html              # Frontend (build)
-├── assets/                 # JS/CSS hasheados
+├── index.html              # Frontend SPA
+├── assets/                 # JS/CSS con hash (cache 1 año)
 ├── clinical-guidelines/    # JSONs de guías clínicas
-├── docs/                   # Documentación clínica
-└── backend/                # API PHP
+│   ├── index.json
+│   ├── icdr_2024.json
+│   └── minsal_chile_2017.json
+├── docs/                   # Documentación clínica de referencia
+└── backend/                # API PHP (opcional)
     ├── get_tokens.php
     ├── consume_token.php
     ├── confirm_processing.php
@@ -330,23 +574,108 @@ Accesible desde el menú **Configuración**:
     └── admin/
 ```
 
+Ver [CONFIG.md](CONFIG.md) para configuración detallada de API y despliegue.
+
 ---
 
 ## Guías Clínicas Soportadas
 
-| Guía | País | Descripción |
-|------|------|-------------|
-| **ICDR 2024** | Internacional | International Clinical Diabetic Retinopathy Disease Severity Scale |
-| **MINSAL Chile 2017** | Chile | Guía Clínica de Retinopatía Diabética del Ministerio de Salud |
+| Guía | País | Descripción | Referencia |
+|------|------|-------------|------------|
+| **ICDR 2024** | Internacional | International Clinical Diabetic Retinopathy Disease Severity Scale | International Council of Ophthalmology |
+| **MINSAL Chile 2017** | Chile | Guía Clínica de Retinopatía Diabética — Ministerio de Salud | GES Problema #31 |
 
-Las guías son archivos JSON en `public/clinical-guidelines/`. Para agregar una nueva guía:
-
-1. Crear archivo JSON siguiendo el esquema existente
-2. Registrarla en `public/clinical-guidelines/index.json`
-3. La aplicación la detectará automáticamente
+El sistema de guías es extensible. Nuevas guías se agregan como archivos JSON sin modificar código.
 
 ---
 
-## Licencia
+## Hoja de Ruta
 
-Proyecto desarrollado por el equipo de TMeduca / Universidad de Chile.
+### Validación Clínica (prioridad)
+- [ ] Estudio de validación con 200-500 imágenes evaluadas por oftalmólogos chilenos
+- [ ] Medición de sensibilidad/especificidad contra gold standard
+- [ ] Piloto en CESFAM rural sin oftalmólogo presencial
+
+### Funcionalidades Técnicas
+- [ ] Detección completa de IRMA y arrosariamiento venoso (criterios Regla 4-2-1)
+- [ ] Integración con cámaras retinales vía protocolo DICOM
+- [ ] Aplicación de escritorio con Tauri (en rama `w/tauri`)
+- [ ] Aprendizaje federado para mejora de modelos preservando privacidad
+
+### Regulatorio
+- [ ] Preparación de dossier para ISP Chile (dispositivo médico software)
+- [ ] Alineación con marco FDA SaMD (Software as a Medical Device)
+
+---
+
+## Referencias Científicas
+
+### Epidemiología y Carga de Enfermedad
+
+1. **Teo ZL, Tham YC, Yu M, et al.** "Global prevalence of diabetic retinopathy and projection of burden through 2045." *Ophthalmology*, 2021; 128(11):1580-1591.
+
+2. **Yau JWY, Rogers SL, Kawasaki R, et al.** "Global prevalence and major risk factors of diabetic retinopathy." *Diabetes Care*, 2012; 35(3):556-564.
+
+3. **International Diabetes Federation.** *IDF Diabetes Atlas*, 10ª edición, 2021.
+
+4. **Organización Mundial de la Salud.** *World Report on Vision*, 2019.
+
+5. **MINSAL Chile.** *Encuesta Nacional de Salud 2016-2017*.
+
+### IA para Detección de RD — Estudios Fundamentales
+
+6. **Gulshan V, Peng L, Coram M, et al.** "Development and Validation of a Deep Learning Algorithm for Detection of Diabetic Retinopathy in Retinal Fundus Photographs." *JAMA*, 2016; 316(22):2402-2410. — *Sensibilidad 97.5%, Especificidad 93.4%.*
+
+7. **Ting DSW, Cheung CY, Lim G, et al.** "Development and Validation of a Deep Learning System for Diabetic Retinopathy and Related Eye Diseases Using Retinal Images From Multiethnic Populations." *JAMA*, 2017; 318(22):2211-2223. — *AUC 0.936 para RD referable, validado en poblaciones multiétnicas.*
+
+8. **Abràmoff MD, Lavin PT, Birch M, et al.** "Pivotal trial of an autonomous AI-based diagnostic system for detection of diabetic retinopathy in primary care offices." *npj Digital Medicine*, 2018; 1:39. — *Primera aprobación FDA de IA autónoma para diagnóstico.*
+
+9. **Raumviboonsuk P, Krause J, et al.** "Deep learning versus human graders for classifying diabetic retinopathy severity in a nationwide screening program." *npj Digital Medicine*, 2019; 2:25.
+
+10. **Natarajan S, Jain A, et al.** "Diagnostic accuracy of community-based diabetic retinopathy screening with an offline artificial intelligence system on a smartphone." *JAMA Ophthalmology*, 2019; 137(10):1182-1188. — *Validación de IA offline. Sensibilidad 100%, Especificidad 88.4%.*
+
+### Metaanálisis
+
+11. **Islam MM, Yang HC, et al.** "Deep learning algorithms for detection of diabetic retinopathy: a systematic review and meta-analysis." *Computer Methods and Programs in Biomedicine*, 2020; 191:105320. — *Sensibilidad combinada 91.9%, Especificidad 91.3%.*
+
+### Costo-Efectividad
+
+12. **Tufail A, et al.** "Automated diabetic retinopathy image assessment software: diagnostic accuracy and cost-effectiveness." *Ophthalmology*, 2017; 124(3):343-351. — *Reducción del 50% en costos de tamizaje.*
+
+13. **Xie Y, et al.** "Artificial intelligence for teleophthalmology-based diabetic retinopathy screening: an economic analysis." *Lancet Digital Health*, 2020; 2(5):e240-e249.
+
+14. **Liew G, Michaelides M, Bunce C.** "A comparison of the causes of blindness certifications in England and Wales in working age adults." *BMJ Open*, 2014; 4:e004015. — *RD dejó de ser primera causa de ceguera tras programa nacional de tamizaje.*
+
+### Privacidad, Edge Computing y IA Médica
+
+15. **Kaissis GA, et al.** "Secure, privacy-preserving and federated machine learning in medical imaging." *Nature Machine Intelligence*, 2020; 2:305-311.
+
+16. **Rieke N, et al.** "The future of digital health with federated learning." *npj Digital Medicine*, 2020; 3:119.
+
+17. **Price WN, Cohen IG.** "Privacy in the Age of Medical Big Data." *Nature Medicine*, 2019; 25:37-43.
+
+### Implementación y Barreras
+
+18. **Beede E, Baylor E, et al.** "A Human-Centered Evaluation of a Deep Learning System Deployed in Clinics for the Detection of Diabetic Retinopathy." *CHI Conference on Human Factors in Computing Systems*, 2020. — *Documentó fallos de Google ARDA por dependencia de internet en Tailandia.*
+
+19. **Piyasena MMPN, et al.** "Systematic review on barriers and enablers for access to diabetic retinopathy screening services." *PLoS ONE*, 2019; 14(4):e0198979.
+
+20. **Resnikoff S, et al.** "Estimated number of ophthalmologists worldwide: will we meet the needs?" *British Journal of Ophthalmology*, 2020; 104(4):588-592.
+
+### Telemedicina para RD
+
+21. **Scanlon PH.** "The English National Screening Programme for diabetic retinopathy 2003-2016." *Acta Diabetologica*, 2017; 54(6):515-525.
+
+22. **Shi L, Wu H, Dong J, et al.** "Telemedicine for detecting diabetic retinopathy: a systematic review and meta-analysis." *British Journal of Ophthalmology*, 2015; 99(6):823-831.
+
+---
+
+## Equipo y Afiliación
+
+Proyecto desarrollado por el equipo de **TMeduca** / **Universidad de Chile**.
+
+---
+
+<p align="center">
+  <sub>DIRD+ es software de código abierto. Las contribuciones son bienvenidas.</sub>
+</p>
