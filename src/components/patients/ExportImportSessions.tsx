@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { Download, Upload, Database } from 'lucide-react';
+import { Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+
 import {
   Dialog,
   DialogContent,
@@ -10,48 +11,49 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { exportPatient, exportAllData, downloadDirdFile } from '@/lib/export/dird-exporter';
-import { importDirdFile } from '@/lib/export/dird-importer';
+
+import { db } from '@/lib/db/schema';
+
+import { useLiveQuery } from 'dexie-react-hooks';
+import {  exportPatient, downloadDirdFile } from '@/lib/export/dird-exporter';
+import { importDirdFile, importDirdType } from '@/lib/export/dird-importer';
 import type { ImportResult } from '@/lib/export/dird-importer';
 
-interface ExportImportControlsProps {
+interface ExportImportSessionsProps {
   patientId?: number;
-  patientName?: string;
   onImportComplete?: () => void;
 }
 
-const ExportImportControls: React.FC<ExportImportControlsProps> = ({
+const ExportImportSessions: React.FC<ExportImportSessionsProps> = ({
   patientId,
-  patientName,
   onImportComplete,
 }) => {
   const { t } = useTranslation();
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const closeTimeoutRef = useRef<number | null>(null);
+
+  const patient = useLiveQuery(
+    () => (patientId ? db.patients.get(patientId) : undefined),
+    [patientId]
+  );
 
   const handleExportPatient = async () => {
-    if (!patientId) return;
+    if (!patient) return;
+    setIsExporting(true);
 
     try {
-      const blob = await exportPatient(patientId);
-      const filename = `paciente_${patientName?.replace(/\s/g, '_')}_${Date.now()}`;
-      downloadDirdFile(blob, filename);
+      const blob = await exportPatient(patientId!);
+      downloadDirdFile(blob, `dird_export_patient_${patient.patientId}`);
+      toast.success(t('export.patientSuccess'));
     } catch (error) {
       console.error('Error exporting patient:', error);
       toast.error(t('export.errorPatient'));
-    }
-  };
-
-  const handleExportAll = async () => {
-    try {
-      const blob = await exportAllData();
-      const filename = `dird_backup_${Date.now()}`;
-      downloadDirdFile(blob, filename);
-    } catch (error) {
-      console.error('Error exporting data:', error);
-      toast.error(t('export.errorData'));
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -60,15 +62,36 @@ const ExportImportControls: React.FC<ExportImportControlsProps> = ({
     setImportResult(null);
 
     try {
-      const result = await importDirdFile(file);
+      const type = await importDirdType(file);
+
+      if (type === 'full') {
+        setImporting(false);
+        
+        setImportResult({
+          success: false,
+          error: t('import.invalidFile'),
+          sessionsImported: 0,
+          imagesImported: 0,
+          detectionsImported: 0,
+          segmentationsImported: 0,
+          measurementsImported: 0,
+          reportsImported: 0
+        });
+        return;
+      }
+
+      const result = await importDirdFile(file, patientId);
       setImportResult(result);
 
       if (result.success) {
-        setTimeout(() => {
+        closeTimeoutRef.current = window.setTimeout(() => {
           setShowImportDialog(false);
+          setImporting(false);
+          setImportResult(null);
           onImportComplete?.();
-        }, 3000);
+        }, 5000);
       }
+
     } catch (error) {
       console.error('Error importing file:', error);
       setImportResult({
@@ -77,6 +100,9 @@ const ExportImportControls: React.FC<ExportImportControlsProps> = ({
         sessionsImported: 0,
         imagesImported: 0,
         detectionsImported: 0,
+        segmentationsImported: 0,
+        measurementsImported: 0,
+        reportsImported: 0
       });
     } finally {
       setImporting(false);
@@ -90,34 +116,66 @@ const ExportImportControls: React.FC<ExportImportControlsProps> = ({
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+  
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleImport(file);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+  
+
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
         {patientId && (
-          <Button variant="outline" onClick={handleExportPatient} size="sm">
+          <Button 
+            variant="outline" 
+            onClick={handleExportPatient}
+            disabled={isExporting}
+            className="flex-1 md:flex-none"
+          >
             <Download className="w-4 h-4 mr-2" />
-            {t('export.patient')}
+            {isExporting ? t('export.exporting') : t('export.patient')}
           </Button>
         )}
 
-        <Button variant="outline" onClick={handleExportAll} size="sm">
-          <Database className="w-4 h-4 mr-2" />
-          {t('export.all')}
-        </Button>
-
-        <Button variant="outline" onClick={() => setShowImportDialog(true)} size="sm">
+        <Button variant="outline" onClick={() => setShowImportDialog(true)}>
           <Upload className="w-4 h-4 mr-2" />
-          {t('export.import')}
+          {t('import.sessionTitle')}
         </Button>
       </div>
 
       {/* Import Dialog */}
-      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+      <Dialog open={showImportDialog} onOpenChange={(open) => {
+        setShowImportDialog(open);
+
+        if (!open) {
+          if (closeTimeoutRef.current !== null) {
+            clearTimeout(closeTimeoutRef.current);
+            closeTimeoutRef.current = null;
+          }
+
+          setImportResult(null);
+          setImporting(false);
+        }
+
+        if (fileInputRef.current) {fileInputRef.current.value = '';}
+      }}
+      >
+
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('import.title')}</DialogTitle>
+            <DialogTitle>{t('import.sessionTitle')}</DialogTitle>
             <DialogDescription>
-              {t('import.description')}
+              {t('import.sessionDescription')}
             </DialogDescription>
           </DialogHeader>
 
@@ -133,6 +191,8 @@ const ExportImportControls: React.FC<ExportImportControlsProps> = ({
                 />
                 <div
                   onClick={() => fileInputRef.current?.click()}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
                   className="border-2 border-dashed border-coal-300 rounded-lg p-8 text-center cursor-pointer hover:border-primary-400 transition-colors"
                 >
                   <Upload className="w-12 h-12 mx-auto mb-4 text-smoke-400" />
@@ -166,10 +226,21 @@ const ExportImportControls: React.FC<ExportImportControlsProps> = ({
                       {t('import.successTitle')}
                     </h3>
                     <div className="text-sm text-green-700 space-y-1">
-                      <p>{t('import.patientLabel')}{importResult.patient?.name}</p>
+
+                      {importResult.import_type === 'patient' && (
+                        <p>{t('import.patientLabel')}{importResult.patient?.name}</p>
+                      )}
+
+                      {importResult.import_type === 'full' && (
+                        <p>{t('import.patientsImported')}{importResult.patientsImported}</p>
+                      )}
+
                       <p>{t('import.sessionsImported')}{importResult.sessionsImported}</p>
                       <p>{t('import.imagesImported')}{importResult.imagesImported}</p>
+                      <p>{t('import.reportsImported')}{importResult.reportsImported}</p>
                       <p>{t('import.detectionsImported')}{importResult.detectionsImported}</p>
+                      <p>{t('import.segmentationsImported')}{importResult.segmentationsImported}</p>
+                      <p>{t('import.measurementsImported')}{importResult.measurementsImported}</p>
                     </div>
                   </div>
                 ) : (
@@ -187,4 +258,4 @@ const ExportImportControls: React.FC<ExportImportControlsProps> = ({
   );
 };
 
-export default ExportImportControls;
+export default ExportImportSessions;

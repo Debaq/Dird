@@ -15,7 +15,8 @@ import SessionComparison from '@/components/patients/SessionComparison';
 import ContributionMenu from '@/components/contribution/ContributionMenu';
 import AcademyView from '@/components/academy/AcademyView';
 import { db } from '@/lib/db/schema';
-import { LoadingScreen, type LoadingProgress } from '@/components/loading/LoadingScreen';
+import {type LoadingProgress } from '@/lib/db/demoPatient';
+import { DemoLoadingScreen } from '@/components/demo/DemoLoadingScreen';
 import { useTokenStore } from '@/stores/token-store';
 import { fetchTokens } from '@/lib/api/token-service';
 import AdminDashboard from '@/pages/AdminDashboard';
@@ -24,7 +25,6 @@ import { useMessagePolling } from '@/hooks/useMessagePolling';
 import { classManager } from '@/lib/classes/class-manager';
 import { waitForOpenCV } from '@/lib/ai/optic-disc-refiner';
 import { DoomEasterEgg } from '@/components/ui/DoomEasterEgg';
-import { inferenceService } from '@/lib/ai/inference-service';
 
 function App() {
   const { t } = useTranslation();
@@ -34,11 +34,11 @@ function App() {
     ? (import.meta.env.BASE_URL || '/dird')
     : '/';
   const [isInitializing, setIsInitializing] = useState(true);
-  const [loadingProgress, setLoadingProgress] = useState<LoadingProgress>({
+  const [loadingProgress] = useState<LoadingProgress>({
     step: 'init',
     current: 0,
     total: 1,
-    message: t('loading.steps.init'),
+    message: t('demo.loading.steps.init'),
   });
   const setTokens = useTokenStore((state) => state.setTokens);
 
@@ -48,7 +48,7 @@ function App() {
     enabled: !isInitializing, // Only start polling after initialization
   });
 
-  // Cargar tokens y recursos al inicio
+  // Inicializar paciente demo y cargar tokens al inicio
   useEffect(() => {
     let cancelled = false; // Para evitar race conditions
 
@@ -63,14 +63,7 @@ function App() {
 
     db.on('blocked', handleDbBlocked);
 
-    const updateProgress = (step: LoadingProgress['step'], message: string) => {
-      if (!cancelled) {
-        setLoadingProgress({ step, current: 0, total: 1, message });
-      }
-    };
-
     const loadTokens = async () => {
-      updateProgress('tokens', t('loading.steps.tokens'));
       try {
         const tokenCount = await fetchTokens();
         if (!cancelled) {
@@ -81,31 +74,16 @@ function App() {
       }
     };
 
-    const loadModel = async () => {
-      updateProgress('model', t('loading.steps.model'));
+    const loadModelMetadata = async () => {
       try {
         // Cargar metadata del modelo desde GitHub
         await classManager.ensureMetadataLoaded();
-        // Descargar y cargar el modelo de detección AI
-        if (!inferenceService.isDetectionModelLoaded()) {
-          await inferenceService.loadDetectionModel(undefined, undefined, (percent) => {
-            if (!cancelled) {
-              setLoadingProgress({
-                step: 'model',
-                current: percent,
-                total: 100,
-                message: `${t('loading.steps.model')} (${percent}%)`,
-              });
-            }
-          });
-        }
       } catch (error) {
-        console.error('❌ Error al cargar modelo de IA:', error);
+        console.error('❌ Error al cargar metadata del modelo:', error);
       }
     };
 
     const initOpenCV = async () => {
-      updateProgress('opencv', t('loading.steps.opencv'));
       try {
         // Esperar a que OpenCV esté listo (máximo 10 segundos)
         const ready = await waitForOpenCV(10000);
@@ -119,37 +97,29 @@ function App() {
       }
     };
 
-    const initialize = async () => {
-      try {
-        await loadTokens();
-        if (cancelled) return;
-        await loadModel();
-        if (cancelled) return;
-        await initOpenCV();
-        if (cancelled) return;
-        updateProgress('done', t('loading.steps.done'));
-      } catch (error) {
-        console.error('❌ Error al inicializar aplicación:', error);
-      } finally {
-        if (!cancelled) {
-          setIsInitializing(false);
-        }
+    // Ejecutar en paralelo
+    Promise.all([loadTokens(), loadModelMetadata(), initOpenCV()]).then(() => {
+      if (!cancelled) {
+        setIsInitializing(false);
       }
-    };
-
-    initialize();
+    }).catch((error) => {
+      console.error('❌ Error al inicializar aplicación:', error);
+      if (!cancelled) {
+        setIsInitializing(false);
+      }
+    });
 
     // Cleanup function para evitar actualizaciones en componente desmontado
     return () => {
       cancelled = true;
-      // db.on('blocked') does not need to be removed as db is a singleton and long-lived,
+      // db.on('blocked') does not need to be removed as db is a singleton and long-lived, 
       // but strictly we should unsubscribe if we could. Dexie doesn't provide easy off().
     };
   }, [setTokens, isInitializing, t]);
 
   // Mostrar pantalla de carga mientras se inicializa
   if (isInitializing) {
-    return <LoadingScreen progress={loadingProgress} />;
+    return <DemoLoadingScreen progress={loadingProgress} />;
   }
 
   return (

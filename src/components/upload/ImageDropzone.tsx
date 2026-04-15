@@ -67,25 +67,25 @@ const ImageDropzone: React.FC<ImageDropzoneProps> = ({ sessionId, onUploadComple
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full mx-auto">
       {getHiddenInput()}
 
       <div className="flex flex-wrap items-center justify-center gap-4 p-4 mb-4 bg-coal-50 rounded-lg">
         <span className="text-sm font-medium text-coal-700">{t('upload.selectEye')}</span>
         <div className="flex gap-2">
           <Button
-            variant={selectedEye === 'OI' ? 'default' : 'outline'}
-            onClick={() => setSelectedEye('OI')}
-            disabled={isLimitReached}
-          >
-            {t('upload.eye.left')}
-          </Button>
-          <Button
             variant={selectedEye === 'OD' ? 'default' : 'outline'}
             onClick={() => setSelectedEye('OD')}
             disabled={isLimitReached}
           >
             {t('upload.eye.right')}
+          </Button>          
+          <Button
+            variant={selectedEye === 'OI' ? 'default' : 'outline'}
+            onClick={() => setSelectedEye('OI')}
+            disabled={isLimitReached}
+          >
+            {t('upload.eye.left')}
           </Button>
         </div>
       </div>
@@ -99,7 +99,7 @@ const ImageDropzone: React.FC<ImageDropzoneProps> = ({ sessionId, onUploadComple
         </div>
       )}
 
-      <div
+      <div 
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}

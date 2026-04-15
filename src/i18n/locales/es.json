@@ -664,21 +664,30 @@
     "errorPatient": "Error al exportar el paciente",
     "errorData": "Error al exportar los datos",
     "patientSuccess": "Paciente exportado exitosamente",
-    "sessionSuccess": "Estudio exportado exitosamente"
+    "sessionSuccess": "Estudio exportado exitosamente",
+    "fullSuccess": "Todos los datos exportados exitosamente",
+    "sessionExport" : "sesion"
   },
   "import": {
-    "title": "Importar .dird",
-    "description": "Importa un archivo .dird para restaurar datos de pacientes",
+    "patientTitle": "Importar paciente(s)",
+    "sessionTitle": "Importar estudio(s)",
+    "patientDescription": "Importa un archivo .dird para cargar un paciente o pacientes",
+    "sessionDescription": "Importa un archivo .dird para cargar un estudio o estudios",
     "selectFile": "Haz clic para seleccionar un archivo .dird",
     "importing": "Importando datos...",
     "waitMessage": "Esto puede tardar unos momentos",
     "successTitle": "Importación Exitosa",
     "patientLabel": "Paciente: ",
+    "patientsImported": "Pacientes importados: ",
     "sessionsImported": "Estudios importados: ",
+    "reportsImported": "Informes importados: ",
     "imagesImported": "Imágenes importadas: ",
     "detectionsImported": "Detecciones importadas: ",
+    "segmentationsImported": "Segmentaciones importadas: ",
+    "measurementsImported": "Mediciones importadas: ",
     "errorTitle": "Error de Importación",
-    "processError": "Error al procesar el archivo"
+    "processError": "Error al procesar el archivo",
+    "invalidFile": "Archivo inválido. Por favor seleccione un archivo de paciente(s) .dird válido."
   },
   "languages": {
     "es": "Español",

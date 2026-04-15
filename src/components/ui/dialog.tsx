@@ -12,7 +12,7 @@ const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children }) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 flex items-center justify-center z-50">
       <div
         className="fixed inset-0 bg-black/50"
         onClick={() => onOpenChange(false)}
@@ -27,13 +27,17 @@ const DialogContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
     <div
       ref={ref}
       className={cn(
-        'relative bg-snow rounded-lg shadow-strong w-full max-w-lg p-6',
+        'relative bg-snow rounded-lg shadow-strong w-full max-w-md p-6',
+        'max-h-[100vh] overflow-y-auto',
         'animate-fade-in',
         className
       )}
       {...props}
     >
-      {children}
+      <div className="text-xs">
+        {children}
+      </div>
+       
     </div>
   )
 );
