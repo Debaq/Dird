@@ -142,20 +142,47 @@ guía clínica           con conclusiones       portable entre
 
 ### Comparativa de Mercado
 
-| Característica | IDx-DR (Digital Diagnostics) | Google ARDA | EyeArt (Eyenuk) | Phelcom Eyer (Brasil) | SELENA+ (Singapur) | **DIRD+** |
+| Característica | DART (TeleDx, Chile) | IDx-DR (Digital Diagnostics) | Google ARDA | EyeArt (Eyenuk) | Phelcom Eyer (Brasil) | **DIRD+** |
 |---|---|---|---|---|---|---|
 | **Procesamiento** | Cloud | Cloud | Cloud | Cloud | Cloud | **Edge (navegador)** |
-| **Datos salen del dispositivo** | Sí (USA) | Sí (Google Cloud) | Sí (USA) | Sí (Brasil) | Sí (Singapur) | **No** |
+| **Datos salen del dispositivo** | Sí (cloud TeleDx) | Sí (USA) | Sí (Google Cloud) | Sí (USA) | Sí (Brasil) | **No** |
 | **Funciona offline** | No | No | No | No | No | **Sí** |
-| **Hardware requerido** | Topcon NW400 (~USD 15-25K) | Cámara de mesa (~USD 5-15K) | Cámara compatible (~USD 5-15K) | Smartphone + adaptador (~USD 3-5K) | Cámara de mesa (~USD 5-15K) | **Cualquier cámara existente** |
-| **Costo por tamizaje** | ~USD 40-55 | No disponible comercialmente | ~USD 8-15 | Suscripción | Integrado en sistema nacional | **USD 0** |
-| **Código abierto** | No | Parcial (papers) | No | No | No | **Sí** |
-| **Idioma español nativo** | No | No | No | Portugués/Inglés | No | **Sí** |
-| **Multi-guía clínica** | No (resultado binario) | No | No | No | No | **Sí (ICDR, MINSAL, extensible)** |
-| **Aprobación regulatoria** | FDA De Novo, CE | CE, Thai FDA | FDA 510(k), CE | ANVISA | HSA, CE | En desarrollo |
-| **Soberanía de datos** | No | No | No | No | Parcial | **Sí (100% local)** |
+| **Hardware requerido** | Retinógrafo + internet | Topcon NW400 (~USD 15-25K) | Cámara de mesa (~USD 5-15K) | Cámara compatible (~USD 5-15K) | Smartphone + adaptador (~USD 3-5K) | **Cualquier cámara existente** |
+| **Costo por tamizaje** | Licencia por volumen (MINSAL) | ~USD 40-55 | No disponible comercialmente | ~USD 8-15 | Suscripción | **USD 0** |
+| **Código abierto** | No | No | Parcial (papers) | No | No | **Sí** |
+| **Idioma español nativo** | Sí | No | No | No | Portugués/Inglés | **Sí** |
+| **Multi-guía clínica** | No | No (resultado binario) | No | No | No | **Sí (ICDR, MINSAL, extensible)** |
+| **Clasificación detallada** | Riesgo (sí/no) | Binario (referir/no) | 5 niveles | Referir/no | Referir/no | **5+ niveles por guía, con cuadrantes** |
+| **Canvas de revisión/anotación** | No | No | No | No | No | **Sí (multicapa, mediciones)** |
+| **Aprobación regulatoria** | Validación clínica publicada (*Eye*) | FDA De Novo, CE | CE, Thai FDA | FDA 510(k), CE | ANVISA | En desarrollo |
+| **Soberanía de datos** | Parcial (cloud en Chile) | No (USA) | No (Google) | No (USA) | No (Brasil) | **Sí (100% local)** |
+| **Despliegue en Chile** | 170 establecimientos, >350K exámenes | No | No | No | No | En desarrollo |
 
 **No existe otra plataforma que combine edge-computing en navegador + funcionamiento offline + código abierto + soporte multi-guía clínica para tamizaje de RD.**
+
+### DART: El Referente Chileno y Cómo DIRD+ lo Complementa
+
+**DART** (TeleDx) es la plataforma de tamizaje de RD con IA desplegada por el MINSAL en Chile. Es el sistema más maduro en el país:
+
+- **Cobertura**: 170+ establecimientos públicos, >350,000 exámenes analizados
+- **Rendimiento**: Sensibilidad 94.6%, especificidad 74.3% (validación publicada en *Eye*)
+- **Modelo**: Cloud — imágenes se suben a la plataforma para análisis IA + teleinformes por oftalmólogos remotos
+- **Adquisición MINSAL**: Licencia por 200,000 casos (2018)
+- **Impacto**: Reduce necesidad de revisión por oftalmólogo en 50%, aumenta capacidad de atención 2-4x
+
+**DART demostró que el tamizaje con IA funciona en Chile.** Sin embargo, su arquitectura cloud presenta limitaciones que DIRD+ aborda:
+
+| Aspecto | DART | DIRD+ |
+|---------|------|-------|
+| **Conectividad** | Requiere internet para cada examen | Funciona offline |
+| **Privacidad** | Imágenes se transmiten al cloud | Procesamiento 100% local |
+| **Resultado** | Clasificación de riesgo (sí/no) | Severidad detallada por cuadrante según guía clínica |
+| **Revisión de hallazgos** | No tiene canvas de anotación | Canvas multicapa con herramientas de medición |
+| **Código** | Propietario (TeleDx) | Open source auditable |
+| **Costo** | Licencia por volumen | Gratuito |
+| **Dependencia** | Depende de TeleDx como proveedor | Sin vendor lock-in |
+
+**DIRD+ no busca reemplazar DART sino complementarlo**: DART cubre la red pública con teleinformes centralizados; DIRD+ habilita tamizaje en establecimientos sin conectividad, proporciona herramientas de análisis detallado para el clínico, y ofrece una alternativa open source sin dependencia de proveedor.
 
 ### Por qué las Soluciones Existentes no han Cerrado la Brecha
 
