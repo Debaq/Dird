@@ -1456,5 +1456,62 @@
       "opencv": "Inicializando OpenCV",
       "done": "Completado"
     }
+  },
+  "clinical": {
+    "warnings": {
+      "quadrantUnavailable": "Análisis de cuadrantes no disponible - precisión de regla 4-2-1 reducida",
+      "rule421NotEvaluated": "Regla 4-2-1 no pudo ser completamente evaluada",
+      "rightEyeUnavailable": "Datos del ojo derecho (OD) no disponibles",
+      "leftEyeUnavailable": "Datos del ojo izquierdo (OI) no disponibles",
+      "aiDisclaimer": "Esta es una sugerencia asistida por IA, no un diagnóstico definitivo",
+      "clinicalCorrelation": "Se requiere correlación clínica y revisión por especialista",
+      "quadrantApproximated": "El análisis por cuadrantes (regla 4-2-1) es aproximado"
+    },
+    "rule421": {
+      "quadrantsMet": "{{name}}: {{met}}/{{required}} cuadrantes cumplidos"
+    },
+    "recommendations": {
+      "pdr": {
+        "urgentReferral": "URGENTE: Derivación inmediata a especialista en retina requerida",
+        "considerPRP": "Considerar fotocoagulación panretiniana (PRP)",
+        "followup": "Control en 2-4 semanas"
+      },
+      "severe_npdr": {
+        "urgentReferral": "Derivación urgente a especialista en retina",
+        "followup": "Control en 1-2 meses",
+        "considerTherapy": "Considerar PRP o terapia anti-VEGF"
+      },
+      "moderate_npdr": {
+        "refer": "Derivar a oftalmólogo",
+        "followup": "Control cada 3-6 meses",
+        "optimizeGlycemic": "Optimizar control glicémico"
+      },
+      "mild_npdr": {
+        "annualExam": "Examen anual con dilatación pupilar",
+        "monitorGlucose": "Monitorear niveles de glucosa",
+        "continueDM": "Continuar manejo de diabetes"
+      },
+      "no_dr": {
+        "annualScreening": "Tamizaje anual recomendado",
+        "maintainGlycemic": "Mantener buen control glicémico"
+      },
+      "riskFactors": {
+        "hypertension": "Control de presión arterial es esencial",
+        "dyslipidemia": "Manejo de lípidos recomendado",
+        "longDuration": "Larga duración de diabetes aumenta riesgo de progresión",
+        "type1": "Diabetes tipo 1 requiere monitoreo vigilante"
+      }
+    },
+    "format": {
+      "title": "CLASIFICACIÓN DE RETINOPATÍA DIABÉTICA",
+      "protocol": "Protocolo",
+      "overallSeverity": "Severidad Global",
+      "rightEye": "Ojo Derecho (OD)",
+      "leftEye": "Ojo Izquierdo (OI)",
+      "confidence": "Confianza",
+      "criteria": "Criterios",
+      "recommendations": "Recomendaciones",
+      "warnings": "Advertencias"
+    }
   }
 }

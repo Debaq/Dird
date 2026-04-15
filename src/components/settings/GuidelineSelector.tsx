@@ -24,7 +24,7 @@ import type {
 } from '@/types/clinical-guidelines';
 
 export function GuidelineSelector() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { config, setActiveGuideline } = useConfigStore();
   const [guidelines, setGuidelines] = useState<GuidelineIndexEntry[]>([]);
   const [pendingGuidelineId, setPendingGuidelineId] = useState<string | null>(null);
@@ -291,10 +291,10 @@ export function GuidelineSelector() {
               />
               <div className="flex-1">
                 <div className="text-sm font-medium text-gray-900">
-                  {level.name_es || level.name}
+                  {i18n.language === 'es' ? (level.name_es || level.name) : (level.name || level.name_es)}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {level.description_es || level.description}
+                  {i18n.language === 'es' ? (level.description_es || level.description) : (level.description || level.description_es)}
                 </div>
               </div>
               <div className="text-xs text-gray-400 font-medium">

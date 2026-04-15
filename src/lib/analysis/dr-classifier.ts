@@ -11,6 +11,7 @@ import { Detection } from '../db/schema';
 import { Patient } from '../db/schema';
 import { classifyWithGuideline } from '../clinical-guidelines/multi-guideline-classifier';
 import type { LesionCounts as GuidelineLesionCounts } from '@/types/clinical-guidelines';
+import i18n from '@/i18n/config';
 
 /**
  * Severity levels according to ICDR scale
@@ -185,54 +186,37 @@ export function generateRecommendations(
   riskFactors: RiskFactors
 ): string[] {
   const recommendations: string[] = [];
+  const t = i18n.t.bind(i18n);
 
   // Based on severity
-  switch (classification.severity) {
-    case 'pdr':
-      recommendations.push('URGENT: Immediate referral to retina specialist required');
-      recommendations.push('Consider pan-retinal photocoagulation (PRP)');
-      recommendations.push('Follow-up within 2-4 weeks');
-      break;
+  const severityKeys: Record<DRSeverityLevel, string[]> = {
+    pdr: ['urgentReferral', 'considerPRP', 'followup'],
+    severe_npdr: ['urgentReferral', 'followup', 'considerTherapy'],
+    moderate_npdr: ['refer', 'followup', 'optimizeGlycemic'],
+    mild_npdr: ['annualExam', 'monitorGlucose', 'continueDM'],
+    no_dr: ['annualScreening', 'maintainGlycemic'],
+  };
 
-    case 'severe_npdr':
-      recommendations.push('Urgent referral to retina specialist');
-      recommendations.push('Follow-up within 1-2 months');
-      recommendations.push('Consider PRP or anti-VEGF therapy');
-      break;
-
-    case 'moderate_npdr':
-      recommendations.push('Refer to ophthalmologist');
-      recommendations.push('Follow-up every 3-6 months');
-      recommendations.push('Optimize glycemic control');
-      break;
-
-    case 'mild_npdr':
-      recommendations.push('Annual dilated eye examination');
-      recommendations.push('Monitor blood glucose levels');
-      recommendations.push('Continue diabetes management');
-      break;
-
-    case 'no_dr':
-      recommendations.push('Annual screening recommended');
-      recommendations.push('Maintain good glycemic control');
-      break;
+  const keys = severityKeys[classification.severity] || [];
+  for (const key of keys) {
+    recommendations.push(t(`clinical.recommendations.${classification.severity}.${key}`));
   }
 
   // Risk factor based recommendations
   if (riskFactors.hypertension) {
-    recommendations.push('Blood pressure control is essential');
+    recommendations.push(t('clinical.recommendations.riskFactors.hypertension'));
   }
 
   if (riskFactors.dyslipidemia) {
-    recommendations.push('Lipid management recommended');
+    recommendations.push(t('clinical.recommendations.riskFactors.dyslipidemia'));
   }
 
   if (riskFactors.diabetesDuration === 'high') {
-    recommendations.push('Long diabetes duration increases progression risk');
+    recommendations.push(t('clinical.recommendations.riskFactors.longDuration'));
   }
 
   if (riskFactors.type1Diabetes) {
-    recommendations.push('Type 1 diabetes requires vigilant monitoring');
+    recommendations.push(t('clinical.recommendations.riskFactors.type1'));
   }
 
   return recommendations;
@@ -245,19 +229,20 @@ export function generateWarnings(
   detectionsByEye: Map<'OD' | 'OI', Detection[]>
 ): string[] {
   const warnings: string[] = [];
+  const t = i18n.t.bind(i18n);
 
   // Check for missing eyes
   if (!detectionsByEye.has('OD')) {
-    warnings.push('Right eye (OD) data not available');
+    warnings.push(t('clinical.warnings.rightEyeUnavailable'));
   }
   if (!detectionsByEye.has('OI')) {
-    warnings.push('Left eye (OI) data not available');
+    warnings.push(t('clinical.warnings.leftEyeUnavailable'));
   }
 
   // AI limitations disclaimer
-  warnings.push('This is an AI-assisted suggestion, not a definitive diagnosis');
-  warnings.push('Clinical correlation and expert review required');
-  warnings.push('Quadrant-based analysis (4-2-1 rule) is approximated');
+  warnings.push(t('clinical.warnings.aiDisclaimer'));
+  warnings.push(t('clinical.warnings.clinicalCorrelation'));
+  warnings.push(t('clinical.warnings.quadrantApproximated'));
 
   return warnings;
 }
@@ -360,41 +345,40 @@ export async function classifyDiabeticRetinopathy(
  * Format classification result as human-readable text
  */
 export function formatClassificationText(classification: DRClassification): string {
-  const severityLabels: Record<DRSeverityLevel, string> = {
-    'no_dr': 'Sin Retinopatía Diabética',
-    'mild_npdr': 'Retinopatía Diabética No Proliferativa Leve',
-    'moderate_npdr': 'Retinopatía Diabética No Proliferativa Moderada',
-    'severe_npdr': 'Retinopatía Diabética No Proliferativa Severa',
-    'pdr': 'Retinopatía Diabética Proliferativa'
+  const t = i18n.t.bind(i18n);
+  const lang = i18n.language === 'es' ? 'es' : 'en';
+
+  const getSeverityLabel = (severity: DRSeverityLevel): string => {
+    return t(`analysis.drClassification.severity.${severity}.${lang}`);
   };
 
-  let text = `CLASIFICACIÓN DE RETINOPATÍA DIABÉTICA\n`;
+  let text = `${t('clinical.format.title')}\n`;
   if (classification.guidelineName) {
-    text += `Protocolo: ${classification.guidelineName} ${classification.guidelineVersion ? `(v${classification.guidelineVersion})` : ''}\n`;
+    text += `${t('clinical.format.protocol')}: ${classification.guidelineName} ${classification.guidelineVersion ? `(v${classification.guidelineVersion})` : ''}\n`;
   }
   text += `${'='.repeat(50)}\n\n`;
-  text += `Severidad Global: ${severityLabels[classification.overallSeverity]}\n\n`;
+  text += `${t('clinical.format.overallSeverity')}: ${getSeverityLabel(classification.overallSeverity)}\n\n`;
 
   if (classification.rightEye) {
-    text += `Ojo Derecho (OD): ${severityLabels[classification.rightEye.severity]}\n`;
-    text += `  Confianza: ${classification.rightEye.confidence}\n`;
-    text += `  Criterios:\n`;
+    text += `${t('clinical.format.rightEye')}: ${getSeverityLabel(classification.rightEye.severity)}\n`;
+    text += `  ${t('clinical.format.confidence')}: ${classification.rightEye.confidence}\n`;
+    text += `  ${t('clinical.format.criteria')}:\n`;
     classification.rightEye.criteria.forEach(c => text += `    - ${c}\n`);
     text += `\n`;
   }
 
   if (classification.leftEye) {
-    text += `Ojo Izquierdo (OI): ${severityLabels[classification.leftEye.severity]}\n`;
-    text += `  Confianza: ${classification.leftEye.confidence}\n`;
-    text += `  Criterios:\n`;
+    text += `${t('clinical.format.leftEye')}: ${getSeverityLabel(classification.leftEye.severity)}\n`;
+    text += `  ${t('clinical.format.confidence')}: ${classification.leftEye.confidence}\n`;
+    text += `  ${t('clinical.format.criteria')}:\n`;
     classification.leftEye.criteria.forEach(c => text += `    - ${c}\n`);
     text += `\n`;
   }
 
-  text += `Recomendaciones:\n`;
+  text += `${t('clinical.format.recommendations')}:\n`;
   classification.recommendations.forEach(r => text += `  - ${r}\n`);
 
-  text += `\nAdvertencias:\n`;
+  text += `\n${t('clinical.format.warnings')}:\n`;
   classification.warnings.forEach(w => text += `  - ${w}\n`);
 
   return text;
