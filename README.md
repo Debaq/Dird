@@ -28,7 +28,6 @@
   - [Academia](#academia)
   - [Panel de Administración](#panel-de-administración)
 - [Instalación](#instalación)
-  - [Uso como PWA](#uso-como-pwa)
   - [Desarrollo Local](#desarrollo-local)
   - [Build de Producción](#build-de-producción)
 - [Configuración](#configuración)
@@ -40,7 +39,7 @@
 
 ## Visión General
 
-DIRD+ es una aplicación web diseñada para el análisis de imágenes de fondo de ojo (fundoscopía) utilizando modelos de inteligencia artificial YOLOv8n ejecutados **íntegramente en el navegador** mediante ONNX Runtime Web (WebAssembly). No requiere servidor para el procesamiento de imágenes — los datos del paciente nunca abandonan el dispositivo.
+DIRD+ es una aplicación web diseñada para el análisis de imágenes de fondo de ojo (fundoscopía) utilizando modelos de visión artificial ejecutados **íntegramente en el navegador** mediante ONNX Runtime Web (WebAssembly). No requiere servidor para el procesamiento de imágenes — los datos del paciente nunca abandonan el dispositivo.
 
 La plataforma permite a oftalmólogos, tecnólogos médicos e investigadores:
 
@@ -58,7 +57,7 @@ La plataforma permite a oftalmólogos, tecnólogos médicos e investigadores:
 | Aspecto | Detalle |
 |---------|---------|
 | **Privacidad total** | Inferencia IA en el navegador. Cero transmisión de imágenes a servidores externos |
-| **Offline-first** | PWA con Service Worker + IndexedDB. Funciona sin conexión tras primera carga |
+| **Persistencia local** | IndexedDB para almacenamiento completo de datos en el dispositivo |
 | **Sin dependencias de infraestructura** | No requiere GPU en servidor, ni API de IA externa para el análisis |
 | **Guías clínicas extensibles** | Sistema pluggable de guías (ICDR 2024, MINSAL Chile 2017). Agregar nuevas guías sin modificar código |
 | **Portabilidad** | Formato `.dird` (ZIP) permite mover pacientes completos entre instalaciones |
@@ -84,7 +83,7 @@ La plataforma permite a oftalmólogos, tecnólogos médicos e investigadores:
 | Tecnología | Versión | Rol |
 |-----------|---------|-----|
 | ONNX Runtime Web | 1.23 | Inferencia WebAssembly en navegador |
-| YOLOv8n | — | Modelos de detección (bbox) + segmentación (masks) |
+| Modelos ONNX | — | Detección (bounding boxes) + Segmentación (máscaras) |
 | OpenCV.js | — | Refinamiento del disco óptico (CDN) |
 
 ### Canvas y Visualización
@@ -121,7 +120,7 @@ La plataforma permite a oftalmólogos, tecnólogos médicos e investigadores:
 │  ┌──────────┐  ┌──────────────┐  ┌──────────────┐  │
 │  │  React   │  │ ONNX Runtime │  │  IndexedDB   │  │
 │  │  UI/SPA  │  │  (WASM)      │  │  (Dexie)     │  │
-│  │          │◄─┤  YOLOv8n     │  │  Pacientes   │  │
+│  │          │◄─┤  Modelos VA  │  │  Pacientes   │  │
 │  │  Canvas  │  │  Detección   │  │  Sesiones    │  │
 │  │  Konva   │  │  Segmentac.  │  │  Imágenes    │  │
 │  │          │  │              │  │  Detecciones  │  │
@@ -129,8 +128,6 @@ La plataforma permite a oftalmólogos, tecnólogos médicos e investigadores:
 │  │  jsPDF   │  │  (CDN)       │  │              │  │
 │  └──────────┘  └──────────────┘  └──────────────┘  │
 │         │                                           │
-│         │  Service Worker (Workbox)                  │
-│         │  Cache: modelos ONNX, WASM, assets        │
 └─────────┼───────────────────────────────────────────┘
           │ (opcional)
           ▼
@@ -259,15 +256,6 @@ Motor de clasificación de severidad de retinopatía diabética:
 
 ## Instalación
 
-### Uso como PWA
-
-DIRD+ está desplegado en [tmeduca.org/dird](https://tmeduca.org/dird). Al acceder desde un navegador compatible:
-
-1. Abrir la URL en Chrome, Edge o Firefox
-2. Instalar como aplicación (opción del navegador)
-3. Los modelos de IA se descargarán en la primera ejecución y quedarán en caché
-4. La aplicación funciona offline tras la primera carga
-
 ### Desarrollo Local
 
 ```bash
@@ -341,16 +329,6 @@ Accesible desde el menú **Configuración**:
     ├── receive_contribution.php
     └── admin/
 ```
-
-### Caché y Service Worker
-
-| Recurso | Estrategia | TTL |
-|---------|-----------|-----|
-| `index.html`, `version.json` | NetworkFirst | Sin caché |
-| Modelos ONNX, WASM | CacheFirst | 30 días |
-| Locales, guías clínicas | NetworkFirst | 7-30 días |
-| OpenCV.js (CDN) | CacheFirst | 1 año |
-| Assets con hash | CacheFirst | 1 año |
 
 ---
 
