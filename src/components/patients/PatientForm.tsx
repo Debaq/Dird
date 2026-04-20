@@ -153,7 +153,7 @@ const PatientForm: React.FC<PatientFormProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, patientId: e.target.value })
               }
-              placeholder="P-001"
+              placeholder={t('patients.placeholders.id')}
               required
               disabled={!!patient}
             />
@@ -165,7 +165,7 @@ const PatientForm: React.FC<PatientFormProps> = ({
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Juan Pérez"
+              placeholder={t('patients.placeholders.name')}
               required
             />
           </div>
