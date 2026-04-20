@@ -5,14 +5,20 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/generate-version.cjs && tsc && vite build && node scripts/generate-htaccess.cjs",
+    "dev:tauri": "vite",
+    "build": "node scripts/generate-version.cjs && tsc && vite build",
+    "build:tauri": "node scripts/generate-version.cjs && tsc && vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
-    "check-config": "node scripts/check-config.cjs"
+    "check-config": "node scripts/check-config.cjs",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-label": "^2.1.0",
@@ -21,6 +27,7 @@
     "@radix-ui/react-switch": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.1",
     "@tailwindcss/typography": "^0.5.19",
+    "@tauri-apps/api": "^2.10.1",
     "browser-image-compression": "^2.0.2",
     "clsx": "^2.1.1",
     "dexie": "^4.0.11",
@@ -49,6 +56,7 @@
     "zustand": "^5.0.1"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.10.1",
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.17",
     "@types/react-dom": "^18.3.5",
@@ -57,7 +65,6 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",
-    "vite": "^6.0.7",
-    "vite-plugin-pwa": "^0.21.1"
+    "vite": "^6.0.7"
   }
 }
