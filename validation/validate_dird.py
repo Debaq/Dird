@@ -771,7 +771,10 @@ def _load_classes(classes_json: str | None) -> list[str]:
     with open(classes_json) as f:
         meta = json.load(f)
 
-    raw_classes = meta.get("classes", [])
+    if isinstance(meta, list):
+        raw_classes = meta
+    else:
+        raw_classes = meta.get("classes", [])
 
     if not raw_classes:
         return DEFAULT_CLASSES

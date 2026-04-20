@@ -63,6 +63,25 @@ CLASS_DISPLAY_NAMES = {
 # Área mínima de componente conectado para filtrar ruido (píxeles)
 MIN_COMPONENT_AREA = 10
 
+# Normalización de nombres de clase del modelo (sinónimos → nombre canónico)
+CLASS_NORMALIZE = {
+    "microaneurysms":    "microaneurysm",
+    "microhemorrhages":  "microaneurysm",
+    "microaneurysm":     "microaneurysm",
+    "hemorrhages":       "hemorrhage",
+    "haemorrhage":       "hemorrhage",
+    "haemorrhages":      "hemorrhage",
+    "hard_exudates":     "hard_exudate",
+    "soft_exudates":     "soft_exudate",
+    "cotton_wool_spot":  "soft_exudate",
+    "cotton_wool_spots": "soft_exudate",
+    "optic_disk":        "optic_disc",
+}
+
+
+def normalize_class_name(name: str) -> str:
+    return CLASS_NORMALIZE.get(name, name)
+
 # Umbral IoU de NMS del modelo (fijo)
 NMS_IOU_THRESHOLD = 0.45
 
@@ -354,7 +373,7 @@ def evaluate_dataset(
 
             # Filtrar predicciones de esta clase, ordenar por confianza
             pred_dets = sorted(
-                [d for d in detections if d["class"] == model_class],
+                [d for d in detections if normalize_class_name(d["class"]) == model_class],
                 key=lambda d: d["confidence"],
                 reverse=True,
             )
