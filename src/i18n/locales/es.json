@@ -50,7 +50,22 @@
   "common": {
     "confirm": "Confirmar",
     "cancel": "Cancelar",
-    "delete": "Eliminar"
+    "delete": "Eliminar",
+    "error": {
+      "dbBlocked": "Por favor cierra otras pestañas de esta aplicación para permitir la actualización de la base de datos."
+    }
+  },
+  "messages": {
+    "info": "Información",
+    "message": "Mensaje",
+    "warning": "Advertencia",
+    "attention": "Atención",
+    "accept": "Aceptar"
+  },
+  "success": {
+    "deletePatient": "Paciente eliminado correctamente",
+    "archivePatient": "Paciente archivado",
+    "unarchivePatient": "Paciente desarchivado"
   },
   "errors": {
     "savePatient": "Error al guardar el paciente",
@@ -64,7 +79,8 @@
     "duplicateSession": "Error al duplicar el estudio.",
     "import": "Error de Importación",
     "deletePatient": "Error al eliminar el paciente.",
-    "archivePatient": "Error al {{action}} el paciente.",
+    "archivePatient": "Error al archivar el paciente.",
+    "unarchivePatient": "Error al desarchivar el paciente.",
     "processingImages": "Error procesando imágenes: {{error}}",
     "drClassification": {
       "noClassification": "No se pudo generar la clasificación",
@@ -76,7 +92,11 @@
     "deleteSession": "¿Estás seguro de que quieres eliminar este estudio y todos sus datos? Esta acción es irreversible.",
     "duplicateSession": "¿Estás seguro de que deseas duplicar este estudio? Esta acción creará una copia con los mismos elementos pero desbloqueada.",
     "deletePatient": "¿Estás seguro de que quieres eliminar este paciente y todos sus datos? Esta acción es irreversible.",
-    "archivePatient": "¿Estás seguro de que quieres {{action}} este paciente?",
+    "deletePatientTitle": "Eliminar Paciente",
+    "archivePatient": "¿Estás seguro de que quieres archivar este paciente?",
+    "unarchivePatient": "¿Estás seguro de que quieres desarchivar este paciente?",
+    "archivePatientTitle": "Archivar Paciente",
+    "unarchivePatientTitle": "Desarchivar Paciente",
     "deleteReportTitle": "Eliminar Informe",
     "finalizeReportTitle": "Finalizar Informe"
   },
@@ -129,6 +149,10 @@
     "filter": {
       "allStatus": "Todos los estados",
       "pendingReport": "Pendientes de Informe"
+    },
+    "placeholders": {
+      "id": "P-001",
+      "name": "Juan Pérez"
     },
     "form": {
       "editDescription": "Edita la información del paciente",
@@ -1455,6 +1479,46 @@
       "model": "Cargando modelo de IA",
       "opencv": "Inicializando OpenCV",
       "done": "Completado"
+    }
+  },
+  "demo": {
+    "loading": {
+      "title": "Preparando DIRD",
+      "subtitle": "Cargando paciente demo y recursos",
+      "firstTimeInfo": "La primera carga puede tardar unos segundos mientras se preparan los modelos de IA y las imágenes demo.",
+      "imagesProgress": "Procesando imagen {{current}} de {{total}}",
+      "steps": {
+        "init": "Inicializando",
+        "patient": "Creando paciente demo",
+        "model": "Cargando modelo de IA",
+        "modelLoaded": "Modelo de IA cargado",
+        "images": "Procesando imágenes",
+        "report": "Generando informe",
+        "done": "Completado"
+      }
+    }
+  },
+  "tokens": {
+    "modal": {
+      "title": "Mi Token de Sesión",
+      "description": "Este es tu identificador único de instalación:",
+      "copyButton": "Copiar Token",
+      "copied": "Token copiado al portapapeles",
+      "close": "Cerrar"
+    },
+    "beacon": {
+      "active": "Baliza Activa",
+      "adminNotified": "El administrador ha sido notificado de tu solicitud de ayuda.",
+      "timeRemaining": "Tiempo restante:",
+      "activate": "🚨 Encender Baliza",
+      "activating": "Activando...",
+      "activated": "¡Baliza activada! El administrador será notificado.",
+      "alreadyActive": "Baliza ya está activa ({{time}} restantes)",
+      "error": "Error al activar baliza",
+      "info": {
+        "title": "ℹ️ ¿Qué es la baliza?",
+        "description": "La baliza alertará al administrador durante 5 minutos. Úsala cuando necesites ayuda urgente."
+      }
     }
   },
   "clinical": {

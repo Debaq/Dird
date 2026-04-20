@@ -85,11 +85,12 @@ const PatientList: React.FC = () => {
 
   const handleArchivePatient = async (patient: Patient) => {
     const isArchiving = (patient.status || 'active') === 'active';
-    const action = isArchiving ? 'archivar' : 'desarchivar';
 
     const confirmed = await confirm({
       title: isArchiving ? t('confirmations.archivePatientTitle') : t('confirmations.unarchivePatientTitle'),
-      description: t('confirmations.archivePatient', { action }),
+      description: isArchiving
+        ? t('confirmations.archivePatient')
+        : t('confirmations.unarchivePatient'),
       confirmText: t('common.confirm'),
       cancelText: t('common.cancel'),
       variant: 'warning',
@@ -101,8 +102,8 @@ const PatientList: React.FC = () => {
       await db.patients.update(patient.id!, { status: isArchiving ? 'archived' : 'active' });
       toast.success(isArchiving ? t('success.archivePatient') : t('success.unarchivePatient'));
     } catch (error) {
-      console.error(`Error ${action}ing patient:`, error);
-      toast.error(t('errors.archivePatient', { action }));
+      console.error('Error archiving/unarchiving patient:', error);
+      toast.error(isArchiving ? t('errors.archivePatient') : t('errors.unarchivePatient'));
     }
   };
   

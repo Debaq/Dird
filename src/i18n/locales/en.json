@@ -47,6 +47,26 @@
     "loadingPDF": "Loading PDF...",
     "failedToLoadPDF": "Failed to load PDF document"
   },
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "error": {
+      "dbBlocked": "Please close other tabs of this application to allow the database update."
+    }
+  },
+  "messages": {
+    "info": "Information",
+    "message": "Message",
+    "warning": "Warning",
+    "attention": "Attention",
+    "accept": "OK"
+  },
+  "success": {
+    "deletePatient": "Patient deleted successfully",
+    "archivePatient": "Patient archived",
+    "unarchivePatient": "Patient unarchived"
+  },
   "errors": {
     "unknown": "Unknown error",
     "exportStudy": "Error exporting study.",
@@ -57,7 +77,8 @@
     "duplicateStudy": "Error duplicating study.",
     "import": "Import Error",
     "deletePatient": "Error deleting patient.",
-    "archivePatient": "Error {{action}} patient.",
+    "archivePatient": "Error archiving patient.",
+    "unarchivePatient": "Error unarchiving patient.",
     "drClassification": {
       "noClassification": "Could not generate classification",
       "noClassifications": "Could not generate classifications"
@@ -68,7 +89,11 @@
     "deleteStudy": "Are you sure you want to delete this study and all its data? This action is irreversible.",
     "duplicateStudy": "Are you sure you want to duplicate this study? This action will create a copy with the same elements but unlocked.",
     "deletePatient": "Are you sure you want to delete this patient and all their data? This action is irreversible.",
-    "archivePatient": "Are you sure you want to {{action}} this patient?"
+    "deletePatientTitle": "Delete Patient",
+    "archivePatient": "Are you sure you want to archive this patient?",
+    "unarchivePatient": "Are you sure you want to unarchive this patient?",
+    "archivePatientTitle": "Archive Patient",
+    "unarchivePatientTitle": "Unarchive Patient"
   },
   "patients": {
     "title": "Patients",
@@ -90,6 +115,45 @@
     "description": "Manage patients and their analysis studies",
     "notFound": "No patients found",
     "empty": "No patients registered. Create one to start.",
+    "sessions": "studies",
+    "status": {
+      "no_report": "No Report",
+      "preliminary": "Draft"
+    },
+    "medicalLabels": {
+      "diabetes": "Diabetes",
+      "hta": "HTN",
+      "dlp": "DLP"
+    },
+    "filter": {
+      "allStatus": "All statuses",
+      "pendingReport": "Pending Report"
+    },
+    "placeholders": {
+      "id": "P-001",
+      "name": "John Doe"
+    },
+    "form": {
+      "editDescription": "Edit patient information",
+      "createDescription": "Fill in the data to create a new patient",
+      "medicalHistory": "Medical History",
+      "diabetes": "Diabetes",
+      "diabetesType": "Diabetes Type",
+      "selectType": "Select type",
+      "types": {
+        "type1": "Type 1",
+        "type2": "Type 2",
+        "gestational": "Gestational",
+        "other": "Other"
+      },
+      "diabetesDuration": "Years with Diabetes",
+      "diabetesDurationPlaceholder": "Years since diagnosis",
+      "hta": "Arterial Hypertension (HTN)",
+      "dlp": "Dyslipidemia (DLP)",
+      "medicationsPlaceholder": "List of medications separated by commas",
+      "otherConditions": "Other History",
+      "otherConditionsPlaceholder": "Other relevant medical history..."
+    },
     "fields": {
       "name": "Name",
       "email": "Email",
@@ -1299,6 +1363,58 @@
       "criteria": "Criteria",
       "recommendations": "Recommendations",
       "warnings": "Warnings"
+    }
+  },
+  "loading": {
+    "title": "Preparing DIRD",
+    "subtitle": "Loading required resources",
+    "info": "Loading the components required for the application to run.",
+    "steps": {
+      "init": "Initializing",
+      "tokens": "Checking tokens",
+      "model": "Loading AI model",
+      "opencv": "Initializing OpenCV",
+      "done": "Completed"
+    }
+  },
+  "demo": {
+    "loading": {
+      "title": "Preparing DIRD",
+      "subtitle": "Loading demo patient and resources",
+      "firstTimeInfo": "First load may take a few seconds while AI models and demo images are prepared.",
+      "imagesProgress": "Processing image {{current}} of {{total}}",
+      "steps": {
+        "init": "Initializing",
+        "patient": "Creating demo patient",
+        "model": "Loading AI model",
+        "modelLoaded": "AI model loaded",
+        "images": "Processing images",
+        "report": "Generating report",
+        "done": "Completed"
+      }
+    }
+  },
+  "tokens": {
+    "modal": {
+      "title": "My Session Token",
+      "description": "This is your unique installation identifier:",
+      "copyButton": "Copy Token",
+      "copied": "Token copied to clipboard",
+      "close": "Close"
+    },
+    "beacon": {
+      "active": "Beacon Active",
+      "adminNotified": "The administrator has been notified of your help request.",
+      "timeRemaining": "Time remaining:",
+      "activate": "🚨 Trigger Beacon",
+      "activating": "Activating...",
+      "activated": "Beacon activated! The administrator will be notified.",
+      "alreadyActive": "Beacon already active ({{time}} remaining)",
+      "error": "Error activating beacon",
+      "info": {
+        "title": "ℹ️ What is the beacon?",
+        "description": "The beacon will alert the administrator for 5 minutes. Use it when you need urgent help."
+      }
     }
   }
 }

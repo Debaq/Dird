@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Copy, Radio, CheckCircle, Info } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { getInstallationToken } from '@/lib/utils/installation';
@@ -12,15 +13,22 @@ interface TokenInfoModalProps {
 }
 
 export function TokenInfoModal({ open, onOpenChange }: TokenInfoModalProps) {
+  const { t } = useTranslation();
   const [isActivating, setIsActivating] = useState(false);
   const [beaconActive, setBeaconActive] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(0);
 
   const installationToken = getInstallationToken();
 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handleCopyToken = () => {
     navigator.clipboard.writeText(installationToken);
-    toast.success('Token copiado al portapapeles');
+    toast.success(t('tokens.modal.copied'));
   };
 
   const handleActivateBeacon = async () => {
@@ -30,9 +38,9 @@ export function TokenInfoModal({ open, onOpenChange }: TokenInfoModalProps) {
       const response = await activateBeacon(installationToken);
 
       if (response.already_active) {
-        toast.info(`Baliza ya está activa (${Math.floor(response.seconds_remaining / 60)}:${(response.seconds_remaining % 60).toString().padStart(2, '0')} restantes)`);
+        toast.info(t('tokens.beacon.alreadyActive', { time: formatTime(response.seconds_remaining) }));
       } else {
-        toast.success('¡Baliza activada! El administrador será notificado.');
+        toast.success(t('tokens.beacon.activated'));
         setBeaconActive(true);
         setTimeRemaining(response.seconds_remaining);
 
@@ -49,17 +57,11 @@ export function TokenInfoModal({ open, onOpenChange }: TokenInfoModalProps) {
         }, 1000);
       }
     } catch (error) {
-      toast.error('Error al activar baliza');
+      toast.error(t('tokens.beacon.error'));
       console.error(error);
     } finally {
       setIsActivating(false);
     }
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -68,7 +70,7 @@ export function TokenInfoModal({ open, onOpenChange }: TokenInfoModalProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Info className="w-5 h-5" />
-            Mi Token de Sesión
+            {t('tokens.modal.title')}
           </DialogTitle>
         </DialogHeader>
 
@@ -76,7 +78,7 @@ export function TokenInfoModal({ open, onOpenChange }: TokenInfoModalProps) {
           {/* Token Display */}
           <div className="space-y-2">
             <p className="text-sm text-smoke-600 dark:text-dark-textSecondary">
-              Este es tu identificador único de instalación:
+              {t('tokens.modal.description')}
             </p>
             <div className="bg-smoke-100 dark:bg-coal-900 rounded-lg p-4 border border-smoke-200 dark:border-coal-700">
               <code className="text-xs font-mono text-coal-800 dark:text-dark-text break-all block">
@@ -90,7 +92,7 @@ export function TokenInfoModal({ open, onOpenChange }: TokenInfoModalProps) {
               className="w-full gap-2"
             >
               <Copy className="w-4 h-4" />
-              Copiar Token
+              {t('tokens.modal.copyButton')}
             </Button>
           </div>
 
@@ -102,15 +104,15 @@ export function TokenInfoModal({ open, onOpenChange }: TokenInfoModalProps) {
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                     <h3 className="font-semibold text-green-800 dark:text-green-300">
-                      Baliza Activa
+                      {t('tokens.beacon.active')}
                     </h3>
                   </div>
                   <p className="text-sm text-green-700 dark:text-green-400">
-                    El administrador ha sido notificado de tu solicitud de ayuda.
+                    {t('tokens.beacon.adminNotified')}
                   </p>
                   <div className="mt-3 flex items-center justify-between">
                     <span className="text-sm text-green-600 dark:text-green-400">
-                      Tiempo restante:
+                      {t('tokens.beacon.timeRemaining')}
                     </span>
                     <span className="font-mono text-lg font-bold text-green-700 dark:text-green-300">
                       {formatTime(timeRemaining)}
@@ -134,12 +136,12 @@ export function TokenInfoModal({ open, onOpenChange }: TokenInfoModalProps) {
                   size="lg"
                 >
                   <Radio className={`w-5 h-5 ${isActivating ? 'animate-pulse' : ''}`} />
-                  {isActivating ? 'Activando...' : '🚨 Encender Baliza'}
+                  {isActivating ? t('tokens.beacon.activating') : t('tokens.beacon.activate')}
                 </Button>
                 <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 rounded-lg p-3">
                   <p className="text-xs text-amber-800 dark:text-amber-300">
-                    <strong>ℹ️ ¿Qué es la baliza?</strong><br />
-                    La baliza alertará al administrador durante 5 minutos. Úsala cuando necesites ayuda urgente.
+                    <strong>{t('tokens.beacon.info.title')}</strong><br />
+                    {t('tokens.beacon.info.description')}
                   </p>
                 </div>
               </div>
@@ -153,7 +155,7 @@ export function TokenInfoModal({ open, onOpenChange }: TokenInfoModalProps) {
             onClick={() => onOpenChange(false)}
             className="w-full"
           >
-            Cerrar
+            {t('tokens.modal.close')}
           </Button>
         </DialogFooter>
       </DialogContent>

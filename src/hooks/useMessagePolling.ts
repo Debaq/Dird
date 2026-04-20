@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { fetchPendingMessages, markMessageAsRead } from '@/lib/api/admin-service';
 import { getInstallationToken } from '@/lib/utils/installation';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -27,6 +28,7 @@ export interface UseMessagePollingOptions {
 export function useMessagePolling(options: UseMessagePollingOptions = {}) {
   const { intervalMs = 120000, enabled = true } = options;
 
+  const { t } = useTranslation();
   const [isChecking, setIsChecking] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const { confirm, ConfirmDialogComponent } = useConfirm();
@@ -50,18 +52,18 @@ export function useMessagePolling(options: UseMessagePollingOptions = {}) {
     } else {
       // Show modal dialog
       const variantConfig = {
-        info: { title: 'Información', variant: 'default' as const },
-        success: { title: 'Mensaje', variant: 'default' as const },
-        warning: { title: 'Advertencia', variant: 'warning' as const },
-        error: { title: 'Atención', variant: 'destructive' as const },
+        info: { titleKey: 'messages.info', variant: 'default' as const },
+        success: { titleKey: 'messages.message', variant: 'default' as const },
+        warning: { titleKey: 'messages.warning', variant: 'warning' as const },
+        error: { titleKey: 'messages.attention', variant: 'destructive' as const },
       };
 
       const config = variantConfig[message.variant] || variantConfig.info;
 
       await confirm({
-        title: config.title,
+        title: t(config.titleKey),
         description: message.text,
-        confirmText: 'Aceptar',
+        confirmText: t('messages.accept'),
         variant: config.variant,
       });
     }
