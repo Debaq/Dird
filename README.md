@@ -51,7 +51,7 @@
 - [Guías Clínicas Soportadas](#guías-clínicas-soportadas)
 - [Hoja de Ruta](#hoja-de-ruta)
 - [Referencias Científicas](#referencias-científicas)
-- [Equipo y Afiliación](#equipo-y-afiliación)
+- [Autor](#autor)
 
 ---
 
@@ -763,15 +763,11 @@ Las referencias completas que sustentan el contexto epidemiológico, clínico y 
 
 ---
 
-## Equipo y Afiliación
+## Autor
 
-| Nombre | Rol | Afiliación |
-|--------|-----|------------|
-| [PLACEHOLDER: nombre] | [PLACEHOLDER: rol] | [PLACEHOLDER: institución] |
+**Nicolás Baier Quezada**
 
-**Contacto**: [PLACEHOLDER: email o formulario]  
-**Afiliación institucional**: [PLACEHOLDER: universidad/departamento/laboratorio]  
-**Financiamiento**: [PLACEHOLDER: si aplica — fondos, proyectos, concursos]
+Reportes de bugs y contribuciones vía [issues](https://github.com/Debaq/Dird/issues) y pull requests en este repositorio.
 
 ---
 DIRD+ es software de código abierto bajo licencia MIT. Las contribuciones son bienvenidas.
