@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <strong>Análisis oftalmológico con inteligencia artificial ejecutada íntegramente en el navegador.</strong><br>
-  Privacidad total. Sin dependencia de servidores. Sin costo por tamizaje.
+  <strong>Aplicación de escritorio con inteligencia artificial ejecutada íntegramente en dispositivo.</strong><br>
+  Privacidad total. Sin dependencia de servidores. Sin costo por tamizaje. Empaquetada con Tauri v2.
 </p>
 
 > **Aviso importante**: DIRD+ es un sistema de investigación y desarrollo. No está aprobado como dispositivo médico. No debe usarse como único criterio diagnóstico en entornos clínicos reales.
@@ -364,6 +364,13 @@ Estudios de costo-efectividad respaldan el tamizaje con IA:
 
 ### Stack Tecnológico
 
+#### Shell desktop
+| Tecnología | Versión | Rol |
+|-----------|---------|-----|
+| Tauri | v2 | Shell nativo multiplataforma (Rust + WebView) |
+| WebKitGTK | 4.1 | Webview en Linux |
+| Rust | 1.93+ | Backend nativo del shell |
+
 #### Frontend
 | Tecnología | Versión | Rol |
 |-----------|---------|-----|
@@ -376,6 +383,7 @@ Estudios de costo-efectividad respaldan el tamizaje con IA:
 | Zustand | 5.0 | Estado global (configuración, canvas, tokens, pacientes) |
 | Framer Motion | 11 | Animaciones y transiciones |
 | i18next | 24.2 | Internacionalización (español/inglés) |
+| Vitest + happy-dom | 4.1 | Suite de tests |
 
 #### IA e Inferencia
 | Tecnología | Versión | Rol |
@@ -649,60 +657,66 @@ Sección educativa consultiva integrada en la aplicación, orientada a que el pr
 
 ## Instalación y Despliegue
 
-### Desarrollo Local
+DIRD+ se distribuye como **aplicación de escritorio** (Linux, Windows, macOS) empaquetada con Tauri v2. El webview local embebido corre el frontend, sin servidor HTTP.
+
+### Prerequisitos
+
+- **Rust toolchain** (via [rustup](https://rustup.rs/))
+- **Node.js 20+** y [pnpm](https://pnpm.io/) (`npm i -g pnpm`)
+- Dependencias de sistema WebKitGTK (Linux). En Arch:
+  ```bash
+  sudo pacman -S webkit2gtk-4.1 libayatana-appindicator librsvg patchelf
+  ```
+  En Debian/Ubuntu:
+  ```bash
+  sudo apt install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+  ```
+
+### Clonar + instalar
 
 ```bash
-# Clonar repositorio
 git clone https://github.com/Debaq/Dird.git
 cd Dird
-
-# Instalar dependencias
-npm install
-
-# Iniciar servidor de desarrollo
-npm run dev
+pnpm install
 ```
 
-### Build de Producción
+### Desarrollo
 
 ```bash
-# Build completo (type-check + vite build + version.json + .htaccess)
-npm run build
-
-# Preview local del build
-npm run preview
-
-# Verificar configuración de API
-npm run check-config
+# Abrir la app de escritorio con HMR
+pnpm tauri:dev
 ```
 
-### Variables de Entorno
+Primera compilación Rust toma ~2-3 min. Siguientes arranques son instantáneos (cache `.cargo-target/`).
+
+### Build de producción
+
+```bash
+# Compila frontend + Rust en modo release
+pnpm tauri:build
+```
+
+El binario queda en `./src-tauri/target/release/app` (o `~/.cargo-target/release/app` si `CARGO_TARGET_DIR` está seteado). **No se generan AppImage/deb/rpm** por defecto (`bundle.active=false` en `src-tauri/tauri.conf.json`).
+
+Para generar paquetes de distribución: cambiar `bundle.active` a `true` y correr con `NO_STRIP=true pnpm tauri:build` (evita el bug de `strip` + `.relr.dyn` en Arch moderno).
+
+### Tests
+
+```bash
+pnpm test            # run (30 tests)
+pnpm test:watch      # modo watch
+pnpm test:ui         # UI Vitest
+```
+
+Cobertura: pipeline ONNX (NMS, postprocess), motor de guías clínicas (ICDR 2024 integración, regla 4-2-1), validador de guías.
+
+### Variables de entorno
 
 | Variable | Descripción | Ejemplo |
 |----------|-------------|---------|
-| `VITE_API_BASE_URL` | URL absoluta del backend PHP | `https://tmeduca.org/dird/backend` |
-| `VITE_API_USE_RELATIVE` | Usar ruta relativa al BASE_URL | `true` |
+| `VITE_API_BASE_URL` | URL absoluta del backend PHP (contribuciones + admin) | `https://tmeduca.org/dird/backend` |
 
-### Estructura de Despliegue
-
-```
-/var/www/html/dird/
-├── index.html              # Frontend SPA
-├── assets/                 # JS/CSS con hash (cache 1 año)
-├── clinical-guidelines/    # JSONs de guías clínicas
-│   ├── index.json
-│   ├── icdr_2024.json
-│   └── minsal_chile_2017.json
-├── docs/                   # Documentación clínica de referencia
-└── backend/                # API PHP (opcional)
-    ├── get_tokens.php
-    ├── consume_token.php
-    ├── confirm_processing.php
-    ├── receive_contribution.php
-    └── admin/
-```
-
-Ver [CONFIG.md](CONFIG.md) para configuración detallada de API y despliegue.
+Definidas en `.env.development` (dev remoto) y `.env.production` (bundle final).
 
 ---
 
