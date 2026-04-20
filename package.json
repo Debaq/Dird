@@ -10,6 +10,9 @@
     "build:tauri": "node scripts/generate-version.cjs && tsc && vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
     "check-config": "node scripts/check-config.cjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
@@ -61,10 +64,13 @@
     "@types/react": "^18.3.17",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/ui": "^4.1.4",
     "autoprefixer": "^10.4.20",
+    "happy-dom": "^20.9.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "vitest": "^4.1.4"
   }
 }
