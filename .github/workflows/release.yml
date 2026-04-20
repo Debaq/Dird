@@ -1,0 +1,180 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  # ────────────────────────────────────────────────────────────────
+  # Linux: binario + AppImage
+  # ────────────────────────────────────────────────────────────────
+  build-linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        run: echo "APP_VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build Tauri (AppImage + binario)
+        run: pnpm tauri build --bundles appimage
+        env:
+          NO_STRIP: true
+          CARGO_HTTP_TIMEOUT: 300
+          CARGO_NET_RETRY: 5
+
+      - name: Prepare Linux artifacts
+        run: |
+          mkdir -p artifacts
+          # Binario raw
+          cp src-tauri/target/release/app \
+             "artifacts/DIRD-v${APP_VERSION}-linux-x86_64"
+          chmod +x "artifacts/DIRD-v${APP_VERSION}-linux-x86_64"
+          # AppImage
+          for f in src-tauri/target/release/bundle/appimage/*.AppImage; do
+            [ -f "$f" ] && cp "$f" "artifacts/DIRD-v${APP_VERSION}-linux-x86_64.AppImage"
+          done
+          chmod +x artifacts/*.AppImage 2>/dev/null || true
+          ls -lh artifacts/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dird-linux
+          path: artifacts/*
+          retention-days: 30
+
+  # ────────────────────────────────────────────────────────────────
+  # Windows: NSIS installer + MSI (sin firma)
+  # ────────────────────────────────────────────────────────────────
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        shell: pwsh
+        run: |
+          $version = "${env:GITHUB_REF_NAME}" -replace '^v', ''
+          echo "APP_VERSION=$version" >> $env:GITHUB_ENV
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build Tauri (NSIS + MSI)
+        run: pnpm tauri build --bundles nsis,msi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_HTTP_TIMEOUT: 300
+          CARGO_NET_RETRY: 5
+
+      - name: Rename artifacts with version
+        shell: pwsh
+        run: |
+          Get-ChildItem src-tauri/target/release/bundle/nsis/*.exe | ForEach-Object {
+            $newPath = Join-Path $_.DirectoryName "DIRD-v$env:APP_VERSION-windows-x86_64-setup.exe"
+            Move-Item $_.FullName $newPath -Force
+          }
+          Get-ChildItem src-tauri/target/release/bundle/msi/*.msi | ForEach-Object {
+            $newPath = Join-Path $_.DirectoryName "DIRD-v$env:APP_VERSION-windows-x86_64.msi"
+            Move-Item $_.FullName $newPath -Force
+          }
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dird-windows
+          path: |
+            src-tauri/target/release/bundle/nsis/*.exe
+            src-tauri/target/release/bundle/msi/*.msi
+          retention-days: 30
+
+  # ────────────────────────────────────────────────────────────────
+  # Crear GitHub Release con todos los artefactos
+  # ────────────────────────────────────────────────────────────────
+  release:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        run: echo "APP_VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dird-linux
+          path: dist/linux
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dird-windows
+          path: dist/windows
+
+      - name: List artifacts
+        run: find dist -type f
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: DIRD+ v${{ env.APP_VERSION }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          files: |
+            dist/linux/*
+            dist/windows/**/*.exe
+            dist/windows/**/*.msi
