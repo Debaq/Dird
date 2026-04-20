@@ -28,11 +28,7 @@ import { DoomEasterEgg } from '@/components/ui/DoomEasterEgg';
 
 function App() {
   const { t } = useTranslation();
-  // Usa VITE_BASE_URL de las variables de entorno, con fallback a BASE_URL (de vite.config)
-  // En desarrollo siempre usa '/'
-  const basename = import.meta.env.PROD
-    ? (import.meta.env.BASE_URL || '/dird')
-    : '/';
+  const basename = '/';
   const [isInitializing, setIsInitializing] = useState(true);
   const [loadingProgress] = useState<LoadingProgress>({
     step: 'init',
