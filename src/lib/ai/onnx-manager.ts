@@ -1,5 +1,5 @@
 import * as ort from 'onnxruntime-web';
-import type { ModelMetadata, ClassDefinitionMetadata, BboxFormat } from './model-metadata';
+import type { ModelMetadata, ClassDefinitionMetadata } from './model-metadata';
 import { useConfigStore } from '@/stores/config-store';
 
 export class ONNXModelManager {
@@ -242,70 +242,21 @@ export function postprocessDetections(
     ? confidenceThreshold
     : (metadata.confidence_threshold || 0.5);
 
+  // Model output format can be:
+  // [batch, num_detections, 4 + num_classes] (transposed)
+  // or [batch, 4 + num_classes, num_detections] (original)
   const numClasses = classes.length;
-  const inputSize = metadata.model_info?.input_size?.[0] || metadata.input_size?.[0] || 640;
-  const scaleX = originalWidth / inputSize;
-  const scaleY = originalHeight / inputSize;
-
-  // Format declared by metadata spec (preferred) or auto-detected from shape.
-  const spec = metadata.output_spec;
-  const isEnd2End =
-    spec?.format === 'end2end_nms' ||
-    (spec === undefined && dims.length === 3 && dims[2] === 6);
-
-  if (isEnd2End) {
-    // [batch, D, 6] = [x1, y1, x2, y2, score, class_idx]. NMS already applied.
-    const numDets = dims[1];
-    const cols = dims[2];
-    const bboxFormat: BboxFormat = spec?.bbox_format ?? 'xyxy';
-    for (let i = 0; i < numDets; i++) {
-      const off = i * cols;
-      const score = outputData[off + 4];
-      if (score < threshold) continue;
-      const ci = outputData[off + 5] | 0;
-      if (ci < 0 || ci >= numClasses) continue;
-
-      let bboxX: number, bboxY: number, bboxWidth: number, bboxHeight: number;
-      if (bboxFormat === 'cxcywh') {
-        const cx = outputData[off];
-        const cy = outputData[off + 1];
-        const w = outputData[off + 2];
-        const h = outputData[off + 3];
-        bboxX = (cx - w / 2) * scaleX;
-        bboxY = (cy - h / 2) * scaleY;
-        bboxWidth = w * scaleX;
-        bboxHeight = h * scaleY;
-      } else {
-        const x1 = outputData[off];
-        const y1 = outputData[off + 1];
-        const x2 = outputData[off + 2];
-        const y2 = outputData[off + 3];
-        bboxX = x1 * scaleX;
-        bboxY = y1 * scaleY;
-        bboxWidth = (x2 - x1) * scaleX;
-        bboxHeight = (y2 - y1) * scaleY;
-      }
-
-      detections.push({
-        bbox: { x: bboxX, y: bboxY, width: bboxWidth, height: bboxHeight },
-        class: getClassName(ci),
-        confidence: score,
-        classIndex: ci,
-      });
-    }
-    return detections;
-  }
-
-  // Legacy YOLO raw: [batch, num_detections, 4 + num_classes] (transposed)
-  //                  or [batch, 4 + num_classes, num_detections]
   let numDetections: number;
   let isTransposed = false;
 
+  // Detect format based on dimensions
   if (dims.length === 3) {
     if (dims[1] === 4 + numClasses || dims[1] === 84) {
+      // Format: [batch, 4+classes, detections]
       numDetections = dims[2];
       isTransposed = false;
     } else {
+      // Format: [batch, detections, 4+classes]
       numDetections = dims[1];
       isTransposed = true;
     }
@@ -349,7 +300,16 @@ export function postprocessDetections(
       }
     }
 
+    // Filter by confidence threshold
     if (maxScore >= threshold) {
+      // Model outputs coordinates in model space (0-inputSize pixels), not normalized
+      // We need to scale from model space to original image space
+      const inputSize = metadata.model_info?.input_size?.[0] || metadata.input_size?.[0] || 640;
+      const scaleX = originalWidth / inputSize;
+      const scaleY = originalHeight / inputSize;
+
+      // Convert from center format (cx, cy, w, h) to corner format (x, y, w, h)
+      // and scale to original image dimensions
       const bboxX = (x - w / 2) * scaleX;
       const bboxY = (y - h / 2) * scaleY;
       const bboxWidth = w * scaleX;
