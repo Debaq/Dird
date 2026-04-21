@@ -1,7 +1,7 @@
 # Roadmap DIRD+ — Migración a Tauri
 
 Branch de trabajo: `w/tauri`
-Stack actual: Vite 6 + React 18 + TypeScript + ONNX Runtime Web + Dexie (IndexedDB) + Konva + i18next + PWA.
+Stack actual: Vite 6 + React 18 + TypeScript + ONNX Runtime Web + Dexie (IndexedDB) + Konva + i18next.
 
 ---
 
@@ -60,7 +60,6 @@ Problema: `base: '/dird/'` rompe en Tauri (protocolo `tauri://localhost`).
 
 - [ ] Crear mode `tauri` en `vite.config.ts`:
   - `base: '/'` cuando `process.env.TAURI_ENV_PLATFORM`
-  - Desactivar `VitePWA` en build Tauri (el SW no aplica en desktop)
   - `server.strictPort: true`
   - `server.hmr.protocol: 'ws'`
 - [ ] Nuevos scripts en `package.json`:
@@ -127,9 +126,7 @@ Ya iniciada en `w/tauri`:
 
 ## Fase 7 — Cleanup
 
-- [ ] Decisión: ¿desktop-only o web + desktop?
-  - **Desktop-only** → remover `vite-plugin-pwa`, `.htaccess`, `nginx.conf.example`
-  - **Dual** → mantener PWA solo en build web
+- [x] Desktop-only: PWA descartada, removidos `vite-plugin-pwa`, hooks y componentes asociados
 - [ ] Actualizar README con instrucciones de build Tauri
 - [ ] Crear CI para generar binarios multiplataforma (GitHub Actions)
 
@@ -142,7 +139,6 @@ Ya iniciada en `w/tauri`:
 | SharedArrayBuffer no disponible en WebKitGTK | Forzar single-thread en ONNX |
 | CSP estricta rompe ONNX WASM | Relajar con `wasm-unsafe-eval` y `blob:` |
 | Rutas base (`/dird/`) rompen en Tauri | Modo `tauri` con `base: '/'` |
-| PWA SW conflicto con Tauri | Desactivar plugin en mode tauri |
 | Tamaño bundle (modelos ONNX ~20MB) | Aceptable para desktop, lazy load ya implementado |
 
 ---

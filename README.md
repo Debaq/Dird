@@ -111,15 +111,20 @@ La OMS y la ADA recomiendan exámenes de fondo de ojo **al menos cada 1-2 años*
 
 ## La Solución
 
-DIRD+ es una plataforma web que ejecuta modelos de visión artificial para detección de retinopatía diabética **íntegramente en el navegador** del usuario, mediante ONNX Runtime Web (WebAssembly). Las imágenes de fondo de ojo se procesan localmente — **los datos del paciente nunca abandonan el dispositivo**.
+DIRD+ es una plataforma de doble distribución que ejecuta modelos de visión artificial para detección de retinopatía diabética **íntegramente en el dispositivo del usuario** mediante ONNX Runtime (WebAssembly):
+
+- **Aplicación de escritorio** (Linux/Windows/macOS, empaquetada con Tauri v2) — distribución principal, con historial persistente, base de datos local y operación 100% offline tras la instalación.
+- **Demo web** (misma base de código corriendo en el navegador) — sin instalación, útil para pruebas, docencia y evaluación.
+
+Las imágenes de fondo de ojo se procesan localmente en ambos modos — **los datos del paciente nunca abandonan el dispositivo**.
 
 ### Propuesta de Valor
 
 | Aspecto | Qué ofrece DIRD+ | Por qué importa |
 |---------|-------------------|-----------------|
-| **Privacidad total** | Inferencia IA en el navegador. Cero transmisión de datos a servidores externos | Cumplimiento con Ley 21.096 y regulaciones de datos de salud sin esfuerzo adicional |
+| **Privacidad total** | Inferencia IA en el dispositivo (escritorio o navegador). Cero transmisión de datos a servidores externos | Cumplimiento con Ley 21.096 y regulaciones de datos de salud sin esfuerzo adicional |
 | **Costo cero de operación** | Sin licencias, sin pago por tamizaje, sin hardware propietario | Viable para CESFAM rurales con presupuesto limitado |
-| **Funciona offline** | Modelos descargados una vez, almacenados en caché del navegador. IndexedDB local | Operativo en zonas sin conectividad estable |
+| **Funciona offline** | Modelos descargados una vez, cacheados localmente. Historial y pacientes en IndexedDB (persistente tanto en app desktop como en navegador) | Operativo en zonas sin conectividad estable |
 | **Guías clínicas adaptables** | Sistema pluggable: ICDR 2024 (internacional), MINSAL Chile 2017. Agregar nuevas guías sin modificar código | Adaptable a protocolos locales GES sin depender de proveedor extranjero |
 | **Código abierto** | Código fuente completo auditable. Algoritmos, umbrales y criterios verificables | Transparencia para reguladores, investigadores y clínicos |
 | **Portabilidad** | Formato `.dird` (ZIP) para exportar/importar pacientes completos | Interoperabilidad entre instalaciones sin vendor lock-in |
@@ -129,7 +134,7 @@ DIRD+ es una plataforma web que ejecuta modelos de visión artificial para detec
 ```
 1. CAPTURA             2. CARGA               3. ANÁLISIS IA          4. REVISIÓN
 Retinógrafo         →  Subir imágenes      →  Detección automática →  Canvas interactivo
-(cualquier cámara)     al navegador            de lesiones (ONNX)     multicapa con
+(cualquier cámara)     a la app/navegador      de lesiones (ONNX)     multicapa con
                        OD / OI                 + Segmentación         herramientas de
                                                                       anotación
 
@@ -139,7 +144,7 @@ guía clínica           con conclusiones       portable entre
 (ICDR/MINSAL)          y recomendaciones      instalaciones
 ```
 
-**Todo ocurre en el navegador. Sin servidor. Sin internet (después de la primera carga).**
+**Todo ocurre en el dispositivo — app de escritorio o navegador. Sin servidor. Sin internet (después de la primera carga).**
 
 ### Motor de Guías Clínicas Pluggable — Funcionalidad Única
 
@@ -234,7 +239,7 @@ El LLM externo es un **servicio opcional de redacción**. DIRD+ funciona complet
 
 | Característica | DART (TeleDx, Chile) | IDx-DR (Digital Diagnostics) | Google ARDA | EyeArt (Eyenuk) | Phelcom Eyer (Brasil) | **DIRD+** |
 |---|---|---|---|---|---|---|
-| **Procesamiento** | Cloud | Cloud | Cloud | Cloud | Cloud | **Edge (navegador)** |
+| **Procesamiento** | Cloud | Cloud | Cloud | Cloud | Cloud | **Edge (desktop/navegador)** |
 | **Datos salen del dispositivo** | Sí (cloud TeleDx) | Sí (USA) | Sí (Google Cloud) | Sí (USA) | Sí (Brasil) | **No** |
 | **Funciona offline** | No | No | No | No | No | **Sí** |
 | **Hardware requerido** | Retinógrafo + internet | Topcon NW400 (~USD 15-25K) | Cámara de mesa (~USD 5-15K) | Cámara compatible (~USD 5-15K) | Smartphone + adaptador (~USD 3-5K) | **Cualquier cámara existente** |
@@ -248,7 +253,7 @@ El LLM externo es un **servicio opcional de redacción**. DIRD+ funciona complet
 | **Soberanía de datos** | Parcial (cloud en Chile) | No (USA) | No (Google) | No (USA) | No (Brasil) | **Sí (100% local)** |
 | **Despliegue en Chile** | 170 establecimientos, >350K exámenes | No | No | No | No | En desarrollo |
 
-**No existe otra plataforma que combine edge-computing en navegador + funcionamiento offline + código abierto + soporte multi-guía clínica para tamizaje de RD.**
+**No existe otra plataforma que combine edge-computing (desktop y navegador) + funcionamiento offline + código abierto + soporte multi-guía clínica para tamizaje de RD.**
 
 ### DART: El Referente Chileno y Cómo DIRD+ lo Complementa
 
@@ -322,7 +327,7 @@ Estudios de costo-efectividad respaldan el tamizaje con IA:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        NAVEGADOR WEB                            │
+│           DISPOSITIVO DEL USUARIO (Desktop Tauri o Web)         │
 │                                                                 │
 │  ┌────────────────┐  ┌───────────────────┐  ┌───────────────┐  │
 │  │   React 18     │  │  ONNX Runtime Web │  │  IndexedDB    │  │
@@ -590,13 +595,14 @@ src/
 - Paciente demo precargado para evaluación del sistema
 - Sesiones combinadas para análisis longitudinal
 
-### Análisis con IA en el Navegador
+### Análisis con IA en el Dispositivo (Desktop o Navegador)
 - **Modelos duales**: Detección (bounding boxes) + Segmentación (máscaras de píxeles)
-- **Ejecución local**: ONNX Runtime Web con SIMD y multi-thread
-- **Descarga progresiva**: Modelos desde GitHub Releases, cacheados en navegador
+- **Ejecución local**: ONNX Runtime (WebAssembly) con SIMD y multi-thread, idéntico en desktop Tauri y en navegador
+- **Descarga progresiva**: Modelos desde GitHub `Debaq/dird_models`, cacheados localmente
 - **Sensibilidad configurable**: Umbral de confianza ajustable por modelo
 - **Optimización por CPU**: Perfiles para Intel, AMD y ARM
 - **Procesamiento batch**: Todas las imágenes de una sesión en una ejecución
+- **Historial de rendimiento persistente**: Métricas de tiempo por inferencia (preprocess/inference/postprocess/NMS/total) guardadas localmente, exportables a JSON. Persisten entre sesiones tanto en desktop como en navegador
 
 ### Canvas Interactivo de Anotación
 - **5 capas**: Imagen original, detecciones IA, segmentaciones IA, anotaciones manuales, mediciones
@@ -748,7 +754,7 @@ El sistema de guías es extensible. Nuevas guías se agregan como archivos JSON 
 ### Funcionalidades Técnicas
 - [ ] Detección completa de IRMA y arrosariamiento venoso (criterios Regla 4-2-1)
 - [ ] Integración con cámaras retinales vía protocolo DICOM
-- [ ] Aplicación de escritorio con Tauri — en desarrollo activo en la rama actual (`w/tauri`)
+- [x] Aplicación de escritorio con Tauri v2 — implementada (Linux/Windows/macOS); demo web se mantiene en paralelo desde la misma base de código
 - [ ] Aprendizaje federado para mejora de modelos preservando privacidad
 
 ### Regulatorio

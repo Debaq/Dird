@@ -7,7 +7,6 @@
 ## Estado Actual - Lo que está bien
 
 - Arquitectura offline-first sólida (IndexedDB/Dexie con 16 versiones de migración)
-- PWA completa con estrategias de caché inteligentes
 - Sistema de directrices clínicas extensible (ICDR, MINSAL)
 - AI edge-computing real (ONNX en browser via WebAssembly)
 - Zustand bien usado para estado global
