@@ -17,7 +17,8 @@ import {
   Microscope,
   Bug,
   Trash2,
-  Wrench
+  Wrench,
+  Activity
 } from 'lucide-react';
 import { useConfigStore, type ModelSource } from '@/stores/config-store';
 import { apiInferenceService } from '@/lib/ai/api-inference-service';
@@ -31,6 +32,7 @@ import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import ModelSettings from './ModelSettings';
 import ReportSettings from './ReportSettings';
+import MetricsSettings from './MetricsSettings';
 import { GuidelineSelector } from './GuidelineSelector';
 import { getCurrentVersion, type VersionInfo } from '@/utils/version';
 import { changeLanguage } from '@/i18n/config';
@@ -271,6 +273,10 @@ export function Settings() {
             <TabsTrigger value="guidelines" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <BookOpen className="h-4 w-4 mr-2" />
               Clinical Guidelines
+            </TabsTrigger>
+            <TabsTrigger value="metrics" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
+              <Activity className="h-4 w-4 mr-2" />
+              Métricas
             </TabsTrigger>
             <TabsTrigger value="debug" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <Bug className="h-4 w-4 mr-2" />
@@ -859,6 +865,16 @@ export function Settings() {
         <TabsContent value="guidelines">
           <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
             <GuidelineSelector />
+          </Card>
+        </TabsContent>
+
+        {/* Metrics Tab */}
+        <TabsContent value="metrics">
+          <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
+            <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4">
+              Métricas de rendimiento y uso
+            </h2>
+            <MetricsSettings />
           </Card>
         </TabsContent>
 

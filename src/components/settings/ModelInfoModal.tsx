@@ -10,7 +10,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { AlertCircle, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, CheckCircle, AlertTriangle, Info, Copy, Trash2, Timer } from 'lucide-react';
+import { useInferenceMetricsStore } from '@/stores/inference-metrics-store';
 import type { ModelMetadata } from '@/lib/ai/model-metadata';
 import { getClassColor } from '@/lib/ai/model-metadata';
 import { classManager } from '@/lib/classes/class-manager';
@@ -331,6 +333,9 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
             </Card>
           )}
 
+          {/* Inference performance metrics */}
+          <InferencePerformanceSection />
+
           {/* Recommendations */}
           {enrichedMetadata?.analysis_report?.recommendations_next_steps && enrichedMetadata.analysis_report.recommendations_next_steps.length > 0 && (
             <Card className="border-blue-200 bg-blue-50">
@@ -355,6 +360,146 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
         </div>
       </DialogContent>
     </Dialog>
+  );
+};
+
+const InferencePerformanceSection: React.FC = () => {
+  const history = useInferenceMetricsStore((s) => s.history);
+  const clear = useInferenceMetricsStore((s) => s.clear);
+  const getStats = useInferenceMetricsStore((s) => s.getStats);
+  const [copied, setCopied] = useState(false);
+
+  if (history.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Timer className="w-5 h-5" />
+            Rendimiento medido
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-smoke-600">
+            Aún no hay inferencias medidas. Procesa una imagen para ver las métricas.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const stats = getStats();
+  const last = history[0];
+
+  const handleCopy = async () => {
+    const payload = {
+      exported_at: new Date().toISOString(),
+      stats,
+      history,
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy metrics', err);
+    }
+  };
+
+  const fmt = (n: number) => n.toFixed(2);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Timer className="w-5 h-5" />
+          Rendimiento medido ({history.length} inferencia{history.length === 1 ? '' : 's'})
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div>
+          <h4 className="text-sm font-medium mb-2">Última inferencia</h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+            <div><span className="text-smoke-600">Modelo:</span> {last.modelVersion}</div>
+            <div><span className="text-smoke-600">Imagen:</span> {last.imageWidth}×{last.imageHeight}</div>
+            <div><span className="text-smoke-600">Detecciones:</span> {last.numDetections}</div>
+            <div><span className="text-smoke-600">Preprocess:</span> {fmt(last.preprocess_ms)} ms</div>
+            <div><span className="text-smoke-600">ONNX Inference:</span> {fmt(last.inference_ms)} ms</div>
+            <div><span className="text-smoke-600">Post-processing:</span> {fmt(last.postprocess_ms)} ms</div>
+            {last.nms_ms !== null && (
+              <div><span className="text-smoke-600">NMS:</span> {fmt(last.nms_ms)} ms</div>
+            )}
+            <div><span className="text-smoke-600">Spatial analysis:</span> {fmt(last.spatial_ms ?? 0)} ms</div>
+            <div><span className="text-smoke-600">Clinical classification:</span> {fmt(last.clinical_ms ?? 0)} ms</div>
+            <div className="font-medium col-span-2 md:col-span-3 border-t pt-1 mt-1">
+              <span className="text-smoke-600">End-to-end:</span> {fmt(last.total_ms)} ms
+            </div>
+          </div>
+        </div>
+
+        {history.length >= 1 && (
+          <div>
+            <h4 className="text-sm font-medium mb-2">
+              Agregados E2E (N={stats.count}) · media total {fmt(stats.total_ms.mean)} ms
+            </h4>
+            <div className="overflow-x-auto">
+              <table className="text-xs w-full">
+                <thead>
+                  <tr className="text-smoke-600 border-b">
+                    <th className="text-left py-1 pr-2">Fase</th>
+                    <th className="text-right px-2">Media</th>
+                    <th className="text-right px-2">Mediana</th>
+                    <th className="text-right px-2">Min</th>
+                    <th className="text-right px-2">Max</th>
+                    <th className="text-right px-2">Std</th>
+                    <th className="text-right px-2">% E2E</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {([
+                    ['Preprocess', stats.preprocess_ms],
+                    ['ONNX Inference', stats.inference_ms],
+                    ['Post-processing', stats.postprocess_ms],
+                    ['NMS', stats.nms_ms],
+                    ['Spatial analysis', stats.spatial_ms],
+                    ['Clinical classification', stats.clinical_ms],
+                  ] as const).map(([label, s]) => (
+                    <tr key={label} className="border-b">
+                      <td className="py-1 pr-2">{label}</td>
+                      <td className="text-right px-2">{fmt(s.mean)}</td>
+                      <td className="text-right px-2">{fmt(s.median)}</td>
+                      <td className="text-right px-2">{fmt(s.min)}</td>
+                      <td className="text-right px-2">{fmt(s.max)}</td>
+                      <td className="text-right px-2">{fmt(s.std)}</td>
+                      <td className="text-right px-2">{s.pct_of_total.toFixed(1)}%</td>
+                    </tr>
+                  ))}
+                  <tr className="font-medium">
+                    <td className="py-1 pr-2">Total E2E</td>
+                    <td className="text-right px-2">{fmt(stats.total_ms.mean)}</td>
+                    <td className="text-right px-2">{fmt(stats.total_ms.median)}</td>
+                    <td className="text-right px-2">{fmt(stats.total_ms.min)}</td>
+                    <td className="text-right px-2">{fmt(stats.total_ms.max)}</td>
+                    <td className="text-right px-2">{fmt(stats.total_ms.std)}</td>
+                    <td className="text-right px-2">100%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-2 pt-2">
+          <Button size="sm" variant="outline" onClick={handleCopy}>
+            <Copy className="w-4 h-4 mr-1" />
+            {copied ? 'Copiado' : 'Copiar JSON'}
+          </Button>
+          <Button size="sm" variant="outline" onClick={clear}>
+            <Trash2 className="w-4 h-4 mr-1" />
+            Limpiar historial
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

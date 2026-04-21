@@ -4,6 +4,7 @@ import type { ModelMetadata } from './model-metadata';
 import { db } from '@/lib/db/schema';
 import { modelDownloader, type DownloadProgressCallback } from './model-downloader';
 import { useConfigStore } from '@/stores/config-store';
+import { useInferenceMetricsStore } from '@/stores/inference-metrics-store';
 import { classManager } from '@/lib/classes/class-manager';
 import { generateOpticDiscMask, isOpenCVReady } from './optic-disc-refiner';
 import { quadrantCalculator } from '@/lib/analysis/quadrant-calculator';
@@ -66,23 +67,20 @@ export class InferenceService {
 
     const metadata = this.detectionModel.getMetadata()!;
 
-    // Get input size (new format or legacy)
     const inputSize = metadata.model_info?.input_size || metadata.input_size || [640, 640];
 
-    // Preprocess image
+    const t0 = performance.now();
     const { data, dims } = preprocessImage(imageElement, inputSize);
+    const t1 = performance.now();
 
-    // Run inference
     const results = await this.detectionModel.runInference(data, dims);
+    const t2 = performance.now();
 
-    // Get output tensor (assuming first output is detections)
     const outputName = Object.keys(results)[0];
     const output = results[outputName];
 
-    // Get sensitivity from config
     const sensitivity = useConfigStore.getState().config.localModels.detection.sensitivity;
 
-    // Post-process results
     let detections = postprocessDetections(
       output,
       metadata,
@@ -90,37 +88,57 @@ export class InferenceService {
       imageElement.height,
       sensitivity
     );
+    const t3 = performance.now();
 
-    // Apply NMS
-    const iouThreshold = metadata.iou_threshold || 0.45;
-    detections = applyNMS(detections, iouThreshold);
+    let nms_ms: number | null = null;
+    if (!metadata.output_spec?.nms_applied_by_model) {
+      const iouThreshold = metadata.iou_threshold || 0.45;
+      detections = applyNMS(detections, iouThreshold);
+      nms_ms = performance.now() - t3;
+    }
+    const t4 = performance.now();
 
-    // Perform quadrant analysis
+    // Spatial analysis (quadrant calculation)
     const quadrantAnalysis = quadrantCalculator.analyzeQuadrants(
       detections,
       imageElement.width,
       imageElement.height
     );
+    const t5 = performance.now();
 
-    // Log analysis for debugging
     console.log('Quadrant Analysis:', quadrantCalculator.formatAnalysis(quadrantAnalysis));
 
-    // Save detections to database
     const modelVersion = metadata.model_info?.version || metadata.model_version || 'unknown';
     await this.saveDetections(imageId, detections, modelVersion);
 
-    // Generate optic disc segmentation masks if enabled
     const config = useConfigStore.getState().config;
     if (config.processing.opticDiscRefinement) {
       await this.generateOpticDiscSegmentations(imageElement, imageId, detections, modelVersion);
     }
 
-    // Auto-classify DR after AI processing
+    // Clinical classification
+    const t6 = performance.now();
     try {
       await classifyAndSaveImage(imageId);
     } catch (error) {
       console.error('Error auto-classifying image after AI processing:', error);
     }
+    const t7 = performance.now();
+
+    useInferenceMetricsStore.getState().addEntry({
+      timestamp: Date.now(),
+      modelVersion,
+      imageWidth: imageElement.width,
+      imageHeight: imageElement.height,
+      numDetections: detections.length,
+      preprocess_ms: +(t1 - t0).toFixed(2),
+      inference_ms: +(t2 - t1).toFixed(2),
+      postprocess_ms: +(t3 - t2).toFixed(2),
+      nms_ms: nms_ms !== null ? +nms_ms.toFixed(2) : null,
+      spatial_ms: +(t5 - t4).toFixed(2),
+      clinical_ms: +(t7 - t6).toFixed(2),
+      total_ms: +((t1 - t0) + (t2 - t1) + (t3 - t2) + (nms_ms ?? 0) + (t5 - t4) + (t7 - t6)).toFixed(2),
+    });
 
     return detections;
   }

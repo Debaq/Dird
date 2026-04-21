@@ -20,6 +20,7 @@ import UploadProgressModal from './UploadProgressModal';
 import { db, Session } from '@/lib/db/schema';
 import { exportSession, downloadDirdFile } from '@/lib/export/dird-exporter';
 import { inferenceService } from '@/lib/ai/inference-service';
+import { useInferenceMetricsStore } from '@/stores/inference-metrics-store';
 import { useImageUploader } from '@/hooks/useImageUploader';
 import { usePatientStore } from '@/stores/patient-store';
 
@@ -175,10 +176,14 @@ const SessionView: React.FC = () => {
     setIsProcessing(true);
     setProcessingProgress({ current: 0, total: images.length });
 
+    const sessionStart = performance.now();
+    let modelLoadMs = 0;
+
     try {
       if (!inferenceService.isDetectionModelLoaded()) {
-        // Load model from GitHub (with fallback to local)
+        const tLoad = performance.now();
         await inferenceService.loadDetectionModel();
+        modelLoadMs = performance.now() - tLoad;
       }
 
       const imageIds = images.map(img => img.id).filter(id => id !== undefined) as number[];
@@ -220,6 +225,16 @@ const SessionView: React.FC = () => {
           detection: 'DIRDv1r1',
           segmentation: session?.modelVersions?.segmentation,
         },
+      });
+
+      const sessionTotal = performance.now() - sessionStart;
+      useInferenceMetricsStore.getState().addSession({
+        timestamp: Date.now(),
+        sessionId: sessionId ?? null,
+        imagesProcessed: images.length,
+        modelLoad_ms: +modelLoadMs.toFixed(2),
+        session_total_ms: +sessionTotal.toFixed(2),
+        avg_per_image_ms: images.length > 0 ? +(sessionTotal / images.length).toFixed(2) : 0,
       });
 
       setRefreshKey((prev) => prev + 1);
