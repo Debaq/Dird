@@ -76,6 +76,8 @@ CLASS_NORMALIZE = {
     "cotton_wool_spot":  "soft_exudate",
     "cotton_wool_spots": "soft_exudate",
     "optic_disk":        "optic_disc",
+    "optic_disc":        "optic_disc",
+    "fovea":             "fovea",
 }
 
 
@@ -321,6 +323,7 @@ def evaluate_dataset(
     """
     images_dir = os.path.join(dataset_dir, "images")
 
+    print("Clases del modelo:", classes)
     print("Cargando ground truth IDRiD...")
     gt = load_idrid_gt(dataset_dir)
     print(f"  {len(gt)} imágenes con ground truth")
@@ -332,6 +335,8 @@ def evaluate_dataset(
 
     per_image_results = []
     inference_times = []
+    raw_class_counts: dict[str, int] = {}
+    all_detections: list[dict] = []
 
     image_stems = sorted(gt.keys())
 
@@ -363,6 +368,8 @@ def evaluate_dataset(
         detections = apply_nms(
             outputs[0], classes, orig_w, orig_h, conf_threshold, NMS_IOU_THRESHOLD
         )
+
+        all_detections.extend(detections)
 
         # Evaluar por clase
         image_row = {"image": stem}
@@ -397,6 +404,10 @@ def evaluate_dataset(
             image_row[f"{model_class}_fn"] = fn
 
         per_image_results.append(image_row)
+
+    for det in all_detections:
+        raw_class_counts[det["class"]] = raw_class_counts.get(det["class"], 0) + 1
+    print("Predicciones por clase (raw):", raw_class_counts)
 
     # Calcular AP por clase
     ap_results = {}
@@ -543,6 +554,13 @@ def save_results(
     lines.append(sep)
     lines.append(f"{'mAP':<20} | {mAP:>6.3f} |          |            |")
 
+    lines += [
+        "",
+        "Note: model class 'microhemorrhages' is mapped to IDRiD ground",
+        "truth class 'microaneurysm' as both represent the same clinical",
+        "finding (small red lesions) in this model version.",
+    ]
+
     # Inferencia
     inf_times = eval_data["inference_times"]
     if len(inf_times) > 0:
@@ -586,12 +604,17 @@ def main():
     parser.add_argument("--dataset", required=True, help="Directorio test/ de IDRiD (con images/ y masks/).")
     parser.add_argument("--output", required=True, help="Directorio de salida.")
     parser.add_argument("--conf-threshold", type=float, default=0.5, help="Umbral de confianza (default: 0.5).")
-    parser.add_argument("--iou-threshold", type=float, default=0.5, help="Umbral IoU matching GT-pred (default: 0.5).")
+    parser.add_argument("--iou-threshold", type=float, default=0.5, help="Umbral IoU NMS override (default: 0.5).")
+    parser.add_argument("--iou-threshold-match", type=float, default=None, help="Umbral IoU matching GT-pred. Si None, usa --iou-threshold.")
     parser.add_argument("--classes-json", default=None, help="JSON de metadata del modelo.")
     parser.add_argument("--benchmark", action="store_true", help="Ejecutar benchmark.")
     parser.add_argument("--n-benchmark", type=int, default=100, help="Imágenes para benchmark (default: 100).")
 
     args = parser.parse_args()
+
+    global NMS_IOU_THRESHOLD
+    NMS_IOU_THRESHOLD = args.iou_threshold
+    iou_match = args.iou_threshold_match if args.iou_threshold_match is not None else args.iou_threshold
 
     classes = _load_classes(args.classes_json)
 
@@ -599,7 +622,7 @@ def main():
     print(f"Dataset:            {args.dataset}")
     print(f"Clases ({len(classes)}):       {classes}")
     print(f"Conf threshold:     {args.conf_threshold}")
-    print(f"IoU threshold:      {args.iou_threshold} (matching)")
+    print(f"IoU threshold:      {iou_match} (matching)")
     print(f"IoU NMS:            {NMS_IOU_THRESHOLD}")
     print()
 
@@ -639,7 +662,7 @@ def main():
         classes=classes,
         dataset_dir=args.dataset,
         conf_threshold=args.conf_threshold,
-        iou_threshold=args.iou_threshold,
+        iou_threshold=iou_match,
     )
 
     # Benchmark opcional
@@ -659,7 +682,7 @@ def main():
         benchmark_data=benchmark_data,
         output_dir=args.output,
         conf_threshold=args.conf_threshold,
-        iou_threshold=args.iou_threshold,
+        iou_threshold=iou_match,
     )
 
     print()

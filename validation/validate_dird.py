@@ -54,13 +54,12 @@ INPUT_SIZE = 640
 # Orden = índice en el tensor de salida del modelo.
 # Ajustar si el JSON de metadata indica otro orden.
 DEFAULT_CLASSES = [
-    "microaneurysm",
-    "hemorrhage",
-    "hard_exudate",
-    "soft_exudate",
-    "neovascularization",
     "optic_disc",
+    "hard_exudate",
     "fovea",
+    "hemorrhage",
+    "cotton_wool_spot",
+    "microhemorrhages",
 ]
 
 # Clases que son lesiones clínicas (excluye landmarks anatómicos).
@@ -220,18 +219,39 @@ def apply_nms(
     num_classes = len(classes)
     expected_channels = 4 + num_classes
 
-    # Detectar formato automáticamente
+    scale_x = original_w / INPUT_SIZE
+    scale_y = original_h / INPUT_SIZE
+
+    # Formato end2end con NMS incluido: [D, 6] = [x1, y1, x2, y2, score, class_idx].
+    # El modelo ya aplicó NMS internamente; bbox en coords 640x640 directas.
+    if data.ndim == 2 and data.shape[1] == 6 and data.shape[0] != expected_channels:
+        keep = []
+        for i in range(data.shape[0]):
+            score = float(data[i, 4])
+            if score < conf_threshold:
+                continue
+            ci = int(data[i, 5])
+            if ci < 0 or ci >= num_classes:
+                continue
+            x1 = float(data[i, 0]) * scale_x
+            y1 = float(data[i, 1]) * scale_y
+            x2 = float(data[i, 2]) * scale_x
+            y2 = float(data[i, 3]) * scale_y
+            keep.append({
+                "bbox": np.array([x1, y1, x2, y2]),
+                "class": classes[ci],
+                "confidence": score,
+                "class_index": ci,
+            })
+        return keep
+
+    # Formato YOLO crudo: [4+N, D] o [D, 4+N] con cx,cy,w,h + scores por clase.
     if data.shape[0] == expected_channels or data.shape[0] < data.shape[1]:
-        # Formato [4+N, D] — cada columna es una detección
         num_detections = data.shape[1]
         is_transposed = False
     else:
-        # Formato [D, 4+N] — cada fila es una detección
         num_detections = data.shape[0]
         is_transposed = True
-
-    scale_x = original_w / INPUT_SIZE
-    scale_y = original_h / INPUT_SIZE
 
     raw_detections = []
 
@@ -255,7 +275,6 @@ def apply_nms(
         if max_score < conf_threshold:
             continue
 
-        # cx,cy,w,h → x1,y1,x2,y2 en espacio original
         x1 = (cx - w / 2) * scale_x
         y1 = (cy - h / 2) * scale_y
         x2 = (cx + w / 2) * scale_x
@@ -273,7 +292,6 @@ def apply_nms(
     if not raw_detections:
         return []
 
-    # NMS greedy: ordenar por confianza descendente
     raw_detections.sort(key=lambda d: d["confidence"], reverse=True)
     keep = []
 
@@ -779,13 +797,10 @@ def _load_classes(classes_json: str | None) -> list[str]:
     if not raw_classes:
         return DEFAULT_CLASSES
 
-    # Soportar formato nuevo (objetos con technical_name + currently_detected)
-    # y formato legacy (lista de strings)
+    # Preservar orden EXACTO del JSON: el índice en esta lista == índice del
+    # tensor de salida del modelo. No filtrar ni reordenar.
     if isinstance(raw_classes[0], dict):
-        # Filtrar solo clases actualmente detectadas, mantener orden por index
-        detected = [c for c in raw_classes if c.get("currently_detected", True)]
-        detected.sort(key=lambda c: c.get("index", 0))
-        return [c["technical_name"] for c in detected]
+        return [c["technical_name"] for c in raw_classes]
     else:
         return [str(c) for c in raw_classes]
 
