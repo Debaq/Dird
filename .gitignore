@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 dird
+artifacts
 *.local
 
 # Environment variables (solo archivos locales personales)

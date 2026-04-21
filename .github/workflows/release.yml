@@ -163,6 +163,8 @@ jobs:
 
       - name: Build web bundle
         run: pnpm build
+        env:
+          BASE_PATH: /dird/web/
 
       - name: Package dist
         run: |
