@@ -42,11 +42,21 @@ export interface ClassDefinitionMetadata {
   aliases?: string[];
 }
 
+export interface OutputSpec {
+  format?: 'end2end_nms' | 'raw' | string;
+  bbox_format?: 'xyxy' | 'cxcywh' | string;
+  bbox_coord_space?: 'input_pixels' | 'normalized' | string;
+  tensor_layout?: string[];
+  nms_applied_by_model?: boolean;
+  max_detections?: number;
+}
+
 export interface ModelMetadata {
   model_info?: ModelInfo;
   classes?: string[] | ClassDefinitionMetadata[];
   performance_metrics?: PerformanceMetrics;
   analysis_report?: AnalysisReport;
+  output_spec?: OutputSpec;
 
   // Legacy fields for backward compatibility
   model_version?: string;

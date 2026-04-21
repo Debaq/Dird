@@ -90,8 +90,11 @@ export class InferenceService {
     );
     const t3 = performance.now();
 
-    const iouThreshold = metadata.iou_threshold || 0.45;
-    detections = applyNMS(detections, iouThreshold);
+    // Si el modelo ya aplicó NMS (end2end), saltar para no re-filtrar.
+    if (!metadata.output_spec?.nms_applied_by_model) {
+      const iouThreshold = metadata.iou_threshold || 0.45;
+      detections = applyNMS(detections, iouThreshold);
+    }
     const t4 = performance.now();
     const nms_ms: number = +(t4 - t3).toFixed(2);
 

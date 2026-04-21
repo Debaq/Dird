@@ -242,21 +242,58 @@ export function postprocessDetections(
     ? confidenceThreshold
     : (metadata.confidence_threshold || 0.5);
 
-  // Model output format can be:
-  // [batch, num_detections, 4 + num_classes] (transposed)
-  // or [batch, 4 + num_classes, num_detections] (original)
   const numClasses = classes.length;
+  const inputSize = metadata.model_info?.input_size?.[0] || metadata.input_size?.[0] || 640;
+
+  // End2end NMS format (YOLOv26 / DIRDv2): output = [1, max_det, 6]
+  // Layout per detection: [x1, y1, x2, y2, score, class_idx] in input_pixel space.
+  // NMS ya aplicado por el modelo; filas con score=0 son padding.
+  if (metadata.output_spec?.format === 'end2end_nms') {
+    if (dims.length !== 3 || dims[2] !== 6) {
+      throw new Error(`end2end_nms expects dims [1, N, 6], got ${dims}`);
+    }
+    const maxDet = dims[1];
+    const scaleX = originalWidth / inputSize;
+    const scaleY = originalHeight / inputSize;
+
+    for (let i = 0; i < maxDet; i++) {
+      const off = i * 6;
+      const score = outputData[off + 4];
+      if (score < threshold) continue; // incluye padding score=0
+      const classIndex = Math.round(outputData[off + 5]);
+      if (classIndex < 0 || classIndex >= numClasses) continue;
+
+      const x1 = outputData[off] * scaleX;
+      const y1 = outputData[off + 1] * scaleY;
+      const x2 = outputData[off + 2] * scaleX;
+      const y2 = outputData[off + 3] * scaleY;
+
+      detections.push({
+        bbox: {
+          x: x1,
+          y: y1,
+          width: x2 - x1,
+          height: y2 - y1,
+        },
+        class: getClassName(classIndex),
+        confidence: score,
+        classIndex,
+      });
+    }
+    return detections;
+  }
+
+  // Formato legacy YOLOv11 raw:
+  // [batch, num_detections, 4 + num_classes] (transposed)
+  // o [batch, 4 + num_classes, num_detections] (original)
   let numDetections: number;
   let isTransposed = false;
 
-  // Detect format based on dimensions
   if (dims.length === 3) {
     if (dims[1] === 4 + numClasses || dims[1] === 84) {
-      // Format: [batch, 4+classes, detections]
       numDetections = dims[2];
       isTransposed = false;
     } else {
-      // Format: [batch, detections, 4+classes]
       numDetections = dims[1];
       isTransposed = true;
     }
@@ -300,11 +337,7 @@ export function postprocessDetections(
       }
     }
 
-    // Filter by confidence threshold
     if (maxScore >= threshold) {
-      // Model outputs coordinates in model space (0-inputSize pixels), not normalized
-      // We need to scale from model space to original image space
-      const inputSize = metadata.model_info?.input_size?.[0] || metadata.input_size?.[0] || 640;
       const scaleX = originalWidth / inputSize;
       const scaleY = originalHeight / inputSize;
 

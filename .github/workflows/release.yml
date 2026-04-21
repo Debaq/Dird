@@ -162,9 +162,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build web bundle
+        # Sin BASE_PATH: base relativo + <base href> runtime hace que
+        # el bundle funcione en cualquier subdirectorio del servidor.
         run: pnpm build
-        env:
-          BASE_PATH: /dird/web/
 
       - name: Package dist
         run: |

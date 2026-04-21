@@ -391,7 +391,7 @@ export async function loadDemoImage(
     }
 
     // Determinar la ruta base según el entorno
-    const basePath = import.meta.env.PROD ? '/dird' : '';
+    const basePath = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
     const sessionFolder = sessionNumber === 1 ? 'session-1-final' : 'session-2-preview';
 
     // Cargar la imagen
@@ -551,7 +551,7 @@ export async function loadDemoPreviewReport(): Promise<void> {
 
   try {
     // Cargar el PDF desde public
-    const basePath = import.meta.env.PROD ? '/dird' : '';
+    const basePath = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
     const pdfUrl = `${basePath}/demo-reports/session-2-preview.pdf`;
 
     const response = await fetch(pdfUrl);
@@ -644,7 +644,7 @@ export async function loadDemoReportAndLockSession(): Promise<void> {
 
   try {
     // Cargar el PDF desde public
-    const basePath = import.meta.env.PROD ? '/dird' : '';
+    const basePath = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
     const pdfUrl = `${basePath}/demo-reports/session-1-final.pdf`;
 
     const response = await fetch(pdfUrl);

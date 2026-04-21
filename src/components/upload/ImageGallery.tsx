@@ -327,54 +327,61 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, patientId, sessionI
   }, [images]);
 
   useEffect(() => {
-    const newThumbnails = new Map<number, string>();
     let cancelled = false;
+    const currentIds = new Set(images.map(i => i.id).filter((id): id is number => !!id));
 
-    // Create thumbnails progressively to avoid memory issues on mobile
+    setThumbnails(prev => {
+      // Revocar URLs de imagenes que ya no existen en la lista actual
+      const next = new Map(prev);
+      for (const [id, url] of prev) {
+        if (!currentIds.has(id)) {
+          try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+          next.delete(id);
+        }
+      }
+      return next;
+    });
+
     const createThumbnails = async () => {
       for (const image of images) {
         if (cancelled) break;
-        if (image.id && image.originalBlob) {
-          try {
-            // Verify blob is valid before creating URL
-            if (!(image.originalBlob instanceof Blob) || image.originalBlob.size === 0) {
-              console.warn(`Invalid blob for image ${image.id}`);
-              continue;
-            }
+        if (!image.id || !image.originalBlob) continue;
+        if (!(image.originalBlob instanceof Blob) || image.originalBlob.size === 0) {
+          console.warn(`Invalid blob for image ${image.id}`);
+          continue;
+        }
+        // Skip si ya tenemos thumbnail valida
+        let alreadyExists = false;
+        setThumbnails(prev => {
+          alreadyExists = prev.has(image.id!);
+          return prev;
+        });
+        if (alreadyExists) continue;
 
-            const url = URL.createObjectURL(image.originalBlob);
-
-            // Test if URL is accessible (important for mobile Safari)
-            await new Promise<void>((resolve, reject) => {
-              const testImg = new Image();
-              const timeout = setTimeout(() => {
-                testImg.src = '';
-                reject(new Error('Image load timeout'));
-              }, 3000);
-
-              testImg.onload = () => {
-                clearTimeout(timeout);
-                newThumbnails.set(image.id!, url);
-                // Update state progressively for better UX
-                setThumbnails(new Map(newThumbnails));
-                resolve();
-              };
-
-              testImg.onerror = () => {
-                clearTimeout(timeout);
-                URL.revokeObjectURL(url);
-                console.error(`Failed to load thumbnail for image ${image.id}`);
-                reject(new Error('Image load failed'));
-              };
-
-              testImg.src = url;
-            });
-
-            // Small delay to prevent blocking the main thread
-            await new Promise(resolve => setTimeout(resolve, 10));
-          } catch (error) {
-            console.error(`Error creating thumbnail for image ${image.id}:`, error);
+        const url = URL.createObjectURL(image.originalBlob);
+        try {
+          await new Promise<void>((resolve, reject) => {
+            const testImg = new Image();
+            const timeout = setTimeout(() => {
+              reject(new Error('Image load timeout'));
+            }, 3000);
+            testImg.onload = () => { clearTimeout(timeout); resolve(); };
+            testImg.onerror = () => { clearTimeout(timeout); reject(new Error('Image load failed')); };
+            testImg.src = url;
+          });
+          if (cancelled) {
+            URL.revokeObjectURL(url);
+            break;
           }
+          setThumbnails(prev => {
+            const next = new Map(prev);
+            next.set(image.id!, url);
+            return next;
+          });
+          await new Promise(resolve => setTimeout(resolve, 10));
+        } catch (error) {
+          URL.revokeObjectURL(url);
+          console.error(`Error creating thumbnail for image ${image.id}:`, error);
         }
       }
     };
@@ -383,15 +390,20 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images, patientId, sessionI
 
     return () => {
       cancelled = true;
-      newThumbnails.forEach(url => {
-        try {
-          URL.revokeObjectURL(url);
-        } catch (e) {
-          // Ignore revoke errors
-        }
-      });
     };
   }, [images]);
+
+  // Revocar todas las URLs al desmontar el componente
+  useEffect(() => {
+    return () => {
+      setThumbnails(prev => {
+        prev.forEach(url => {
+          try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+        });
+        return new Map();
+      });
+    };
+  }, []);
 
   const { oiImages, odImages } = useMemo(() => {
     const byId = new Map(images.map(i => [i.id!, i]));

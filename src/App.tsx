@@ -28,7 +28,9 @@ import { DoomEasterEgg } from '@/components/ui/DoomEasterEgg';
 
 function App() {
   const { t } = useTranslation();
-  const basename = import.meta.env.BASE_URL || '/';
+  const basename = typeof document !== 'undefined'
+    ? new URL('.', document.baseURI).pathname
+    : '/';
   const [isInitializing, setIsInitializing] = useState(true);
   const [loadingProgress] = useState<LoadingProgress>({
     step: 'init',

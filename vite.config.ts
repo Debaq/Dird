@@ -43,5 +43,5 @@ export default defineConfig(async () => ({
     }
   },
   assetsInclude: ['**/*.wasm'],
-  base: process.env.BASE_PATH || '/'
+  base: process.env.BASE_PATH || './'
 }));

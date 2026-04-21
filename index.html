@@ -2,6 +2,19 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Fija <base href> al directorio donde vive index.html para que:
+      //  - import.meta.env.BASE_URL / rutas relativas resuelvan desde aqui
+      //  - fetch() use este base aunque el router cambie location
+      // Asi el bundle resiste moverse entre subdirs (/dird/web/, /dird2/web/, etc).
+      (function () {
+        var p = location.pathname;
+        var dir = p.endsWith('/') ? p : p.substring(0, p.lastIndexOf('/') + 1);
+        var b = document.createElement('base');
+        b.setAttribute('href', dir);
+        document.head.appendChild(b);
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="./logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DIRD+</title>
