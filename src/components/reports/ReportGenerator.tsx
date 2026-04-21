@@ -38,13 +38,15 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
   const [generating, setGenerating] = useState(false);
   const [previewGenerated, setPreviewGenerated] = useState(false);
   const [hasInteractedWithPreview, setHasInteractedWithPreview] = useState(false);
+  const [forceOffline, setForceOffline] = useState(false);
   const { tokens, setTokens } = useTokenStore();
 
   const handleGenerateReport = async (type: ReportType) => {
-    // Check if user has tokens before generating
+    // Offline si no hay tokens o si el clínico marcó modo local explícito
     const noTokensMode = tokens <= 0;
-    
-    if (noTokensMode) {
+    const useOffline = noTokensMode || forceOffline;
+
+    if (noTokensMode && !forceOffline) {
       toast.warning(t('reports.offlineModeWarning', { defaultValue: 'Sin tokens: Generando informe en modo offline (sin validación externa).' }));
     }
 
@@ -78,8 +80,23 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
 
       let systemComment = '';
       let tokensConsumed = false;
+      let fellBackToOffline = false;
 
-      if (!noTokensMode) {
+      const generateOfflineComment = async (): Promise<string> => {
+        const detectionsByEye = new Map<'OD' | 'OI', any[]>();
+        for (const img of images) {
+          const imgDetections = detections.filter(d => d.imageId === img.id);
+          if (imgDetections.length > 0) {
+            const current = detectionsByEye.get(img.eyeType) || [];
+            detectionsByEye.set(img.eyeType, [...current, ...imgDetections]);
+          }
+        }
+        const { config } = useConfigStore.getState();
+        const localClassification = await classifyDiabeticRetinopathy(detectionsByEye, patient, config.activeGuideline);
+        return `[OFFLINE GENERATION]\n${formatClassificationText(localClassification)}`;
+      };
+
+      if (!useOffline) {
         // --- ONLINE MODE ---
         // Prepare report data for backend
         const reportDataForBackend = {
@@ -142,45 +159,37 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
           reportType: type,
         };
 
-        // Send to backend
-        const { processed_data: processedData, ai_processed, message } = await processConclusion(reportDataForBackend, i18n.language);
+        try {
+          const { processed_data: processedData, ai_processed, message } = await processConclusion(reportDataForBackend, i18n.language);
 
-        if (!processedData || !processedData._processing) {
-          throw new Error('Invalid processed data received from server');
+          if (!processedData || !processedData._processing) {
+            throw new Error('Invalid processed data received from server');
+          }
+
+          systemComment = processedData.ai_analysis || processedData._processing.comment || '';
+
+          if (ai_processed) {
+            const remainingTokens = await confirmProcessing();
+            setTokens(remainingTokens);
+            tokensConsumed = true;
+          } else if (message) {
+            toast.warning(message, { duration: 6000 });
+          }
+        } catch (onlineError) {
+          console.warn('Fallo generacion online, cayendo a modo local:', onlineError);
+          toast.warning(
+            t('reports.onlineFailedFallback', {
+              defaultValue: 'El análisis IA no respondió. Informe generado en modo local sin validación externa.',
+            }),
+            { duration: 6000 }
+          );
+          systemComment = await generateOfflineComment();
+          fellBackToOffline = true;
         }
 
-        systemComment = processedData.ai_analysis || processedData._processing.comment || '';
-        
-        if (ai_processed) {
-          // Confirm processing (consumes token) ONLY if AI actually processed it
-          const remainingTokens = await confirmProcessing();
-          setTokens(remainingTokens);
-          tokensConsumed = true;
-        } else if (message) {
-          // AI failed (e.g. quota limit), show warning but continue with report generation
-          toast.warning(message, { duration: 6000 });
-        }
-        
       } else {
         // --- OFFLINE MODE ---
-        // Generate classification text locally
-        const detectionsByEye = new Map<'OD' | 'OI', any[]>();
-        
-        // Group detections by eye (using image eyeType)
-        for (const img of images) {
-          const imgDetections = detections.filter(d => d.imageId === img.id);
-          if (imgDetections.length > 0) {
-            const current = detectionsByEye.get(img.eyeType) || [];
-            detectionsByEye.set(img.eyeType, [...current, ...imgDetections]);
-          }
-        }
-
-        // Get active guideline
-        const { config } = useConfigStore.getState();
-        const localClassification = await classifyDiabeticRetinopathy(detectionsByEye, patient, config.activeGuideline);
-        const formattedText = formatClassificationText(localClassification);
-        
-        systemComment = `[OFFLINE GENERATION]\n${formattedText}`;
+        systemComment = await generateOfflineComment();
       }
 
       // Append system comment to notes
@@ -244,7 +253,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         setShowDialog(false);
         onReportGenerated?.();
 
-        if (noTokensMode) {
+        if (useOffline || fellBackToOffline) {
           toast.success(t('reports.generated') + ' ' + t('reports.generatedOffline'));
         } else if (tokensConsumed) {
           toast.success(t('reports.generated') + ` (Tokens restantes: ${tokens - 1})`);
@@ -255,7 +264,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         // Preview generated successfully
         setPreviewGenerated(true);
 
-        if (noTokensMode) {
+        if (useOffline || fellBackToOffline) {
           toast.success(t('reports.previewGenerated') + ' (' + t('reports.generatedOffline') + ')');
         } else if (tokensConsumed) {
           toast.success(t('reports.previewGenerated') + ` (Tokens restantes: ${tokens - 1})`);
@@ -355,6 +364,25 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                 disabled={generating || previewGenerated}
               />
             </div>
+
+            {!previewGenerated && tokens > 0 && (
+              <div className="flex items-start gap-2 p-3 rounded-lg border border-smoke-200 bg-smoke-50">
+                <input
+                  id="forceOffline"
+                  type="checkbox"
+                  checked={forceOffline}
+                  onChange={(e) => setForceOffline(e.target.checked)}
+                  disabled={generating}
+                  className="mt-1 cursor-pointer"
+                />
+                <label htmlFor="forceOffline" className="text-sm text-coal-700 cursor-pointer">
+                  <span className="font-medium">Generar en modo local (sin IA)</span>
+                  <span className="block text-xs text-smoke-600 mt-0.5">
+                    No consume tokens. Usa clasificación local según la guía activa.
+                  </span>
+                </label>
+              </div>
+            )}
 
             {!previewGenerated ? (
               <>

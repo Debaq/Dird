@@ -90,13 +90,10 @@ export class InferenceService {
     );
     const t3 = performance.now();
 
-    let nms_ms: number | null = null;
-    if (!metadata.output_spec?.nms_applied_by_model) {
-      const iouThreshold = metadata.iou_threshold || 0.45;
-      detections = applyNMS(detections, iouThreshold);
-      nms_ms = performance.now() - t3;
-    }
+    const iouThreshold = metadata.iou_threshold || 0.45;
+    detections = applyNMS(detections, iouThreshold);
     const t4 = performance.now();
+    const nms_ms: number = +(t4 - t3).toFixed(2);
 
     // Spatial analysis (quadrant calculation)
     const quadrantAnalysis = quadrantCalculator.analyzeQuadrants(
@@ -134,10 +131,10 @@ export class InferenceService {
       preprocess_ms: +(t1 - t0).toFixed(2),
       inference_ms: +(t2 - t1).toFixed(2),
       postprocess_ms: +(t3 - t2).toFixed(2),
-      nms_ms: nms_ms !== null ? +nms_ms.toFixed(2) : null,
+      nms_ms,
       spatial_ms: +(t5 - t4).toFixed(2),
       clinical_ms: +(t7 - t6).toFixed(2),
-      total_ms: +((t1 - t0) + (t2 - t1) + (t3 - t2) + (nms_ms ?? 0) + (t5 - t4) + (t7 - t6)).toFixed(2),
+      total_ms: +((t1 - t0) + (t2 - t1) + (t3 - t2) + nms_ms + (t5 - t4) + (t7 - t6)).toFixed(2),
     });
 
     return detections;
