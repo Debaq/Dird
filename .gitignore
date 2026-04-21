@@ -52,3 +52,6 @@ validation/aptos_extracted/
 validation/aptos_markers/
 validation/__pycache__/
 validation/*.json
+
+validation/**/*.pt
+validation/**/*.pth
