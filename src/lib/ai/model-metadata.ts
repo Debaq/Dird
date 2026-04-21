@@ -29,6 +29,19 @@ export interface ModelInfo {
   input_size: [number, number];
 }
 
+export type OutputFormat = 'yolo_raw' | 'end2end_nms';
+export type BboxFormat = 'cxcywh' | 'xyxy';
+export type BboxCoordSpace = 'input_pixels' | 'normalized';
+
+export interface OutputSpec {
+  format: OutputFormat;
+  bbox_format: BboxFormat;
+  bbox_coord_space?: BboxCoordSpace;
+  tensor_layout?: string[];
+  nms_applied_by_model?: boolean;
+  max_detections?: number;
+}
+
 export interface ClassDefinitionMetadata {
   index: number;
   technical_name: string;
@@ -44,6 +57,8 @@ export interface ClassDefinitionMetadata {
 
 export interface ModelMetadata {
   model_info?: ModelInfo;
+  output_spec?: OutputSpec;
+  clinical_equivalents?: Record<string, string[]>;
   classes?: string[] | ClassDefinitionMetadata[];
   performance_metrics?: PerformanceMetrics;
   analysis_report?: AnalysisReport;
