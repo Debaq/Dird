@@ -973,6 +973,108 @@
       }
       .nav-links.open a { display: block; padding: 0.5rem 0; }
     }
+
+    /* CARRUSEL */
+    .carousel-section { background: var(--bg-subtle); }
+    .carousel {
+      position: relative;
+      max-width: 1100px;
+      margin: 0 auto;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #000;
+      border: 1px solid var(--border);
+      aspect-ratio: 16 / 10;
+    }
+    .carousel-track {
+      position: absolute; inset: 0;
+    }
+    .carousel-slide {
+      position: absolute; inset: 0;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .carousel-slide.is-active { opacity: 1; }
+    .carousel-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .carousel-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      z-index: 2;
+    }
+    .carousel-btn:hover { background: rgba(0,0,0,0.85); }
+    .carousel-btn.prev { left: 12px; }
+    .carousel-btn.next { right: 12px; }
+    .carousel-btn svg { width: 22px; height: 22px; }
+    .carousel-counter {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-variant-numeric: tabular-nums;
+      z-index: 2;
+    }
+    .carousel-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      max-width: 1100px;
+      margin: 2rem auto 0;
+    }
+    .carousel-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      text-align: center;
+    }
+    .carousel-stat .v {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--primary-bright);
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    .carousel-stat .l {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 0.35rem;
+    }
+    .carousel-note {
+      max-width: 1100px;
+      margin: 1.25rem auto 0;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    @media (max-width: 720px) {
+      .carousel-stats { grid-template-columns: 1fr; }
+      .carousel-btn { width: 38px; height: 38px; }
+    }
   </style>
 </head>
 <body>
@@ -986,6 +1088,7 @@
       </button>
       <div class="nav-links">
         <a href="#caracteristicas">Proyecto</a>
+        <a href="#ejemplos">Ejemplos</a>
         <a href="#modelo">Modelo IA</a>
         <a href="#descargas">Descargas</a>
         <a href="https://tmeduca.org/dird/web/">Versión web</a>
@@ -1023,6 +1126,14 @@
         <a href="https://github.com/Debaq/Dird" class="btn btn-ghost">
           <svg viewBox="0 0 16 16" fill="currentColor" style="width:18px;height:18px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           Ver código
+        </a>
+        <a href="https://doi.org/10.5281/zenodo.19687226" class="btn btn-ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          DOI Zenodo
+        </a>
+        <a href="https://doi.org/10.64898/2026.04.26.26351745" class="btn btn-ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          Preprint medRxiv
         </a>
       </div>
       <div class="hero-stack">
@@ -1127,8 +1238,8 @@
       <div class="showcase reverse animate-in">
         <div class="showcase-text">
           <div class="showcase-label">Reportes</div>
-          <h3 class="showcase-title">Informe clínico listo para firmar</h3>
-          <p class="showcase-desc">Exporta un PDF con la imagen analizada, los hallazgos segmentados, la severidad estimada y recomendaciones según guía clínica configurada. Plantillas editables.</p>
+          <h3 class="showcase-title">Informe de apoyo, el clínico decide</h3>
+          <p class="showcase-desc">Plantilla PDF editable con la imagen analizada, los hallazgos segmentados y la severidad sugerida por el modelo. El profesional revisa, ajusta lo que haga falta y firma. La IA entrega un formato ordenado; el criterio diagnóstico y el informe final quedan siempre en manos del clínico.</p>
         </div>
         <div class="showcase-img">
           <img src="img/reporte.webp" alt="Informe clínico PDF generado por DIRD+" onerror="this.outerHTML='<div class=screenshot-placeholder>Imagen: reporte.webp</div>'">
@@ -1147,9 +1258,47 @@
           <p class="showcase-desc">Carga de retinografía, inferencia local, revisión del profesional, validación de hallazgos y generación de informe. Todo sin abrir el navegador a internet.</p>
         </div>
         <div class="showcase-img">
-          <img src="img/flujo.webp" alt="Flujo clínico DIRD+" onerror="this.outerHTML='<div class=screenshot-placeholder>Imagen: flujo.webp</div>'">
+          <img src="img/flujo.svg" alt="Flujo clínico DIRD+: captura, inferencia local, revisión del clínico, validación e informe firmado">
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- CARRUSEL EJEMPLOS DIRDv2r0 -->
+  <section id="ejemplos" class="carousel-section">
+    <div class="container">
+      <div class="section-header animate-in">
+        <div class="section-label">Ejemplos en vivo</div>
+        <h2 class="section-title">DIRDv2r0 sobre retinografías reales</h2>
+        <p class="section-subtitle">Inferencia local con YOLOv26s end2end NMS. Cajas y scores generados sin enviar imágenes a internet.</p>
+      </div>
+
+      <div class="carousel animate-in" id="dirdCarousel" aria-roledescription="carrusel" aria-label="Ejemplos de detección DIRDv2r0">
+        <div class="carousel-track" id="carouselTrack"></div>
+        <button class="carousel-btn prev" id="carouselPrev" aria-label="Anterior">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="carousel-btn next" id="carouselNext" aria-label="Siguiente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="carousel-counter" id="carouselCounter">1 / 1</div>
+      </div>
+
+      <div class="carousel-stats animate-in">
+        <div class="carousel-stat">
+          <div class="v">3.662</div>
+          <div class="l">Imágenes inferidas</div>
+        </div>
+        <div class="carousel-stat">
+          <div class="v">1.250,75 s</div>
+          <div class="l">Tiempo total</div>
+        </div>
+        <div class="carousel-stat">
+          <div class="v">~2,93 img/s</div>
+          <div class="l">Throughput (~341 ms/img)</div>
+        </div>
+      </div>
+      <p class="carousel-note">Benchmark cliente, PC sin GPU, DIRDv2r0 (YOLOv26s end2end NMS, 640×640). Inferencia 100% local en navegador / desktop.</p>
     </div>
   </section>
 
@@ -1336,8 +1485,9 @@
         <div class="footer-col">
           <h4>Modelo</h4>
           <a href="https://github.com/Debaq/dird_models">dird_models</a>
-          <a href="https://doi.org/10.5281/zenodo.19666694">DOI modelo</a>
-          <a href="https://doi.org/10.5281/zenodo.19666272">DOI aplicación</a>
+          <a href="https://doi.org/10.5281/zenodo.19685466">DOI modelo</a>
+          <a href="https://doi.org/10.5281/zenodo.19687226">DOI aplicación</a>
+          <a href="https://doi.org/10.64898/2026.04.26.26351745">Preprint medRxiv</a>
         </div>
         <div class="footer-col">
           <h4>Comunidad</h4>
@@ -1511,6 +1661,66 @@
     }
 
     loadReleases();
+
+    /* CARRUSEL DIRDv2r0 */
+    (function initCarousel() {
+      const TOTAL_EJEMPLOS = 36;
+      const files = Array.from({ length: TOTAL_EJEMPLOS }, (_, i) =>
+        `ejemplo-${String(i + 1).padStart(2, '0')}.webp`
+      );
+
+      const track = document.getElementById('carouselTrack');
+      const counter = document.getElementById('carouselCounter');
+      const prevBtn = document.getElementById('carouselPrev');
+      const nextBtn = document.getElementById('carouselNext');
+      if (!track) return;
+
+      files.forEach((name, i) => {
+        const slide = document.createElement('div');
+        slide.className = 'carousel-slide' + (i === 0 ? ' is-active' : '');
+        const img = document.createElement('img');
+        img.src = 'img/carrusel/' + encodeURIComponent(name);
+        img.alt = 'Detección DIRDv2r0 — ejemplo ' + (i + 1);
+        img.loading = i === 0 ? 'eager' : 'lazy';
+        img.decoding = 'async';
+        slide.appendChild(img);
+        track.appendChild(slide);
+      });
+
+      let idx = 0;
+      const total = files.length;
+      const slides = track.children;
+      let timer = null;
+
+      function go(n) {
+        slides[idx].classList.remove('is-active');
+        idx = (n + total) % total;
+        slides[idx].classList.add('is-active');
+        counter.textContent = (idx + 1) + ' / ' + total;
+      }
+      function next() { go(idx + 1); }
+      function prev() { go(idx - 1); }
+      function start() { stop(); timer = setInterval(next, 3500); }
+      function stop()  { if (timer) { clearInterval(timer); timer = null; } }
+
+      counter.textContent = '1 / ' + total;
+      nextBtn.addEventListener('click', () => { next(); start(); });
+      prevBtn.addEventListener('click', () => { prev(); start(); });
+
+      const carousel = document.getElementById('dirdCarousel');
+      carousel.addEventListener('mouseenter', stop);
+      carousel.addEventListener('mouseleave', start);
+
+      // Pausa si no es visible
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach(e => e.isIntersecting ? start() : stop());
+        }, { threshold: 0.25 });
+        io.observe(carousel);
+      } else {
+        start();
+      }
+    })();
   </script>
 
 </body>
