@@ -310,6 +310,57 @@
     }
     .btn svg { width: 18px; height: 18px; }
 
+    .hero-cite {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      justify-content: center;
+      align-items: center;
+      margin-top: 1.5rem;
+      animation: fade-up 0.8s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+      position: relative;
+      z-index: 2;
+    }
+    .cite-label {
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .cite-badge {
+      display: inline-flex;
+      align-items: stretch;
+      border-radius: 6px;
+      overflow: hidden;
+      font-size: 0.78rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .cite-badge:hover {
+      border-color: var(--primary);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(32,181,174,0.25);
+    }
+    .cite-badge .cite-key {
+      background: rgba(255,255,255,0.06);
+      color: var(--text-muted);
+      padding: 0.4rem 0.7rem;
+      font-weight: 600;
+    }
+    .cite-badge .cite-val {
+      background: var(--primary);
+      color: #04201f;
+      padding: 0.4rem 0.7rem;
+      font-weight: 700;
+    }
+    .cite-badge.cite-preprint .cite-val {
+      background: var(--accent);
+      color: #2a1405;
+    }
+
     .hero-stack {
       margin-top: 3rem;
       display: flex;
@@ -1127,13 +1178,21 @@
           <svg viewBox="0 0 16 16" fill="currentColor" style="width:18px;height:18px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           Ver código
         </a>
-        <a href="https://doi.org/10.5281/zenodo.19687226" class="btn btn-ghost">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          DOI Zenodo
+      </div>
+
+      <div class="hero-cite">
+        <span class="cite-label">Citar:</span>
+        <a href="https://doi.org/10.64898/2026.04.26.26351745" class="cite-badge cite-preprint">
+          <span class="cite-key">Preprint</span>
+          <span class="cite-val">medRxiv 2026.04.26</span>
         </a>
-        <a href="https://doi.org/10.64898/2026.04.26.26351745" class="btn btn-ghost">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-          Preprint medRxiv
+        <a href="https://doi.org/10.5281/zenodo.19687226" class="cite-badge">
+          <span class="cite-key">DOI app</span>
+          <span class="cite-val">10.5281/zenodo.19687226</span>
+        </a>
+        <a href="https://doi.org/10.5281/zenodo.19685466" class="cite-badge">
+          <span class="cite-key">DOI modelo</span>
+          <span class="cite-val">10.5281/zenodo.19685466</span>
         </a>
       </div>
       <div class="hero-stack">
