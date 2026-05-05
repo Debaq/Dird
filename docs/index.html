@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>DIRD+ — Detección de Retinopatía Diabética con IA Edge</title>
   <meta name="description" content="Aplicación de escritorio para detección asistida de retinopatía diabética. IA ejecutada íntegramente en el dispositivo. Privacidad total, sin nube, open source.">
   <meta name="keywords" content="retinopatía diabética, DIRD, detección IA, oftalmología, YOLO, ONNX, edge AI, tamizaje, Tauri, open source">
@@ -596,6 +599,83 @@
       height: 3px;
       background: linear-gradient(90deg, var(--primary), var(--accent));
     }
+    .corner-ribbon {
+      position: absolute;
+      top: 18px;
+      right: -58px;
+      transform: rotate(40deg);
+      width: 220px;
+      padding: 0.45rem 0;
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #fff;
+      background: linear-gradient(90deg, var(--accent), #f59e0b);
+      box-shadow: 0 6px 18px rgba(216,122,26,0.35), 0 0 0 1px rgba(255,255,255,0.08) inset;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .hero-ribbon {
+      position: absolute;
+      top: 92px;
+      right: -110px;
+      transform: rotate(38deg);
+      width: 460px;
+      padding: 0.85rem 0;
+      text-align: center;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #fff;
+      background: linear-gradient(90deg, var(--accent), #f59e0b);
+      box-shadow:
+        0 14px 40px rgba(216,122,26,0.45),
+        0 0 0 1px rgba(255,255,255,0.1) inset,
+        0 -1px 0 rgba(0,0,0,0.25) inset;
+      z-index: 5;
+      text-decoration: none;
+      font-size: 0.9rem;
+      line-height: 1.15;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .hero-ribbon:hover {
+      transform: rotate(38deg) scale(1.03);
+      box-shadow:
+        0 18px 50px rgba(216,122,26,0.6),
+        0 0 0 1px rgba(255,255,255,0.15) inset;
+    }
+    .hero-ribbon strong {
+      display: block;
+      font-size: 1.05rem;
+      letter-spacing: 0.1em;
+    }
+    .hero-ribbon small {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: none;
+      opacity: 0.95;
+      margin-top: 2px;
+    }
+    @media (max-width: 900px) {
+      .hero-ribbon { width: 360px; right: -90px; top: 78px; font-size: 0.78rem; padding: 0.7rem 0; }
+      .hero-ribbon strong { font-size: 0.9rem; }
+    }
+    @media (max-width: 600px) {
+      .hero-ribbon { display: none; }
+    }
+    .corner-ribbon small {
+      display: block;
+      font-size: 0.6rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: none;
+      opacity: 0.92;
+      margin-top: 1px;
+    }
     .model-header {
       display: flex;
       justify-content: space-between;
@@ -709,6 +789,12 @@
       color: var(--amber);
     }
     .model-status b { color: var(--amber); }
+    .model-status.ok {
+      background: rgba(52,211,153,0.08);
+      border-color: rgba(52,211,153,0.22);
+      color: var(--green);
+    }
+    .model-status.ok b { color: var(--green); }
     .model-note {
       margin-top: 1rem;
       font-size: 0.8rem;
@@ -1141,6 +1227,7 @@
         <a href="#caracteristicas">Proyecto</a>
         <a href="#ejemplos">Ejemplos</a>
         <a href="#modelo">Modelo IA</a>
+        <a href="#validacion">Validación</a>
         <a href="#descargas">Descargas</a>
         <a href="https://tmeduca.org/dird/web/">Versión web</a>
         <a href="https://github.com/Debaq/Dird" class="nav-cta">
@@ -1153,6 +1240,10 @@
 
   <!-- HERO -->
   <header class="hero">
+    <a href="#validacion" class="hero-ribbon" aria-label="Ver validación externa APTOS">
+      <strong>NUEVO · MCC 0.91</strong>
+      <small>Validación externa APTOS · n=3.662 · 5-fold CV</small>
+    </a>
     <div class="container">
       <div class="hero-badge">
         <span class="dot"></span>
@@ -1374,6 +1465,7 @@
 
         <!-- v2.0.0 -->
         <div class="model-card is-latest animate-in">
+          <div class="corner-ribbon">MCC 0.91<small>APTOS · 5-fold CV</small></div>
           <div class="model-header">
             <div>
               <div class="model-version">
@@ -1381,23 +1473,24 @@
                 <small>detection-v2.0.0 · YOLOv26s end2end NMS</small>
               </div>
             </div>
-            <span class="model-badge badge-current">En desarrollo</span>
+            <span class="model-badge badge-current">Validado externamente</span>
           </div>
           <div class="model-meta">
             <span><b>Entrenado:</b> 2026-04-21</span>
             <span><b>Input:</b> 640×640</span>
-            <span><b>Clases:</b> 11 (7 activas)</span>
+            <span><b>Clases:</b> 6 activas</span>
           </div>
 
           <div class="metrics">
-            <div class="metric"><div class="metric-value">0.578</div><div class="metric-label">mAP50</div></div>
-            <div class="metric"><div class="metric-value">0.325</div><div class="metric-label">mAP50-95</div></div>
-            <div class="metric"><div class="metric-value">0.610</div><div class="metric-label">Precision</div></div>
-            <div class="metric"><div class="metric-value">0.576</div><div class="metric-label">Recall</div></div>
+            <div class="metric"><div class="metric-value">0.978</div><div class="metric-label">Sensibilidad</div></div>
+            <div class="metric"><div class="metric-value">0.933</div><div class="metric-label">Especificidad</div></div>
+            <div class="metric"><div class="metric-value">0.911</div><div class="metric-label">MCC</div></div>
+            <div class="metric"><div class="metric-value">0.967</div><div class="metric-label">AUC-ROC</div></div>
           </div>
+          <p style="margin:0.6rem 0 0;font-size:0.75rem;color:var(--text-dim);">Validación binaria sobre <b>APTOS 2019</b> (n=3.662, OOD, 5-fold CV). Ver detalle más abajo.</p>
 
           <div class="per-class">
-            <h4>mAP50 por clase</h4>
+            <h4>mAP@50 por clase (entrenamiento interno)</h4>
             <div class="class-row"><span class="class-name">Disco óptico</span><span class="class-map">0.995</span><div class="class-bar"><div class="class-bar-fill" style="width:99.5%"></div></div></div>
             <div class="class-row"><span class="class-name">Fóvea</span><span class="class-map">0.855</span><div class="class-bar"><div class="class-bar-fill" style="width:85.5%"></div></div></div>
             <div class="class-row"><span class="class-name">Exudado blando (CWS)</span><span class="class-map">0.590</span><div class="class-bar"><div class="class-bar-fill" style="width:59.0%"></div></div></div>
@@ -1406,8 +1499,8 @@
             <div class="class-row"><span class="class-name">Hemorragia</span><span class="class-map">0.161</span><div class="class-bar"><div class="class-bar-fill" style="width:16.1%"></div></div></div>
           </div>
 
-          <div class="model-status">
-            <b>Estado:</b> REQUIRES_IMPROVEMENT · Pendiente: balanceo de clases y mejor detección de hemorragias grandes (recall 0.17).
+          <div class="model-status ok">
+            <b>Estado:</b> VALIDATED · Operating point recomendado <code>PCT_fpr02</code> (τ por clase calibrado a FPR≤2%). MCC 0.91 estable en 5-fold CV (σ≤0.015). ~9 FPS CPU.
           </div>
 
           <a href="https://github.com/Debaq/dird_models/blob/main/detection-v2.0.0.json" class="model-link">
@@ -1480,6 +1573,93 @@
 
       <p style="text-align:center;margin-top:2rem;font-size:0.85rem;color:var(--text-dim);">
         Segmentación (vasos, MA, exudados, hemorragias, neovascularización) en desarrollo activo — aún no liberado.
+      </p>
+    </div>
+  </section>
+
+  <!-- VALIDATION -->
+  <section id="validacion" class="model-section" style="padding-top:0;">
+    <div class="container">
+      <div class="section-header animate-in">
+        <div class="section-label">Validación clínica</div>
+        <h2 class="section-title">Validación externa <code style="font-family:inherit;color:var(--primary-bright)">DIRDv2r0</code></h2>
+        <p class="section-subtitle">Evaluación binaria (normal vs. retinopatía) sobre datasets públicos no usados en entrenamiento. Sin reentrenar el modelo, sólo calibración del operating point.</p>
+      </div>
+
+      <div class="model-grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));">
+
+        <div class="model-card is-latest animate-in">
+          <div class="model-header">
+            <div>
+              <div class="model-version">
+                APTOS 2019
+                <small>n=3.662 · India · 49,3% normal / 50,7% RD</small>
+              </div>
+            </div>
+            <span class="model-badge badge-current">Completado</span>
+          </div>
+          <div class="model-meta">
+            <span><b>Cierre:</b> 2026-04-30</span>
+            <span><b>Diseño:</b> 5-fold CV estratificado</span>
+            <span><b>Hardware:</b> CPU, ONNX Runtime</span>
+          </div>
+
+          <div class="metrics">
+            <div class="metric"><div class="metric-value">0.978</div><div class="metric-label">Sens (±0.013)</div></div>
+            <div class="metric"><div class="metric-value">0.933</div><div class="metric-label">Spec (±0.004)</div></div>
+            <div class="metric"><div class="metric-value">0.911</div><div class="metric-label">MCC (±0.015)</div></div>
+            <div class="metric"><div class="metric-value">0.967</div><div class="metric-label">AUC-ROC</div></div>
+          </div>
+
+          <div class="per-class">
+            <h4>Sensibilidad por grado APTOS (baseline conf=0.25)</h4>
+            <div class="class-row"><span class="class-name">Grado 1 — RD leve</span><span class="class-map">0.989</span><div class="class-bar"><div class="class-bar-fill" style="width:98.9%"></div></div></div>
+            <div class="class-row"><span class="class-name">Grado 2 — RD moderada</span><span class="class-map">0.999</span><div class="class-bar"><div class="class-bar-fill" style="width:99.9%"></div></div></div>
+            <div class="class-row"><span class="class-name">Grado 3 — RD severa</span><span class="class-map">1.000</span><div class="class-bar"><div class="class-bar-fill" style="width:100%"></div></div></div>
+            <div class="class-row"><span class="class-name">Grado 4 — RD proliferativa</span><span class="class-map">0.997</span><div class="class-bar"><div class="class-bar-fill" style="width:99.7%"></div></div></div>
+          </div>
+
+          <div class="model-status ok">
+            <b>Operating point:</b> <code>PCT_fpr02</code> — τ por clase calibrado a FPR≤2% sobre normales: hard_exudate 0.63 · microhemorrhages 0.26 · cotton_wool_spot 0.85 · hemorrhage 0.05.
+          </div>
+
+          <div class="model-note">
+            6 experimentos (corrida base, barrido conf/N, calibración per-clase, 5-fold CV, filtro de área, área×per-clase). PPV 0.876 · NPV 0.995 · Youden J 0.909. Latencia mediana 112 ms (p95 127 ms) en CPU.
+          </div>
+
+          <a href="https://github.com/Debaq/Dird/blob/main/validation/results/INFORME_COMPLETO_APTOS.md" class="model-link">
+            Ver informe completo
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+
+        <div class="model-card animate-in">
+          <div class="model-header">
+            <div>
+              <div class="model-version">
+                Messidor-2
+                <small>cohorte europea · cámaras heterogéneas</small>
+              </div>
+            </div>
+            <span class="model-badge badge-prev">En curso</span>
+          </div>
+          <div class="model-meta">
+            <span><b>Objetivo:</b> Confirmar generalización poblacional</span>
+          </div>
+
+          <div class="model-note" style="margin-top:1.25rem;">
+            Próxima validación externa para confirmar que los umbrales τ per-clase derivados sobre APTOS son estables en otra población (Francia, fondo de cámara distinto). Replica el protocolo de los experimentos 3 y 4 del informe APTOS.
+          </div>
+
+          <div class="model-note">
+            Reentrenamiento dirigido (próxima versión del modelo): recall sobre hemorragias grandes (AUC clase 0.64), reducción de FPR en exudado duro, separación microhemorragia/microaneurisma con anotaciones dedicadas.
+          </div>
+        </div>
+
+      </div>
+
+      <p style="text-align:center;margin-top:2rem;font-size:0.85rem;color:var(--text-dim);">
+        Limitación: APTOS no entrega anotaciones a nivel de lesión, por lo que la validación es a nivel de clasificación binaria por imagen (no IoU/mAP). La validación sobre Messidor-2 / EyePACS confirmará la generalización a otras cohortes.
       </p>
     </div>
   </section>
