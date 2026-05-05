@@ -11,7 +11,7 @@
 
 > **Aviso importante**: DIRD+ es un sistema de investigación y desarrollo. No está aprobado como dispositivo médico. No debe usarse como único criterio diagnóstico en entornos clínicos reales.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![DOI](https://zenodo.org/badge/1114058644.svg)](https://doi.org/10.5281/zenodo.19666272) [![Demo](https://img.shields.io/badge/Demo-tmeduca.org%2Fdird-green)](https://tmeduca.org/dird/) [![Branch](https://img.shields.io/badge/branch-w%2Ftauri-orange)](https://github.com/Debaq/Dird/tree/w/tauri)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](LICENSE) [![DOI](https://zenodo.org/badge/1114058644.svg)](https://doi.org/10.5281/zenodo.19666272) [![Demo](https://img.shields.io/badge/Demo-tmeduca.org%2Fdird-green)](https://tmeduca.org/dird/) [![Branch](https://img.shields.io/badge/branch-w%2Ftauri-orange)](https://github.com/Debaq/Dird/tree/w/tauri)
 
 <p align="center">
   <a href="#el-problema">El Problema</a> · 
@@ -776,4 +776,4 @@ Las referencias completas que sustentan el contexto epidemiológico, clínico y 
 Reportes de bugs y contribuciones vía [issues](https://github.com/Debaq/Dird/issues) y pull requests en este repositorio.
 
 ---
-DIRD+ es software de código abierto bajo licencia MIT. Las contribuciones son bienvenidas.
+DIRD+ es software libre bajo licencia GNU AGPLv3 (copyleft fuerte). Las contribuciones son bienvenidas.
