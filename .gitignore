@@ -22,6 +22,9 @@ artifacts
 # Backend data (generado dinámicamente)
 backend/tokens.json
 
+# Claude Code local state
+.claude/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

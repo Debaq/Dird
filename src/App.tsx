@@ -25,6 +25,7 @@ import { useMessagePolling } from '@/hooks/useMessagePolling';
 import { classManager } from '@/lib/classes/class-manager';
 import { waitForOpenCV } from '@/lib/ai/optic-disc-refiner';
 import { DoomEasterEgg } from '@/components/ui/DoomEasterEgg';
+import { WebSecurityWarning } from '@/components/WebSecurityWarning';
 
 function App() {
   const { t } = useTranslation();
@@ -136,6 +137,7 @@ function App() {
         duration={4000}
       />
       <DoomEasterEgg />
+      <WebSecurityWarning />
       <LanguageSync />
       <DocumentTitleSync />
       <Routes>
