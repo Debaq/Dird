@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 460" role="img" aria-label="Flujo clínico DIRD+">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f1c1c"/>
+      <stop offset="1" stop-color="#142828"/>
+    </linearGradient>
+    <linearGradient id="primG" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#20b5ae"/>
+      <stop offset="1" stop-color="#4dcac4"/>
+    </linearGradient>
+    <linearGradient id="accG" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d87a1a"/>
+      <stop offset="1" stop-color="#f8b05c"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4dcac4"/>
+    </marker>
+    <marker id="arrowAcc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#f8b05c"/>
+    </marker>
+  </defs>
+
+  <rect width="720" height="460" rx="18" fill="url(#bg)"/>
+  <rect x="0.5" y="0.5" width="719" height="459" rx="18" fill="none" stroke="#1f3838" stroke-width="1"/>
+
+  <!-- Título -->
+  <text x="36" y="44" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="14" fill="#9ba8a8" letter-spacing="2">FLUJO CLÍNICO</text>
+  <text x="36" y="72" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="20" font-weight="600" fill="#e8f0f0">El clínico dirige, la IA asiste</text>
+
+  <!-- Banda local (sin internet) -->
+  <g transform="translate(540,54)">
+    <rect x="0" y="0" width="150" height="30" rx="15" fill="#0a1515" stroke="#20b5ae" stroke-width="1"/>
+    <circle cx="16" cy="15" r="4" fill="#4dcac4"/>
+    <text x="28" y="20" font-family="system-ui,sans-serif" font-size="12" fill="#4dcac4">100% local · offline</text>
+  </g>
+
+  <!-- Pasos -->
+  <!-- Paso 1: Captura -->
+  <g transform="translate(36,130)">
+    <rect width="120" height="120" rx="14" fill="#0a1515" stroke="#2a4444" stroke-width="1.5"/>
+    <g transform="translate(60,48)" stroke="#4dcac4" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="-22" y="-14" width="44" height="32" rx="4"/>
+      <circle cx="0" cy="3" r="9"/>
+      <circle cx="0" cy="3" r="4" fill="#4dcac4"/>
+      <rect x="-8" y="-18" width="16" height="6" rx="2" fill="#4dcac4"/>
+    </g>
+    <text x="60" y="92" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#e8f0f0">Captura</text>
+    <text x="60" y="108" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#9ba8a8">retinografía</text>
+  </g>
+
+  <!-- Paso 2: Inferencia IA -->
+  <g transform="translate(186,130)">
+    <rect width="120" height="120" rx="14" fill="#0a1515" stroke="#2a4444" stroke-width="1.5"/>
+    <g transform="translate(60,52)" stroke="#4dcac4" stroke-width="2" fill="none" stroke-linecap="round">
+      <circle cx="0" cy="0" r="20"/>
+      <circle cx="-10" cy="-4" r="2.5" fill="#4dcac4"/>
+      <circle cx="10" cy="-4" r="2.5" fill="#4dcac4"/>
+      <circle cx="0" cy="8" r="2.5" fill="#4dcac4"/>
+      <path d="M-10,-4 L0,8 M10,-4 L0,8 M-10,-4 L10,-4"/>
+    </g>
+    <text x="60" y="92" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#e8f0f0">Inferencia IA</text>
+    <text x="60" y="108" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#9ba8a8">ONNX local</text>
+  </g>
+
+  <!-- Paso 3: Revisión clínica (destacado, accent) -->
+  <g transform="translate(336,120)">
+    <rect width="120" height="140" rx="14" fill="#1a1410" stroke="url(#accG)" stroke-width="2" filter="url(#glow)"/>
+    <rect x="8" y="-8" width="104" height="18" rx="9" fill="#d87a1a"/>
+    <text x="60" y="5" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" font-weight="700" fill="#0a1515" letter-spacing="1">CLÍNICO</text>
+    <g transform="translate(60,62)" stroke="#f8b05c" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <!-- stethoscope/persona -->
+      <circle cx="0" cy="-10" r="8"/>
+      <path d="M-14,14 C-14,2 -8,-2 0,-2 C8,-2 14,2 14,14"/>
+      <circle cx="-16" cy="2" r="3" fill="none"/>
+    </g>
+    <text x="60" y="104" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#f8b05c">Revisión</text>
+    <text x="60" y="120" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#e8c8a0">criterio experto</text>
+  </g>
+
+  <!-- Paso 4: Validación/edición -->
+  <g transform="translate(486,130)">
+    <rect width="120" height="120" rx="14" fill="#0a1515" stroke="#2a4444" stroke-width="1.5"/>
+    <g transform="translate(60,50)" stroke="#4dcac4" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M-18,-10 L-18,14 L18,14 L18,-4"/>
+      <path d="M-10,2 L-4,8 L10,-10"/>
+      <path d="M8,-14 L18,-4 L10,4 L0,4 L0,-6 Z" fill="#0a1515"/>
+    </g>
+    <text x="60" y="92" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#e8f0f0">Validación</text>
+    <text x="60" y="108" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#9ba8a8">ajusta / edita</text>
+  </g>
+
+  <!-- Flechas primarias -->
+  <path d="M156,190 L186,190" stroke="#4dcac4" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M306,190 L336,190" stroke="#4dcac4" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M456,190 L486,190" stroke="#f8b05c" stroke-width="2" fill="none" marker-end="url(#arrowAcc)"/>
+
+  <!-- Paso 5: Informe firmado (debajo) -->
+  <g transform="translate(300,310)">
+    <rect width="140" height="100" rx="12" fill="#0a1515" stroke="url(#primG)" stroke-width="1.5"/>
+    <g transform="translate(28,20)" stroke="#4dcac4" stroke-width="1.5" fill="none" stroke-linecap="round">
+      <rect x="0" y="0" width="28" height="36" rx="2"/>
+      <line x1="5" y1="8" x2="23" y2="8"/>
+      <line x1="5" y1="14" x2="23" y2="14"/>
+      <line x1="5" y1="20" x2="18" y2="20"/>
+      <path d="M6,30 q4,-6 8,-2 t8,-1" stroke="#f8b05c" stroke-width="1.8"/>
+    </g>
+    <text x="78" y="34" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#e8f0f0">Informe</text>
+    <text x="78" y="50" font-family="system-ui,sans-serif" font-size="11" fill="#9ba8a8">PDF editable</text>
+    <text x="78" y="66" font-family="system-ui,sans-serif" font-size="11" fill="#f8b05c">firma clínica</text>
+  </g>
+
+  <!-- Flecha paso 4 -> informe -->
+  <path d="M546,254 Q546,310 440,340" stroke="#4dcac4" stroke-width="2" fill="none" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
+
+  <!-- Nota al pie: IA asiste, no reemplaza -->
+  <g transform="translate(36,340)">
+    <rect width="240" height="80" rx="10" fill="#0f1c1c" stroke="#1f3838"/>
+    <text x="16" y="26" font-family="system-ui,sans-serif" font-size="12" font-weight="700" fill="#f8b05c">IA asiste, no reemplaza</text>
+    <text x="16" y="46" font-family="system-ui,sans-serif" font-size="11" fill="#9ba8a8">Cada hallazgo se revisa y puede</text>
+    <text x="16" y="60" font-family="system-ui,sans-serif" font-size="11" fill="#9ba8a8">editarse antes de emitir el informe.</text>
+  </g>
+</svg>
