@@ -115,6 +115,8 @@
 
     a { color: var(--primary-bright); text-decoration: none; transition: color 0.2s; }
     a:hover { color: #fff; }
+    a.wlink { color: inherit; border-bottom: 1px dotted var(--primary-bright); }
+    a.wlink:hover { color: var(--primary-bright); border-bottom-style: solid; }
 
     .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
 
@@ -1479,6 +1481,240 @@
       .carousel-stats { grid-template-columns: 1fr; }
       .carousel-btn { width: 38px; height: 38px; }
     }
+
+    /* === Modal experimentos === */
+    .exp-trigger {
+      cursor: pointer;
+      border-bottom: 1px dashed currentColor;
+      background: none;
+      border-top: 0; border-left: 0; border-right: 0;
+      padding: 0;
+      font: inherit;
+      color: inherit;
+    }
+    .exp-trigger:hover { opacity: 0.85; }
+    .exp-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-left: 0.75rem;
+      font-size: 0.78rem;
+      color: var(--primary-bright);
+      cursor: pointer;
+      background: none;
+      border: 1px solid var(--border-accent);
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .exp-link:hover {
+      background: var(--primary-glow);
+      border-color: var(--primary);
+    }
+
+    .exp-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(5,12,12,0.78);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      z-index: 1000;
+      padding: 2rem 1rem;
+      overflow-y: auto;
+    }
+    .exp-modal-overlay.is-open { display: flex; }
+    .exp-modal {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-accent);
+      border-radius: 14px;
+      max-width: 920px;
+      width: 100%;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+      animation: expFadeIn 0.25s ease;
+    }
+    @keyframes expFadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .exp-modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.5rem 1.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .exp-modal-header h2 {
+      margin: 0 0 0.35rem;
+      font-size: 1.25rem;
+      color: var(--text);
+    }
+    .exp-modal-header p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .exp-close {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .exp-close:hover { color: var(--text); border-color: var(--primary); }
+    .exp-modal-body {
+      padding: 1.5rem 1.75rem;
+      font-size: 0.9rem;
+      line-height: 1.65;
+      color: var(--text-secondary);
+    }
+    .exp-modal-body h3 {
+      color: var(--primary-bright);
+      font-size: 1rem;
+      margin: 1.75rem 0 0.6rem;
+      letter-spacing: 0.02em;
+    }
+    .exp-modal-body h3:first-child { margin-top: 0; }
+    .exp-modal-body p { margin: 0 0 0.75rem; }
+    .exp-modal-body code {
+      background: rgba(32,181,174,0.10);
+      color: var(--primary-bright);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    .exp-modal-body strong { color: var(--text); }
+    .exp-callout {
+      background: rgba(32,181,174,0.07);
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      margin: 0.75rem 0 1rem;
+      font-size: 0.85rem;
+    }
+    .exp-callout b { color: var(--primary-bright); }
+    .exp-tau-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.5rem;
+      margin: 0.75rem 0 0.5rem;
+    }
+    .exp-tau-grid div {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+    }
+    .exp-tau-grid b { color: var(--text); display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 0.15rem; }
+    .exp-tau-grid span { color: var(--primary-bright); font-weight: 600; font-size: 1rem; }
+
+    .exp-timeline { margin: 0.5rem 0 1rem; }
+    .exp-step {
+      position: relative;
+      padding: 0.85rem 0 0.85rem 2.2rem;
+      border-left: 2px solid var(--border-accent);
+      margin-left: 0.6rem;
+    }
+    .exp-step::before {
+      content: counter(exp-counter);
+      counter-increment: exp-counter;
+      position: absolute;
+      left: -14px;
+      top: 0.8rem;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 2px solid var(--primary);
+      color: var(--primary-bright);
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .exp-timeline { counter-reset: exp-counter; }
+    .exp-step h4 {
+      margin: 0 0 0.25rem;
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+    .exp-step .exp-q {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-style: italic;
+      margin: 0 0 0.4rem;
+    }
+    .exp-step .exp-a {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin: 0 0 0.35rem;
+    }
+    .exp-step .exp-metric {
+      font-size: 0.78rem;
+      color: var(--green);
+      font-family: var(--mono, ui-monospace, monospace);
+    }
+
+    .exp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      margin: 0.5rem 0 0.75rem;
+    }
+    .exp-table th, .exp-table td {
+      padding: 0.4rem 0.55rem;
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+    }
+    .exp-table th:first-child, .exp-table td:first-child { text-align: left; }
+    .exp-table th {
+      color: var(--text-dim);
+      font-weight: 500;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .exp-table tr.is-best td {
+      background: rgba(52,211,153,0.06);
+      color: var(--text);
+      font-weight: 600;
+    }
+    .exp-table tr.is-best td:first-child { color: var(--green); }
+
+    .exp-modal-footer {
+      padding: 1rem 1.75rem 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .exp-modal-footer a {
+      font-size: 0.83rem;
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-accent);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .exp-modal-footer a.primary {
+      background: var(--primary);
+      color: var(--bg);
+      border-color: var(--primary);
+    }
+    .exp-modal-footer a.primary:hover { background: var(--primary-bright); }
+
+    @media (max-width: 640px) {
+      .exp-modal { border-radius: 10px; }
+      .exp-modal-header, .exp-modal-body, .exp-modal-footer { padding-left: 1.1rem; padding-right: 1.1rem; }
+      .exp-modal-body { font-size: 0.85rem; }
+      .exp-link { display: block; margin: 0.5rem 0 0; width: max-content; }
+    }
   </style>
 </head>
 <body>
@@ -1530,7 +1766,7 @@
         <span class="gradient-text">con IA 100% en tu dispositivo</span>
       </h1>
       <p class="subtitle">
-        DIRD+ detecta lesiones retinales con modelos YOLO ONNX corriendo local en el navegador o como app de escritorio Tauri. Sin nube. Sin costos por tamizaje. Privacidad total para los datos del paciente.
+        DIRD+ detecta lesiones retinales con modelos <a class="wlink" href="https://en.wikipedia.org/wiki/You_Only_Look_Once" target="_blank" rel="noopener">YOLO</a> <a class="wlink" href="https://es.wikipedia.org/wiki/ONNX" target="_blank" rel="noopener">ONNX</a> corriendo local en el navegador o como app de escritorio Tauri. Sin nube. Sin costos por tamizaje. Privacidad total para los datos del paciente.
       </p>
       <div class="hero-buttons">
         <a href="https://tmeduca.org/dird/web/" class="btn btn-primary">
@@ -1565,7 +1801,7 @@
       <div class="hero-stack">
         <span>Tauri 2</span>
         <span>React</span>
-        <span>ONNX Runtime</span>
+        <span><a class="wlink" href="https://es.wikipedia.org/wiki/ONNX" target="_blank" rel="noopener">ONNX</a> Runtime</span>
         <span>YOLOv26</span>
         <span>SQLite</span>
         <span>TypeScript</span>
@@ -1707,7 +1943,7 @@
       <div class="section-header animate-in">
         <div class="section-label">Plataforma</div>
         <h2 class="section-title">Detección asistida para oftalmología</h2>
-        <p class="section-subtitle">Modelo YOLO entrenado sobre imágenes de fondo de ojo, ejecutado local, con informes clínicos generados en el dispositivo.</p>
+        <p class="section-subtitle">Modelo <a class="wlink" href="https://www.ultralytics.com/yolo" target="_blank" rel="noopener">YOLO</a> entrenado sobre imágenes de fondo de ojo, ejecutado local, con informes clínicos generados en el dispositivo.</p>
       </div>
       <div class="features-grid">
         <div class="feature-card animate-in">
@@ -1722,7 +1958,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 4v4"/><path d="M16 4v4"/></svg>
           </div>
           <h3>IA local, sin nube</h3>
-          <p>Modelo ONNX ejecutado en el navegador vía onnxruntime-web o como binario Tauri. Los datos del paciente nunca salen del dispositivo.</p>
+          <p>Modelo <a class="wlink" href="https://es.wikipedia.org/wiki/ONNX" target="_blank" rel="noopener">ONNX</a> ejecutado en el navegador vía onnxruntime-web o como binario Tauri. Los datos del paciente nunca salen del dispositivo.</p>
         </div>
         <div class="feature-card animate-in">
           <div class="feature-icon">
@@ -1750,7 +1986,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
           </div>
           <h3>Arquitectura multiplataforma</h3>
-          <p>Desktop Tauri (Windows/Linux) + build web estática. Mismo modelo ONNX en ambos entornos, misma experiencia.</p>
+          <p>Desktop Tauri (Windows/Linux) + build web estática. Mismo modelo <a class="wlink" href="https://es.wikipedia.org/wiki/ONNX" target="_blank" rel="noopener">ONNX</a> en ambos entornos, misma experiencia.</p>
         </div>
       </div>
     </div>
@@ -1810,7 +2046,7 @@
       <div class="section-header animate-in">
         <div class="section-label">Ejemplos en vivo</div>
         <h2 class="section-title">DIRDv2r0 sobre retinografías reales</h2>
-        <p class="section-subtitle">Inferencia local con YOLOv26s end2end NMS. Cajas y scores generados sin enviar imágenes a internet.</p>
+        <p class="section-subtitle">Inferencia local con YOLOv26s end2end <a class="wlink" href="https://en.wikipedia.org/wiki/Object_detection" target="_blank" rel="noopener">NMS</a>. Cajas y scores generados sin enviar imágenes a internet.</p>
       </div>
 
       <div class="carousel animate-in" id="dirdCarousel" aria-roledescription="carrusel" aria-label="Ejemplos de detección DIRDv2r0">
@@ -1838,7 +2074,7 @@
           <div class="l">Throughput (~341 ms/img)</div>
         </div>
       </div>
-      <p class="carousel-note">Benchmark cliente, PC sin GPU, DIRDv2r0 (YOLOv26s end2end NMS, 640×640). Inferencia 100% local en navegador / desktop.</p>
+      <p class="carousel-note">Benchmark cliente, PC sin GPU, DIRDv2r0 (YOLOv26s end2end <a class="wlink" href="https://www.ultralytics.com/glossary/non-maximum-suppression-nms" target="_blank" rel="noopener">NMS</a>, 640×640). Inferencia 100% local en navegador / desktop.</p>
     </div>
   </section>
 
@@ -1848,19 +2084,19 @@
       <div class="section-header animate-in">
         <div class="section-label">Modelo IA</div>
         <h2 class="section-title">Avances de <code style="font-family:inherit;color:var(--primary-bright)">dird_models</code></h2>
-        <p class="section-subtitle">Modelos ONNX publicados en el repositorio <a href="https://github.com/Debaq/dird_models">dird_models</a>. Open weights, documentados, reproducibles.</p>
+        <p class="section-subtitle">Modelos <a class="wlink" href="https://es.wikipedia.org/wiki/ONNX" target="_blank" rel="noopener">ONNX</a> publicados en el repositorio <a href="https://github.com/Debaq/dird_models">dird_models</a>. Open weights, documentados, reproducibles.</p>
       </div>
 
       <div class="model-grid">
 
         <!-- v2.0.0 -->
         <div class="model-card is-latest animate-in">
-          <div class="corner-ribbon">MCC 0.91<small>APTOS · 5-fold CV</small></div>
+          <div class="corner-ribbon"><a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a> 0.91<small>APTOS · <a class="wlink" href="https://es.wikipedia.org/wiki/Validaci%C3%B3n_cruzada" target="_blank" rel="noopener">5-fold CV</a></small></div>
           <div class="model-header">
             <div>
               <div class="model-version">
                 DIRDv2r0
-                <small>detection-v2.0.0 · YOLOv26s end2end NMS</small>
+                <small>detection-v2.0.0 · YOLOv26s end2end <a class="wlink" href="https://www.ultralytics.com/glossary/non-maximum-suppression-nms" target="_blank" rel="noopener">NMS</a></small>
               </div>
             </div>
             <span class="model-badge badge-current">Validado externamente</span>
@@ -1874,13 +2110,13 @@
           <div class="metrics">
             <div class="metric"><div class="metric-value">0.978</div><div class="metric-label">Sensibilidad</div></div>
             <div class="metric"><div class="metric-value">0.933</div><div class="metric-label">Especificidad</div></div>
-            <div class="metric"><div class="metric-value">0.911</div><div class="metric-label">MCC</div></div>
-            <div class="metric"><div class="metric-value">0.967</div><div class="metric-label">AUC-ROC</div></div>
+            <div class="metric"><div class="metric-value">0.911</div><div class="metric-label"><a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a></div></div>
+            <div class="metric"><div class="metric-value">0.967</div><div class="metric-label"><a class="wlink" href="https://es.wikipedia.org/wiki/Curva_ROC" target="_blank" rel="noopener">AUC-ROC</a></div></div>
           </div>
-          <p style="margin:0.6rem 0 0;font-size:0.75rem;color:var(--text-dim);">Validación binaria sobre <b>APTOS 2019</b> (n=3.662, OOD, 5-fold CV). Ver detalle más abajo.</p>
+          <p style="margin:0.6rem 0 0;font-size:0.75rem;color:var(--text-dim);">Validación binaria sobre <b>APTOS 2019</b> (n=3.662, OOD, <a class="wlink" href="https://es.wikipedia.org/wiki/Validaci%C3%B3n_cruzada" target="_blank" rel="noopener">5-fold CV</a>). Ver detalle más abajo.</p>
 
           <div class="per-class">
-            <h4>mAP@50 por clase (entrenamiento interno)</h4>
+            <h4><a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP@50</a> por clase (entrenamiento interno)</h4>
             <div class="class-row"><span class="class-name">Disco óptico</span><span class="class-map">0.995</span><div class="class-bar"><div class="class-bar-fill" style="width:99.5%"></div></div></div>
             <div class="class-row"><span class="class-name">Fóvea</span><span class="class-map">0.855</span><div class="class-bar"><div class="class-bar-fill" style="width:85.5%"></div></div></div>
             <div class="class-row"><span class="class-name">Exudado blando (CWS)</span><span class="class-map">0.590</span><div class="class-bar"><div class="class-bar-fill" style="width:59.0%"></div></div></div>
@@ -1890,7 +2126,7 @@
           </div>
 
           <div class="model-status ok">
-            <b>Estado:</b> VALIDATED · Operating point recomendado <code>PCT_fpr02</code> (τ por clase calibrado a FPR≤2%). MCC 0.91 estable en 5-fold CV (σ≤0.015). ~9 FPS CPU.
+            <b>Estado:</b> VALIDATED · Operating point recomendado <code>PCT_fpr02</code> (τ por clase calibrado a FPR≤2%). <a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a> 0.91 estable en <a class="wlink" href="https://es.wikipedia.org/wiki/Validaci%C3%B3n_cruzada" target="_blank" rel="noopener">5-fold CV</a> (σ≤0.015). ~9 FPS CPU.
           </div>
 
           <a href="https://github.com/Debaq/dird_models/blob/main/detection-v2.0.0.json" class="model-link">
@@ -1917,14 +2153,14 @@
           </div>
 
           <div class="metrics">
-            <div class="metric"><div class="metric-value">0.826</div><div class="metric-label">mAP50</div></div>
-            <div class="metric"><div class="metric-value">0.450</div><div class="metric-label">mAP50-95</div></div>
+            <div class="metric"><div class="metric-value">0.826</div><div class="metric-label"><a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP50</a></div></div>
+            <div class="metric"><div class="metric-value">0.450</div><div class="metric-label"><a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP50-95</a></div></div>
             <div class="metric"><div class="metric-value">0.820</div><div class="metric-label">Precision</div></div>
             <div class="metric"><div class="metric-value">0.790</div><div class="metric-label">Recall</div></div>
           </div>
 
           <div class="per-class">
-            <h4>mAP50 por clase</h4>
+            <h4><a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP50</a> por clase</h4>
             <div class="class-row"><span class="class-name">Disco óptico</span><span class="class-map">0.984</span><div class="class-bar"><div class="class-bar-fill" style="width:98.4%"></div></div></div>
             <div class="class-row"><span class="class-name">Fóvea</span><span class="class-map">0.957</span><div class="class-bar"><div class="class-bar-fill" style="width:95.7%"></div></div></div>
             <div class="class-row"><span class="class-name">Edema *</span><span class="class-map">0.995</span><div class="class-bar"><div class="class-bar-fill" style="width:99.5%"></div></div></div>
@@ -1935,7 +2171,7 @@
           </div>
 
           <div class="model-note">
-            * edema con soporte bajo en validación (imbalance severo). Métricas globales mejores que v2, pero v2 usa arquitectura end2end NMS con mejor integración para despliegue edge.
+            * edema con soporte bajo en validación (imbalance severo). Métricas globales mejores que v2, pero v2 usa arquitectura end2end <a class="wlink" href="https://www.ultralytics.com/glossary/non-maximum-suppression-nms" target="_blank" rel="noopener">NMS</a> con mejor integración para despliegue edge.
           </div>
 
           <a href="https://github.com/Debaq/dird_models/blob/main/detection-v1.0.1.json" class="model-link">
@@ -1990,15 +2226,15 @@
           </div>
           <div class="model-meta">
             <span><b>Cierre:</b> 2026-04-30</span>
-            <span><b>Diseño:</b> 5-fold CV estratificado</span>
-            <span><b>Hardware:</b> CPU, ONNX Runtime</span>
+            <span><b>Diseño:</b> <a class="wlink" href="https://es.wikipedia.org/wiki/Validaci%C3%B3n_cruzada" target="_blank" rel="noopener">5-fold CV</a> estratificado</span>
+            <span><b>Hardware:</b> CPU, <a class="wlink" href="https://es.wikipedia.org/wiki/ONNX" target="_blank" rel="noopener">ONNX</a> Runtime</span>
           </div>
 
           <div class="metrics">
             <div class="metric"><div class="metric-value">0.978</div><div class="metric-label">Sens (±0.013)</div></div>
             <div class="metric"><div class="metric-value">0.933</div><div class="metric-label">Spec (±0.004)</div></div>
-            <div class="metric"><div class="metric-value">0.911</div><div class="metric-label">MCC (±0.015)</div></div>
-            <div class="metric"><div class="metric-value">0.967</div><div class="metric-label">AUC-ROC</div></div>
+            <div class="metric"><div class="metric-value">0.911</div><div class="metric-label"><a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a> (±0.015)</div></div>
+            <div class="metric"><div class="metric-value">0.967</div><div class="metric-label"><a class="wlink" href="https://es.wikipedia.org/wiki/Curva_ROC" target="_blank" rel="noopener">AUC-ROC</a></div></div>
           </div>
 
           <div class="per-class">
@@ -2010,16 +2246,21 @@
           </div>
 
           <div class="model-status ok">
-            <b>Operating point:</b> <code>PCT_fpr02</code> — τ por clase calibrado a FPR≤2% sobre normales: hard_exudate 0.63 · microhemorrhages 0.26 · cotton_wool_spot 0.85 · hemorrhage 0.05.
+            <b>Operating point:</b> <button type="button" class="exp-trigger" data-exp-open aria-haspopup="dialog"><code>PCT_fpr02</code></button> — τ por clase calibrado a FPR≤2% sobre normales: hard_exudate 0.63 · microhemorrhages 0.26 · cotton_wool_spot 0.85 · hemorrhage 0.05.
+            <button type="button" class="exp-link" data-exp-open aria-haspopup="dialog">Ver experimentos →</button>
           </div>
 
           <div class="model-note">
-            6 experimentos (corrida base, barrido conf/N, calibración per-clase, 5-fold CV, filtro de área, área×per-clase). PPV 0.876 · NPV 0.995 · Youden J 0.909. Latencia mediana 112 ms (p95 127 ms) en CPU.
+            6 experimentos (corrida base, barrido conf/N, calibración per-clase, <a class="wlink" href="https://es.wikipedia.org/wiki/Validaci%C3%B3n_cruzada" target="_blank" rel="noopener">5-fold CV</a>, filtro de área, área×per-clase). <a class="wlink" href="https://es.wikipedia.org/wiki/Valor_predictivo" target="_blank" rel="noopener">PPV</a> 0.876 · <a class="wlink" href="https://es.wikipedia.org/wiki/Valor_predictivo" target="_blank" rel="noopener">NPV</a> 0.995 · <a class="wlink" href="https://en.wikipedia.org/wiki/Youden%27s_J_statistic" target="_blank" rel="noopener">Youden J</a> 0.909. Latencia mediana 112 ms (p95 127 ms) en CPU.
           </div>
 
-          <a href="https://github.com/Debaq/Dird/blob/main/validation/results/INFORME_COMPLETO_APTOS.md" class="model-link">
+          <a href="INFORME_COMPLETO_APTOS.md" class="model-link" target="_blank" rel="noopener">
             Ver informe completo
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+          <a href="dird-aptos-scripts.zip" class="model-link" download>
+            Descargar scripts de validación (.zip, 37 KB)
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </a>
         </div>
 
@@ -2076,7 +2317,7 @@
       </div>
 
       <p style="text-align:center;margin-top:2rem;font-size:0.85rem;color:var(--text-dim);">
-        Limitación: APTOS no entrega anotaciones a nivel de lesión, por lo que la validación es a nivel de clasificación binaria por imagen (no IoU/mAP). La validación sobre Messidor-2 / EyePACS confirmará la generalización a otras cohortes.
+        Limitación: APTOS no entrega anotaciones a nivel de lesión, por lo que la validación es a nivel de clasificación binaria por imagen (no <a class="wlink" href="https://es.wikipedia.org/wiki/%C3%8Dndice_Jaccard" target="_blank" rel="noopener">IoU</a>/<a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP</a>). La validación sobre Messidor-2 / EyePACS confirmará la generalización a otras cohortes.
       </p>
     </div>
   </section>
@@ -2389,6 +2630,224 @@
       } else {
         start();
       }
+    })();
+  </script>
+
+  <!-- ============== Modal experimentos PCT_fpr02 ============== -->
+  <div class="exp-modal-overlay" id="expModal" role="dialog" aria-modal="true" aria-labelledby="expModalTitle" hidden>
+    <div class="exp-modal" role="document">
+      <div class="exp-modal-header">
+        <div>
+          <h2 id="expModalTitle">PCT_fpr02 — operating point recomendado</h2>
+          <p>Cómo calibramos DIRD+ v2 sobre APTOS 2019 (n=3 662) y por qué este punto es el default.</p>
+        </div>
+        <button type="button" class="exp-close" data-exp-close aria-label="Cerrar">×</button>
+      </div>
+
+      <div class="exp-modal-body">
+
+        <h3>0 · Contexto — qué problema resolvemos</h3>
+        <p>
+          DIRD+ está diseñado primariamente como herramienta <strong>human-in-the-loop (HITL)</strong>:
+          un tecnólogo médico u oftalmólogo trabaja con el modelo, no es reemplazado por él. El modelo
+          marca, sugiere y prioriza; la persona revisa, valida y decide.
+          Como modo secundario, puede operar como <strong>screening autónomo</strong> cuando el contexto
+          lo amerita (postas rurales, tamizaje masivo, ausencia de especialista in situ).
+        </p>
+        <p>
+          Esta validación evalúa el <strong>modo autónomo</strong> — el modelo solo, sin asistencia
+          humana — porque es el setup que se puede medir contra las etiquetas de APTOS. Es deliberadamente
+          el escenario más exigente: el peor caso desde el punto de vista del producto, dado que el caso
+          de uso real (HITL) suma el juicio clínico encima del output del modelo. La pregunta operacional
+          que respondemos aquí es la binaria de tamizaje:
+          <strong>¿esta imagen requiere atención de un oftalmólogo, sí o no?</strong>
+        </p>
+        <p>
+          Para validar eso aprovechamos <strong>APTOS 2019 Blindness Detection</strong> (Kaggle,
+          n=3 662 imágenes), que viene etiquetado con la escala clínica internacional de
+          retinopatía diabética (ICDR) en grados 0 a 4:
+        </p>
+        <table class="exp-table">
+          <thead>
+            <tr><th>Grado ICDR</th><th>Significado</th><th>Etiqueta binaria</th><th>n</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td style="text-align:left">Sin retinopatía</td><td>NORMAL</td><td>1 805</td></tr>
+            <tr><td>1</td><td style="text-align:left">RD leve</td><td>PATOLÓGICO</td><td>370</td></tr>
+            <tr><td>2</td><td style="text-align:left">RD moderada</td><td>PATOLÓGICO</td><td>999</td></tr>
+            <tr><td>3</td><td style="text-align:left">RD severa</td><td>PATOLÓGICO</td><td>193</td></tr>
+            <tr><td>4</td><td style="text-align:left">RD proliferativa</td><td>PATOLÓGICO</td><td>295</td></tr>
+          </tbody>
+        </table>
+        <p>
+          <strong>Binarizamos</strong> el ground truth: grado 0 → <code>NORMAL</code>, grados 1-4 →
+          <code>PATOLÓGICO</code> (1 805 sanos vs 1 857 patológicos, 49.3% / 50.7% — balanceado).
+          La tarea de validación se reduce entonces a <em>"dado el output del detector, ¿qué umbrales
+          de confianza separan mejor sanos de patológicos?"</em>. Esa es la pregunta que persigue toda
+          la cadena de experimentos siguiente — y PCT_fpr02 es la respuesta calibrada.
+        </p>
+        <div class="exp-callout">
+          <b>Nota de diseño:</b> el modelo es un <em>detector de lesiones</em> (6 clases: hard_exudate,
+          hemorrhage, cotton_wool_spot, microhemorrhages, optic_disc, fovea), no un clasificador de
+          grados. La regla binaria es: si aparece <em>al menos una</em> lesión sobre su umbral, la
+          imagen se marca como patológica. Las clases anatómicas (disco óptico, fóvea) se ignoran a
+          propósito porque están en toda retina.
+        </div>
+
+        <h3>1 · ¿Qué es PCT_fpr02?</h3>
+        <p>
+          <strong>PCT</strong> = <em>Per-Class Thresholds</em> (umbral por clase).
+          <strong>FPR02</strong> = <em>False Positive Rate ≤ 2%</em> medido sobre fondos sanos.
+        </p>
+        <p>
+          En lugar de aplicar el mismo umbral de confianza a todas las clases de lesión
+          (ej. 0.25 uniforme), <strong>cada lesión tiene su propio umbral</strong>, calibrado para que
+          la tasa de falsos positivos sobre retinas sanas no supere el 2% por clase.
+        </p>
+        <div class="exp-tau-grid">
+          <div><b>hard_exudate</b><span>τ = 0.63</span></div>
+          <div><b>microhemorrhages</b><span>τ = 0.26</span></div>
+          <div><b>cotton_wool_spot</b><span>τ = 0.85</span></div>
+          <div><b>hemorrhage</b><span>τ = 0.05</span></div>
+        </div>
+        <p>
+          Regla de decisión: <code>ALTERADO ⇔ ∃ clase c con score(c) ≥ τ[c]</code>. Si solo se
+          detectan landmarks anatómicos (disco óptico, fóvea) o nada, la imagen es <code>NORMAL</code>.
+        </p>
+        <div class="exp-callout">
+          <b>Por qué importa:</b> cada lesión tiene una distribución de scores distinta. <code>microhemorrhages</code>
+          es la clase con mayor AUC del modelo (0.988), pero saturaba falsos positivos a τ=0.25 porque
+          su distribución empieza más abajo. <code>hard_exudate</code> al revés: sobre-detecta en sanos
+          y necesita un τ alto. Calibrar por clase libera la capacidad real de cada detector.
+        </div>
+
+        <h3>2 · ¿Cómo llegamos a esa idea?</h3>
+        <p>
+          No fue una decisión a priori. Fueron <strong>seis experimentos encadenados</strong>, cada uno
+          respondiendo a la pregunta que dejó abierta el anterior. Esta es la secuencia:
+        </p>
+        <div class="exp-timeline">
+          <div class="exp-step">
+            <h4>Corrida binaria base — ¿generaliza fuera del entrenamiento?</h4>
+            <p class="exp-q">Pregunta: el modelo se entrenó en IDRiD; ¿funciona en APTOS sin reentrenar?</p>
+            <p class="exp-a">Sí, generaliza muy bien (AUC 0.95). Pero a conf=0.25 uniforme da <strong>981 falsos positivos</strong> sobre 1 805 normales. Sirve para tamizaje, no para producción.</p>
+            <p class="exp-metric">Sens 0.997 · Spec 0.456 · <a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a> 0.541</p>
+          </div>
+          <div class="exp-step">
+            <h4>Barrido conf y N — ¿cuál es el mejor umbral uniforme?</h4>
+            <p class="exp-q">Pregunta: ¿se arregla subiendo el umbral o exigiendo varias detecciones?</p>
+            <p class="exp-a">El mejor punto uniforme fue <code>R3: conf≥0.40 ∧ N≥2</code>. Pero notamos algo: usar el <em>conteo</em> de lesiones como score discriminaba mejor (AUC 0.964) que el score máximo (0.949). Pista de que las clases aportaban señal heterogénea.</p>
+            <p class="exp-metric">R3 → Sens 0.932 · Spec 0.918 · <a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a> 0.850</p>
+          </div>
+          <div class="exp-step">
+            <h4>Calibración per-clase — ¿y si cada lesión tiene su propio umbral?</h4>
+            <p class="exp-a">Calculamos curvas <a class="wlink" href="https://es.wikipedia.org/wiki/Curva_ROC" target="_blank" rel="noopener">ROC</a> <em>por clase</em> contra el ground truth binario y elegimos τ con tres criterios: <a class="wlink" href="https://en.wikipedia.org/wiki/Youden%27s_J_statistic" target="_blank" rel="noopener">Youden J</a>, FPR≤5%, FPR≤2%. <strong>FPR≤2% ganó</strong>: <a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a> saltó de 0.85 a 0.913 sin sacrificar sensibilidad. Aquí nació PCT_fpr02.</p>
+            <p class="exp-metric">PCT_fpr02 → Sens 0.978 · Spec 0.933 · <a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a> 0.913</p>
+          </div>
+          <div class="exp-step">
+            <h4><a class="wlink" href="https://es.wikipedia.org/wiki/Validaci%C3%B3n_cruzada" target="_blank" rel="noopener">5-fold cross-validation</a> — ¿overfitting o estable?</h4>
+            <p class="exp-q">Pregunta: ¿esos τ funcionarían en otra muestra o memorizamos APTOS?</p>
+            <p class="exp-a">Estables. Coeficiente de variación máximo: 8% (un solo τ). El resto &lt;1%. <a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a> reproducible 0.911 ± 0.015 en cada fold.</p>
+            <p class="exp-metric">CV: <a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a> 0.911 ± 0.015 · σ Spec ≤ 0.004</p>
+          </div>
+          <div class="exp-step">
+            <h4>Filtro de área — ¿los falsos positivos son bboxes pequeñas?</h4>
+            <p class="exp-a">Hipótesis parcialmente cierta. Filtrando bboxes &lt;800 px² mejoró <a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a> de R3 (0.85 → 0.88), pero <strong>sigue por debajo de PCT_fpr02</strong>. La calibración por clase ya descarta esas detecciones de baja calidad de forma score-driven.</p>
+            <p class="exp-metric">R3+area800 → <a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a> 0.879</p>
+          </div>
+          <div class="exp-step">
+            <h4>Área × per-clase — ¿suman o son redundantes?</h4>
+            <p class="exp-a"><strong>Redundantes.</strong> Aplicar ambos no mejora vs PCT_fpr02 solo. El AUC interno sube con el filtro pero el τ se reajusta y compensa: el resultado final es invariante. Conclusión: usar <em>solo</em> calibración per-clase como única intervención post-modelo.</p>
+            <p class="exp-metric">PCT_fpr02 + area1200 → <a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a> 0.913 (igual)</p>
+          </div>
+        </div>
+
+        <h3>3 · Tabla maestra — todos los puntos comparados</h3>
+        <table class="exp-table">
+          <thead>
+            <tr><th>Configuración</th><th>Sens</th><th>Spec</th><th><a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a></th><th><a class="wlink" href="https://en.wikipedia.org/wiki/Youden%27s_J_statistic" target="_blank" rel="noopener">Youden J</a></th></tr>
+          </thead>
+          <tbody>
+            <tr><td>conf=0.25 uniforme (baseline)</td><td>0.997</td><td>0.456</td><td>0.541</td><td>0.453</td></tr>
+            <tr><td>R3 — conf≥0.40 ∧ N≥2</td><td>0.932</td><td>0.918</td><td>0.850</td><td>0.850</td></tr>
+            <tr class="is-best"><td>PCT_fpr02 (recomendado)</td><td>0.978</td><td>0.933</td><td>0.913</td><td>0.911</td></tr>
+            <tr><td>PCT_fpr02 (<a class="wlink" href="https://es.wikipedia.org/wiki/Validaci%C3%B3n_cruzada" target="_blank" rel="noopener">5-fold CV</a>)</td><td>0.978 ± 0.013</td><td>0.931 ± 0.004</td><td>0.911 ± 0.015</td><td>0.909 ± 0.014</td></tr>
+            <tr><td>R3 + filtro área 800 px²</td><td>0.925</td><td>0.954</td><td>0.879</td><td>0.879</td></tr>
+            <tr><td>PCT_youden_n2 (alta-spec)</td><td>0.915</td><td>0.974</td><td>0.890</td><td>0.889</td></tr>
+          </tbody>
+        </table>
+
+        <h3>4 · Modos alternativos según caso de uso</h3>
+        <table class="exp-table">
+          <thead>
+            <tr><th>Modo</th><th>Sens</th><th>Spec</th><th>Cuándo</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Screening máxima sens</td><td>0.997</td><td>0.456</td><td style="text-align:left">Tamizaje masivo, no perder ningún caso</td></tr>
+            <tr class="is-best"><td>Producción balanceado (PCT_fpr02)</td><td>0.978</td><td>0.933</td><td style="text-align:left"><strong>Default recomendado</strong></td></tr>
+            <tr><td>Asistencial alta spec</td><td>0.915</td><td>0.974</td><td style="text-align:left">Triage donde el sobre-flag tiene costo</td></tr>
+            <tr><td>Confirmación / 2ª opinión</td><td>0.747</td><td>0.997</td><td style="text-align:left">PCT_fpr02 + N≥2</td></tr>
+          </tbody>
+        </table>
+
+        <h3>5 · Alcance de esta validación</h3>
+        <p>
+          Lo que mide este experimento es el <strong>modo autónomo</strong> de DIRD+ — el modelo
+          operando solo contra el ground truth de APTOS, sin asistencia humana. Es el escenario
+          más exigente para el producto, y los números aguantan: Sens 97.8% / Spec 93.1% /
+          <a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a> 0.91 a ~9 FPS en CPU, con τ estables por <a class="wlink" href="https://es.wikipedia.org/wiki/Validaci%C3%B3n_cruzada" target="_blank" rel="noopener">5-fold CV</a>.
+        </p>
+        <p>Lo que <em>no</em> abarca este experimento:</p>
+        <ul style="margin: 0 0 0.75rem 1.1rem; padding: 0; font-size: 0.85rem; line-height: 1.6;">
+          <li><strong>Modo human-in-the-loop:</strong> el caso de uso primario del producto. Su validación es un <em>estudio clínico aparte</em> — tecnólogos marcando con y sin IA, decisión con y sin algoritmo, verificador como árbitro. Otra historia, ya planificada, no parte de esta validación técnica.</li>
+          <li><strong>Cohorte única:</strong> APTOS 2019 (India, cámaras heterogéneas). Cross-validación externa con Messidor-2 / EyePACS es el siguiente paso para confirmar τ poblacionales.</li>
+          <li><strong>Granularidad clínica:</strong> el output operacional es binario "requiere atención sí/no". El estadiaje ICDR 0-4 es tarea distinta y propia del especialista.</li>
+          <li><strong>Métricas a nivel de imagen:</strong> APTOS no provee anotaciones por lesión, así que se reporta clasificación binaria — coherente con el caso de uso.</li>
+        </ul>
+        <p>
+          En síntesis: esta validación cubre el <strong>piso</strong> del producto (modelo solo).
+          El <strong>techo</strong> — desempeño en flujo HITL real — se mide en un estudio
+          clínico dedicado.
+        </p>
+
+      </div>
+
+      <div class="exp-modal-footer">
+        <a class="primary" href="INFORME_COMPLETO_APTOS.md" target="_blank" rel="noopener">Informe completo (Markdown)</a>
+        <a href="dird-aptos-scripts.zip" download>Scripts de validación (.zip)</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      var modal = document.getElementById('expModal');
+      if (!modal) return;
+      var openers = document.querySelectorAll('[data-exp-open]');
+      var closers = modal.querySelectorAll('[data-exp-close]');
+      var lastFocus = null;
+
+      function open(e){
+        e && e.preventDefault();
+        lastFocus = document.activeElement;
+        modal.hidden = false;
+        modal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+        var closeBtn = modal.querySelector('.exp-close');
+        if (closeBtn) closeBtn.focus();
+      }
+      function close(){
+        modal.classList.remove('is-open');
+        modal.hidden = true;
+        document.body.style.overflow = '';
+        if (lastFocus && lastFocus.focus) lastFocus.focus();
+      }
+      openers.forEach(function(b){ b.addEventListener('click', open); });
+      closers.forEach(function(b){ b.addEventListener('click', close); });
+      modal.addEventListener('click', function(e){ if (e.target === modal) close(); });
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape' && modal.classList.contains('is-open')) close();
+      });
     })();
   </script>
 

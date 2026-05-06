@@ -1,0 +1,19 @@
+# Datasets crudos / extraídos (descargar aparte, no versionar)
+data/
+
+# Modelos binarios (viven en repo dird_models)
+models/*.onnx
+models/*.pt
+
+# Outputs de experimentos (regenerables)
+results/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor
+.idea/
+.vscode/

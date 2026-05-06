@@ -1,0 +1,228 @@
+{
+  "model_info": {
+    "version": "DIRDv2r0",
+    "type": "YOLOv26s - Detection (end2end NMS)",
+    "date_trained": "2026-04-21",
+    "input_size": [640, 640]
+  },
+  "output_spec": {
+    "format": "end2end_nms",
+    "bbox_format": "xyxy",
+    "bbox_coord_space": "input_pixels",
+    "tensor_layout": ["x1", "y1", "x2", "y2", "score", "class_idx"],
+    "nms_applied_by_model": true,
+    "max_detections": 300
+  },
+  "classes": [
+    {
+      "index": 0,
+      "technical_name": "optic_disc",
+      "display_name_en": "Optic Disc",
+      "display_name_es": "Disco Óptico",
+      "category": "anatomical_landmark",
+      "severity_impact": "none",
+      "description_en": "Optic disc (optic nerve head)",
+      "description_es": "Disco óptico (cabeza del nervio óptico)",
+      "currently_detected": true
+    },
+    {
+      "index": 1,
+      "technical_name": "hard_exudate",
+      "display_name_en": "Hard Exudate",
+      "display_name_es": "Exudado Duro",
+      "category": "lesion",
+      "severity_impact": "moderate",
+      "description_en": "Lipid deposits indicating vascular leakage",
+      "description_es": "Depósitos lipídicos que indican fuga vascular",
+      "currently_detected": true,
+      "aliases": ["hardExudate", "hard_exudates", "hardExudates", "exudate", "exudates"]
+    },
+    {
+      "index": 2,
+      "technical_name": "fovea",
+      "display_name_en": "Fovea",
+      "display_name_es": "Fóvea",
+      "category": "anatomical_landmark",
+      "severity_impact": "none",
+      "description_en": "Central area of the macula responsible for sharp central vision",
+      "description_es": "Área central de la mácula responsable de la visión central nítida",
+      "currently_detected": true
+    },
+    {
+      "index": 3,
+      "technical_name": "hemorrhage",
+      "display_name_en": "Hemorrhage",
+      "display_name_es": "Hemorragia",
+      "category": "lesion",
+      "severity_impact": "moderate_to_severe",
+      "description_en": "Bleeding in the retina (dot, blot, or flame-shaped)",
+      "description_es": "Sangrado en la retina (forma de punto, mancha o llama)",
+      "currently_detected": true,
+      "aliases": ["hemorrhages", "hemorragia", "hemorragias", "blot_hemorrhage", "flame_hemorrhage"]
+    },
+    {
+      "index": 4,
+      "technical_name": "cotton_wool_spot",
+      "display_name_en": "Cotton Wool Spot",
+      "display_name_es": "Exudado Blando",
+      "category": "lesion",
+      "severity_impact": "moderate_to_severe",
+      "description_en": "Soft exudates caused by ischemia",
+      "description_es": "Exudados blandos causados por isquemia",
+      "currently_detected": true,
+      "aliases": ["soft_exudate", "soft_exudates", "softExudate", "softExudates", "cotton_wool", "cws"]
+    },
+    {
+      "index": 5,
+      "technical_name": "microhemorrhages",
+      "display_name_en": "Microhemorrhages",
+      "display_name_es": "Microhemorragias",
+      "category": "lesion",
+      "severity_impact": "mild_to_moderate",
+      "description_en": "Small punctate hemorrhages, clinically equivalent to microaneurysms in this model version",
+      "description_es": "Pequeñas hemorragias puntiformes, clínicamente equivalentes a microaneurismas en esta versión del modelo",
+      "currently_detected": true,
+      "aliases": ["microhemorrhage", "microhemorragia", "microhemorragias", "dot_hemorrhage", "microaneurysm", "microaneurysms", "ma"]
+    },
+    {
+      "index": 6,
+      "technical_name": "microaneurysm",
+      "display_name_en": "Microaneurysm",
+      "display_name_es": "Microaneurisma",
+      "category": "lesion",
+      "severity_impact": "mild",
+      "description_en": "Small dilations of retinal capillaries (merged into microhemorrhages class in this model)",
+      "description_es": "Pequeñas dilataciones de los capilares retinianos (fusionada con microhemorragias en este modelo)",
+      "currently_detected": false,
+      "aliases": ["microaneurysms", "microaneurisma", "microaneurismas", "ma"]
+    },
+    {
+      "index": 7,
+      "technical_name": "edema",
+      "display_name_en": "Macular Edema",
+      "display_name_es": "Edema Macular",
+      "category": "lesion",
+      "severity_impact": "severe",
+      "description_en": "Fluid accumulation in the macula",
+      "description_es": "Acumulación de líquido en la mácula",
+      "currently_detected": false,
+      "aliases": ["macular_edema", "diabetic_macular_edema", "dme"]
+    },
+    {
+      "index": 8,
+      "technical_name": "neovascularization",
+      "display_name_en": "Neovascularization",
+      "display_name_es": "Neovascularización",
+      "category": "lesion",
+      "severity_impact": "severe",
+      "description_en": "Abnormal new blood vessel growth",
+      "description_es": "Crecimiento anormal de nuevos vasos sanguíneos",
+      "currently_detected": false,
+      "aliases": ["neovascularisation", "nvd", "nve", "nvi", "new_vessels"]
+    },
+    {
+      "index": 9,
+      "technical_name": "venous_beading",
+      "display_name_en": "Venous Beading",
+      "display_name_es": "Arrosariamiento Venoso",
+      "category": "lesion",
+      "severity_impact": "severe",
+      "description_en": "Irregular caliber of retinal veins",
+      "description_es": "Calibre irregular de las venas retinianas",
+      "currently_detected": false,
+      "aliases": ["venousBeading", "vb", "beading", "venous_abnormality"]
+    },
+    {
+      "index": 10,
+      "technical_name": "irma",
+      "display_name_en": "IRMA",
+      "display_name_es": "AMIR",
+      "category": "lesion",
+      "severity_impact": "severe",
+      "description_en": "Intraretinal microvascular abnormalities",
+      "description_es": "Anomalías microvasculares intrarretinianas",
+      "currently_detected": false,
+      "aliases": ["IRMA", "intraretinal_microvascular_abnormality", "intraretinal_microvascular_abnormalities", "amir"]
+    }
+  ],
+  "clinical_equivalents": {
+    "microhemorrhages": ["microaneurysm"]
+  },
+  "class_groups": {
+    "anatomical_landmarks": [0, 2],
+    "early_stage_lesions": [5],
+    "moderate_lesions": [1, 3, 4]
+  },
+  "performance_metrics": {
+    "global": {
+      "mAP50": 0.5776,
+      "mAP50-95": 0.3246,
+      "precision_overall": 0.6101,
+      "recall_overall": 0.5762
+    },
+    "per_class_mAP50": {
+      "optic_disc": 0.995,
+      "hard_exudate": 0.3639,
+      "fovea": 0.8549,
+      "hemorrhage": 0.1605,
+      "cotton_wool_spot": 0.5895,
+      "microhemorrhages": 0.5018
+    },
+    "per_class_full": {
+      "optic_disc":        { "precision": 0.9797, "recall": 1.0000, "mAP50": 0.9950, "mAP50-95": 0.8166 },
+      "hard_exudate":      { "precision": 0.4810, "recall": 0.3787, "mAP50": 0.3639, "mAP50-95": 0.1127 },
+      "fovea":             { "precision": 0.7069, "recall": 0.8333, "mAP50": 0.8549, "mAP50-95": 0.4720 },
+      "hemorrhage":        { "precision": 0.3503, "recall": 0.1653, "mAP50": 0.1605, "mAP50-95": 0.0584 },
+      "cotton_wool_spot":  { "precision": 0.5383, "recall": 0.6208, "mAP50": 0.5895, "mAP50-95": 0.2883 },
+      "microhemorrhages":  { "precision": 0.6043, "recall": 0.4590, "mAP50": 0.5018, "mAP50-95": 0.1999 }
+    }
+  },
+  "color_palette": {
+    "optic_disc": "#10b981",
+    "hard_exudate": "#f59e0b",
+    "fovea": "#06b6d4",
+    "hemorrhage": "#ef4444",
+    "cotton_wool_spot": "#a855f7",
+    "microhemorrhages": "#ec4899",
+    "microaneurysm": "#ec4899",
+    "edema": "#3b82f6",
+    "neovascularization": "#dc2626",
+    "venous_beading": "#9333ea",
+    "irma": "#8b5cf6"
+  },
+  "confidence_threshold": 0.25,
+  "training_info": {
+    "framework": "ultralytics (YOLOv26n)",
+    "input_resolution": "640x640",
+    "known_issues": [
+      "microhemorrhages and microaneurysm merged into a single class (microhemorrhages, index 5)",
+      "hemorrhage class shows low recall (0.17); consider more training data",
+      "bbox annotations from mask-derived bounding boxes; bbox-GT overlap with mask connected components may be strict under IoU 0.5"
+    ],
+    "recommended_improvements": [
+      "retrain at 1024x1024 to improve small-lesion detection",
+      "separate microaneurysm from microhemorrhages with dedicated annotations"
+    ]
+  },
+  "analysis_report": {
+    "status": "REQUIRES_IMPROVEMENT",
+    "critical_findings": [
+      {
+        "issue": "microhemorrhages merged with microaneurysm",
+        "observation": "This model version treats both as a single class (index 5). For IDRiD evaluation, predictions of microhemorrhages must be mapped to the microaneurysm ground truth.",
+        "implication": "Clinically valid since both represent small red lesions, but complicates direct comparison with datasets that separate them."
+      },
+      {
+        "issue": "hemorrhage recall low",
+        "metric": "recall 0.17, mAP50 0.16",
+        "observation": "Large bleed detection is weak.",
+        "cause": "Class imbalance and bbox-vs-connected-component mismatch in IDRiD-style masks."
+      }
+    ],
+    "recommendations_next_steps": [
+      "Train future versions at 1024x1024 for small-lesion recovery.",
+      "Collect balanced hemorrhage samples.",
+      "Separate MA/microhemorrhage annotations if clinical workflow requires distinction."
+    ]
+  }
+}
