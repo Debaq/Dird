@@ -27,7 +27,10 @@ jobs:
             libwebkit2gtk-4.1-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
-            patchelf
+            patchelf \
+            cmake \
+            build-essential \
+            pkg-config
 
       - uses: actions/setup-node@v4
         with:
@@ -140,52 +143,10 @@ jobs:
           retention-days: 30
 
   # ────────────────────────────────────────────────────────────────
-  # Web: bundle estatico (dist/) para hosting en cualquier static server
-  # ────────────────────────────────────────────────────────────────
-  build-web:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Read version
-        run: echo "APP_VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build web bundle
-        # Sin BASE_PATH: base relativo + <base href> runtime hace que
-        # el bundle funcione en cualquier subdirectorio del servidor.
-        run: pnpm build
-
-      - name: Package dist
-        run: |
-          mkdir -p artifacts
-          cd dist
-          zip -r "../artifacts/DIRD-v${APP_VERSION}-web.zip" .
-          cd ..
-          ls -lh artifacts/
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dird-web
-          path: artifacts/*
-          retention-days: 30
-
-  # ────────────────────────────────────────────────────────────────
   # Crear GitHub Release con todos los artefactos
   # ────────────────────────────────────────────────────────────────
   release:
-    needs: [build-linux, build-windows, build-web]
+    needs: [build-linux, build-windows]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
@@ -206,12 +167,6 @@ jobs:
           name: dird-windows
           path: dist/windows
 
-      - name: Download Web artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dird-web
-          path: dist/web
-
       - name: List artifacts
         run: find dist -type f
 
@@ -226,4 +181,3 @@ jobs:
             dist/linux/*
             dist/windows/**/*.exe
             dist/windows/**/*.msi
-            dist/web/*.zip
