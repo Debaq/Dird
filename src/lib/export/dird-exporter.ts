@@ -1,6 +1,22 @@
 import JSZip from 'jszip';
 import { db } from '@/lib/db/schema';
 import type { Patient, Session, Detection, Segmentation, Measurement } from '@/lib/db/schema';
+import { encryptContainer } from './dird-container';
+
+const EXPORT_VERSION = '2.0.0';
+
+/**
+ * Finaliza un ZIP. Si `password` viene, devuelve un contenedor `.dird` v2.0 cifrado;
+ * si no, devuelve el ZIP plano (modo legacy v1.0.1, sólo para migración).
+ */
+async function finalize(zip: JSZip, password?: string): Promise<Blob> {
+  if (!password) {
+    return zip.generateAsync({ type: 'blob' });
+  }
+  const zipBytes = await zip.generateAsync({ type: 'uint8array' });
+  const container = await encryptContainer(zipBytes, password);
+  return new Blob([container as BlobPart], { type: 'application/octet-stream' });
+}
 
 export interface DirdExportMetadata {
   export_version: string;
@@ -11,7 +27,7 @@ export interface DirdExportMetadata {
   
 }
 
-export async function exportPatient(patientId: number): Promise<Blob> {
+export async function exportPatient(patientId: number, password?: string): Promise<Blob> {
   const zip = new JSZip();
 
   // Get patient data
@@ -23,7 +39,7 @@ export async function exportPatient(patientId: number): Promise<Blob> {
 
   // Create metadata
   const metadata: DirdExportMetadata = {
-    export_version: '1.0.1',
+    export_version: EXPORT_VERSION,
     exported_at: new Date().toISOString(),
     export_type: 'patient',
     patient,
@@ -100,19 +116,17 @@ export async function exportPatient(patientId: number): Promise<Blob> {
     }
   }
 
-  // Generate ZIP blob
-  const blob = await zip.generateAsync({ type: 'blob' });
-  return blob;
+  return finalize(zip, password);
 }
 
-export async function exportSession(sessionId: number): Promise<Blob> {
+export async function exportSession(sessionId: number, password?: string): Promise<Blob> {
   const zip = new JSZip();
 
   const session = await db.sessions.get(sessionId);
   if (!session) throw new Error('Session not found');
 
   const metadata: DirdExportMetadata = {
-    export_version: '1.0.1',
+    export_version: EXPORT_VERSION,
     exported_at: new Date().toISOString(),
     export_type: 'session',
     sessions: [session]
@@ -169,15 +183,14 @@ export async function exportSession(sessionId: number): Promise<Blob> {
     }
   }
 
-  const blob = await zip.generateAsync({ type: 'blob' });
-  return blob;
+  return finalize(zip, password);
 }
 
-export async function exportAllData(): Promise<Blob> {
+export async function exportAllData(password?: string): Promise<Blob> {
   const zip = new JSZip();
 
   const metadata: DirdExportMetadata = {
-    export_version: '1.0.1',
+    export_version: EXPORT_VERSION,
     exported_at: new Date().toISOString(),
     export_type: 'full',
   };
@@ -195,7 +208,7 @@ export async function exportAllData(): Promise<Blob> {
     const sessions = await db.sessions.where('patientId').equals(patient.id!).toArray();
 
     const patientMetadata: DirdExportMetadata = {
-      export_version: '1.0.1',
+      export_version: EXPORT_VERSION,
       exported_at: new Date().toISOString(),
       export_type: 'patient',
       patient, sessions
@@ -251,9 +264,7 @@ export async function exportAllData(): Promise<Blob> {
     }
   }
 
-  // Generate ZIP blob
-  const blob = await zip.generateAsync({ type: 'blob' });
-  return blob;
+  return finalize(zip, password);
 }
 
 export function downloadDirdFile(blob: Blob, filename: string) {

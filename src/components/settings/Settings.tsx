@@ -12,13 +12,13 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
-  Lock,
   BookOpen,
   Microscope,
   Bug,
   Trash2,
   Wrench,
-  Activity
+  Activity,
+  Shield
 } from 'lucide-react';
 import { useConfigStore, type ModelSource } from '@/stores/config-store';
 import { apiInferenceService } from '@/lib/ai/api-inference-service';
@@ -34,10 +34,10 @@ import ModelSettings from './ModelSettings';
 import ReportSettings from './ReportSettings';
 import MetricsSettings from './MetricsSettings';
 import { GuidelineSelector } from './GuidelineSelector';
+import { SecuritySettings } from './SecuritySettings';
 import { getCurrentVersion, type VersionInfo } from '@/utils/version';
 import { changeLanguage } from '@/i18n/config';
 import { getAssetPath } from '@/utils/assets';
-import { AdminLogin } from '@/components/admin/AdminLogin';
 import { cleanupInvalidAnnotations } from '@/lib/db/actions';
 import { toast } from 'sonner';
 
@@ -67,7 +67,6 @@ export function Settings() {
   const [hasUpdate, setHasUpdate] = useState(false);
   const [updateCheckMessage, setUpdateCheckMessage] = useState<string | null>(null);
   const [isReloading, setIsReloading] = useState(false);
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [isCleaningAnnotations, setIsCleaningAnnotations] = useState(false);
 
   // Tabs scroll logic
@@ -88,11 +87,6 @@ export function Settings() {
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
   }, []);
-
-  // Check authentication status when modal closes
-  const handleAdminLoginClose = (open: boolean) => {
-    setShowAdminLogin(open);
-  };
 
   const scroll = (direction: 'left' | 'right') => {
     if (tabsListRef.current) {
@@ -281,6 +275,10 @@ export function Settings() {
             <TabsTrigger value="debug" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <Bug className="h-4 w-4 mr-2" />
               Depuración
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
+              <Shield className="h-4 w-4 mr-2" />
+              Seguridad
             </TabsTrigger>
             <TabsTrigger value="about" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <Info className="h-4 w-4 mr-2" />
@@ -1144,6 +1142,13 @@ export function Settings() {
           </Card>
         </TabsContent>
 
+        {/* Security Tab */}
+        <TabsContent value="security">
+          <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
+            <SecuritySettings />
+          </Card>
+        </TabsContent>
+
         {/* About Tab */}
         <TabsContent value="about">
           <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
@@ -1219,28 +1224,10 @@ export function Settings() {
                 </Button>
               </div>
 
-              {/* Admin Access Button */}
-              <div className="pt-4 border-t border-smoke-200 dark:border-coal-700">
-                <Button
-                  onClick={() => setShowAdminLogin(true)}
-                  variant="ghost"
-                  size="sm"
-                  className="w-full gap-2 text-smoke-600 dark:text-dark-textSecondary hover:text-coal-800 dark:hover:text-dark-text"
-                >
-                  <Lock className="w-4 h-4" />
-                  Acceso Administrativo
-                </Button>
-              </div>
             </div>
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Admin Login Modal */}
-      <AdminLogin
-        open={showAdminLogin}
-        onOpenChange={handleAdminLoginClose}
-      />
     </div>
   );
 }

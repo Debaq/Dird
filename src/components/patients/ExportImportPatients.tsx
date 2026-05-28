@@ -14,6 +14,7 @@ import {
 
 import { exportAllData, downloadDirdFile } from '@/lib/export/dird-exporter';
 import { importDirdFile, importDirdType } from '@/lib/export/dird-importer';
+import { useAuthStore } from '@/stores/auth-store';
 import type { ImportResult } from '@/lib/export/dird-importer';
 
 interface ExportImportPatientsProps {
@@ -33,9 +34,14 @@ const ExportImportPatients: React.FC<ExportImportPatientsProps> = ({
 
 
   const handleExportAll = async () => {
+    const exportPw = useAuthStore.getState().exportPassphrase;
+    if (!exportPw) {
+      toast.error('Configura la contraseña de exportación en Ajustes → Seguridad.');
+      return;
+    }
     setExporting(true);
     try {
-      const blob = await exportAllData();
+      const blob = await exportAllData(exportPw);
       downloadDirdFile(blob, `dird_backup_${Date.now()}`);
       toast.success(t('export.fullSuccess'));
     } catch (error) {
@@ -51,7 +57,8 @@ const ExportImportPatients: React.FC<ExportImportPatientsProps> = ({
     setImportResult(null);
 
     try {
-      const type = await importDirdType(file);
+      const importPw = useAuthStore.getState().exportPassphrase ?? undefined;
+      const type = await importDirdType(file, importPw);
 
       if (type === 'session') {
         setImporting(false);
@@ -70,7 +77,7 @@ const ExportImportPatients: React.FC<ExportImportPatientsProps> = ({
         return;
       }
 
-      const result = await importDirdFile(file);
+      const result = await importDirdFile(file, undefined, importPw);
       setImportResult(result);
 
       if (result.success) {

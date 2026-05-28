@@ -10,6 +10,7 @@ import { db } from '@/lib/db/schema';
 import { getAssetPath } from '@/utils/assets';
 import TokenCounter from '@/components/tokens/TokenCounter';
 import { TokenInfoModal } from '@/components/tokens/TokenInfoModal';
+import { EncryptionBadge } from '@/components/layout/EncryptionBadge';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -62,19 +63,22 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
               </div>
             </Link>
 
-            {/* Token Counter */}
-            <div
-              onClick={() => setShowTokenInfo(true)}
-              className="cursor-pointer transition-transform hover:scale-105"
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  setShowTokenInfo(true);
-                }
-              }}
-            >
-              <TokenCounter tokens={tokens} />
+            <div className="flex items-center gap-3">
+              <EncryptionBadge />
+              {/* Token Counter */}
+              <div
+                onClick={() => setShowTokenInfo(true)}
+                className="cursor-pointer transition-transform hover:scale-105"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    setShowTokenInfo(true);
+                  }
+                }}
+              >
+                <TokenCounter tokens={tokens} />
+              </div>
             </div>
           </div>
         </div>

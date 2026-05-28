@@ -19,6 +19,7 @@ import SessionForm from '@/components/patients/SessionForm';
 import UploadProgressModal from './UploadProgressModal';
 import { db, Session } from '@/lib/db/schema';
 import { exportSession, downloadDirdFile } from '@/lib/export/dird-exporter';
+import { useAuthStore } from '@/stores/auth-store';
 import { inferenceService } from '@/lib/ai/inference-service';
 import { useInferenceMetricsStore } from '@/stores/inference-metrics-store';
 import { useImageUploader } from '@/hooks/useImageUploader';
@@ -117,9 +118,14 @@ const SessionView: React.FC = () => {
 
   const handleExportSession = async () => {
     if (!sessionId) return;
+    const exportPw = useAuthStore.getState().exportPassphrase;
+    if (!exportPw) {
+      toast.error('Configura la contraseña de exportación en Ajustes → Seguridad.');
+      return;
+    }
     setIsExporting(true);
     try {
-      const blob = await exportSession(parseInt(sessionId));
+      const blob = await exportSession(parseInt(sessionId), exportPw);
       const sessionName = session?.name?.replace(/ /g, '_') || session?.sessionNumber;
       downloadDirdFile(blob, `dird_export_${patient?.patientId}_session_${sessionName}`);
       toast.success(t('export.sessionSuccess'));

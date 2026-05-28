@@ -1,15 +1,12 @@
 {
   "name": "dird",
   "private": true,
-  "version": "2.1.4",
+  "version": "2.2.0",
   "type": "module",
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "dev": "vite",
-    "dev:tauri": "vite",
     "build": "node scripts/generate-version.cjs && tsc && vite build",
-    "build:tauri": "node scripts/generate-version.cjs && tsc && vite build",
-    "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

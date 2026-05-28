@@ -51,6 +51,9 @@
 - [Guías Clínicas Soportadas](#guías-clínicas-soportadas)
 - [Hoja de Ruta](#hoja-de-ruta)
 - [Referencias Científicas](#referencias-científicas)
+- [🌍 Digital Public Goods Standard Compliance](#-digital-public-goods-standard-compliance)
+  - [Key documents](#key-documents)
+  - [Scientific citation](#scientific-citation)
 - [Autor](#autor)
 
 ---
@@ -113,18 +116,17 @@ La OMS y la ADA recomiendan exámenes de fondo de ojo **al menos cada 1-2 años*
 
 DIRD+ es una plataforma de doble distribución que ejecuta modelos de visión artificial para detección de retinopatía diabética **íntegramente en el dispositivo del usuario** mediante ONNX Runtime (WebAssembly):
 
-- **Aplicación de escritorio** (Linux/Windows/macOS, empaquetada con Tauri v2) — distribución principal, con historial persistente, base de datos local y operación 100% offline tras la instalación.
-- **Demo web** (misma base de código corriendo en el navegador) — sin instalación, útil para pruebas, docencia y evaluación.
+- **Aplicación de escritorio** (Linux/Windows/macOS, empaquetada con Tauri v2) — distribución única, con historial persistente cifrado, base de datos local y operación 100% offline tras la instalación.
 
-Las imágenes de fondo de ojo se procesan localmente en ambos modos — **los datos del paciente nunca abandonan el dispositivo**.
+Las imágenes de fondo de ojo se procesan localmente — **los datos del paciente nunca abandonan el dispositivo**.
 
 ### Propuesta de Valor
 
 | Aspecto | Qué ofrece DIRD+ | Por qué importa |
 |---------|-------------------|-----------------|
-| **Privacidad total** | Inferencia IA en el dispositivo (escritorio o navegador). Cero transmisión de datos a servidores externos | Cumplimiento con Ley 21.096 y regulaciones de datos de salud sin esfuerzo adicional |
+| **Privacidad total** | Inferencia IA en el dispositivo de escritorio. Cero transmisión de datos a servidores externos | Cumplimiento con Ley 21.096 y regulaciones de datos de salud sin esfuerzo adicional |
 | **Costo cero de operación** | Sin licencias, sin pago por tamizaje, sin hardware propietario | Viable para CESFAM rurales con presupuesto limitado |
-| **Funciona offline** | Modelos descargados una vez, cacheados localmente. Historial y pacientes en IndexedDB (persistente tanto en app desktop como en navegador) | Operativo en zonas sin conectividad estable |
+| **Funciona offline** | Modelos descargados una vez, cacheados localmente. Historial y pacientes en SQLite cifrado | Operativo en zonas sin conectividad estable |
 | **Guías clínicas adaptables** | Sistema pluggable: ICDR 2024 (internacional), MINSAL Chile 2017. Agregar nuevas guías sin modificar código | Adaptable a protocolos locales GES sin depender de proveedor extranjero |
 | **Código abierto** | Código fuente completo auditable. Algoritmos, umbrales y criterios verificables | Transparencia para reguladores, investigadores y clínicos |
 | **Portabilidad** | Formato `.dird` (ZIP) para exportar/importar pacientes completos | Interoperabilidad entre instalaciones sin vendor lock-in |
@@ -134,7 +136,7 @@ Las imágenes de fondo de ojo se procesan localmente en ambos modos — **los da
 ```
 1. CAPTURA             2. CARGA               3. ANÁLISIS IA          4. REVISIÓN
 Retinógrafo         →  Subir imágenes      →  Detección automática →  Canvas interactivo
-(cualquier cámara)     a la app/navegador      de lesiones (ONNX)     multicapa con
+(cualquier cámara)     a la app desktop        de lesiones (ONNX)     multicapa con
                        OD / OI                 + Segmentación         herramientas de
                                                                       anotación
 
@@ -144,7 +146,7 @@ guía clínica           con conclusiones       portable entre
 (ICDR/MINSAL)          y recomendaciones      instalaciones
 ```
 
-**Todo ocurre en el dispositivo — app de escritorio o navegador. Sin servidor. Sin internet (después de la primera carga).**
+**Todo ocurre en el dispositivo — app de escritorio. Sin servidor. Sin internet (después de la primera carga).**
 
 ### Motor de Guías Clínicas Pluggable — Funcionalidad Única
 
@@ -239,7 +241,7 @@ El LLM externo es un **servicio opcional de redacción**. DIRD+ funciona complet
 
 | Característica | DART (TeleDx, Chile) | IDx-DR (Digital Diagnostics) | Google ARDA | EyeArt (Eyenuk) | Phelcom Eyer (Brasil) | **DIRD+** |
 |---|---|---|---|---|---|---|
-| **Procesamiento** | Cloud | Cloud | Cloud | Cloud | Cloud | **Edge (desktop/navegador)** |
+| **Procesamiento** | Cloud | Cloud | Cloud | Cloud | Cloud | **Edge (desktop)** |
 | **Datos salen del dispositivo** | Sí (cloud TeleDx) | Sí (USA) | Sí (Google Cloud) | Sí (USA) | Sí (Brasil) | **No** |
 | **Funciona offline** | No | No | No | No | No | **Sí** |
 | **Hardware requerido** | Retinógrafo + internet | Topcon NW400 (~USD 15-25K) | Cámara de mesa (~USD 5-15K) | Cámara compatible (~USD 5-15K) | Smartphone + adaptador (~USD 3-5K) | **Cualquier cámara existente** |
@@ -253,7 +255,7 @@ El LLM externo es un **servicio opcional de redacción**. DIRD+ funciona complet
 | **Soberanía de datos** | Parcial (cloud en Chile) | No (USA) | No (Google) | No (USA) | No (Brasil) | **Sí (100% local)** |
 | **Despliegue en Chile** | 170 establecimientos, >350K exámenes | No | No | No | No | En desarrollo |
 
-**No existe otra plataforma que combine edge-computing (desktop y navegador) + funcionamiento offline + código abierto + soporte multi-guía clínica para tamizaje de RD.**
+**No existe otra plataforma que combine edge-computing desktop + funcionamiento offline + código abierto + soporte multi-guía clínica para tamizaje de RD.**
 
 ### DART: El Referente Chileno y Cómo DIRD+ lo Complementa
 
@@ -597,12 +599,12 @@ src/
 
 ### Análisis con IA en el Dispositivo (Desktop o Navegador)
 - **Modelos duales**: Detección (bounding boxes) + Segmentación (máscaras de píxeles)
-- **Ejecución local**: ONNX Runtime (WebAssembly) con SIMD y multi-thread, idéntico en desktop Tauri y en navegador
+- **Ejecución local**: ONNX Runtime (WebAssembly) con SIMD y multi-thread en desktop Tauri
 - **Descarga progresiva**: Modelos desde GitHub `Debaq/dird_models`, cacheados localmente
 - **Sensibilidad configurable**: Umbral de confianza ajustable por modelo
 - **Optimización por CPU**: Perfiles para Intel, AMD y ARM
 - **Procesamiento batch**: Todas las imágenes de una sesión en una ejecución
-- **Historial de rendimiento persistente**: Métricas de tiempo por inferencia (preprocess/inference/postprocess/NMS/total) guardadas localmente, exportables a JSON. Persisten entre sesiones tanto en desktop como en navegador
+- **Historial de rendimiento persistente**: Métricas de tiempo por inferencia (preprocess/inference/postprocess/NMS/total) guardadas localmente, exportables a JSON. Persisten entre sesiones
 
 ### Canvas Interactivo de Anotación
 - **5 capas**: Imagen original, detecciones IA, segmentaciones IA, anotaciones manuales, mediciones
@@ -754,7 +756,7 @@ El sistema de guías es extensible. Nuevas guías se agregan como archivos JSON 
 ### Funcionalidades Técnicas
 - [ ] Detección completa de IRMA y arrosariamiento venoso (criterios Regla 4-2-1)
 - [ ] Integración con cámaras retinales vía protocolo DICOM
-- [x] Aplicación de escritorio con Tauri v2 — implementada (Linux/Windows/macOS); demo web se mantiene en paralelo desde la misma base de código
+- [x] Aplicación de escritorio con Tauri v2 — implementada (Linux/Windows/macOS) como distribución única
 - [ ] Aprendizaje federado para mejora de modelos preservando privacidad
 
 ### Regulatorio
@@ -766,6 +768,42 @@ El sistema de guías es extensible. Nuevas guías se agregan como archivos JSON 
 ## Referencias Científicas
 
 Las referencias completas que sustentan el contexto epidemiológico, clínico y técnico de este proyecto están disponibles en [REFERENCES.md](REFERENCES.md).
+
+---
+
+## 🌍 Digital Public Goods Standard Compliance
+
+DIRD+ aligns with the [Digital Public Goods Standard](https://digitalpublicgoods.net/standard) maintained by the Digital Public Goods Alliance (DPGA). Below is a mapping of each indicator to the corresponding evidence in this repository.
+
+| # | Indicator | Status | Evidence |
+|---|-----------|:---:|----------|
+| 1 | **SDG Relevance** | ✅ | SDG 3 (Health), SDG 9 (Innovation), SDG 10 (Reduced Inequalities). See [project website](https://tmeduca.org/dird/). |
+| 2 | **Open Licensing** | ✅ | [GNU AGPL-3.0](LICENSE) (OSI-approved). Reference AI models published under AGPL-3.0 in [dird_models](https://github.com/Debaq/dird_models). |
+| 3 | **Clear Ownership** | ✅ | Owned by Nicolás Baier Quezada, Universidad Austral de Chile (UACh). See [project website](https://tmeduca.org/dird/) and Zenodo deposit ([DOI 10.5281/zenodo.19687226](https://doi.org/10.5281/zenodo.19687226)). |
+| 4 | **Platform Independence** | ✅ | Built on fully open stack (Tauri, React, ONNX Runtime, SQLite, Rust). Runs offline on Windows, Linux, and standards-compliant browsers. No proprietary services required. |
+| 5 | **Documentation** | ✅ | This README, [project website](https://tmeduca.org/dird/), [docs/](docs/), [preprint](https://doi.org/10.64898/2026.04.26.26351745), [validation report](https://tmeduca.org/dird/INFORME_COMPLETO_APTOS.md). |
+| 6 | **Non-PII Data Extraction** | ✅ | All non-PII data (models, configurations, derived metrics) uses open standards: ONNX, JSON, SQLite, ZIP. See [docs/dird-format.md](docs/dird-format.md) and [docs/model-interface.md](docs/model-interface.md). |
+| 7 | **Privacy & Applicable Laws** | ✅ | See [PRIVACY.md](PRIVACY.md). Compatible by design with GDPR, HIPAA, Chilean Law 19.628 and 21.719. |
+| 8 | **Open Standards & Best Practices** | ✅ | ONNX, ISO 32000 (PDF), ISO/IEC 19592 (SQLite), JSON (RFC 8259), W3C web standards. SemVer 2.0.0, FAIR principles, Privacy by Design (Cavoukian). |
+| 9A | **Data Privacy & Security** | ✅ | Local-only processing. AES-256 at-rest encryption (v2.0+) with Argon2id key derivation. Dual-password model. See [PRIVACY.md](PRIVACY.md) and [SECURITY.md](SECURITY.md). |
+| 9B | **Inappropriate & Illegal Content** | ✅ N/A | DIRD+ does not collect, store, or distribute user-generated content. It is a single-operator clinical tool. |
+| 9C | **Protection from Harassment** | ✅ N/A | DIRD+ does not facilitate inter-user interactions within the application. Repository community follows GitHub Community Guidelines. |
+
+### Key documents
+
+- 📄 [PRIVACY.md](PRIVACY.md) — Privacy policy and data handling
+- 🔒 [SECURITY.md](SECURITY.md) — Vulnerability disclosure policy
+- 🗺️ [ROADMAP.md](ROADMAP.md) — Public development roadmap
+- 📦 [docs/dird-format.md](docs/dird-format.md) — `.dird` file format specification
+- 🧠 [docs/model-interface.md](docs/model-interface.md) — ONNX model contract for plug-in models
+
+### Scientific citation
+
+If you use DIRD+ in research, please cite:
+
+- **Application**: Baier Quezada, N. (2026). *DIRD+ — Diabetic Imaging Retinopathy Detector*. Zenodo. https://doi.org/10.5281/zenodo.19687226
+- **Reference model**: Baier Quezada, N. (2026). *DIRDv2r0 — Diabetic retinopathy detection model*. Zenodo. https://doi.org/10.5281/zenodo.19685466
+- **Preprint**: Baier Quezada, N. (2026). External validation of DIRD+ on APTOS 2019. medRxiv. https://doi.org/10.64898/2026.04.26.26351745
 
 ---
 

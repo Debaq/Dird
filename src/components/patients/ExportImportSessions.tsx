@@ -17,6 +17,7 @@ import { db } from '@/lib/db/schema';
 import { useLiveQuery } from 'dexie-react-hooks';
 import {  exportPatient, downloadDirdFile } from '@/lib/export/dird-exporter';
 import { importDirdFile, importDirdType } from '@/lib/export/dird-importer';
+import { useAuthStore } from '@/stores/auth-store';
 import type { ImportResult } from '@/lib/export/dird-importer';
 
 interface ExportImportSessionsProps {
@@ -43,10 +44,15 @@ const ExportImportSessions: React.FC<ExportImportSessionsProps> = ({
 
   const handleExportPatient = async () => {
     if (!patient) return;
+    const exportPw = useAuthStore.getState().exportPassphrase;
+    if (!exportPw) {
+      toast.error('Configura la contraseña de exportación en Ajustes → Seguridad.');
+      return;
+    }
     setIsExporting(true);
 
     try {
-      const blob = await exportPatient(patientId!);
+      const blob = await exportPatient(patientId!, exportPw);
       downloadDirdFile(blob, `dird_export_patient_${patient.patientId}`);
       toast.success(t('export.patientSuccess'));
     } catch (error) {
@@ -62,7 +68,8 @@ const ExportImportSessions: React.FC<ExportImportSessionsProps> = ({
     setImportResult(null);
 
     try {
-      const type = await importDirdType(file);
+      const importPw = useAuthStore.getState().exportPassphrase ?? undefined;
+      const type = await importDirdType(file, importPw);
 
       if (type === 'full') {
         setImporting(false);
@@ -80,7 +87,7 @@ const ExportImportSessions: React.FC<ExportImportSessionsProps> = ({
         return;
       }
 
-      const result = await importDirdFile(file, patientId);
+      const result = await importDirdFile(file, patientId, importPw);
       setImportResult(result);
 
       if (result.success) {

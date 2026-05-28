@@ -2,6 +2,23 @@ import JSZip from 'jszip';
 import { db } from '@/lib/db/schema';
 import type { Patient, Detection, Segmentation, Measurement } from '@/lib/db/schema';
 import type { DirdExportMetadata } from './dird-exporter';
+import { isEncryptedContainer, decryptContainer, DirdContainerError } from './dird-container';
+
+/**
+ * Lee un archivo `.dird`. Si tiene magic `DIRD` (contenedor v2.0 cifrado), pide
+ * `password`. Si es ZIP plano (v1.0.1 legacy) lo abre directo.
+ */
+async function readDirdAsZip(file: File, password?: string): Promise<JSZip> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (isEncryptedContainer(bytes)) {
+    if (!password) {
+      throw new DirdContainerError('Archivo cifrado: se requiere contraseña.');
+    }
+    const { zipBytes } = await decryptContainer(bytes, password);
+    return JSZip.loadAsync(zipBytes);
+  }
+  return JSZip.loadAsync(bytes);
+}
 
 export interface ImportResult {
   success: boolean;
@@ -913,10 +930,13 @@ async function importFullZip(zip: JSZip, _metadata: DirdExportMetadata): Promise
   };
 }
 
-export async function importDirdFile(file: File, targetPatientId?: number): Promise<ImportResult> {
+export async function importDirdFile(
+  file: File,
+  targetPatientId?: number,
+  password?: string,
+): Promise<ImportResult> {
   try {
-    // Load ZIP file
-    const zip = await JSZip.loadAsync(file);
+    const zip = await readDirdAsZip(file, password);
 
     // Read metadata
     const metadataFile = zip.file('metadata.json');
@@ -960,10 +980,9 @@ export async function importDirdFile(file: File, targetPatientId?: number): Prom
   }
 }
 
-export async function importDirdType(file: File): Promise<DirdExportMetadata['export_type'] | null > {
+export async function importDirdType(file: File, password?: string): Promise<DirdExportMetadata['export_type'] | null > {
   try {
-    // Load ZIP file
-    const zip = await JSZip.loadAsync(file);
+    const zip = await readDirdAsZip(file, password);
 
     // Read metadata
     const metadataFile = zip.file('metadata.json');

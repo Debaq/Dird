@@ -19,13 +19,10 @@ import {type LoadingProgress } from '@/lib/db/demoPatient';
 import { DemoLoadingScreen } from '@/components/demo/DemoLoadingScreen';
 import { useTokenStore } from '@/stores/token-store';
 import { fetchTokens } from '@/lib/api/token-service';
-import AdminDashboard from '@/pages/AdminDashboard';
-import { ProtectedRoute } from '@/components/admin/ProtectedRoute';
-import { useMessagePolling } from '@/hooks/useMessagePolling';
 import { classManager } from '@/lib/classes/class-manager';
 import { waitForOpenCV } from '@/lib/ai/optic-disc-refiner';
 import { DoomEasterEgg } from '@/components/ui/DoomEasterEgg';
-import { WebSecurityWarning } from '@/components/WebSecurityWarning';
+import { AppGate } from '@/components/auth/AppGate';
 
 function App() {
   const { t } = useTranslation();
@@ -40,12 +37,6 @@ function App() {
     message: t('demo.loading.steps.init'),
   });
   const setTokens = useTokenStore((state) => state.setTokens);
-
-  // Message polling hook for admin broadcast messages
-  const { ConfirmDialogComponent } = useMessagePolling({
-    intervalMs: 120000, // 2 minutes
-    enabled: !isInitializing, // Only start polling after initialization
-  });
 
   // Inicializar paciente demo y cargar tokens al inicio
   useEffect(() => {
@@ -136,8 +127,8 @@ function App() {
         closeButton
         duration={4000}
       />
+      <AppGate>
       <DoomEasterEgg />
-      <WebSecurityWarning />
       <LanguageSync />
       <DocumentTitleSync />
       <Routes>
@@ -234,21 +225,9 @@ function App() {
           }
         />
 
-        {/* Admin Dashboard */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-
         <Route path="*" element={<Navigate to="/patients" replace />} />
       </Routes>
-
-      {/* Message Polling Confirm Dialog */}
-      {ConfirmDialogComponent}
+      </AppGate>
     </BrowserRouter>
   );
 }
