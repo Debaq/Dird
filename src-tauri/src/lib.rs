@@ -1,5 +1,6 @@
 mod crypto;
 mod db;
+mod llm;
 mod models;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -13,6 +14,9 @@ pub fn run() {
             .build(),
         )?;
       }
+      // Cargar perezosamente el LLM activo (si el usuario seleccionó uno).
+      let handle = app.handle().clone();
+      std::thread::spawn(move || llm::autoload(&handle));
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![
@@ -35,6 +39,14 @@ pub fn run() {
       models::models_get_active,
       models::models_get_files,
       models::models_read_onnx_bytes,
+      llm::llm_catalog,
+      llm::llm_installed,
+      llm::llm_uninstall,
+      llm::llm_download,
+      llm::llm_load,
+      llm::llm_unload,
+      llm::llm_active_id,
+      llm::llm_generate,
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

@@ -9,6 +9,7 @@ import { Slider } from '@/components/ui/slider';
 import { Download, Trash2, RefreshCw, CheckCircle, Info, Settings2 } from 'lucide-react';
 import { modelDownloader, formatBytes, type AvailableModel } from '@/lib/ai/model-downloader';
 import { CustomModelsSection } from './CustomModelsSection';
+import { LocalLLMSection } from './LocalLLMSection';
 import { inferenceService } from '@/lib/ai/inference-service';
 import { useConfigStore } from '@/stores/config-store';
 import type { ModelMetadata } from '@/lib/ai/model-metadata';
@@ -498,6 +499,9 @@ const ModelSettings: React.FC = () => {
 
       {/* Custom Models (DPG: model-agnostic platform) */}
       <CustomModelsSection />
+
+      {/* Local LLM (DPG: local-first, no remote inference) */}
+      <LocalLLMSection />
 
       {/* Model Info Modal */}
       <ModelInfoModal

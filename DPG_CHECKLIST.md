@@ -37,6 +37,18 @@ This document captures the state of every DPG Standard indicator and every commi
 | No password-recovery mechanism (Signal/Bitwarden posture) | ✅ | Wizard step 4 acknowledgement; documented in `PRIVACY.md` §5.2 |
 | Clean migration v1.0.1 → v2.0 | ✅ | `src/lib/db-sql/migrator.ts` + `MigrationWizard` (backup `.dird` before migration; idempotent via `meta.migrated_from`) |
 
+### 2.2bis Local LLM on-demand (no remote inference)
+
+| Commitment | Status | Where |
+|---|:---:|---|
+| Embedded llama.cpp backend (in-process inference) | ✅ | `src-tauri/src/llm.rs` via crate `llama-cpp-2` |
+| Curated catalog of small open-weight models (9 entries: SmolLM2/TinyLlama/Llama-3.2/Qwen2.5/Gemma-2/Phi-3.5; 230 MB–2.4 GB Q4_K_M) | ✅ | `CATALOG` const in `llm.rs` |
+| User-driven download (no bundled weights) with resumable progress events | ✅ | `llm_download` Tauri command + `llm:download_progress` event |
+| Settings → AI Models → "Local assistant" UI | ✅ | `src/components/settings/LocalLLMSection.tsx` |
+| Chat templating per model family (TinyLlama / ChatML / Llama-3 / Phi-3 / Gemma) | ✅ | `render_prompt` in `llm.rs` |
+| Removal of remote LLM service (`token-service` → local implementation) | ✅ | `src/lib/api/token-service.ts` rewritten to call `llmGenerate` |
+| 100% local inference (no PII transmitted post-download) | ✅ | Documented in `PRIVACY.md` §6 |
+
 ### 2.2 External ONNX model loading (model-agnostic platform)
 
 | Commitment | Status | Where |
@@ -66,7 +78,7 @@ These were not part of the pre-submission commitments and are openly disclosed i
 | Item | Target | Tracker |
 |---|---|---|
 | Runtime swap of Dexie → SQLite (requires real-data testing) | v2.2.x | F0.8b in `roadmap_dpg.md` |
-| Replace remote LLM token service with local LLM (Ollama/llama.cpp) | v2.3 | F1.x |
+| ~~Replace remote LLM token service with local LLM~~ | ✅ v2.2.0 | — completed in this release |
 | E2E test suite (Playwright) covering wizard, login, encrypted export/import, model install, migration | v2.2.x | F0.12 — manual checklist below until automated |
 
 ## 4. Pre-submission manual QA checklist
@@ -87,6 +99,8 @@ Run before tagging `v2.2.0`:
   - [ ] Import with wrong password → graceful error
   - [ ] Settings → AI Models → Add Model with a valid ONNX + card → installs and activates
   - [ ] Install with invalid card → errors enumerated, no FS side-effects
+  - [ ] Settings → AI Models → Local assistant → download a small model (SmolLM2 360M, ~230 MB) → activate → "Probar" returns text
+  - [ ] `processConclusion` (Report generator) routes through local LLM when one is active
   - [ ] If running upgrade scenario with v1.0.1 IndexedDB data → MigrationWizard appears, backup downloaded, migration completes
 - [ ] `python3 scripts/validate_model_card.py docs/example-card.json` returns 0 (provide an example card)
 - [ ] `markdown-link-check` on README, PRIVACY, SECURITY, ROADMAP, docs/dird-format.md, docs/model-interface.md

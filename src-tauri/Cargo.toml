@@ -30,6 +30,11 @@ zeroize = { version = "1.8", features = ["derive"] }
 thiserror = "1.0"
 rusqlite = { version = "0.31", features = ["bundled-sqlcipher-vendored-openssl", "blob"] }
 parking_lot = "0.12"
+llama-cpp-2 = "0.1.122"
+tokio = { version = "1.40", features = ["rt-multi-thread", "macros", "sync", "fs", "io-util"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream", "json"] }
+futures-util = "0.3"
+sha2 = "0.10"
 
 [dev-dependencies]
 hex = "0.4"

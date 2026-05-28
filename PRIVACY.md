@@ -89,6 +89,7 @@ DIRD+ does not transmit data over the network as part of its core functionality.
 
 - **Manual update checks** (user-initiated): fetches the latest release information from GitHub Releases. No patient data is sent.
 - **Reference model downloads** (user-initiated, from Settings → AI Models): fetches the official DIRDvN models from the public `Debaq/dird_models` repository on GitHub. No patient data is sent. Third-party models loaded via Settings → AI Models → "Add Model" are loaded entirely from the user's filesystem and never transmitted.
+- **Local LLM downloads** (user-initiated, from Settings → AI Models → Local assistant): fetches GGUF weights of small language models from HuggingFace into the application's local storage. Once downloaded, all language-model inference runs **in-process via llama.cpp** — no clinical text ever leaves the device. No tokens, accounts or telemetry are sent.
 
 ## 7. Patient rights and operator responsibilities
 

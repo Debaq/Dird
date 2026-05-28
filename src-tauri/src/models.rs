@@ -218,14 +218,15 @@ fn path_to_string(p: &Path) -> String {
     p.to_string_lossy().to_string()
 }
 
-fn chrono_now() -> String {
-    // Sin chrono crate; usamos `SystemTime` + RFC3339 manual mínimo.
+fn chrono_now() -> String { epoch_iso_now() }
+
+/// Devuelve la hora actual UTC como ISO-8601 (sin dependencia chrono).
+pub fn epoch_iso_now() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
     let secs = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0);
-    // YYYY-MM-DDTHH:MM:SSZ aproximado a partir de epoch (sin DST).
     let (y, mo, d, h, mi, s) = epoch_to_ymdhms(secs as i64);
     format!("{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z", y, mo, d, h, mi, s)
 }
