@@ -77,7 +77,7 @@ These were not part of the pre-submission commitments and are openly disclosed i
 
 | Item | Target | Tracker |
 |---|---|---|
-| Runtime swap of Dexie → SQLite (requires real-data testing) | v2.2.x | F0.8b in `roadmap_dpg.md` |
+| ~~Runtime swap of Dexie → SQLite~~ | ✅ v2.2.0 | — completed in F0.8b (commit `ae0d26f4`) |
 | ~~Replace remote LLM token service with local LLM~~ | ✅ v2.2.0 | — completed in this release |
 | E2E test suite (Playwright) covering wizard, login, encrypted export/import, model install, migration | v2.2.x | F0.12 — manual checklist below until automated |
 
