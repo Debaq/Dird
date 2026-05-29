@@ -21,6 +21,7 @@ import {
   imageToRowWithBlobs, reportToRowWithBlob,
 } from './mappers';
 import { dbExecute, P, type SqlParam } from './client';
+import { bumpDbVersion } from './version-store';
 
 class ImagesShim extends TableShim<Image> {
   constructor() {
@@ -57,6 +58,7 @@ class ImagesShim extends TableShim<Image> {
       `INSERT INTO images (${cols.join(',')}) VALUES (${placeholders})`,
       params,
     );
+    bumpDbVersion();
     return r.last_insert_id;
   }
 
@@ -67,6 +69,7 @@ class ImagesShim extends TableShim<Image> {
     const params: SqlParam[] = cols.map((c) => row[c]);
     params.push(P.int(id));
     await dbExecute(`UPDATE images SET ${sets} WHERE id = ?`, params);
+    bumpDbVersion();
   }
 }
 
@@ -84,6 +87,7 @@ class ReportsShim extends TableShim<Report> {
       `INSERT INTO reports (${cols.join(',')}) VALUES (${placeholders})`,
       params,
     );
+    bumpDbVersion();
     return r.last_insert_id;
   }
 
@@ -110,7 +114,43 @@ class ReportsShim extends TableShim<Report> {
     const params: SqlParam[] = cols.map((c) => row[c]);
     params.push(P.int(id));
     await dbExecute(`UPDATE reports SET ${sets} WHERE id = ?`, params);
+    bumpDbVersion();
   }
+}
+
+/**
+ * Wrapper Dexie-compatible para transacciones. SQLite ya es secuencial dentro
+ * de la única conexión global, así que envolvemos en BEGIN/COMMIT con rollback
+ * automático ante error. Firma flexible (Dexie acepta varios shapes):
+ *
+ *   db.transaction('rw', table, fn)
+ *   db.transaction('rw', [t1, t2, …], fn)
+ *   db.transaction('rw', t1, t2, fn)   (variádica)
+ */
+async function transaction(mode: 'r' | 'rw', ...rest: unknown[]): Promise<void> {
+  const fn = rest[rest.length - 1] as () => Promise<unknown>;
+  if (typeof fn !== 'function') {
+    throw new Error('transaction: el último argumento debe ser la función');
+  }
+  void mode; // SQLite no distingue rw/r para una sola conexión
+  await dbExecute('BEGIN', []);
+  try {
+    await fn();
+    await dbExecute('COMMIT', []);
+    bumpDbVersion();
+  } catch (e) {
+    try { await dbExecute('ROLLBACK', []); } catch { /* noop */ }
+    throw e;
+  }
+}
+
+/**
+ * Stub para `db.on('event', cb)` estilo Dexie. SQLCipher no emite eventos
+ * en runtime; los componentes que usaban `db.on('blocked', …)` quedan inertes
+ * (sin efecto) bajo SQLite — no es necesario porque no hay bloqueos de upgrade.
+ */
+function on(_event: string, _cb: (...args: unknown[]) => void): void {
+  /* noop — SQLite no usa los eventos de Dexie. */
 }
 
 export const sqlDb = {
@@ -123,6 +163,8 @@ export const sqlDb = {
   measurements: new TableShim<Measurement>('measurements', measurementsMapper),
   imageClassifications: new TableShim<ImageClassification>('image_classifications', imageClassificationsMapper),
   pendingContributions: new TableShim<PendingContribution>('pending_contributions', pendingContributionsMapper),
+  transaction,
+  on,
 };
 
 export type SqlDb = typeof sqlDb;

@@ -18,6 +18,12 @@ import {
   type SqlParam,
 } from './client';
 import { camelToSnake } from './mapper';
+import { bumpDbVersion } from './version-store';
+
+interface WhereBuilder<T> {
+  equals: (value: unknown) => WhereExecutor<T>;
+  anyOf: (values: unknown[]) => WhereExecutor<T>;
+}
 
 export interface TableMapper<T> {
   /** snake_case → camelCase + parseo de Date/JSON/blob. */
@@ -52,6 +58,12 @@ interface WhereExecutor<T> {
   delete(): Promise<number>;
   first(): Promise<T | undefined>;
   count(): Promise<number>;
+  /** Filtro adicional en memoria estilo Dexie `.and(predicate)`. */
+  and(predicate: (row: T) => boolean): WhereExecutor<T>;
+  /** Orden descendente al traer resultados. */
+  reverse(): WhereExecutor<T>;
+  /** Ordena en memoria por nombre de campo (camelCase). */
+  sortBy(field: keyof T & string): Promise<T[]>;
 }
 
 export class TableShim<T extends { id?: number }> {
@@ -91,6 +103,7 @@ export class TableShim<T extends { id?: number }> {
       `INSERT INTO ${this.table} (${colNames.join(',')}) VALUES (${placeholders})`,
       params,
     );
+    bumpDbVersion();
     return r.last_insert_id;
   }
 
@@ -107,6 +120,7 @@ export class TableShim<T extends { id?: number }> {
 
   async delete(id: number): Promise<void> {
     await dbExecute(`DELETE FROM ${this.table} WHERE id = ?`, [P.int(id)]);
+    bumpDbVersion();
   }
 
   async update(id: number, partial: Partial<T>): Promise<void> {
@@ -117,6 +131,7 @@ export class TableShim<T extends { id?: number }> {
     const params = cols.map((c) => row[c]);
     params.push(P.int(id));
     await dbExecute(`UPDATE ${this.table} SET ${sets} WHERE id = ?`, params);
+    bumpDbVersion();
   }
 
   async bulkAdd(objs: T[]): Promise<number[]> {
@@ -131,49 +146,119 @@ export class TableShim<T extends { id?: number }> {
     return ids;
   }
 
-  where(field: string): {
-    equals: (value: unknown) => WhereExecutor<T>;
-    anyOf: (values: unknown[]) => WhereExecutor<T>;
-  } {
-    const buildExecutor = (op: 'equals' | 'anyOf', values: unknown[]): WhereExecutor<T> => {
-      const w = buildWhere(field, op, values);
-      return {
-        toArray: async () => {
-          const rows = await dbQueryAll<Record<string, unknown>>(
-            `SELECT * FROM ${this.table} WHERE ${w.sql}`,
-            w.params,
-          );
-          return rows.map((r) => this.mapper.rowToObject(r));
-        },
-        delete: async () => {
-          const r = await dbExecute(`DELETE FROM ${this.table} WHERE ${w.sql}`, w.params);
+  /**
+   * `where(field)` clásico Dexie devuelve un builder con `.equals()` y `.anyOf()`.
+   * `where({a: v1, b: v2})` (object form) devuelve un executor con `a = v1 AND b = v2`.
+   */
+  where(field: string): WhereBuilder<T>;
+  where(filter: Record<string, unknown>): WhereExecutor<T>;
+  where(field: string | Record<string, unknown>): WhereBuilder<T> | WhereExecutor<T> {
+    if (typeof field === 'object' && field !== null) {
+      const parts: string[] = [];
+      const params: SqlParam[] = [];
+      for (const [k, v] of Object.entries(field)) {
+        parts.push(`${camelToSnake(k)} = ?`);
+        params.push(toParam(v));
+      }
+      return this._executor({ sql: parts.join(' AND '), params });
+    }
+    return {
+      equals: (v: unknown) => this._executor(buildWhere(field, 'equals', [v])),
+      anyOf: (vs: unknown[]) => this._executor(buildWhere(field, 'anyOf', vs)),
+    };
+  }
+
+  private _executor(
+    w: { sql: string; params: SqlParam[] },
+    andPreds: Array<(row: T) => boolean> = [],
+    descending = false,
+  ): WhereExecutor<T> {
+    const self = this;
+    const applyFilter = (rows: T[]): T[] => {
+      if (andPreds.length === 0) return rows;
+      return rows.filter((r) => andPreds.every((p) => p(r)));
+    };
+    const orderClause = descending ? ' ORDER BY id DESC' : '';
+    return {
+      async toArray() {
+        const rows = await dbQueryAll<Record<string, unknown>>(
+          `SELECT * FROM ${self.table} WHERE ${w.sql}${orderClause}`,
+          w.params,
+        );
+        return applyFilter(rows.map((r) => self.mapper.rowToObject(r)));
+      },
+      async delete() {
+        if (andPreds.length === 0) {
+          const r = await dbExecute(`DELETE FROM ${self.table} WHERE ${w.sql}`, w.params);
+          bumpDbVersion();
           return r.rows_affected;
-        },
-        first: async () => {
+        }
+        // Con predicado: trae, filtra, borra por id.
+        const rows = await dbQueryAll<Record<string, unknown>>(
+          `SELECT * FROM ${self.table} WHERE ${w.sql}`, w.params,
+        );
+        const filtered = applyFilter(rows.map((r) => self.mapper.rowToObject(r)));
+        let n = 0;
+        for (const obj of filtered) {
+          const id = (obj as { id?: number }).id;
+          if (id !== undefined) {
+            await dbExecute(`DELETE FROM ${self.table} WHERE id = ?`, [P.int(id)]);
+            n++;
+          }
+        }
+        if (n > 0) bumpDbVersion();
+        return n;
+      },
+      async first() {
+        if (andPreds.length === 0) {
           const rows = await dbQueryAll<Record<string, unknown>>(
-            `SELECT * FROM ${this.table} WHERE ${w.sql} LIMIT 1`,
+            `SELECT * FROM ${self.table} WHERE ${w.sql}${orderClause} LIMIT 1`,
             w.params,
           );
-          return rows.length ? this.mapper.rowToObject(rows[0]) : undefined;
-        },
-        count: async () => {
+          return rows.length ? self.mapper.rowToObject(rows[0]) : undefined;
+        }
+        const rows = await this.toArray();
+        return rows[0];
+      },
+      async count() {
+        if (andPreds.length === 0) {
           const r = await dbQuery(
-            `SELECT count(*) AS c FROM ${this.table} WHERE ${w.sql}`,
+            `SELECT count(*) AS c FROM ${self.table} WHERE ${w.sql}`,
             w.params,
           );
           const cell = r.rows[0]?.[0];
           return cell && cell.t === 'int' ? cell.v : 0;
-        },
-      };
-    };
-
-    return {
-      equals: (v) => buildExecutor('equals', [v]),
-      anyOf: (vs) => buildExecutor('anyOf', vs),
+        }
+        return (await this.toArray()).length;
+      },
+      and(predicate: (row: T) => boolean) {
+        return self._executor(w, [...andPreds, predicate], descending);
+      },
+      reverse() {
+        return self._executor(w, andPreds, true);
+      },
+      async sortBy(field: keyof T & string) {
+        const rows = await this.toArray();
+        return [...rows].sort((a, b) => {
+          const av = (a as Record<string, unknown>)[field];
+          const bv = (b as Record<string, unknown>)[field];
+          if (av == null && bv == null) return 0;
+          if (av == null) return -1;
+          if (bv == null) return 1;
+          if (av < bv) return -1;
+          if (av > bv) return 1;
+          return 0;
+        });
+      },
     };
   }
 
-  orderBy(field: string): { toArray: () => Promise<T[]>; reverse: () => { toArray: () => Promise<T[]> } } {
+  orderBy(field: string): {
+    toArray: () => Promise<T[]>;
+    reverse: () => { toArray: () => Promise<T[]> };
+    first: () => Promise<T | undefined>;
+    last: () => Promise<T | undefined>;
+  } {
     const col = camelToSnake(field);
     const run = async (asc: boolean) => {
       const rows = await dbQueryAll<Record<string, unknown>>(
@@ -184,6 +269,14 @@ export class TableShim<T extends { id?: number }> {
     return {
       toArray: () => run(true),
       reverse: () => ({ toArray: () => run(false) }),
+      first: async () => {
+        const rs = await run(true);
+        return rs[0];
+      },
+      last: async () => {
+        const rs = await run(false);
+        return rs[0];
+      },
     };
   }
 

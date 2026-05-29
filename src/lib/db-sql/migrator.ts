@@ -5,7 +5,7 @@
 // si la tabla SQLite ya contiene los datos (chequea `meta.migrated_from`) no
 // re-ejecuta. Marca `meta.migrated_from = "1.0.1"` y `meta.migrated_at` al final.
 
-import { db as dexieDb } from '@/lib/db/schema';
+import { legacyDb as dexieDb } from '@/lib/db/schema';
 import { sqlDb } from './db';
 import { dbExecute, dbQueryOne, P } from './client';
 

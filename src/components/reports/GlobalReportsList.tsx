@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveQuery } from '@/lib/db-sql';
 import { FileText, Download, Calendar, ShieldCheck, Eye, Search, FileSearch, ArrowRight, User, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useConfirm } from '@/hooks/useConfirm';

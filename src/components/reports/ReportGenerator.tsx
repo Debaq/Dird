@@ -205,7 +205,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         .where({ sessionId: sessionId, type: type })
         .first();
 
-      if (existingReport) {
+      if (existingReport && existingReport.id !== undefined) {
         // Update the existing report instead of creating a duplicate
         await db.reports.update(existingReport.id, {
           pdfBlob: pdfBlob,

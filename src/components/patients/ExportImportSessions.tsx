@@ -14,7 +14,7 @@ import {
 
 import { db } from '@/lib/db/schema';
 
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveQuery } from '@/lib/db-sql';
 import {  exportPatient, downloadDirdFile } from '@/lib/export/dird-exporter';
 import { importDirdFile, importDirdType } from '@/lib/export/dird-importer';
 import { useAuthStore } from '@/stores/auth-store';

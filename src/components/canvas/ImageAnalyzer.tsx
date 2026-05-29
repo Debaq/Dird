@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveQuery } from '@/lib/db-sql';
 import { ArrowLeft, Layers, Wrench, Coffee, Star, Heart, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -1063,7 +1063,7 @@ const ImageAnalyzer: React.FC = () => {
               const detection = allDetections?.find(d => d.id === id);
               if (detection) {
                 addToHistory({ type: 'delete', detection });
-                await db.detections.delete(id as string);
+                await db.detections.delete(Number(id));
               }
             }
           } catch (error) {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Github, Coffee, Send, Image as ImageIcon, MessageSquare, BookOpen, BrainCircuit, AlertTriangle, Star } from 'lucide-react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveQuery } from '@/lib/db-sql';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -260,7 +260,7 @@ const ContributionMenu: React.FC = () => {
 
           if (!response.ok) throw new Error(`Failed to upload ${img.filename}`);
 
-          await db.pendingContributions.delete(contrib.id)
+          if (contrib.id !== undefined) await db.pendingContributions.delete(contrib.id)
           successCount++;
         } catch (err) {
           console.log(err);

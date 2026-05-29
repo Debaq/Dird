@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Users, Settings, FileText, Coffee, Star, GraduationCap } from 'lucide-react';
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useLiveQuery } from '@/lib/db-sql';
 import { cn } from '@/lib/utils';
 import { useConfigStore } from '@/stores/config-store';
 import { useTokenStore } from '@/stores/token-store';

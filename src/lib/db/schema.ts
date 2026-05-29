@@ -363,4 +363,14 @@ export class DirdDatabase extends Dexie {
   }
 }
 
-export const db = new DirdDatabase();
+/**
+ * Instancia Dexie legacy. Sólo usada por el migrador en F0.8 para leer datos
+ * de v1.0.1 antes de moverlos a SQLite. NO usar en código de aplicación.
+ */
+export const legacyDb = new DirdDatabase();
+
+// Re-export del facade SQLCipher como `db` (drop-in con la API Dexie usada
+// por la app). Esto materializa el swap atómico F0.8b: todas las lecturas y
+// escrituras pasan por SQLCipher, no por IndexedDB.
+import { sqlDb } from '@/lib/db-sql/db';
+export const db = sqlDb;
