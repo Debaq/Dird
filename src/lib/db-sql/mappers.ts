@@ -7,7 +7,6 @@ import type {
   Report,
   Measurement,
   ImageClassification,
-  PendingContribution,
 } from '@/lib/db/schema';
 import { P } from './client';
 import type { TableMapper } from './shim';
@@ -449,34 +448,6 @@ export const imageClassificationsMapper: TableMapper<ImageClassification> = {
     if (o.manuallyModified !== undefined) row.manually_modified = P.bool(o.manuallyModified);
     if (o.createdAt !== undefined) row.created_at = P.date(o.createdAt);
     row.updated_at = P.date(o.updatedAt ?? new Date());
-    if (!('created_at' in row)) row.created_at = P.date(new Date());
-    return row;
-  },
-};
-
-// ----------------------- pendingContributions -----------------------
-
-export const pendingContributionsMapper: TableMapper<PendingContribution> = {
-  insertColumns() {
-    return ['type', 'reference_id', 'status', 'metadata', 'created_at'];
-  },
-  rowToObject(r): PendingContribution {
-    return {
-      id: r.id as number,
-      type: (r.type as PendingContribution['type']) ?? 'image',
-      referenceId: asNumber(r.reference_id),
-      status: (r.status as PendingContribution['status']) ?? 'pending',
-      metadata: r.metadata ? maybeJSON<Record<string, any>>(r.metadata, {}) : undefined,
-      createdAt: asDate(r.created_at),
-    };
-  },
-  objectToRow(o) {
-    const row: Record<string, any> = {};
-    if (o.type !== undefined) row.type = P.text(o.type);
-    if (o.referenceId !== undefined) row.reference_id = P.int(o.referenceId);
-    if (o.status !== undefined) row.status = P.text(o.status);
-    if ('metadata' in o) row.metadata = o.metadata ? P.json(o.metadata) : P.null();
-    if (o.createdAt !== undefined) row.created_at = P.date(o.createdAt);
     if (!('created_at' in row)) row.created_at = P.date(new Date());
     return row;
   },

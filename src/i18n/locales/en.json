@@ -522,11 +522,6 @@
         }
       },
       "image": "Image {{id}}",
-      "contributeModifiedConclusion": "Contribute this modified conclusion",
-      "contribution": {
-        "warningTitle": "Important",
-        "warningText": "This conclusion was manually modified. When contributing, make sure it does NOT contain patient personal data. Only contribute if the changes improve the classification in general."
-      },
       "showDetails": "Show Full Details",
       "hideDetails": "Hide Details",
       "recommendations": "Recommendations",
@@ -895,10 +890,6 @@
     "guidelines": {
       "copy": "Copy",
       "exportJson": "Export JSON",
-      "contribution": {
-        "warningTitle": "Important",
-        "warningText": "Please ensure this guideline does NOT contain personal data, specific institution names, or confidential information. Remove any identifying references before contributing."
-      },
       "models": {
         "metadataNotLoaded": "Metadata not loaded",
         "metadataNotLoadedDesc": "Could not load model metadata",
@@ -1034,7 +1025,6 @@
           "importSuccess": "Guideline imported successfully",
           "importError": "Invalid JSON file",
           "exportSuccess": "Guideline exported successfully",
-          "exportContribution": "Guideline exported and marked for contribution",
           "saveSuccess": "Guideline saved successfully",
           "validationError": "Validation Errors"
         },
@@ -1285,91 +1275,6 @@
     "detectionsFound": "Detections found: ",
     "imagesProcessed": "Images processed",
     "pleaseWait": "Please wait, this process may take a few moments..."
-  },
-  "contribution": {
-    "title": "Contribute",
-    "description": "Help improve Dird with your contribution",
-    "github": {
-      "title": "Repositories",
-      "appDescription": "Main Application",
-      "modelsDescription": "AI Models"
-    },
-    "donation": {
-      "title": "Support us with a coffee",
-      "description": "Your support helps us continue improving Dird",
-      "button": "Buy us a coffee"
-    },
-    "dialog": {
-      "description": "Contribuye con tu imagen y tus marcas para mejorar el modelo.",
-      "body1": "The contribution includes the original image plus AI and manual annotations (detections, painted segmentations, classification), with differentiated coordinates and their corresponding classes.",
-      "body2": "Your data will be anonymized (including image name serialization) before submission to guarantee privacy. Go to the \"Contribute\" section in the main menu to finalize submission and accept the terms.",
-      "unmark": "No contribuir",
-      "mark": "Marcar",
-      "manage": "Manage contribution",
-      "markToContribute": "Marcar para contribuir",
-      "selectLevel": "Select what you want to contribute:",
-      "markThisImage": "Solo esta imagen",
-      "markWholeSession": "Entire session",
-      "imageMarked": "Imagen marcada para contribuir",
-      "sessionMarked": "{{count}} images from the session marked for contribution",
-      "unmarked": "Contribution cancelled"
-    },
-    "images": {
-      "title": "Image Contributions",
-      "pendingMessage": "You have {{count}} images marked for contribution. These images are invaluable for retraining and improving our detection models.",
-      "terms": "I accept the terms and conditions. I understand that the images will be sent to improve AI models and contain no personally identifiable information.",
-      "sending": "Sending...",
-      "success": "Thank you! {{count}} images sent successfully.",
-      "failedCount": " ({{count}} failed)",
-      "error": "There was an error sending the images. Please check the console or try again later.",
-      "generalError": "General error sending contribution",
-      "submit": "Send {{count}} Images"
-    },
-    "guidelines": {
-      "title": "Clinical Guidelines Contributions",
-      "pendingMessage": "You have {{count}} pending clinical guidelines to contribute. Your custom protocols help expand available options.",
-      "viewGuideline": "View clinical guideline",
-      "success": "Thank you! {{count}} guidelines sent successfully.",
-      "error": "There was an error sending the guidelines.",
-      "submit": "Send {{count}} Guidelines"
-    },
-    "conclusions": {
-      "title": "Conclusion Contributions",
-      "pendingMessage": "You have {{count}} modified conclusions to contribute. Your corrections improve AI accuracy.",
-      "viewConclusion": "View conclusion",
-      "success": "Thank you! {{count}} conclusions sent successfully.",
-      "error": "There was an error sending the conclusions.",
-      "submit": "Send {{count}} Conclusions"
-    },
-    "all": {
-      "terms": "I accept the terms and conditions. I have verified that my contributions do NOT contain patient personal data and understand they will be used to improve DIRD.",
-      "privacyWarning": "IMPORTANT: Before sending, verify that your contributions do NOT contain:",
-      "privacyList": {
-        "item1": "Patient or medical staff names",
-        "item2": "Dates of birth or identification numbers",
-        "item3": "Specific institution names",
-        "item4": "Any information that allows identification of a person"
-      },
-      "privacyNote": "We will also review and remove any personal data before using the contributions.",
-      "pendingContributions": "Pending Contributions",
-      "noContributions": "No pending contributions",
-      "sending": "Sending contributions..."
-    },
-    "feedback": {
-      "title": "Send Feedback",
-      "component": "Component",
-      "dirdApp": "Dird App",
-      "dirdModels": "Dird Models",
-      "selectComponent": "Select a component",
-      "comment": "Comment",
-      "placeholder": "Write your comment or suggestion here...",
-      "eyePhotos": "Eye Photos (Optional)",
-      "eyePhotosDescription": "Upload eye photos with whitening or marks to help improve the models",
-      "clickToUpload": "Click to upload images",
-      "supportedFormats": "Supported formats: JPG, PNG, WEBP",
-      "submit": "Submit Comment",
-      "success": "Comment sent! (Simulated)"
-    }
   },
   "loading": {
     "title": "Preparing DIRD",

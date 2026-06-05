@@ -24,9 +24,7 @@ import {
   ArrowUp,
   ArrowDown,
   Copy,
-  Send,
 } from 'lucide-react';
-import { db } from '@/lib/db/schema';
 import type {
   ClinicalGuideline,
   GuidelineMetadata,
@@ -123,7 +121,6 @@ export function GuidelineEditor({
   });
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState<string | null>(null);
-  const [markForContribution, setMarkForContribution] = useState<boolean>(false);
 
   // ============================================================================
   // Metadata Handlers
@@ -508,20 +505,7 @@ export function GuidelineEditor({
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
 
-    // If marked for contribution, add to pendingContributions
-    if (markForContribution) {
-      await db.pendingContributions.add({
-        type: 'guideline',
-        referenceId: 0, // Guidelines from files don't have a DB id
-        status: 'pending',
-        metadata: guideline,
-        createdAt: new Date(),
-      });
-      setSuccess(t('settings.guidelines.editor.messages.exportContribution'));
-      setMarkForContribution(false);
-    } else {
-      setSuccess(t('settings.guidelines.editor.messages.exportSuccess'));
-    }
+    setSuccess(t('settings.guidelines.editor.messages.exportSuccess'));
 
     setTimeout(() => setSuccess(null), 3000);
   };
@@ -1680,27 +1664,6 @@ export function GuidelineEditor({
           </div>
         </div>
 
-        {/* Mark for Contribution - Only show for custom/draft guidelines */}
-        {(guideline.metadata.status === 'custom' || guideline.metadata.status === 'draft') && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <input
-                type="checkbox"
-                id="markForContribution"
-                checked={markForContribution}
-                onChange={(e) => setMarkForContribution(e.target.checked)}
-                className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
-              />
-              <label htmlFor="markForContribution" className="text-sm text-gray-700 cursor-pointer flex items-center gap-2">
-                <Send className="w-4 h-4 text-amber-600" />
-                Marcar esta guía para contribuir al proyecto
-              </label>
-            </div>
-            <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
-              ⚠️ <strong>{t('settings.guidelines.contribution.warningTitle')}:</strong> {t('settings.guidelines.contribution.warningText')}
-            </div>
-          </div>
-        )}
 
         <div className="flex gap-3 justify-end">
           {onClose && (

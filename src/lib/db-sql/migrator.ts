@@ -11,7 +11,7 @@ import { dbExecute, dbQueryOne, P } from './client';
 
 export type MigrationStep =
   | 'patients' | 'sessions' | 'images' | 'detections' | 'segmentations'
-  | 'reports' | 'measurements' | 'imageClassifications' | 'pendingContributions';
+  | 'reports' | 'measurements' | 'imageClassifications';
 
 export interface MigrationProgress {
   step: MigrationStep | 'done' | 'init';
@@ -59,7 +59,6 @@ export async function countDexieRecords(): Promise<Record<MigrationStep, number>
     reports: await dexieDb.reports.count(),
     measurements: await dexieDb.measurements.count(),
     imageClassifications: await dexieDb.imageClassifications.count(),
-    pendingContributions: await dexieDb.pendingContributions.count(),
   };
 }
 
@@ -134,12 +133,6 @@ export async function migrateAll(progress?: ProgressCallback): Promise<void> {
   for (const c of await dexieDb.imageClassifications.toArray()) {
     await sqlDb.imageClassifications.put(c);
     tick('imageClassifications', 1);
-  }
-
-  // pendingContributions
-  for (const pc of await dexieDb.pendingContributions.toArray()) {
-    await sqlDb.pendingContributions.put(pc);
-    tick('pendingContributions', 1);
   }
 
   await setMeta('migrated_from', '1.0.1');

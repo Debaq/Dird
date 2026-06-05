@@ -152,15 +152,6 @@ export interface ImageClassification {
   updatedAt: Date;
 }
 
-export interface PendingContribution {
-  id?: number;
-  type: 'image' | 'guideline' | 'conclusion';
-  referenceId: number; // imageId, guidelineId (not used for guidelines from files), or imageClassificationId
-  status: 'pending' | 'submitted';
-  metadata?: Record<string, any>; // Store guideline JSON or conclusion data
-  createdAt: Date;
-}
-
 export class DirdDatabase extends Dexie {
   patients!: Table<Patient>;
   sessions!: Table<Session>;
@@ -170,7 +161,6 @@ export class DirdDatabase extends Dexie {
   reports!: Table<Report>;
   measurements!: Table<Measurement>;
   imageClassifications!: Table<ImageClassification>;
-  pendingContributions!: Table<PendingContribution>;
 
   constructor() {
     super('DirdDatabase');

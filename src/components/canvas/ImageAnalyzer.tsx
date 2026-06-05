@@ -1,19 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLiveQuery } from '@/lib/db-sql';
-import { ArrowLeft, Layers, Wrench, Coffee, Star, Heart, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Layers, Wrench, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import AnnotationCanvas from './AnnotationCanvas';
 import AdvancedLayerControls, { type CanvasLayer } from './AdvancedLayerControls';
 import ToolPanel, { type CanvasTool } from './ToolPanel';
@@ -182,8 +173,6 @@ const ImageAnalyzer: React.FC = () => {
   // Mobile UI state
   const [showMobileTools, setShowMobileTools] = useState(false);
   const [showMobileLayers, setShowMobileLayers] = useState(false);
-  const [showContributionDialog, setShowContributionDialog] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [cupDrawerOpen, setCupDrawerOpen] = useState(false);
 
 
@@ -550,76 +539,6 @@ const ImageAnalyzer: React.FC = () => {
     // useLiveQuery automáticamente detectará cambios en db.detections
   };
 
-  // Check if image is already marked for contribution
-  const existingContribution = useLiveQuery(
-    () => image?.id ? db.pendingContributions
-      .where({ type: 'image', referenceId: image.id })
-      .first() : undefined,
-    [image?.id]
-  );
-
-  const handleMarkImage = async () => {
-    if (!image) return;
-
-    // Check if already exists
-    if (existingContribution) {
-      setShowContributionDialog(false);
-      return;
-    }
-
-    // Add to pending contributions
-    await db.pendingContributions.add({
-      type: 'image',
-      referenceId: image.id!,
-      status: 'pending',
-      createdAt: new Date(),
-    });
-    toast.success(t('contribution.dialog.imageMarked'));
-    setShowContributionDialog(false);
-  };
-
-  const handleMarkSession = async () => {
-    if (!session) return;
-
-    try {
-      // Get all images from this session
-      const sessionImages = await db.images.where('sessionId').equals(session.id!).toArray();
-
-      let markedCount = 0;
-      for (const img of sessionImages) {
-        // Check if already marked
-        const existing = await db.pendingContributions
-          .where({ type: 'image', referenceId: img.id! })
-          .first();
-
-        if (!existing) {
-          await db.pendingContributions.add({
-            type: 'image',
-            referenceId: img.id!,
-            status: 'pending',
-            createdAt: new Date(),
-          });
-          markedCount++;
-        }
-      }
-
-      toast.success(t('contribution.dialog.sessionMarked', { count: markedCount }));
-      setShowContributionDialog(false);
-    } catch (error) {
-      toast.error('Error al marcar sesión');
-    }
-  };
-
-  const handleUnmark = async () => {
-    if (!image || !existingContribution) return;
-    await db.pendingContributions.delete(existingContribution.id!);
-    toast.success(t('contribution.dialog.unmarked'));
-    setShowContributionDialog(false);
-  };
-
-  const isMarkedForContribution = existingContribution && existingContribution.status === 'pending';
-  const showContributionPrompt = manualDetections.length > 0 || isMarkedForContribution;
-
   // Handle tool change with advanced mode detection
   const handleToolChange = (tool: CanvasTool) => {
     if (tool === 'image-processing') {
@@ -695,39 +614,6 @@ const ImageAnalyzer: React.FC = () => {
           </div>
         </div>
 
-        {/* Contribute Button in Header */}
-        {showContributionPrompt && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className={cn(
-              "ml-auto mr-2 flex-shrink-0 transition-all hover:scale-110",
-              isMarkedForContribution
-                ? "text-amber-500 hover:text-red-500 hover:bg-red-50"
-                : "hover:bg-purple-50 dark:hover:bg-purple-950/20"
-            )}
-            title={isMarkedForContribution ? t('contribution.dialog.manage') : t('contribution.dialog.markToContribute')}
-            onClick={() => setShowContributionDialog(true)}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
-            <div className="flex items-center gap-1.5">
-              {isMarkedForContribution ? (
-                isHovered ? (
-                  <Heart className="w-6 h-6 fill-current animate-pulse" />
-                ) : (
-                  <Star className="w-6 h-6 fill-current animate-pulse" />
-                )
-              ) : (
-                <>
-                  <Star className="w-5 h-5 animate-contribute-pulse" />
-                  <Coffee className="w-5 h-5 animate-contribute-pulse" />
-                </>
-              )}
-            </div>
-          </Button>
-        )}
-
         {/* Mobile Toolbar Icons */}
         <div className="flex xl:hidden items-center space-x-1 ml-2 flex-shrink-0">
            <Button 
@@ -751,9 +637,6 @@ const ImageAnalyzer: React.FC = () => {
              }}
            >
              <Layers className="w-4 h-4 text-coal-600 dark:text-gray-300" />
-             {showContributionPrompt && (
-                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse" />
-             )}
            </Button>
         </div>
       </div>
@@ -937,66 +820,6 @@ const ImageAnalyzer: React.FC = () => {
         onSaveCup={handleSaveCup}
       />
 
-      <Dialog open={showContributionDialog} onOpenChange={setShowContributionDialog}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-amber-600">
-              <Star className="w-5 h-5 fill-current" />
-              {t('contribution.title')}
-            </DialogTitle>
-            <DialogDescription className="text-base font-medium text-coal-800 dark:text-gray-100">
-              {t('contribution.dialog.description')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 space-y-4">
-            <p className="text-sm text-smoke-600 dark:text-gray-300">
-              {t('contribution.dialog.body1')}
-            </p>
-            <p className="text-sm text-smoke-600 dark:text-gray-300 italic">
-              {t('contribution.dialog.body2')}
-            </p>
-
-            {!isMarkedForContribution && (
-              <div className="border-t border-smoke-200 dark:border-coal-700 pt-4 space-y-3">
-                <p className="text-sm font-medium text-coal-800 dark:text-gray-200">
-                  {t('contribution.dialog.selectLevel')}
-                </p>
-
-                <div className="space-y-2">
-                  <Button
-                    className="w-full justify-start gap-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200"
-                    onClick={handleMarkImage}
-                  >
-                    <ImageIcon className="w-4 h-4" />
-                    {t('contribution.dialog.markThisImage')}
-                  </Button>
-
-                  <Button
-                    className="w-full justify-start gap-2 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200"
-                    onClick={handleMarkSession}
-                  >
-                    <Star className="w-4 h-4" />
-                    {t('contribution.dialog.markWholeSession')}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowContributionDialog(false)}>
-              {t('ui.cancel')}
-            </Button>
-            {isMarkedForContribution && (
-              <Button
-                variant="destructive"
-                onClick={handleUnmark}
-              >
-                {t('contribution.dialog.unmark')}
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 

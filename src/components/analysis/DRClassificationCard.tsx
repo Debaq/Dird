@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Eye, TrendingUp, Info, Check, ChevronDown, Send } from 'lucide-react';
+import { Eye, TrendingUp, Info, Check, ChevronDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,8 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { getSessionClassifications } from '@/lib/analysis/image-classification-service';
 import type { ImageDRClassification } from '@/lib/analysis/image-dr-classifier';
-import { db } from '@/lib/db/schema';
-import { toast } from 'sonner';
 
 interface DRClassificationCardProps {
   sessionId: number;
@@ -187,51 +185,6 @@ export const DRClassificationCard: React.FC<DRClassificationCardProps> = ({ sess
     );
   };
 
-  // Handle marking classification for contribution
-  const handleMarkForContribution = async (classification: ImageDRClassification) => {
-    try {
-      // Get the full classification from DB to ensure we have the ID
-      const dbClassification = await db.imageClassifications
-        .where('imageId')
-        .equals(classification.imageId)
-        .first();
-
-      if (!dbClassification?.id) {
-        toast.error('No se pudo encontrar la clasificación en la base de datos');
-        return;
-      }
-
-      // Check if already pending
-      const existing = await db.pendingContributions
-        .where({ type: 'conclusion', referenceId: dbClassification.id })
-        .first();
-
-      if (existing) {
-        toast.info('Esta conclusión ya está marcada para contribuir');
-        return;
-      }
-
-      // Add to pending contributions
-      await db.pendingContributions.add({
-        type: 'conclusion',
-        referenceId: dbClassification.id,
-        status: 'pending',
-        metadata: {
-          severity: classification.severity,
-          eyeType: classification.eyeType,
-          guideline: classification.guideline || 'unknown',
-        },
-        createdAt: new Date(),
-      });
-
-      toast.success('Conclusión marcada para contribuir. Ve a la sección Contribuir para enviarla.');
-      setShowDetailsModal(null);
-    } catch (error) {
-      toast.error('Error al marcar la conclusión para contribuir');
-      console.error(error);
-    }
-  };
-
   // Render details modal
   const renderDetailsModal = () => {
     if (!showDetailsModal) return null;
@@ -364,22 +317,6 @@ export const DRClassificationCard: React.FC<DRClassificationCardProps> = ({ sess
           </div>
 
           <DialogFooter className="flex-col gap-3 sm:flex-row">
-            {/* Only show contribution button if manually modified */}
-            {classification.manuallyModified && (
-              <div className="w-full space-y-2">
-                <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
-                  ⚠️ <strong>{t('analysis.drClassification.contribution.warningTitle')}:</strong> {t('analysis.drClassification.contribution.warningText')}
-                </div>
-                <Button
-                  variant="default"
-                  onClick={() => handleMarkForContribution(classification)}
-                  className="w-full gap-2 bg-amber-500 hover:bg-amber-600"
-                >
-                  <Send className="h-4 w-4" />
-                  {t('analysis.drClassification.contributeModifiedConclusion')}
-                </Button>
-              </div>
-            )}
             <Button
               variant="outline"
               onClick={() => setShowDetailsModal(null)}

@@ -12,12 +12,11 @@ import type {
   Report,
   Measurement,
   ImageClassification,
-  PendingContribution,
 } from '@/lib/db/schema';
 import { TableShim } from './shim';
 import {
   patientsMapper, sessionsMapper, imagesMapper, detectionsMapper, segmentationsMapper,
-  reportsMapper, measurementsMapper, imageClassificationsMapper, pendingContributionsMapper,
+  reportsMapper, measurementsMapper, imageClassificationsMapper,
   imageToRowWithBlobs, reportToRowWithBlob,
 } from './mappers';
 import { dbExecute, P, type SqlParam } from './client';
@@ -162,7 +161,6 @@ export const sqlDb = {
   reports: new ReportsShim(),
   measurements: new TableShim<Measurement>('measurements', measurementsMapper),
   imageClassifications: new TableShim<ImageClassification>('image_classifications', imageClassificationsMapper),
-  pendingContributions: new TableShim<PendingContribution>('pending_contributions', pendingContributionsMapper),
   transaction,
   on,
 };

@@ -169,18 +169,6 @@ CREATE INDEX idx_image_classifications_guideline ON image_classifications(guidel
 CREATE INDEX idx_image_classifications_urgency   ON image_classifications(urgency);
 CREATE INDEX idx_image_classifications_manually_modified ON image_classifications(manually_modified);
 
-CREATE TABLE pending_contributions (
-  id              INTEGER PRIMARY KEY AUTOINCREMENT,
-  type            TEXT    NOT NULL CHECK (type IN ('image','guideline','conclusion')),
-  reference_id    INTEGER NOT NULL,
-  status          TEXT    NOT NULL CHECK (status IN ('pending','submitted')),
-  metadata        TEXT,
-  created_at      TEXT    NOT NULL,
-  UNIQUE(type, reference_id)
-);
-CREATE INDEX idx_pending_contributions_status     ON pending_contributions(status);
-CREATE INDEX idx_pending_contributions_created_at ON pending_contributions(created_at);
-
 -- Tabla de metadatos del schema (versionado, flags de migración).
 CREATE TABLE meta (
   key             TEXT    PRIMARY KEY,

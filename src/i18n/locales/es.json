@@ -522,11 +522,6 @@
         }
       },
       "image": "Imagen {{id}}",
-      "contributeModifiedConclusion": "Contribuir esta conclusión modificada",
-      "contribution": {
-        "warningTitle": "Importante",
-        "warningText": "Esta conclusión fue modificada manualmente. Al contribuirla, asegúrate de que NO contenga datos personales del paciente. Solo contribuye si los cambios mejoran la clasificación de forma general."
-      },
       "showDetails": "Ver Detalles Completos",
       "hideDetails": "Ocultar Detalles",
       "recommendations": "Recomendaciones",
@@ -895,10 +890,6 @@
     "guidelines": {
       "copy": "Copia",
       "exportJson": "Exportar JSON",
-      "contribution": {
-        "warningTitle": "Importante",
-        "warningText": "Por favor, asegúrate de que esta guía NO contenga datos personales, nombres de instituciones específicas, o información confidencial. Elimina cualquier referencia identificatoria antes de contribuir."
-      },
       "models": {
         "metadataNotLoaded": "Metadatos no cargados",
         "metadataNotLoadedDesc": "No se pudieron cargar los metadatos del modelo",
@@ -1034,7 +1025,6 @@
           "importSuccess": "Guía importada exitosamente",
           "importError": "Archivo JSON inválido",
           "exportSuccess": "Guía exportada exitosamente",
-          "exportContribution": "Guía exportada y marcada para contribución",
           "saveSuccess": "Guía guardada exitosamente",
           "validationError": "Errores de Validación"
         },
@@ -1285,91 +1275,6 @@
     "detectionsFound": "Detecciones encontradas: ",
     "imagesProcessed": "Imágenes procesadas",
     "pleaseWait": "Por favor espera, este proceso puede tardar unos momentos..."
-  },
-  "contribution": {
-    "title": "Contribuir",
-    "description": "Ayuda a mejorar Dird con tu contribución",
-    "github": {
-      "title": "Repositorios",
-      "appDescription": "Aplicación principal",
-      "modelsDescription": "Modelos de IA"
-    },
-    "donation": {
-      "title": "Apóyanos con un café",
-      "description": "Tu apoyo nos ayuda a seguir mejorando Dird",
-      "button": "Comprar un café"
-    },
-    "dialog": {
-      "description": "Contribuye con tu imagen y tus marcas para mejorar el modelo.",
-      "body1": "La contribución incluye la imagen original más las marcas de IA y manuales (detecciones, segmentaciones pintadas, clasificación), con sus coordenadas diferenciadas y sus clases correspondientes.",
-      "body2": "Tus datos serán anonimizados (incluyendo la serialización del nombre de la imagen) antes del envío para garantizar la privacidad. Ve a la sección de \"Contribuir\" en el menú principal para finalizar el envío y aceptar los términos.",
-      "unmark": "No contribuir",
-      "mark": "Marcar",
-      "manage": "Gestionar contribución",
-      "markToContribute": "Marcar para contribuir",
-      "selectLevel": "Selecciona qué deseas contribuir:",
-      "markThisImage": "Solo esta imagen",
-      "markWholeSession": "Toda la sesión",
-      "imageMarked": "Imagen marcada para contribuir",
-      "sessionMarked": "{{count}} imágenes de la sesión marcadas para contribuir",
-      "unmarked": "Contribución cancelada"
-    },
-    "images": {
-      "title": "Contribución de Imágenes",
-      "pendingMessage": "Tienes {{count}} imágenes marcadas para contribuir. Estas imágenes son invaluables para re-entrenar y mejorar nuestros modelos de detección.",
-      "terms": "Acepto los términos y condiciones. Entiendo que las imágenes serán enviadas para mejorar los modelos de IA y que no contienen información personal identificable.",
-      "sending": "Enviando...",
-      "success": "¡Gracias! Se enviaron {{count}} imágenes exitosamente.",
-      "failedCount": " ({{count}} fallaron)",
-      "error": "Hubo un error al enviar las imágenes. Por favor revisa la consola o intenta más tarde.",
-      "generalError": "Error general al enviar la contribación",
-      "submit": "Enviar {{count}} Imágenes"
-    },
-    "guidelines": {
-      "title": "Contribución de Guías Clínicas",
-      "pendingMessage": "Tienes {{count}} guías clínicas pendientes para contribuir. Tus protocolos personalizados ayudan a expandir las opciones disponibles.",
-      "viewGuideline": "Ver guía clínica",
-      "success": "¡Gracias! Se enviaron {{count}} guías exitosamente.",
-      "error": "Hubo un error al enviar las guías.",
-      "submit": "Enviar {{count}} Guías"
-    },
-    "conclusions": {
-      "title": "Contribución de Conclusiones",
-      "pendingMessage": "Tienes {{count}} conclusiones modificadas para contribuir. Tus correcciones mejoran la precisión de la IA.",
-      "viewConclusion": "Ver conclusión",
-      "success": "¡Gracias! Se enviaron {{count}} conclusiones exitosamente.",
-      "error": "Hubo un error al enviar las conclusiones.",
-      "submit": "Enviar {{count}} Conclusiones"
-    },
-    "all": {
-      "terms": "Acepto los términos y condiciones. He revisado que mis contribuciones NO contienen datos personales de pacientes y comprendo que se utilizarán para mejorar DIRD.",
-      "privacyWarning": "IMPORTANTE: Antes de enviar, verifica que tus contribuciones NO contengan:",
-      "privacyList": {
-        "item1": "Nombres de pacientes o personal médico",
-        "item2": "Fechas de nacimiento o números de identificación",
-        "item3": "Nombres de instituciones específicas",
-        "item4": "Cualquier información que permita identificar a una persona"
-      },
-      "privacyNote": "Nosotros también revisaremos y eliminaremos cualquier dato personal antes de usar las contribuciones.",
-      "pendingContributions": "Contribuciones Pendientes",
-      "noContributions": "No hay contribuciones pendientes",
-      "sending": "Enviando contribuciones..."
-    },
-    "feedback": {
-      "title": "Enviar Comentarios",
-      "component": "Componente",
-      "dirdApp": "Aplicación Dird",
-      "dirdModels": "Modelos Dird",
-      "selectComponent": "Selecciona un componente",
-      "comment": "Comentario",
-      "placeholder": "Escribe tu comentario o sugerencia aquí...",
-      "eyePhotos": "Fotos de Ojo (Opcional)",
-      "eyePhotosDescription": "Sube fotos de ojos con blanqueamiento o marcas para ayudar a mejorar los modelos",
-      "clickToUpload": "Haz clic para subir imágenes",
-      "supportedFormats": "Formatos soportados: JPG, PNG, WEBP",
-      "submit": "Enviar Comentario",
-      "success": "¡Comentario enviado! (Simulado)"
-    }
   },
   "loading": {
     "title": "Preparando DIRD",
