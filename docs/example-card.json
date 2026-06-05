@@ -1,0 +1,66 @@
+{
+  "schema_version": "2.0",
+  "name": "DIRDv2r0",
+  "version": "2.0.0",
+  "description": "Reference DIRD+ detection model (YOLOv26s, end2end NMS). Example model card for the DIRD+ model interface specification — see docs/model-interface.md.",
+  "license": "AGPL-3.0",
+  "doi": "10.5281/zenodo.19685466",
+  "authors": [
+    "Nicolás Baier Quezada"
+  ],
+  "trained_on": "Internal dataset based on IDRiD",
+  "validated_on": [
+    {
+      "dataset": "APTOS 2019 Blindness Detection",
+      "n": 3662,
+      "metrics": {
+        "sensitivity": 0.978,
+        "specificity": 0.933,
+        "MCC": 0.911,
+        "AUC_ROC": 0.967
+      },
+      "operating_point": "PCT_fpr02",
+      "doi_report": null
+    }
+  ],
+  "input": {
+    "tensor_name": "images",
+    "shape": [1, 3, 640, 640],
+    "layout": "NCHW",
+    "dtype": "float32",
+    "preprocessing": {
+      "resize_to": [640, 640],
+      "letterbox": true,
+      "letterbox_color": [114, 114, 114],
+      "normalize": "divide_by_255",
+      "color_order": "RGB"
+    }
+  },
+  "output": {
+    "tensor_name": "output",
+    "format": "yolo_end2end_v2",
+    "max_detections": 300
+  },
+  "classes": [
+    { "id": 0,  "name": "optic_disc",         "severity": "landmark" },
+    { "id": 1,  "name": "fovea",              "severity": "landmark" },
+    { "id": 2,  "name": "hard_exudate",       "severity": "moderate" },
+    { "id": 3,  "name": "hemorrhage",         "severity": "moderate-severe" },
+    { "id": 4,  "name": "cotton_wool_spot",   "severity": "moderate-severe" },
+    { "id": 5,  "name": "microhemorrhages",   "severity": "mild-moderate" },
+    { "id": 6,  "name": "edema",              "severity": "severe" },
+    { "id": 7,  "name": "microaneurysm",      "severity": "mild" },
+    { "id": 8,  "name": "neovascularization", "severity": "severe" },
+    { "id": 9,  "name": "venous_beading",     "severity": "severe" },
+    { "id": 10, "name": "IRMA",               "severity": "severe" }
+  ],
+  "per_class_thresholds": {
+    "hard_exudate": 0.63,
+    "microhemorrhages": 0.26,
+    "cotton_wool_spot": 0.85,
+    "hemorrhage": 0.05
+  },
+  "default_confidence_threshold": 0.25,
+  "minimum_dird_version": "2.0.0",
+  "tags": ["diabetic-retinopathy", "ophthalmology", "yolo", "edge"]
+}

@@ -1,652 +1,415 @@
-# DIRD+ — Plataforma de Detección de Retinopatía Diabética con IA Edge-Computing
+# DIRD+ — Diabetic Retinopathy Detection Platform with Edge-Computing AI
 
 <p align="center">
   <img src="public/logo.svg" alt="DIRD+ Logo" width="140" />
 </p>
 
 <p align="center">
-  <strong>Aplicación de escritorio con inteligencia artificial ejecutada íntegramente en dispositivo.</strong><br>
-  Privacidad total. Sin dependencia de servidores. Sin costo por tamizaje. Empaquetada con Tauri v2.
+  <strong>Desktop application whose AI runs entirely on-device.</strong><br>
+  Full privacy. No server dependency. No per-screening cost. Packaged with Tauri v2.
 </p>
 
-> **Aviso importante**: DIRD+ es un sistema de investigación y desarrollo. No está aprobado como dispositivo médico. No debe usarse como único criterio diagnóstico en entornos clínicos reales.
+> 🌐 **Idioma / Language:** This README is in English (canonical, for international and Digital Public Goods reviewers). The user interface ships in both Spanish and English.
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](LICENSE) [![DOI](https://zenodo.org/badge/1114058644.svg)](https://doi.org/10.5281/zenodo.19666272) [![Demo](https://img.shields.io/badge/Demo-tmeduca.org%2Fdird-green)](https://tmeduca.org/dird/) [![Branch](https://img.shields.io/badge/branch-w%2Ftauri-orange)](https://github.com/Debaq/Dird/tree/w/tauri)
+> **Important notice:** DIRD+ is a research-and-development system. It is **not** an approved medical device and must **not** be used as the sole diagnostic criterion in real clinical settings. Every finding must be reviewed by a qualified ophthalmologist.
+
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](LICENSE) [![DOI](https://zenodo.org/badge/1114058644.svg)](https://doi.org/10.5281/zenodo.19666272) [![Website](https://img.shields.io/badge/Website-tmeduca.org%2Fdird-green)](https://tmeduca.org/dird/) [![DPG](https://img.shields.io/badge/Digital%20Public%20Good-nominee-orange)](https://digitalpublicgoods.net/standard)
 
 <p align="center">
-  <a href="#el-problema">El Problema</a> · 
-  <a href="#la-solución">La Solución</a> · 
-  <a href="#diferenciadores">Diferenciadores</a> · 
-  <a href="#comparativa-de-mercado">Mercado</a> · 
-  <a href="#arquitectura-técnica">Arquitectura</a> · 
-  <a href="#referencias-científicas">Referencias</a>
+  <a href="#the-problem">Problem</a> · 
+  <a href="#the-solution">Solution</a> · 
+  <a href="#bring-your-own-model">Bring Your Own Model</a> · 
+  <a href="#market-differentiators">Market</a> · 
+  <a href="#technical-architecture">Architecture</a> · 
+  <a href="#digital-public-goods-standard-compliance">DPG</a>
 </p>
 
 ---
 
-## Tabla de Contenidos
+## Table of Contents
 
-- [El Problema](#el-problema)
-  - [Epidemiología Global](#epidemiología-global)
-  - [Contexto Chile](#contexto-chile)
-  - [La Brecha de Tamizaje](#la-brecha-de-tamizaje)
-- [La Solución](#la-solución)
-  - [Propuesta de Valor](#propuesta-de-valor)
-  - [Flujo Clínico](#flujo-clínico)
-  - [Motor de Guías Clínicas Pluggable](#motor-de-guías-clínicas-pluggable--funcionalidad-única)
-- [Diferenciadores frente al Mercado](#diferenciadores-frente-al-mercado)
-  - [Comparativa de Mercado](#comparativa-de-mercado)
-  - [Por qué las Soluciones Existentes no han Cerrado la Brecha](#por-qué-las-soluciones-existentes-no-han-cerrado-la-brecha)
-  - [Ventaja Regulatoria: Soberanía de Datos](#ventaja-regulatoria-soberanía-de-datos)
-  - [Impacto Económico](#impacto-económico)
-- [Arquitectura Técnica](#arquitectura-técnica)
-  - [Diagrama de Arquitectura](#diagrama-de-arquitectura)
-  - [Stack Tecnológico](#stack-tecnológico)
-  - [Pipeline de Inferencia IA](#pipeline-de-inferencia-ia)
-  - [Sistema de Guías Clínicas Pluggable](#sistema-de-guías-clínicas-pluggable)
-  - [Esquema de Base de Datos](#esquema-de-base-de-datos)
-  - [Estructura del Proyecto](#estructura-del-proyecto)
-- [Funcionalidades](#funcionalidades)
-- [Instalación y Despliegue](#instalación-y-despliegue)
-- [Guías Clínicas Soportadas](#guías-clínicas-soportadas)
-- [Hoja de Ruta](#hoja-de-ruta)
-- [Referencias Científicas](#referencias-científicas)
-- [🌍 Digital Public Goods Standard Compliance](#-digital-public-goods-standard-compliance)
-  - [Key documents](#key-documents)
-  - [Scientific citation](#scientific-citation)
-- [Autor](#autor)
+- [The Problem](#the-problem)
+  - [Global Epidemiology](#global-epidemiology)
+  - [Chile Context](#chile-context)
+  - [The Screening Gap](#the-screening-gap)
+- [The Solution](#the-solution)
+  - [Value Proposition](#value-proposition)
+  - [Clinical Workflow](#clinical-workflow)
+  - [Pluggable Clinical-Guideline Engine](#pluggable-clinical-guideline-engine)
+  - [Separation of Roles: Clinical Guideline vs. Local LLM](#separation-of-roles-clinical-guideline-vs-local-llm)
+- [Bring Your Own Model](#bring-your-own-model)
+- [Market Differentiators](#market-differentiators)
+- [Technical Architecture](#technical-architecture)
+  - [Architecture Diagram](#architecture-diagram)
+  - [Technology Stack](#technology-stack)
+  - [AI Inference Pipeline](#ai-inference-pipeline)
+  - [Database Schema](#database-schema)
+  - [Project Structure](#project-structure)
+- [Features](#features)
+- [Installation & Build](#installation--build)
+- [Supported Clinical Guidelines](#supported-clinical-guidelines)
+- [Roadmap](#roadmap)
+- [Scientific References](#scientific-references)
+- [Digital Public Goods Standard Compliance](#digital-public-goods-standard-compliance)
+- [Author](#author)
 
 ---
 
-## El Problema
+## The Problem
 
-### Epidemiología Global
+### Global Epidemiology
 
-La retinopatía diabética (RD) es la **principal causa de ceguera en adultos en edad laboral** (20-74 años) en países desarrollados (OMS, World Report on Vision, 2019). Más del **80% de esta ceguera es prevenible** con detección temprana y tratamiento oportuno.
+Diabetic retinopathy (DR) is the **leading cause of blindness among working-age adults** (20–74) in developed countries (WHO, World Report on Vision, 2019). More than **80% of this blindness is preventable** with early detection and timely treatment.
 
-| Indicador | Cifra | Fuente |
-|-----------|-------|--------|
-| Adultos con diabetes en el mundo | 537 millones (2021) | IDF Diabetes Atlas, 10ª ed. |
-| Proyección para 2045 | 783 millones | IDF, 2021 |
-| Prevalencia de RD entre diabéticos | 22-35% | Teo et al., *Ophthalmology*, 2021; Yau et al., *Diabetes Care*, 2012 |
-| Personas con algún grado de RD | ~103 millones (2020) | Teo et al., 2021 |
-| RD que amenaza la visión | 6-10% de diabéticos | Yau et al., 2012 |
-| Casos de ceguera por RD | ~860,000 | GBD 2020, *Lancet Global Health* |
-| Diabéticos sin diagnóstico | ~240 millones | IDF, 2021 |
+| Indicator | Figure | Source |
+|-----------|--------|--------|
+| Adults with diabetes worldwide | 537 million (2021) | IDF Diabetes Atlas, 10th ed. |
+| Projection for 2045 | 783 million | IDF, 2021 |
+| DR prevalence among people with diabetes | 22–35% | Teo et al., *Ophthalmology*, 2021; Yau et al., *Diabetes Care*, 2012 |
+| People with some degree of DR | ~103 million (2020) | Teo et al., 2021 |
+| Vision-threatening DR | 6–10% of people with diabetes | Yau et al., 2012 |
+| Blindness cases due to DR | ~860,000 | GBD 2020, *Lancet Global Health* |
+| Undiagnosed people with diabetes | ~240 million | IDF, 2021 |
 
-Sin tratamiento, aproximadamente el **50% de los pacientes con RD proliferativa quedan legalmente ciegos en 5 años** (National Eye Institute, NIH).
+Untreated, roughly **50% of patients with proliferative DR become legally blind within 5 years** (National Eye Institute, NIH).
 
-### Contexto Chile
+### Chile Context
 
-Chile enfrenta una situación particularmente crítica:
+Chile faces a particularly critical situation:
 
-| Indicador | Cifra | Fuente |
-|-----------|-------|--------|
-| Prevalencia de diabetes en adultos | **12.3%** (~1.7 millones de personas) | Encuesta Nacional de Salud 2016-2017, MINSAL |
-| Sospecha de diabetes (incl. no diagnosticados) | 15.8% | ENS 2016-2017 |
-| Prevalencia en mayores de 65 años | >30% | ENS 2016-2017 |
-| Diabéticos con algún grado de RD estimados | 425,000 - 595,000 | Programa de Salud Cardiovascular, MINSAL |
-| Diabéticos que reciben tamizaje oftalmológico oportuno | **Solo 15-30%** | Programa de Salud Cardiovascular, MINSAL |
-| Oftalmólogos en el país | ~1,100 - 1,300 | Sociedad Chilena de Oftalmología |
-| Concentrados en Región Metropolitana | 60-65% | Superintendencia de Salud |
-| Densidad en regiones extremas | <3 por 100,000 hab. | Registro de Prestadores, Superintendencia de Salud |
+| Indicator | Figure | Source |
+|-----------|--------|--------|
+| Diabetes prevalence in adults | **12.3%** (~1.7 million people) | National Health Survey 2016–2017, MINSAL |
+| Suspected diabetes (incl. undiagnosed) | 15.8% | ENS 2016–2017 |
+| Prevalence in people over 65 | >30% | ENS 2016–2017 |
+| Estimated people with diabetes and some DR | 425,000–595,000 | Cardiovascular Health Program, MINSAL |
+| People with diabetes receiving timely eye screening | **Only 15–30%** | Cardiovascular Health Program, MINSAL |
+| Ophthalmologists in the country | ~1,100–1,300 | Chilean Society of Ophthalmology |
+| Concentrated in the Metropolitan Region | 60–65% | Health Superintendency |
+| Density in remote regions | <3 per 100,000 inhabitants | Provider Registry, Health Superintendency |
 
-La Retinopatía Diabética está incluida en las **Garantías Explícitas en Salud (GES)** desde 2006, obligando al Estado a garantizar acceso a tamizaje y tratamiento. Sin embargo, las **listas de espera GES para oftalmología superan los plazos garantizados** en múltiples regiones, y la distribución inequitativa de especialistas deja a regiones como Aysén, Magallanes, Atacama y la Araucanía con cobertura insuficiente.
+DR has been included in Chile's **Explicit Health Guarantees (GES)** since 2006, obliging the State to guarantee access to screening and treatment. However, **GES waiting lists for ophthalmology exceed the guaranteed timeframes** in several regions, and the uneven distribution of specialists leaves regions such as Aysén, Magallanes, Atacama, and Araucanía with insufficient coverage.
 
-### La Brecha de Tamizaje
+### The Screening Gap
 
-La OMS y la ADA recomiendan exámenes de fondo de ojo **al menos cada 1-2 años** para todo diabético. La realidad es otra:
+WHO and the ADA recommend fundus exams **at least every 1–2 years** for everyone with diabetes. Reality differs:
 
-| País/Región | Tasa de tamizaje oportuno | Fuente |
-|-------------|--------------------------|--------|
-| Países de altos ingresos | 50-70% | Piyasena et al., *PLoS ONE*, 2019 |
-| Países de bajos/medianos ingresos | 10-30% | Piyasena et al., 2019 |
-| Chile (APS pública) | 15-30% | MINSAL |
+| Country/Region | Timely screening rate | Source |
+|----------------|----------------------|--------|
+| High-income countries | 50–70% | Piyasena et al., *PLoS ONE*, 2019 |
+| Low/middle-income countries | 10–30% | Piyasena et al., 2019 |
+| Chile (public primary care) | 15–30% | MINSAL |
 
-**Barreras principales:**
-- **Escasez de especialistas**: Déficit mundial estimado de >200,000 oftalmólogos (Resnikoff et al., *BJO*, 2020)
-- **Costo**: Examen con oftalmólogo: USD 50-200 en Latinoamérica
-- **Acceso geográfico**: Concentración urbana de especialistas
-- **Tiempos de espera**: 6-12 meses en sistema público chileno
-- **Conectividad**: 40-60% de establecimientos rurales con internet limitado (ITU, 2022)
+**Main barriers:**
+- **Shortage of specialists**: estimated global deficit of >200,000 ophthalmologists (Resnikoff et al., *BJO*, 2020)
+- **Cost**: an ophthalmologist exam costs USD 50–200 in Latin America
+- **Geographic access**: urban concentration of specialists
+- **Waiting times**: 6–12 months in the Chilean public system
+- **Connectivity**: 40–60% of rural facilities have limited internet (ITU, 2022)
 
 ---
 
-## La Solución
+## The Solution
 
-DIRD+ es una **aplicación de escritorio** (Linux/Windows/macOS, empaquetada con Tauri v2) que ejecuta modelos de visión artificial para detección de retinopatía diabética **íntegramente en el dispositivo del usuario** mediante ONNX Runtime (WebAssembly):
+DIRD+ is a **desktop application** (Linux/Windows/macOS, packaged with Tauri v2) that runs computer-vision models for diabetic retinopathy detection **entirely on the user's device** via ONNX Runtime:
 
-- Historial persistente cifrado, base de datos local SQLite y operación 100% offline tras la instalación.
+- Encrypted persistent history, a local SQLite database, and 100% offline operation after installation.
 
-Las imágenes de fondo de ojo se procesan localmente — **los datos del paciente nunca abandonan el dispositivo**.
+Fundus images are processed locally — **patient data never leaves the device**.
 
-### Propuesta de Valor
+### Value Proposition
 
-| Aspecto | Qué ofrece DIRD+ | Por qué importa |
-|---------|-------------------|-----------------|
-| **Privacidad total** | Inferencia IA en el dispositivo de escritorio. Cero transmisión de datos a servidores externos | Cumplimiento con Ley 21.096 y regulaciones de datos de salud sin esfuerzo adicional |
-| **Costo cero de operación** | Sin licencias, sin pago por tamizaje, sin hardware propietario | Viable para CESFAM rurales con presupuesto limitado |
-| **Funciona offline** | Modelos descargados una vez, cacheados localmente. Historial y pacientes en SQLite cifrado | Operativo en zonas sin conectividad estable |
-| **Guías clínicas adaptables** | Sistema pluggable: ICDR 2024 (internacional), MINSAL Chile 2017. Agregar nuevas guías sin modificar código | Adaptable a protocolos locales GES sin depender de proveedor extranjero |
-| **Código abierto** | Código fuente completo auditable. Algoritmos, umbrales y criterios verificables | Transparencia para reguladores, investigadores y clínicos |
-| **Portabilidad** | Formato `.dird` (ZIP) para exportar/importar pacientes completos | Interoperabilidad entre instalaciones sin vendor lock-in |
+| Aspect | What DIRD+ offers | Why it matters |
+|--------|-------------------|----------------|
+| **Full privacy** | On-device AI inference. Zero data transmission to external servers | Compliance with data-protection and health-data regulations with no extra effort |
+| **Zero operating cost** | No licenses, no per-screening fees, no proprietary hardware | Viable for budget-constrained rural primary-care clinics |
+| **Works offline** | Models downloaded once, stored locally. History and patients in an encrypted SQLite database | Operational in areas without stable connectivity |
+| **Adaptable clinical guidelines** | Pluggable engine: ICDR 2024 (international), MINSAL Chile 2017. Add new guidelines without changing code | Adaptable to local protocols without depending on a foreign vendor |
+| **Open source** | Fully auditable source code. Algorithms, thresholds, and criteria are verifiable | Transparency for regulators, researchers, and clinicians |
+| **Portability** | `.dird` format (ZIP) to export/import complete patients | Interoperability across installations without vendor lock-in |
 
-### Flujo Clínico
+### Clinical Workflow
 
 ```
-1. CAPTURA             2. CARGA               3. ANÁLISIS IA          4. REVISIÓN
-Retinógrafo         →  Subir imágenes      →  Detección automática →  Canvas interactivo
-(cualquier cámara)     a la app desktop        de lesiones (ONNX)     multicapa con
-                       OD / OI                 + Segmentación         herramientas de
-                                                                      anotación
+1. CAPTURE             2. UPLOAD              3. AI ANALYSIS          4. REVIEW
+Fundus camera       →  Upload images       →  Automatic lesion     →  Interactive
+(any camera)           into the desktop        detection (ONNX)        multi-layer canvas
+                       app, OD / OI            + segmentation          with annotation tools
 
-5. CLASIFICACIÓN       6. INFORME             7. EXPORTACIÓN
-Severidad según     →  PDF configurable    →  Formato .dird
-guía clínica           con conclusiones       portable entre
-(ICDR/MINSAL)          y recomendaciones      instalaciones
+5. CLASSIFICATION      6. REPORT              7. EXPORT
+Severity per        →  Configurable PDF    →  .dird format
+clinical guideline     with conclusions       portable across
+(ICDR/MINSAL)          and recommendations    installations
 ```
 
-**Todo ocurre en el dispositivo — app de escritorio. Sin servidor. Sin internet (después de la primera carga).**
+**Everything happens on the device. No server. No internet (after the first model download).**
 
-### Motor de Guías Clínicas Pluggable — Funcionalidad Única
+### Pluggable Clinical-Guideline Engine
 
-DIRD+ incluye un **motor de clasificación clínica agnóstico a la guía**, una capacidad que ningún otro sistema de tamizaje de RD ofrece. Mientras todos los competidores (DART, IDx-DR, EyeArt, Google ARDA) implementan un criterio de clasificación fijo y cerrado — generalmente un resultado binario "referir / no referir" — DIRD+ permite que **cualquier guía clínica sea cargada como un archivo JSON sin modificar código**.
+DIRD+ includes a **guideline-agnostic clinical classification engine** — a capability no other DR screening system offers. While every competitor (DART, IDx-DR, EyeArt, Google ARDA) implements a fixed, closed classification criterion — usually a binary "refer / don't refer" result — DIRD+ lets **any clinical guideline be loaded as a JSON file without changing code**.
 
-#### Por qué es potente
+| Capability | Impact |
+|------------|--------|
+| **Guidelines as data, not code** | Adding a new country's guideline means writing a JSON file and registering it. No development, no waiting on the vendor |
+| **Detailed severity classification** | Not just "refer/don't refer": DIRD+ classifies into 5+ levels (no DR → mild → moderate → severe → proliferative), with per-level treatments, urgency, and follow-up interval |
+| **Per-quadrant spatial analysis** | Lesion distribution across 4 quadrants + macular center. Automatically evaluates the 4-2-1 rule (ICDR criterion for severe NPDR) |
+| **Multiple simultaneous guidelines** | Classify the same image under ICDR (international) and MINSAL (Chile) to compare criteria. Useful in research and teaching |
+| **Integrated treatment protocols** | Each severity level defines clinical actions, urgency (routine/accelerated/urgent), and follow-up interval in days |
+| **AI → clinical class mapping** | Translates model detections (microaneurysm, hemorrhage, cotton_wool_spot…) into the guideline's clinical categories |
+| **Preserved human correction** | The clinician can modify the generated classification. The system flags `manuallyModified: true` for traceability |
+| **Automatic validation** | On load, the system validates structure, level coherence, rules, and protocols. It reports errors and warnings |
 
-| Capacidad | Impacto |
-|-----------|---------|
-| **Guías como datos, no como código** | Agregar la guía de un nuevo país es crear un JSON y registrarlo. Sin desarrollo, sin esperar al proveedor |
-| **Clasificación detallada por severidad** | No solo "referir/no referir": DIRD+ clasifica en 5+ niveles (sin RD → leve → moderada → severa → proliferativa), con tratamientos, urgencia y plazo de seguimiento específicos por nivel |
-| **Análisis espacial por cuadrante** | Distribución de lesiones en 4 cuadrantes + centro macular. Evalúa la Regla 4-2-1 (criterio ICDR para RDNP severa) automáticamente |
-| **Múltiples guías simultáneas** | Clasificar la misma imagen según ICDR (internacional) y MINSAL (Chile) para comparar criterios. Útil en investigación y docencia |
-| **Protocolos de tratamiento integrados** | Cada nivel de severidad define acciones clínicas, urgencia (rutina/acelerada/urgente) e intervalo de seguimiento en días |
-| **Mapeo de clases IA → clínica** | Traduce las detecciones del modelo (microaneurysm, hemorrhage, cotton_wool_spot...) a categorías clínicas de la guía (microaneurismas, hemorragias, exudados...) |
-| **Corrección humana preservada** | El clínico puede modificar la clasificación generada. El sistema marca `manuallyModified: true` para trazabilidad |
-| **Validación automática** | Al cargar una guía, el sistema valida estructura, coherencia de niveles, reglas y protocolos. Reporta errores y advertencias |
+**Currently implemented guidelines:** ICDR 2024 (International Council of Ophthalmology) and MINSAL Chile 2017 (Chilean national GES protocol).
 
-#### Guías actualmente implementadas
+To add any other country's guideline, create `public/clinical-guidelines/my_guideline.json` (severity levels, classification rules, treatment protocols, class mapping), register it in `public/clinical-guidelines/index.json`, and the app detects it automatically on reload. No programming knowledge is required — only the clinical knowledge to define the criteria.
 
-| Guía | Origen | Uso |
-|------|--------|-----|
-| **ICDR 2024** | International Council of Ophthalmology | Estándar internacional de referencia |
-| **MINSAL Chile 2017** | Ministerio de Salud de Chile | Protocolo GES nacional chileno |
+### Separation of Roles: Clinical Guideline vs. Local LLM
 
-#### Ejemplo de extensión
-
-Para agregar la guía de cualquier otro país (ej. México, Colombia, España):
-
-1. Crear `public/clinical-guidelines/mi_guia.json` con niveles de severidad, reglas de clasificación, protocolos de tratamiento y mapeo de clases
-2. Registrar en `public/clinical-guidelines/index.json`
-3. La aplicación la detecta automáticamente al recargar
-
-No requiere conocimiento de programación — solo conocimiento clínico para definir los criterios.
-
-#### Implicancia estratégica
-
-Este diseño convierte a DIRD+ en una **plataforma**, no solo una herramienta. Cada país, servicio de salud o grupo de investigación puede adaptar la clasificación a sus protocolos locales sin depender del desarrollador. Esto es especialmente relevante para:
-
-- **Escalamiento regional**: Una misma plataforma sirve para Chile (MINSAL), Perú, Colombia, México — cada uno con su guía
-- **Investigación**: Comparar cómo diferentes guías clasifican los mismos hallazgos
-- **Docencia**: Enseñar a residentes las diferencias entre criterios internacionales y locales
-- **Evolución clínica**: Cuando una guía se actualiza, basta actualizar el JSON — sin esperar una nueva versión del software
-
-#### Separación de Roles: Guía Clínica vs. LLM Externo
-
-Un principio de diseño fundamental de DIRD+ es la **separación estricta entre clasificación clínica y generación de texto narrativo**:
+A core design principle of DIRD+ is the **strict separation between clinical classification and narrative text generation**:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│                    CLASIFICACIÓN (local, determinista)               │
-│                                                                      │
-│  Detecciones IA → Motor de Guía Clínica → Severidad + Tratamiento   │
-│  (ONNX local)     (JSON pluggable)         + Urgencia + Seguimiento │
-│                                                                      │
-│  La GUÍA CLÍNICA decide. Reglas explícitas, auditables,             │
-│  reproducibles. Sin IA generativa. Sin caja negra.                  │
-└──────────────────────────┬───────────────────────────────────────────┘
+│                 CLASSIFICATION (local, deterministic)                 │
+│                                                                       │
+│  AI detections → Clinical-guideline engine → Severity + Treatment     │
+│  (local ONNX)    (pluggable JSON)             + Urgency + Follow-up    │
+│                                                                       │
+│  The CLINICAL GUIDELINE decides. Explicit, auditable, reproducible    │
+│  rules. No generative AI. No black box.                               │
+└──────────────────────────┬────────────────────────────────────────────┘
                            │
-                           ▼ datos estructurados ya clasificados
+                           ▼ already-classified structured data
 ┌──────────────────────────────────────────────────────────────────────┐
-│                    NARRACIÓN (local, opcional)                        │
-│                                                                      │
-│  Datos de clasificación → LLM local  → Texto de conclusión clínica  │
-│  (severidad, lesiones,   (llama.cpp)    narrativo para el informe    │
-│   tratamientos, urgencia)                                            │
-│                                                                      │
-│  El LLM NARRA. Recibe la decisión ya tomada por la guía y la        │
-│  redacta como texto clínico legible. No clasifica. No diagnostica.  │
-│  El clínico puede editar el texto antes de finalizar el informe.    │
-└──────────────────────────────────────────────────────────────────────┘
+│                    NARRATION (local, optional)                        │
+│                                                                       │
+│  Classification data → Local LLM → Clinical conclusion prose          │
+│  (severity, lesions,   (llama.cpp)  for the report                    │
+│   treatments, urgency)                                                │
+│                                                                       │
+│  The LLM NARRATES. It receives the decision already made by the       │
+│  guideline and writes it as readable clinical text. It does not       │
+│  classify or diagnose. The clinician can edit the text before         │
+│  finalizing the report.                                               │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
-**¿Por qué esta separación importa?**
-
-| Aspecto | Sin separación (otros sistemas) | DIRD+ |
-|---------|--------------------------------|-------|
-| **Trazabilidad** | "La IA dijo esto" — ¿qué IA? ¿qué criterio? | Clasificación trazable a reglas explícitas de la guía. El JSON es auditable |
-| **Reproducibilidad** | Misma imagen → diferentes resultados según el prompt | Misma imagen + misma guía = mismo resultado, siempre |
-| **Regulación** | Difícil demostrar que el LLM no alucina un diagnóstico | La clasificación no depende de IA generativa. El LLM solo redacta |
-| **Offline** | Si el LLM no está disponible, no hay conclusión | Sin LLM: la clasificación completa funciona igual. Solo falta el texto narrativo |
-| **Sesgo** | El LLM puede introducir sesgos en la clasificación | El LLM no tiene influencia sobre la severidad ni el tratamiento |
-| **Edición humana** | ¿El clínico edita la clasificación o el texto? | Clasificación y texto editables por separado. `manuallyModified` preserva trazabilidad |
-
-El LLM externo es un **servicio opcional de redacción**. DIRD+ funciona completamente sin él — la clasificación, severidad, tratamientos, urgencia y seguimiento se determinan localmente por la guía clínica.
+The local LLM is an **optional writing aid** that runs in-process via llama.cpp — no remote inference, no data leaves the device. DIRD+ works completely without it: severity, treatments, urgency, and follow-up are determined locally by the clinical guideline. This separation keeps classification **traceable** (to explicit guideline rules), **reproducible** (same image + same guideline = same result), and free of any generative-AI bias on the medical decision.
 
 ---
 
-## Diferenciadores frente al Mercado
+## Bring Your Own Model
 
-### Comparativa de Mercado
+DIRD+ ships with reference models (DIRDv1r1, DIRDv2r0) but is **model-agnostic by design**: any organization can train and plug in its own ONNX model — calibrated to its own population — **without modifying the application**.
 
-| Característica | DART (TeleDx, Chile) | IDx-DR (Digital Diagnostics) | Google ARDA | EyeArt (Eyenuk) | Phelcom Eyer (Brasil) | **DIRD+** |
+The full contract is specified in **[`docs/model-interface.md`](docs/model-interface.md)**. In short, a custom model needs:
+
+- **Format**: ONNX, runnable by ONNX Runtime. Input tensor `[1, 3, 640, 640]` (RGB, normalized), output as detection boxes `[x, y, w, h, confidence, class…]`.
+- **A model card** (`.json` companion) declaring its class mapping, input/output shapes, and metadata. See [`docs/model-interface.md` §6](docs/model-interface.md) for required fields and [`docs/example-card.json`](docs/example-card.json) for a complete, validated example.
+- **Class definitions**: the reference models use class IDs `0–10` (`optic_disc`, `fovea`, `hard_exudate`, `hemorrhage`, `cotton_wool_spot`, `microhemorrhages`, `edema`, `microaneurysm`, `neovascularization`, `venous_beading`, `IRMA`). Custom models may declare **their own classes** in the model card; DIRD+ uses that mapping to label detections in the UI and feed the clinical-guideline engine.
+
+Load it from **Settings → AI Models → Add Model** (file picker). DIRD+ validates the model card schema, checks input/output tensor shapes, and runs an inference sanity check before registering it under `<user_data>/models/`. A standalone validator is also provided:
+
+```bash
+python3 scripts/validate_model_card.py my-card.json --onnx my-model.onnx
+```
+
+> **Why this matters for screening programs:** a national health service, university, or research group can retrain on its own cohort and deploy inside DIRD+ with no vendor dependency and no code changes — only a model file and a model card.
+
+---
+
+## Market Differentiators
+
+| Feature | DART (TeleDx, Chile) | IDx-DR | Google ARDA | EyeArt | Phelcom Eyer | **DIRD+** |
 |---|---|---|---|---|---|---|
-| **Procesamiento** | Cloud | Cloud | Cloud | Cloud | Cloud | **Edge (desktop)** |
-| **Datos salen del dispositivo** | Sí (cloud TeleDx) | Sí (USA) | Sí (Google Cloud) | Sí (USA) | Sí (Brasil) | **No** |
-| **Funciona offline** | No | No | No | No | No | **Sí** |
-| **Hardware requerido** | Retinógrafo + internet | Topcon NW400 (~USD 15-25K) | Cámara de mesa (~USD 5-15K) | Cámara compatible (~USD 5-15K) | Smartphone + adaptador (~USD 3-5K) | **Cualquier cámara existente** |
-| **Costo por tamizaje** | Licencia por volumen (MINSAL) | ~USD 40-55 | No disponible comercialmente | ~USD 8-15 | Suscripción | **USD 0** |
-| **Código abierto** | No | No | Parcial (papers) | No | No | **Sí** |
-| **Idioma español nativo** | Sí | No | No | No | Portugués/Inglés | **Sí** |
-| **Multi-guía clínica** | No | No (resultado binario) | No | No | No | **Sí (ICDR, MINSAL, extensible)** |
-| **Clasificación detallada** | Riesgo (sí/no) | Binario (referir/no) | 5 niveles | Referir/no | Referir/no | **5+ niveles por guía, con cuadrantes** |
-| **Canvas de revisión/anotación** | No | No | No | No | No | **Sí (multicapa, mediciones)** |
-| **Aprobación regulatoria** | Validación clínica publicada (*Eye*) | FDA De Novo, CE | CE, Thai FDA | FDA 510(k), CE | ANVISA | En desarrollo |
-| **Soberanía de datos** | Parcial (cloud en Chile) | No (USA) | No (Google) | No (USA) | No (Brasil) | **Sí (100% local)** |
-| **Despliegue en Chile** | 170 establecimientos, >350K exámenes | No | No | No | No | En desarrollo |
+| **Processing** | Cloud | Cloud | Cloud | Cloud | Cloud | **Edge (desktop)** |
+| **Data leaves device** | Yes | Yes (US) | Yes (Google Cloud) | Yes (US) | Yes (Brazil) | **No** |
+| **Works offline** | No | No | No | No | No | **Yes** |
+| **Required hardware** | Camera + internet | Topcon NW400 (~USD 15–25K) | Tabletop camera (~USD 5–15K) | Compatible camera (~USD 5–15K) | Smartphone + adapter (~USD 3–5K) | **Any existing camera** |
+| **Cost per screening** | Volume license (MINSAL) | ~USD 40–55 | Not commercial | ~USD 8–15 | Subscription | **USD 0** |
+| **Open source** | No | No | Partial (papers) | No | No | **Yes** |
+| **Multi-guideline** | No | No (binary) | No | No | No | **Yes (ICDR, MINSAL, extensible)** |
+| **Detailed classification** | Risk (yes/no) | Binary | 5 levels | Refer/no | Refer/no | **5+ levels per guideline, with quadrants** |
+| **Review/annotation canvas** | No | No | No | No | No | **Yes (multi-layer, measurements)** |
+| **Regulatory approval** | Published clinical validation (*Eye*) | FDA De Novo, CE | CE, Thai FDA | FDA 510(k), CE | ANVISA | In development |
+| **Data sovereignty** | Partial (cloud in Chile) | No (US) | No (Google) | No (US) | No (Brazil) | **Yes (100% local)** |
 
-**No existe otra plataforma que combine edge-computing desktop + funcionamiento offline + código abierto + soporte multi-guía clínica para tamizaje de RD.**
+**No other platform combines edge-computing desktop processing + offline operation + open source + multi-guideline clinical support for DR screening.**
 
-### DART: El Referente Chileno y Cómo DIRD+ lo Complementa
+**DART** (TeleDx) is the most mature DR-screening platform deployed by MINSAL in Chile (170+ public facilities, >350,000 exams; sensitivity 94.6%, specificity 74.3%, validated in *Eye*). DART proved AI screening works in Chile, but its cloud architecture requires internet for every exam and transmits images off-device. **DIRD+ does not aim to replace DART but to complement it**: it enables screening in facilities without connectivity, provides detailed per-quadrant analysis tools for the clinician, and offers an open-source alternative without vendor lock-in.
 
-**DART** (TeleDx) es la plataforma de tamizaje de RD con IA desplegada por el MINSAL en Chile. Es el sistema más maduro en el país:
+### Why existing solutions haven't closed the gap
 
-- **Cobertura**: 170+ establecimientos públicos, >350,000 exámenes analizados
-- **Rendimiento**: Sensibilidad 94.6%, especificidad 74.3% (validación publicada en *Eye*)
-- **Modelo**: Cloud — imágenes se suben a la plataforma para análisis IA + teleinformes por oftalmólogos remotos
-- **Adquisición MINSAL**: Licencia por 200,000 casos (2018)
-- **Impacto**: Reduce necesidad de revisión por oftalmólogo en 50%, aumenta capacidad de atención 2-4x
+| Barrier | How it hurts | How DIRD+ solves it |
+|---------|--------------|---------------------|
+| **Internet dependency** | 95%+ of solutions require cloud. Rural areas that most need screening have the worst connectivity (e.g. Google ARDA failed in rural Thai clinics due to network issues — Beede et al., *CHI*, 2020) | Works 100% offline after the first download |
+| **Cost per screening** | USD 8–55 per screening adds up; for 1.7M Chileans with diabetes that is USD 13–93M/year in software licenses alone | USD 0 per screening |
+| **Proprietary hardware** | IDx-DR requires a Topcon NW400 camera (~USD 25K), creating vendor lock-in | Works with any fundus image |
+| **Data sovereignty** | Retinal images (biometric data) sent to servers in the US, China, or Singapore | Data never leaves the device |
+| **Clinical adaptability** | Binary result without adaptation to local protocols | Multi-guideline: MINSAL Chile, ICDR, or custom guidelines |
+| **Vendor lock-in** | If the vendor raises prices or disappears, the clinic loses screening capacity | Open source; data exportable in an open format |
 
-**DART demostró que el tamizaje con IA funciona en Chile.** Sin embargo, su arquitectura cloud presenta limitaciones que DIRD+ aborda:
+### Data sovereignty as a regulatory advantage
 
-| Aspecto | DART | DIRD+ |
-|---------|------|-------|
-| **Conectividad** | Requiere internet para cada examen | Funciona offline |
-| **Privacidad** | Imágenes se transmiten al cloud | Procesamiento 100% local |
-| **Resultado** | Clasificación de riesgo (sí/no) | Severidad detallada por cuadrante según guía clínica |
-| **Revisión de hallazgos** | No tiene canvas de anotación | Canvas multicapa con herramientas de medición |
-| **Código** | Propietario (TeleDx) | Open source auditable |
-| **Costo** | Licencia por volumen | Gratuito |
-| **Dependencia** | Depende de TeleDx como proveedor | Sin vendor lock-in |
-
-**DIRD+ no busca reemplazar DART sino complementarlo**: DART cubre la red pública con teleinformes centralizados; DIRD+ habilita tamizaje en establecimientos sin conectividad, proporciona herramientas de análisis detallado para el clínico, y ofrece una alternativa open source sin dependencia de proveedor.
-
-### Por qué las Soluciones Existentes no han Cerrado la Brecha
-
-Las soluciones comerciales de IA para RD existen desde 2018 (IDx-DR fue la primera con aprobación FDA). Sin embargo, la brecha de tamizaje persiste, especialmente en países de ingresos medios como Chile:
-
-| Barrera | Cómo afecta | Cómo DIRD+ la resuelve |
-|---------|-------------|------------------------|
-| **Dependencia de internet** | 95%+ de las soluciones requieren cloud. Las zonas rurales donde más se necesita screening son las de peor conectividad. Caso documentado: Google ARDA en Tailandia falló en clínicas rurales por problemas de red (Beede et al., *CHI*, 2020) | Funciona 100% offline tras primera carga |
-| **Costo por tamizaje** | USD 8-55 por screening se acumula. Para 1.7M de diabéticos chilenos: USD 13-93 millones/año solo en licencias de software | USD 0 por tamizaje |
-| **Hardware propietario** | IDx-DR exige cámara Topcon NW400 (~USD 25K). Crea vendor lock-in | Compatible con cualquier imagen de fondo de ojo |
-| **Idioma** | Mayoría de soluciones solo en inglés. Personal de APS chilena no domina inglés técnico | Interfaz y reportes en español nativo |
-| **Soberanía de datos** | Imágenes retinales (datos biométricos) enviadas a servidores en EE.UU., China o Singapur | Datos nunca abandonan el dispositivo |
-| **Adaptabilidad clínica** | Resultado binario (referir/no referir) sin adaptación a protocolos locales | Multi-guía: clasificación según MINSAL Chile, ICDR, o guías personalizadas |
-| **Vendor lock-in** | Si el proveedor sube precios o desaparece, el hospital pierde capacidad de screening | Open source. Datos exportables en formato abierto |
-
-### Ventaja Regulatoria: Soberanía de Datos
-
-La arquitectura edge-computing de DIRD+ otorga una ventaja regulatoria estructural que los competidores cloud no pueden replicar fácilmente:
-
-- **Chile — Ley 21.096**: Consagra la protección de datos personales como derecho constitucional. Los datos biométricos (imágenes retinales) son categoría especial.
-- **Chile — Ley 21.719** (2024): Nuevo marco de protección de datos personales con requisitos más estrictos para datos de salud, alineado con GDPR europeo.
-- **GDPR (Europa)**: Clasifica datos de salud como "categoría especial" con restricciones de transferencia transfronteriza (Art. 9, 44-49).
-- **Tendencia global**: Múltiples países adoptan legislación de soberanía de datos que exige procesamiento local de datos de salud (Vayena & Blasimme, *JLME*, 2018).
-
-DIRD+ cumple con todas estas regulaciones **por diseño**: no hay datos que proteger en tránsito porque nunca salen del dispositivo.
-
-### Impacto Económico
-
-Proyección comparativa para tamizaje a escala nacional en Chile (~1.7 millones de diabéticos):
-
-| Solución | Costo software/año | Hardware inicial | Total Año 1 |
-|----------|--------------------|--------------------|-------------|
-| IDx-DR | ~USD 68-93M | ~USD 25K × N cámaras | >USD 70M |
-| EyeArt | ~USD 13-25M | ~USD 10K × N cámaras | >USD 15M |
-| **DIRD+** | **USD 0** | **Usa cámaras existentes** | **~USD 0** |
-
-Estudios de costo-efectividad respaldan el tamizaje con IA:
-- Reducción del **40-60%** en costos vs. evaluación manual por graders (Tufail et al., *Ophthalmology*, 2017)
-- Costo por tamizaje con IA: **USD 2-15** vs. USD 50-200 con oftalmólogo presencial (Xie et al., *Lancet Digital Health*, 2020)
-- En Inglaterra, el programa nacional de tamizaje (ENSPDR) logró que la RD **dejara de ser la primera causa de ceguera** en edad laboral por primera vez en 2010 (Liew et al., *BMJ Open*, 2014)
+DIRD+'s edge-computing architecture is compliant **by design**: there is no data to protect in transit because it never leaves the device. This aligns with Chile's Law 21.096 (biometric data as a constitutional protection), Chile's Law 21.719 (2024, GDPR-aligned), and the EU GDPR's treatment of health data as a special category with cross-border transfer restrictions (Art. 9, 44–49).
 
 ---
 
-## Arquitectura Técnica
+## Technical Architecture
 
-### Diagrama de Arquitectura
+### Architecture Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│           DISPOSITIVO DEL USUARIO (Desktop Tauri o Web)         │
+│                   USER DEVICE (Tauri desktop)                   │
 │                                                                 │
 │  ┌────────────────┐  ┌───────────────────┐  ┌───────────────┐  │
-│  │   React 18     │  │  ONNX Runtime Web │  │  IndexedDB    │  │
-│  │   TypeScript   │  │  (WebAssembly)    │  │  (Dexie v4)   │  │
-│  │                │  │                   │  │               │  │
-│  │  ┌──────────┐  │  │  Modelos ONNX:    │  │  9 tablas:    │  │
-│  │  │ Canvas   │  │  │  - Detección      │  │  - patients   │  │
-│  │  │ Konva    │◄─┼──┤  - Segmentación   │  │  - sessions   │  │
-│  │  │ multicapa│  │  │                   │  │  - images     │  │
-│  │  └──────────┘  │  │  Análisis:        │  │  - detections │  │
-│  │                │  │  - Clasificador DR │  │  - segments   │  │
-│  │  ┌──────────┐  │  │  - Cuadrantes     │  │  - reports    │  │
-│  │  │ PDF      │  │  │  - Edema macular  │  │  - measures   │  │
-│  │  │ jsPDF    │  │  │  - Copa/disco     │  │  - classif.   │  │
-│  │  └──────────┘  │  │                   │  │  - contrib.   │  │
-│  │                │  │  OpenCV.js (CDN)   │  │               │  │
-│  │  ┌──────────┐  │  │  Refinam. disco   │  │  16 versiones │  │
-│  │  │ Guías    │  │  │  óptico           │  │  de migración │  │
-│  │  │ Clínicas │  │  │                   │  │               │  │
-│  │  │ ICDR     │  │  │  Optimizaciones:  │  │  Export:      │  │
-│  │  │ MINSAL   │  │  │  - SIMD           │  │  .dird (ZIP)  │  │
-│  │  └──────────┘  │  │  - Multi-thread   │  │               │  │
-│  └────────────────┘  │  - CPU profiles   │  └───────────────┘  │
-│                      │    (Intel/AMD/ARM) │                     │
-│                      └───────────────────┘                     │
+│  │   React 18     │  │  ONNX Runtime     │  │  SQLite +     │  │
+│  │   TypeScript   │  │  (WebAssembly)    │  │  SQLCipher    │  │
+│  │                │  │                   │  │  (AES-256)    │  │
+│  │  ┌──────────┐  │  │  ONNX models:     │  │  8 tables:    │  │
+│  │  │ Canvas   │  │  │  - Detection      │  │  - patients   │  │
+│  │  │ Konva    │◄─┼──┤  - Segmentation   │  │  - sessions   │  │
+│  │  │ layers   │  │  │                   │  │  - images     │  │
+│  │  └──────────┘  │  │  Analysis:        │  │  - detections │  │
+│  │                │  │  - DR classifier  │  │  - segments   │  │
+│  │  ┌──────────┐  │  │  - Quadrants      │  │  - reports    │  │
+│  │  │ PDF      │  │  │  - Macular edema  │  │  - measures   │  │
+│  │  │ jsPDF    │  │  │  - Cup/disc       │  │  - classif.   │  │
+│  │  └──────────┘  │  │                   │  │               │  │
+│  │                │  │  OpenCV.js         │  └───────────────┘  │
+│  │  ┌──────────┐  │  │  optic-disc       │  ┌───────────────┐  │
+│  │  │ Clinical │  │  │  refinement       │  │  Local LLM    │  │
+│  │  │ guidelines│ │  │                   │  │  llama.cpp    │  │
+│  │  │ ICDR     │  │  │  Optimizations:   │  │  (on-demand,  │  │
+│  │  │ MINSAL   │  │  │  - SIMD           │  │  report prose)│  │
+│  │  └──────────┘  │  │  - Multi-thread   │  └───────────────┘  │
+│  └────────────────┘  └───────────────────┘                     │
 │                                                                 │
-│         Toda la inferencia IA ocurre aquí ▲                     │
-│         100% local — sin backend ni red                         │
+│         All AI inference happens here ▲                         │
+│         100% local — no backend, no network                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Stack Tecnológico
+### Technology Stack
 
-#### Shell desktop
-| Tecnología | Versión | Rol |
-|-----------|---------|-----|
-| Tauri | v2 | Shell nativo multiplataforma (Rust + WebView) |
-| WebKitGTK | 4.1 | Webview en Linux |
-| Rust | 1.93+ | Backend nativo del shell |
+**Desktop shell:** Tauri v2 (native cross-platform shell, Rust + WebView), WebKitGTK 4.1 (Linux webview), Rust 1.93+.
 
-#### Frontend
-| Tecnología | Versión | Rol |
-|-----------|---------|-----|
-| React | 18.3 | Framework UI |
-| TypeScript | 5.7 | Tipado estático (strict mode) |
-| Vite | 6.0 | Build tool + HMR dev server |
-| Tailwind CSS | 3.4 | Sistema de estilos utilitarios |
-| Radix UI | — | Primitivas accesibles (Dialog, Tabs, Select, Switch, Slider) |
-| React Router | 6 | Navegación SPA |
-| Zustand | 5.0 | Estado global (configuración, canvas, pacientes) |
-| Framer Motion | 11 | Animaciones y transiciones |
-| i18next | 24.2 | Internacionalización (español/inglés) |
-| Vitest + happy-dom | 4.1 | Suite de tests |
+**Frontend:** React 18.3, TypeScript 5.7 (strict), Vite 6, Tailwind CSS 3.4, Radix UI, React Router 6, Zustand 5 (global state: config, canvas, patient), Framer Motion 11, i18next 24.2 (Spanish/English), Vitest + happy-dom.
 
-#### IA e Inferencia
-| Tecnología | Versión | Rol |
-|-----------|---------|-----|
-| ONNX Runtime Web | 1.23 | Motor de inferencia WebAssembly |
-| Modelos ONNX | — | Detección (bounding boxes) + Segmentación (máscaras de píxeles) |
-| OpenCV.js | — | Refinamiento del disco óptico (CDN) |
+**AI & inference:** ONNX Runtime Web 1.23 (WebAssembly engine running inside the Tauri webview), ONNX models (detection bounding boxes + segmentation masks), OpenCV.js (optic-disc refinement), llama.cpp via the `llama-cpp-2` Rust crate (optional in-process LLM for report prose).
 
-#### Canvas y Visualización
-| Tecnología | Versión | Rol |
-|-----------|---------|-----|
-| Konva | 10 | Motor canvas 2D de alto rendimiento |
-| React-Konva | 18.2 | Bindings declarativos React-Konva |
+**Storage:** SQLite with SQLCipher (`rusqlite`, `bundled-sqlcipher-vendored-openssl`) for the AES-256-encrypted local database; Argon2id key derivation (`src-tauri/src/crypto.rs`); JSZip for the portable `.dird` (ZIP) export format.
 
-#### Almacenamiento
-| Tecnología | Versión | Rol |
-|-----------|---------|-----|
-| Dexie | 4.0 | Wrapper IndexedDB con 16 migraciones versionadas |
-| JSZip | 3.10 | Formato `.dird` (ZIP portable con datos de paciente) |
+**Reports:** jsPDF 2.5 + jspdf-autotable 3.8 (client-side PDF generation).
 
-#### Informes
-| Tecnología | Versión | Rol |
-|-----------|---------|-----|
-| jsPDF | 2.5 | Generación de PDF en cliente |
-| jspdf-autotable | 3.8 | Tablas clínicas en PDF |
+### AI Inference Pipeline
 
-### Pipeline de Inferencia IA
-
-El procesamiento de imágenes sigue un pipeline de 6 etapas ejecutado completamente en WebAssembly:
+Image processing runs entirely in WebAssembly, on-device:
 
 ```
-Imagen retinal (cualquier cámara)
-    │
-    ▼
-1. PREPROCESAMIENTO
-   Redimensionar a 640×640, normalizar valores de píxeles
-    │
-    ▼
-2. INFERENCIA ONNX
-   Modelo de detección → bounding boxes con clase y confianza
-   Modelo de segmentación → máscaras de píxeles por lesión
-   (Optimizado: SIMD habilitado, perfiles CPU Intel/AMD/ARM)
-    │
-    ▼
-3. POST-PROCESAMIENTO
-   Non-Maximum Suppression (IoU threshold: 0.45)
-   Filtrado por umbral de confianza configurable
-    │
-    ▼
-4. ANÁLISIS ESPACIAL
-   Distribución por cuadrantes (4 zonas + centro)
-   Detección de edema macular (patrón de exudados)
-   Análisis de microaneurismas, hemorragias
-   Relación copa/disco óptico (con OpenCV.js)
-   Calibración espacial desde disco óptico
-    │
-    ▼
-5. CLASIFICACIÓN CLÍNICA
-   Aplicar guía seleccionada (ICDR 2024 / MINSAL 2017)
-   Mapear lesiones detectadas → criterios de la guía
-   Evaluar Regla 4-2-1 para RD severa
-   Generar: severidad, tratamientos, seguimiento, urgencia
-    │
-    ▼
-6. ALMACENAMIENTO
-   Guardar en IndexedDB: detecciones, segmentaciones,
-   clasificación, mediciones
+Fundus image (any camera)
+  │
+  ▼ 1. PREPROCESS    Resize to 640×640, normalize pixel values
+  │
+  ▼ 2. ONNX INFERENCE   Detection model → boxes with class + confidence
+  │                     Segmentation model → per-lesion pixel masks
+  │                     (SIMD enabled, Intel/AMD/ARM CPU profiles)
+  │
+  ▼ 3. POST-PROCESS   Non-Maximum Suppression (IoU 0.45), confidence threshold
+  │
+  ▼ 4. SPATIAL ANALYSIS   Quadrant distribution (4 zones + center),
+  │                       macular-edema detection, cup/disc ratio (OpenCV.js),
+  │                       spatial calibration from the optic disc
+  │
+  ▼ 5. CLINICAL CLASSIFICATION   Apply selected guideline (ICDR 2024 / MINSAL 2017),
+  │                              map lesions → guideline criteria, evaluate 4-2-1 rule,
+  │                              produce severity, treatments, follow-up, urgency
+  │
+  ▼ 6. STORAGE   Persist to the encrypted SQLite database
 ```
 
-**Clases detectables:**
-Microaneurismas, hemorragias (dot/blot), exudados duros, exudados blandos (cotton wool spots), neovascularización, disco óptico, fóvea.
+**Detectable classes:** microaneurysms, hemorrhages (dot/blot), hard exudates, cotton-wool spots, neovascularization, optic disc, fovea, edema, venous beading, IRMA. **Severity levels (ICDR 2024):** no DR → mild NPDR → moderate NPDR → severe NPDR → proliferative DR.
 
-**Niveles de severidad (ICDR 2024):**
-Sin RD → RDNP leve → RDNP moderada → RDNP severa → RD proliferativa
+### Database Schema
 
-### Sistema de Guías Clínicas Pluggable
+Local **SQLite database encrypted at rest with SQLCipher (AES-256)**, 8 tables:
 
-DIRD+ implementa un motor de clasificación agnóstico a la guía clínica. Las guías son archivos JSON independientes que definen:
+| Table | Key fields | Purpose |
+|-------|------------|---------|
+| **patients** | patientId, name, diabetes (type/duration), HTN, dyslipidemia, medications | Demographics and clinical data |
+| **sessions** | patientId, date, modelVersions, locked, type (normal/combined) | Clinical visits |
+| **images** | sessionId, eyeType (OD/OI), originalBlob, order | Fundus images |
+| **detections** | imageId, type (ai/manual), bbox, class, confidence | Lesion bounding boxes |
+| **segmentations** | imageId, type (ai/manual), maskData, class, opacity | Segmentation masks |
+| **imageClassifications** | imageId, severity, guideline, treatments[], followupDays, urgency, rationale, manuallyModified | Per-guideline DR classification |
+| **reports** | sessionId, type (preview/final), pdfBlob, evaluatorNotes, conclusionEdited | Generated PDF reports |
+| **measurements** | imageId, origin, destination, distancePixels, distanceDD | Calibrated measurements |
 
-```json
-{
-  "guideline_id": "icdr_2024",
-  "metadata": {
-    "name": "ICDR International 2024",
-    "country": "International",
-    "language": "en",
-    "status": "official"
-  },
-  "severity_levels": [
-    {
-      "id": "no_dr",
-      "name_es": "Sin RD Aparente",
-      "order": 0,
-      "color": "#22c55e"
-    },
-    {
-      "id": "mild_npdr",
-      "name_es": "RDNP Leve",
-      "order": 1,
-      "color": "#84cc16"
-    }
-  ],
-  "classification_rules": [
-    {
-      "severity": "mild_npdr",
-      "conditions": ["microaneurysms_only"],
-      "logic": "AND",
-      "priority": 1
-    }
-  ],
-  "rule_421": {
-    "enabled": true,
-    "criteria": [
-      "extensive_hemorrhages_4q",
-      "venous_beading_2q",
-      "irma_1q"
-    ]
-  },
-  "treatment_protocols": [
-    {
-      "severity": "severe_npdr",
-      "urgency": "accelerated",
-      "actions": ["referral_ophthalmology", "retinal_imaging"],
-      "followup_interval_days": 30
-    }
-  ],
-  "class_mapping": {
-    "microaneurysms": ["microaneurysm", "microhemorrhages"],
-    "hemorrhages": ["hemorrhage"],
-    "hardExudates": ["hard_exudate"],
-    "softExudates": ["cotton_wool_spot"],
-    "neovascularization": ["neovascularization"]
-  }
-}
-```
+The `.dird` container format is specified in [`docs/dird-format.md`](docs/dird-format.md).
 
-**Para agregar una nueva guía clínica:**
-1. Crear archivo JSON en `public/clinical-guidelines/` siguiendo el esquema
-2. Registrar en `public/clinical-guidelines/index.json`
-3. La aplicación la detectará automáticamente — sin modificar código fuente
-
-### Esquema de Base de Datos
-
-IndexedDB local con 9 tablas y 16 versiones de migración:
-
-| Tabla | Campos clave | Propósito |
-|-------|-------------|-----------|
-| **patients** | patientId, name, diabetes (tipo/duración), HTA, DLP, medicamentos | Datos demográficos y clínicos |
-| **sessions** | patientId, date, modelVersions, locked, type (normal/combined) | Visitas clínicas |
-| **images** | sessionId, eyeType (OD/OI), originalBlob, order | Imágenes de fondo de ojo |
-| **detections** | imageId, type (ai/manual), bbox, class, confidence | Bounding boxes de lesiones |
-| **segmentations** | imageId, type (ai/manual), maskData, class, opacity | Máscaras de segmentación |
-| **imageClassifications** | imageId, severity, guideline, treatments[], followupDays, urgency, rationale, manuallyModified | Clasificación DR por guía clínica |
-| **reports** | sessionId, type (preview/final), pdfBlob, evaluatorNotes, conclusionEdited | Informes PDF generados |
-| **measurements** | imageId, origin, destination, distancePixels, distanceDD | Mediciones calibradas |
-
-### Estructura del Proyecto
+### Project Structure
 
 ```
 src/
 ├── components/
-│   ├── canvas/               # Canvas de anotación multicapa (Konva)
-│   │   └── advanced-editor/  # Editor avanzado con herramientas especializadas
-│   ├── patients/             # Gestión de pacientes, export/import
-│   ├── upload/               # Carga de imágenes, galería, vista de sesión
-│   ├── reports/              # Generación de informes PDF
-│   ├── settings/             # Configuración (modelos, procesamiento, apariencia)
-│   ├── demo/                 # Paciente demo y pantalla de carga
-│   └── ui/                   # Primitivas UI reutilizables (Radix + Tailwind)
+│   ├── canvas/               # Multi-layer annotation canvas (Konva)
+│   │   └── advanced-editor/  # Advanced editor with specialized tools
+│   ├── patients/             # Patient management, export/import
+│   ├── upload/               # Image upload, gallery, session view
+│   ├── reports/              # PDF report generation
+│   ├── settings/             # Settings (models, processing, appearance, security)
+│   ├── onboarding/           # First-run security wizard
+│   ├── demo/                 # Demo patient and loading screen
+│   └── ui/                   # Reusable UI primitives (Radix + Tailwind)
 ├── lib/
-│   ├── ai/                   # InferenceService, ONNXModelManager, ModelDownloader
+│   ├── ai/                   # InferenceService, ONNXModelManager, ModelDownloader, llm-client
 │   ├── analysis/             # ImageDRClassifier, QuadrantCalculator, EdemaDetector,
 │   │                         # HemorrhageDetector, MicroaneurysmDetector,
 │   │                         # OpticDiscCuppingDetector, SpatialCalibrator
 │   ├── clinical-guidelines/  # GuidelineLoader, MultiGuidelineClassifier
-│   ├── db/                   # Esquema Dexie, migraciones, paciente demo
-│   ├── export/               # DirdExporter, DirdImporter (formato .dird ZIP)
-│   ├── pdf/                  # Motor de renderizado de informes PDF
-│   ├── classes/              # ClassManager (metadatos de clases del modelo)
-│   └── api/                  # ReportAIService (pulido de informes con LLM local)
-├── stores/                   # Estado global Zustand
-│   ├── config-store.ts       # Configuración persistida (modelos, reportes, apariencia)
-│   ├── canvas-store.ts       # Estado del canvas (herramienta, clase, undo/redo)
-│   └── patient-store.ts      # Paciente actual seleccionado
-├── i18n/                     # Internacionalización (español/inglés)
-├── hooks/                    # Custom hooks (useImageUploader)
-├── types/                    # Interfaces TypeScript
-└── App.tsx                   # Router principal + inicialización paralela
+│   ├── db-sql/               # SQLite access layer (shim, mappers, migrator)
+│   ├── db/                   # Legacy Dexie schema (one-time migration only)
+│   ├── export/               # DirdExporter, DirdImporter (.dird ZIP format)
+│   ├── pdf/                  # PDF report rendering engine
+│   ├── classes/              # ClassManager (model class metadata)
+│   └── api/                  # ReportAIService (local-LLM report polishing)
+├── stores/                   # Zustand global state (config, canvas, patient)
+├── i18n/                     # Internationalization (Spanish/English)
+├── hooks/                    # Custom hooks
+├── types/                    # TypeScript interfaces
+└── App.tsx                   # Main router + parallel initialization
+src-tauri/                    # Rust shell: crypto (Argon2id), SQLCipher db, llama.cpp LLM, model registry
 ```
 
 ---
 
-## Funcionalidades
+## Features
 
-### Gestión de Pacientes y Sesiones
-- Crear, editar, archivar y buscar pacientes por nombre o ID
-- Datos clínicos: diabetes (tipo, duración), HTA, dislipidemia, medicamentos
-- Sesiones como visitas clínicas: duplicar, editar, cerrar
-- Paciente demo precargado para evaluación del sistema
-- Sesiones combinadas para análisis longitudinal
-
-### Análisis con IA en el Dispositivo (Desktop o Navegador)
-- **Modelos duales**: Detección (bounding boxes) + Segmentación (máscaras de píxeles)
-- **Ejecución local**: ONNX Runtime (WebAssembly) con SIMD y multi-thread en desktop Tauri
-- **Descarga progresiva**: Modelos desde GitHub `Debaq/dird_models`, cacheados localmente
-- **Sensibilidad configurable**: Umbral de confianza ajustable por modelo
-- **Optimización por CPU**: Perfiles para Intel, AMD y ARM
-- **Procesamiento batch**: Todas las imágenes de una sesión en una ejecución
-- **Historial de rendimiento persistente**: Métricas de tiempo por inferencia (preprocess/inference/postprocess/NMS/total) guardadas localmente, exportables a JSON. Persisten entre sesiones
-
-### Canvas Interactivo de Anotación
-- **5 capas**: Imagen original, detecciones IA, segmentaciones IA, anotaciones manuales, mediciones
-- **Herramientas**: Selección, dibujo libre, polígono, medición (distancia/área), zoom, pan
-- **Controles por capa**: Visibilidad, opacidad, bloqueo
-- **Overlays clínicos**: Cuadrantes retinales, zona macular, área del disco óptico
-- **Corrección humana**: Modificar, ocultar o agregar detecciones sobre los resultados IA
-
-### Clasificación Clínica Multi-Guía
-- Clasificación de severidad según guía clínica seleccionada
-- Análisis por cuadrante (4 zonas + centro) con distribución de lesiones
-- Detectores especializados: hemorragias, microaneurismas, edema macular, copa/disco
-- Evaluación de Regla 4-2-1 para RD severa
-- Resultado: severidad, tratamientos, plazo de seguimiento, nivel de urgencia, rationale
-- El clínico puede ajustar manualmente la clasificación generada
-
-### Generación de Informes PDF
-- **Preview**: Borrador editable. **Final**: Informe definitivo
-- Conclusión clínica generada por la guía activa local; pulido opcional de la redacción con el LLM local embebido (sin red)
-- Secciones configurables: datos del paciente, galería, estadísticas, conclusión
-- Galería personalizable: imágenes originales/anotadas, con/sin cuadrantes y mediciones
-- Notas del evaluador, firma del profesional, edición de conclusión
-- Campos del paciente ocultables (nombre, edad, ID) para privacidad
-
-### Comparación de Sesiones
-- Comparar estadísticas entre 2+ sesiones del mismo paciente
-- Conteo de detecciones, severidad, análisis de tendencia temporal
-- Sesiones combinadas con trazabilidad de origen
-
-### Exportación e Importación
-- **Formato `.dird`**: ZIP con datos completos (paciente, sesiones, imágenes, detecciones, informes)
-- **3 niveles de exportación**: Paciente completo, sesión individual, datos totales
-- **Mapeo de IDs**: IDs se reasignan al importar, evitando conflictos
-- **Detección de colisiones**: Solicita confirmación antes de sobrescribir sesiones existentes
+- **Patient & session management** — create, edit, archive, and search patients; clinical data (diabetes type/duration, HTN, dyslipidemia, medications); sessions as clinical visits; preloaded demo patient; combined sessions for longitudinal analysis.
+- **On-device AI analysis** — dual models (detection + segmentation) on ONNX Runtime (WebAssembly) with SIMD and multi-threading; models downloaded once from [`Debaq/dird_models`](https://github.com/Debaq/dird_models) and stored locally; configurable confidence threshold; per-CPU optimization; batch processing; persistent per-inference performance metrics exportable to JSON.
+- **Interactive annotation canvas** — 5 layers (original image, AI detections, AI segmentations, manual annotations, measurements); tools for selection, freehand, polygon, distance/area measurement, zoom, pan; per-layer visibility/opacity/lock; clinical overlays (retinal quadrants, macular zone, optic-disc area); human correction over AI results.
+- **Multi-guideline clinical classification** — severity per selected guideline; per-quadrant analysis; specialized detectors (hemorrhages, microaneurysms, macular edema, cup/disc); 4-2-1 rule; output of severity, treatments, follow-up, urgency, rationale; clinician can adjust the generated classification.
+- **PDF report generation** — editable preview and final report; clinical conclusion produced locally by the active guideline, with **optional prose polishing by the embedded local LLM (no network)**; configurable sections; customizable gallery; evaluator notes and signature; patient fields hideable for privacy.
+- **At-rest encryption** — first-run wizard sets up a dual-password model (application + export); SQLCipher AES-256 database and AES-256-GCM `.dird` containers; Argon2id key derivation; encryption-status badge always visible.
+- **Session comparison** — compare statistics across 2+ sessions of the same patient; detection counts, severity, temporal trend; combined sessions with origin traceability.
+- **Export & import** — `.dird` (ZIP) with complete data; three export levels (full patient, single session, all data); ID remapping on import; collision detection before overwriting.
 
 ---
 
-## Instalación y Despliegue
+## Installation & Build
 
-DIRD+ se distribuye como **aplicación de escritorio** (Linux, Windows, macOS) empaquetada con Tauri v2. El webview local embebido corre el frontend, sin servidor HTTP.
+DIRD+ is distributed as a **desktop application** (Linux, Windows, macOS) packaged with Tauri v2. The embedded local webview runs the frontend — there is no HTTP server.
 
-### Prerequisitos
+### Prerequisites
 
 - **Rust toolchain** (via [rustup](https://rustup.rs/))
-- **Node.js 20+** y [pnpm](https://pnpm.io/) (`npm i -g pnpm`)
-- Dependencias de sistema WebKitGTK (Linux). En Arch:
-  ```bash
-  sudo pacman -S webkit2gtk-4.1 libayatana-appindicator librsvg patchelf
-  ```
-  En Debian/Ubuntu:
-  ```bash
-  sudo apt install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
-  ```
+- **Node.js 20+** and [pnpm](https://pnpm.io/) (`npm i -g pnpm`)
+- WebKitGTK system dependencies (Linux):
+  - Arch: `sudo pacman -S webkit2gtk-4.1 libayatana-appindicator librsvg patchelf base-devel cmake`
+  - Debian/Ubuntu: `sudo apt install libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf build-essential cmake`
+  - (`cmake` and a C/C++ toolchain are required to build the embedded llama.cpp.)
 
-### Clonar + instalar
+### Clone + install
 
 ```bash
 git clone https://github.com/Debaq/Dird.git
@@ -654,107 +417,87 @@ cd Dird
 pnpm install
 ```
 
-### Desarrollo
+### Development
 
 ```bash
-# Abrir la app de escritorio con HMR
-pnpm tauri:dev
+pnpm tauri:dev          # launch the desktop app with HMR
 ```
 
-Primera compilación Rust toma ~2-3 min. Siguientes arranques son instantáneos (cache `.cargo-target/`).
+The first Rust build takes ~2–3 min; subsequent launches are near-instant.
 
-### Build de producción
+### Production build
 
 ```bash
-# Compila frontend + Rust en modo release
-pnpm tauri:build
+pnpm tauri:build        # build frontend + Rust in release mode
 ```
 
-El binario queda en `./src-tauri/target/release/app` (o `~/.cargo-target/release/app` si `CARGO_TARGET_DIR` está seteado). **No se generan AppImage/deb/rpm** por defecto (`bundle.active=false` en `src-tauri/tauri.conf.json`).
-
-Para generar paquetes de distribución: cambiar `bundle.active` a `true` y correr con `NO_STRIP=true pnpm tauri:build` (evita el bug de `strip` + `.relr.dyn` en Arch moderno).
+The binary lands in `./src-tauri/target/release/app`. **No AppImage/deb/rpm are produced by default** (`bundle.active=false` in `src-tauri/tauri.conf.json`); set it to `true` to produce distribution packages.
 
 ### Tests
 
 ```bash
-pnpm test            # run (30 tests)
-pnpm test:watch      # modo watch
-pnpm test:ui         # UI Vitest
+pnpm test               # Vitest (52 tests)
+cargo test --manifest-path src-tauri/Cargo.toml   # Rust unit tests (crypto, db)
 ```
 
-Cobertura: pipeline ONNX (NMS, postprocess), motor de guías clínicas (ICDR 2024 integración, regla 4-2-1), validador de guías.
+Coverage: ONNX pipeline (NMS, post-process), clinical-guideline engine (ICDR 2024 integration, 4-2-1 rule), guideline validator, model-card validator, crypto, and SQLite layer.
 
-> DIRD+ es 100% local: no requiere variables de entorno ni backend remoto. La inferencia (detección ONNX + narración LLM) corre dentro del proceso Tauri.
-
----
-
-## Guías Clínicas Soportadas
-
-| Guía | País | Descripción | Referencia |
-|------|------|-------------|------------|
-| **ICDR 2024** | Internacional | International Clinical Diabetic Retinopathy Disease Severity Scale | International Council of Ophthalmology |
-| **MINSAL Chile 2017** | Chile | Guía Clínica de Retinopatía Diabética — Ministerio de Salud | GES Problema #31 |
-
-El sistema de guías es extensible. Nuevas guías se agregan como archivos JSON sin modificar código.
+> DIRD+ is 100% local: it needs no environment variables and no remote backend. All inference (ONNX detection + LLM narration) runs inside the Tauri process.
 
 ---
 
-## Hoja de Ruta
+## Supported Clinical Guidelines
 
-### Validación Técnica con Datasets Públicos (en curso)
+| Guideline | Country | Description | Reference |
+|-----------|---------|-------------|-----------|
+| **ICDR 2024** | International | International Clinical Diabetic Retinopathy Disease Severity Scale | International Council of Ophthalmology |
+| **MINSAL Chile 2017** | Chile | Diabetic Retinopathy Clinical Guideline — Ministry of Health | GES Problem #31 |
 
-* Evaluación del pipeline sobre APTOS 2019 (Kaggle) — ~3,600 imágenes, escala ICDR 0-4
-* Evaluación sobre IDRiD — anotaciones a nivel de lesión para validar detecciones individuales
-* Benchmarks de rendimiento de inferencia por dispositivo (desktop, laptop, tablet, móvil)
-* Comparación de tiempos de inferencia ONNX con SIMD habilitado vs deshabilitado
-
-### Validación Clínica (prioridad)
-- [ ] Estudio de validación con 200-500 imágenes evaluadas por oftalmólogos chilenos
-- [ ] Medición de sensibilidad/especificidad contra gold standard
-- [ ] Piloto en CESFAM rural sin oftalmólogo presencial
-
-### Funcionalidades Técnicas
-- [ ] Detección completa de IRMA y arrosariamiento venoso (criterios Regla 4-2-1)
-- [ ] Integración con cámaras retinales vía protocolo DICOM
-- [x] Aplicación de escritorio con Tauri v2 — implementada (Linux/Windows/macOS) como distribución única
-- [ ] Aprendizaje federado para mejora de modelos preservando privacidad
-
-### Regulatorio
-- [ ] Preparación de dossier para ISP Chile (dispositivo médico software)
-- [ ] Alineación con marco FDA SaMD (Software as a Medical Device)
+The guideline system is extensible — new guidelines are added as JSON files without modifying code.
 
 ---
 
-## Referencias Científicas
+## Roadmap
 
-Las referencias completas que sustentan el contexto epidemiológico, clínico y técnico de este proyecto están disponibles en [REFERENCES.md](REFERENCES.md).
+See [`ROADMAP.md`](ROADMAP.md) for the full public roadmap. Highlights:
+
+- **Technical validation** on public datasets (APTOS 2019, IDRiD) and per-device inference benchmarks.
+- **Clinical validation** with 200–500 images graded by Chilean ophthalmologists; sensitivity/specificity against a gold standard; pilot in a rural primary-care clinic.
+- **Technical features**: full IRMA and venous-beading detection (4-2-1 criteria), DICOM camera integration, privacy-preserving federated learning.
+- **Regulatory**: dossier preparation for Chile's ISP (software medical device), alignment with the FDA SaMD framework.
 
 ---
 
-## 🌍 Digital Public Goods Standard Compliance
+## Scientific References
 
-DIRD+ aligns with the [Digital Public Goods Standard](https://digitalpublicgoods.net/standard) maintained by the Digital Public Goods Alliance (DPGA). Below is a mapping of each indicator to the corresponding evidence in this repository.
+Full references supporting the epidemiological, clinical, and technical context are in [`REFERENCES.md`](REFERENCES.md).
+
+---
+
+## Digital Public Goods Standard Compliance
+
+DIRD+ aligns with the [Digital Public Goods Standard](https://digitalpublicgoods.net/standard) maintained by the Digital Public Goods Alliance (DPGA).
 
 | # | Indicator | Status | Evidence |
 |---|-----------|:---:|----------|
 | 1 | **SDG Relevance** | ✅ | SDG 3 (Health), SDG 9 (Innovation), SDG 10 (Reduced Inequalities). See [project website](https://tmeduca.org/dird/). |
 | 2 | **Open Licensing** | ✅ | [GNU AGPL-3.0](LICENSE) (OSI-approved). Reference AI models published under AGPL-3.0 in [dird_models](https://github.com/Debaq/dird_models). |
-| 3 | **Clear Ownership** | ✅ | Owned by Nicolás Baier Quezada, Universidad Austral de Chile (UACh). See [project website](https://tmeduca.org/dird/) and Zenodo deposit ([DOI 10.5281/zenodo.19687226](https://doi.org/10.5281/zenodo.19687226)). |
-| 4 | **Platform Independence** | ✅ | Built on fully open stack (Tauri, React, ONNX Runtime, SQLite, Rust). Runs offline on Windows, Linux, and standards-compliant browsers. No proprietary services required. |
-| 5 | **Documentation** | ✅ | This README, [project website](https://tmeduca.org/dird/), [docs/](docs/), [preprint](https://doi.org/10.64898/2026.04.26.26351745), [validation report](https://tmeduca.org/dird/INFORME_COMPLETO_APTOS.md). |
+| 3 | **Clear Ownership** | ✅ | Owned by Nicolás Baier Quezada, Universidad Austral de Chile (UACh). See [project website](https://tmeduca.org/dird/) and the Zenodo deposit ([DOI 10.5281/zenodo.19687226](https://doi.org/10.5281/zenodo.19687226)). |
+| 4 | **Platform Independence** | ✅ | Built on a fully open stack (Tauri, React, ONNX Runtime, SQLite, Rust). Runs offline; no proprietary services required. |
+| 5 | **Documentation** | ✅ | This README, [project website](https://tmeduca.org/dird/), [docs/](docs/), [preprint](https://doi.org/10.64898/2026.04.26.26351745), and the [Wiki](https://github.com/Debaq/Dird/wiki). |
 | 6 | **Non-PII Data Extraction** | ✅ | All non-PII data (models, configurations, derived metrics) uses open standards: ONNX, JSON, SQLite, ZIP. See [docs/dird-format.md](docs/dird-format.md) and [docs/model-interface.md](docs/model-interface.md). |
-| 7 | **Privacy & Applicable Laws** | ✅ | See [PRIVACY.md](PRIVACY.md). Compatible by design with GDPR, HIPAA, Chilean Law 19.628 and 21.719. |
-| 8 | **Open Standards & Best Practices** | ✅ | ONNX, ISO 32000 (PDF), ISO/IEC 19592 (SQLite), JSON (RFC 8259), W3C web standards. SemVer 2.0.0, FAIR principles, Privacy by Design (Cavoukian). |
-| 9A | **Data Privacy & Security** | ✅ | Local-only processing. AES-256 at-rest encryption (v2.0+) with Argon2id key derivation. Dual-password model. See [PRIVACY.md](PRIVACY.md) and [SECURITY.md](SECURITY.md). |
+| 7 | **Privacy & Applicable Laws** | ✅ | See [PRIVACY.md](PRIVACY.md). Compatible by design with GDPR, HIPAA, and Chilean Laws 19.628 and 21.719. |
+| 8 | **Open Standards & Best Practices** | ✅ | ONNX, ISO 32000 (PDF), SQLite, JSON (RFC 8259), Argon2id (RFC 9106), AES-256-GCM. SemVer 2.0.0, Privacy by Design. |
+| 9A | **Data Privacy & Security** | ✅ | Local-only processing. AES-256 at-rest encryption (SQLCipher + `.dird` GCM) with Argon2id key derivation and a dual-password model. See [PRIVACY.md](PRIVACY.md) and [SECURITY.md](SECURITY.md). |
 | 9B | **Inappropriate & Illegal Content** | ✅ N/A | DIRD+ does not collect, store, or distribute user-generated content. It is a single-operator clinical tool. |
-| 9C | **Protection from Harassment** | ✅ N/A | DIRD+ does not facilitate inter-user interactions within the application. Repository community follows GitHub Community Guidelines. |
+| 9C | **Protection from Harassment** | ✅ N/A | DIRD+ does not facilitate inter-user interactions within the application. |
 
 ### Key documents
 
-- 📄 [PRIVACY.md](PRIVACY.md) — Privacy policy and data handling
-- 🔒 [SECURITY.md](SECURITY.md) — Vulnerability disclosure policy
-- 🗺️ [ROADMAP.md](ROADMAP.md) — Public development roadmap
-- 📦 [docs/dird-format.md](docs/dird-format.md) — `.dird` file format specification
+- 📄 [PRIVACY.md](PRIVACY.md) — privacy policy and data handling
+- 🔒 [SECURITY.md](SECURITY.md) — vulnerability disclosure policy
+- 🗺️ [ROADMAP.md](ROADMAP.md) — public development roadmap
+- 📦 [docs/dird-format.md](docs/dird-format.md) — `.dird` file-format specification
 - 🧠 [docs/model-interface.md](docs/model-interface.md) — ONNX model contract for plug-in models
 
 ### Scientific citation
@@ -763,15 +506,14 @@ If you use DIRD+ in research, please cite:
 
 - **Application**: Baier Quezada, N. (2026). *DIRD+ — Diabetic Imaging Retinopathy Detector*. Zenodo. https://doi.org/10.5281/zenodo.19687226
 - **Reference model**: Baier Quezada, N. (2026). *DIRDv2r0 — Diabetic retinopathy detection model*. Zenodo. https://doi.org/10.5281/zenodo.19685466
-- **Preprint**: Baier Quezada, N. (2026). External validation of DIRD+ on APTOS 2019. medRxiv. https://doi.org/10.64898/2026.04.26.26351745
+- **Preprint**: Baier Quezada, N. (2026). *External validation of DIRD+ on APTOS 2019*. medRxiv. https://doi.org/10.64898/2026.04.26.26351745
 
 ---
 
-## Autor
+## Author
 
-**Nicolás Baier Quezada**
+**Nicolás Baier Quezada** — Universidad Austral de Chile, Puerto Montt 🇨🇱
 
-Reportes de bugs y contribuciones vía [issues](https://github.com/Debaq/Dird/issues) y pull requests en este repositorio.
+Bug reports and contributions via [issues](https://github.com/Debaq/Dird/issues) and pull requests.
 
----
-DIRD+ es software libre bajo licencia GNU AGPLv3 (copyleft fuerte). Las contribuciones son bienvenidas.
+DIRD+ is free software under the **GNU AGPLv3** license (strong copyleft). Contributions are welcome.
