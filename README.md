@@ -357,16 +357,8 @@ Estudios de costo-efectividad respaldan el tamizaje con IA:
 │                      └───────────────────┘                     │
 │                                                                 │
 │         Toda la inferencia IA ocurre aquí ▲                     │
+│         100% local — sin backend ni red                         │
 └─────────────────────────────────────────────────────────────────┘
-                         │ (opcional)
-                         ▼
-              ┌─────────────────────┐
-              │  Backend PHP        │
-              │  - Gestión tokens   │
-              │  - Contribuciones   │
-              │  - Administración   │
-              │  - Mensajería       │
-              └─────────────────────┘
 ```
 
 ### Stack Tecnológico
@@ -387,7 +379,7 @@ Estudios de costo-efectividad respaldan el tamizaje con IA:
 | Tailwind CSS | 3.4 | Sistema de estilos utilitarios |
 | Radix UI | — | Primitivas accesibles (Dialog, Tabs, Select, Switch, Slider) |
 | React Router | 6 | Navegación SPA |
-| Zustand | 5.0 | Estado global (configuración, canvas, tokens, pacientes) |
+| Zustand | 5.0 | Estado global (configuración, canvas, pacientes) |
 | Framer Motion | 11 | Animaciones y transiciones |
 | i18next | 24.2 | Internacionalización (español/inglés) |
 | Vitest + happy-dom | 4.1 | Suite de tests |
@@ -546,7 +538,6 @@ IndexedDB local con 9 tablas y 16 versiones de migración:
 | **imageClassifications** | imageId, severity, guideline, treatments[], followupDays, urgency, rationale, manuallyModified | Clasificación DR por guía clínica |
 | **reports** | sessionId, type (preview/final), pdfBlob, evaluatorNotes, conclusionEdited | Informes PDF generados |
 | **measurements** | imageId, origin, destination, distancePixels, distanceDD | Mediciones calibradas |
-| **pendingContributions** | type (image/conclusion), referenceId, status | Contribuciones al dataset compartido |
 
 ### Estructura del Proyecto
 
@@ -559,9 +550,6 @@ src/
 │   ├── upload/               # Carga de imágenes, galería, vista de sesión
 │   ├── reports/              # Generación de informes PDF
 │   ├── settings/             # Configuración (modelos, procesamiento, apariencia)
-│   ├── admin/                # Panel de administración protegido
-│   ├── contribution/         # Contribución de datos al dataset compartido
-│   ├── academy/              # Contenido educativo
 │   ├── demo/                 # Paciente demo y pantalla de carga
 │   └── ui/                   # Primitivas UI reutilizables (Radix + Tailwind)
 ├── lib/
@@ -574,14 +562,13 @@ src/
 │   ├── export/               # DirdExporter, DirdImporter (formato .dird ZIP)
 │   ├── pdf/                  # Motor de renderizado de informes PDF
 │   ├── classes/              # ClassManager (metadatos de clases del modelo)
-│   └── api/                  # TokenService, AdminService
+│   └── api/                  # ReportAIService (pulido de informes con LLM local)
 ├── stores/                   # Estado global Zustand
 │   ├── config-store.ts       # Configuración persistida (modelos, reportes, apariencia)
 │   ├── canvas-store.ts       # Estado del canvas (herramienta, clase, undo/redo)
-│   ├── token-store.ts        # Tokens disponibles para informes
 │   └── patient-store.ts      # Paciente actual seleccionado
 ├── i18n/                     # Internacionalización (español/inglés)
-├── hooks/                    # Custom hooks (useImageUploader, useMessagePolling)
+├── hooks/                    # Custom hooks (useImageUploader)
 ├── types/                    # Interfaces TypeScript
 └── App.tsx                   # Router principal + inicialización paralela
 ```
@@ -622,7 +609,8 @@ src/
 - El clínico puede ajustar manualmente la clasificación generada
 
 ### Generación de Informes PDF
-- **Preview**: Borrador sin consumir token. **Final**: Informe definitivo
+- **Preview**: Borrador editable. **Final**: Informe definitivo
+- Conclusión clínica generada por la guía activa local; pulido opcional de la redacción con el LLM local embebido (sin red)
 - Secciones configurables: datos del paciente, galería, estadísticas, conclusión
 - Galería personalizable: imágenes originales/anotadas, con/sin cuadrantes y mediciones
 - Notas del evaluador, firma del profesional, edición de conclusión
@@ -638,28 +626,6 @@ src/
 - **3 niveles de exportación**: Paciente completo, sesión individual, datos totales
 - **Mapeo de IDs**: IDs se reasignan al importar, evitando conflictos
 - **Detección de colisiones**: Solicita confirmación antes de sobrescribir sesiones existentes
-
-### Sistema de Contribución
-- Subir imágenes y clasificaciones al dataset compartido
-- Seguimiento de contribuciones pendientes y enviadas
-- Mejora colaborativa de modelos
-
-### Panel de Administración
-- Gestión de tokens por instalación
-- Visualización de contribuciones recibidas
-- Sistema de mensajería broadcast a instalaciones
-- Monitoreo de beacons (instalaciones activas)
-
-### Módulo Academy
-
-Sección educativa consultiva integrada en la aplicación, orientada a que el profesional de salud comprenda qué detecta la IA, cómo clasifica y qué guía clínica aplica:
-
-- **Escalas de clasificación de RD**: Tres tabs comparativas con ICDR (internacional), MINSAL 2017 (Chile/GES) y ETDRS (investigación), con niveles de severidad, conducta clínica y links a guías oficiales
-- **Clases detectables**: Catálogo visual de lesiones que el modelo detecta actualmente (microaneurismas, hemorragias, exudados duros/blandos, neovascularización) y clases en desarrollo (IRMA, arrosariamiento venoso, edema macular)
-- **Cómo funciona DIRD**: Explicación del flujo de trabajo y la arquitectura de privacidad
-- **Documentación técnica**: Acceso directo a revisión técnica del clasificador, roadmap de entrenamiento, mejoras sin reentrenar modelos, y guía clínica MINSAL 2017 (PDF original)
-- **Disclaimer clínico**: Aviso de que es herramienta de apoyo, no reemplazo del criterio profesional
-- **Tutorial interactivo**: Preparado para guía paso a paso (próximamente)
 
 ---
 
