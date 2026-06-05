@@ -34,9 +34,6 @@ docs/sample-report-*.pdf
 .env.development.local
 .env.production.local
 
-# Backend data (generado dinámicamente)
-backend/tokens.json
-
 # Claude Code local state
 .claude/
 
@@ -50,7 +47,6 @@ backend/tokens.json
 *.njsproj
 *.sln
 *.sw?
-backend/data/api_keys.json
 
 # Validation datasets and results (large files)
 validation/datasets/*
