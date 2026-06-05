@@ -5,17 +5,6 @@
     "longDescription": "Plataforma de análisis de imágenes oftalmológicas con IA edge-computing. Todos los datos permanecen en tu dispositivo.",
     "start": "Comenzar"
   },
-  "webWarning": {
-    "title": "Versión Web — Solo Demostración",
-    "intro": "Esta versión web de DIRD+ es para exploración y demostración.",
-    "bullet1": "No ingrese datos reales de pacientes (nombre, identificadores, historial clínico).",
-    "bullet2": "Los datos se guardan en el navegador (IndexedDB) y pueden perderse al limpiar el historial o cambiar de equipo.",
-    "bullet3": "Para uso clínico real, utilice la aplicación de escritorio: cifrado en reposo, backups y protección adecuada.",
-    "legal": "El uso con datos clínicos reales puede infringir la normativa de protección de datos y secreto médico aplicable en su jurisdicción (por ejemplo GDPR en UE, HIPAA en EE.UU., Ley 21.719 / Ley 20.584 en Chile). Usted es responsable del cumplimiento.",
-    "downloadDesktop": "Descargar versión de escritorio",
-    "acknowledge": "Entiendo, continuar con datos de prueba",
-    "dontShowAgain": "No volver a mostrar"
-  },
   "ui": {
     "close": "Cerrar",
     "loading": "Cargando...",
@@ -589,7 +578,7 @@
     "previewButton": "Generar Borrador",
     "finalizeDescription": "Genera el informe clínico oficial. Bloquea la estudio permanentemente para garantizar la integridad de los datos.",
     "importantNoteTitle": "Importante:",
-    "importantNoteBody": "Los informes generados se guardan localmente en la base de datos del navegador. Puede acceder a ellos desde la pestaña \"Reporte\" de esta estudio en cualquier momento.",
+    "importantNoteBody": "Los informes generados se guardan localmente en la base de datos local de la aplicación. Puede acceder a ellos desde la pestaña \"Reporte\" de esta estudio en cualquier momento.",
     "generated": "Informe generado exitosamente",
     "processingWithAI": "Procesando con IA...",
     "previewGenerated": "Vista preliminar generada",

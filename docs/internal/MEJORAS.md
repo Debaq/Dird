@@ -6,9 +6,9 @@
 
 ## Estado Actual - Lo que está bien
 
-- Arquitectura offline-first sólida (IndexedDB/Dexie con 16 versiones de migración)
+- Arquitectura local sólida (SQLite/SQLCipher cifrado en el proceso Tauri)
 - Sistema de directrices clínicas extensible (ICDR, MINSAL)
-- AI edge-computing real (ONNX en browser via WebAssembly)
+- AI edge-computing real (ONNX vía WebAssembly en el webview Tauri)
 - Zustand bien usado para estado global
 - TypeScript strict mode habilitado
 - i18n implementado (ES/EN)

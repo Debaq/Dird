@@ -124,10 +124,6 @@ export interface AppConfig {
   advancedAnalysis: AdvancedAnalysisConfig;
   debug: DebugConfig;
   activeGuideline: string; // ID of active clinical guideline
-  pwa: {
-    installPromptShown: boolean;
-    updateAvailable: boolean;
-  };
 }
 
 interface ConfigStore {
@@ -250,11 +246,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       general: false
     }
   },
-  activeGuideline: 'icdr_2024', // Default to ICDR International standard
-  pwa: {
-    installPromptShown: false,
-    updateAvailable: false
-  }
+  activeGuideline: 'icdr_2024' // Default to ICDR International standard
 };
 
 export const useConfigStore = create<ConfigStore>()(

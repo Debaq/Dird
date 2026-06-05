@@ -114,9 +114,9 @@ La OMS y la ADA recomiendan exámenes de fondo de ojo **al menos cada 1-2 años*
 
 ## La Solución
 
-DIRD+ es una plataforma de doble distribución que ejecuta modelos de visión artificial para detección de retinopatía diabética **íntegramente en el dispositivo del usuario** mediante ONNX Runtime (WebAssembly):
+DIRD+ es una **aplicación de escritorio** (Linux/Windows/macOS, empaquetada con Tauri v2) que ejecuta modelos de visión artificial para detección de retinopatía diabética **íntegramente en el dispositivo del usuario** mediante ONNX Runtime (WebAssembly):
 
-- **Aplicación de escritorio** (Linux/Windows/macOS, empaquetada con Tauri v2) — distribución única, con historial persistente cifrado, base de datos local y operación 100% offline tras la instalación.
+- Historial persistente cifrado, base de datos local SQLite y operación 100% offline tras la instalación.
 
 Las imágenes de fondo de ojo se procesan localmente — **los datos del paciente nunca abandonan el dispositivo**.
 

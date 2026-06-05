@@ -5,17 +5,6 @@
     "longDescription": "Ophthalmological image analysis platform with edge-computing AI. All data remains on your device.",
     "start": "Start"
   },
-  "webWarning": {
-    "title": "Web Version — Demonstration Only",
-    "intro": "This web version of DIRD+ is intended for exploration and demonstration.",
-    "bullet1": "Do not enter real patient data (names, identifiers, medical history).",
-    "bullet2": "Data is stored in the browser (IndexedDB) and can be lost when clearing history or switching devices.",
-    "bullet3": "For real clinical use, install the desktop app: encryption at rest, backups and proper protection.",
-    "legal": "Using this web version with real clinical data may violate the data protection and medical confidentiality regulations that apply in your jurisdiction (e.g. GDPR in the EU, HIPAA in the US, Law 21.719 / Law 20.584 in Chile). You are responsible for compliance.",
-    "downloadDesktop": "Download desktop version",
-    "acknowledge": "I understand, continue with test data",
-    "dontShowAgain": "Don't show again"
-  },
   "ui": {
     "close": "Close",
     "loading": "Loading...",
@@ -589,7 +578,7 @@
     "previewButton": "Generate Draft",
     "finalizeDescription": "Generates the official clinical report. Permanently locks the study to ensure data integrity.",
     "importantNoteTitle": "Important:",
-    "importantNoteBody": "Generated reports are saved locally in the browser's database. You can access them from the \"Report\" tab of this study at any time.",
+    "importantNoteBody": "Generated reports are saved locally in the local application database. You can access them from the \"Report\" tab of this study at any time.",
     "generated": "Report generated successfully",
     "processingWithAI": "Processing with AI...",
     "previewGenerated": "Draft report generated",
