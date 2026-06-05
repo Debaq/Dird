@@ -17,6 +17,9 @@ artifacts
 # Local LLM weights (downloaded on-demand to <app_data>/llm/, also for repo safety)
 *.gguf
 
+# Reportes de muestra pesados (no versionar; regenerables desde la app)
+docs/sample-report-*.pdf
+
 # Encrypted `.dird` exports — sensitive clinical data, never commit
 *.dird
 
