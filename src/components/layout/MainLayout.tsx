@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Users, Settings, FileText, Coffee, Star, GraduationCap } from 'lucide-react';
-import { useLiveQuery } from '@/lib/db-sql';
+import { Users, Settings, FileText, GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useConfigStore } from '@/stores/config-store';
 import { useTokenStore } from '@/stores/token-store';
-import { db } from '@/lib/db/schema';
 import { getAssetPath } from '@/utils/assets';
 import TokenCounter from '@/components/tokens/TokenCounter';
 import { TokenInfoModal } from '@/components/tokens/TokenInfoModal';
@@ -23,16 +21,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
   const tokens = useTokenStore((state) => state.tokens);
   const [showTokenInfo, setShowTokenInfo] = useState(false);
 
-  // Count all pending contributions
-  const pendingContributions = useLiveQuery(
-    () => db.pendingContributions.where('status').equals('pending').count()
-  );
-
   const navItems = [
     { path: '/patients', icon: Users, label: t('patients.title') },
     { path: '/reports', icon: FileText, label: t('reports.title') },
     { path: '/settings', icon: Settings, label: t('settings.title') },
-    { path: '/contribute', icon: Coffee, label: t('contribution.title') },
     { path: '/academy', icon: GraduationCap, label: t('academy.title') },
   ];
 
@@ -96,8 +88,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname.startsWith(item.path);
-              const isContribute = item.path === '/contribute';
-              const showBadge = !!(isContribute && pendingContributions && pendingContributions > 0);
 
               return (
                 <Link
@@ -116,9 +106,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
                 >
                   <div className="relative">
                     <Icon className="w-4 h-4 dark:text-gray-200" />
-                    {showBadge && (
-                      <Star className="absolute -top-3 -right-3 w-4 h-4 text-amber-500 fill-amber-500 animate-pulse" />
-                    )}
                   </div>
                   <span className="text-sm font-medium">{item.label}</span>
                 </Link>

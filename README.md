@@ -208,10 +208,10 @@ Un principio de diseño fundamental de DIRD+ es la **separación estricta entre 
                            │
                            ▼ datos estructurados ya clasificados
 ┌──────────────────────────────────────────────────────────────────────┐
-│                    NARRACIÓN (remota, opcional)                       │
+│                    NARRACIÓN (local, opcional)                        │
 │                                                                      │
-│  Datos de clasificación → LLM externo → Texto de conclusión clínica │
-│  (severidad, lesiones,    (vía backend)   narrativo para el informe  │
+│  Datos de clasificación → LLM local  → Texto de conclusión clínica  │
+│  (severidad, lesiones,   (llama.cpp)    narrativo para el informe    │
 │   tratamientos, urgencia)                                            │
 │                                                                      │
 │  El LLM NARRA. Recibe la decisión ya tomada por la guía y la        │
@@ -718,13 +718,7 @@ pnpm test:ui         # UI Vitest
 
 Cobertura: pipeline ONNX (NMS, postprocess), motor de guías clínicas (ICDR 2024 integración, regla 4-2-1), validador de guías.
 
-### Variables de entorno
-
-| Variable | Descripción | Ejemplo |
-|----------|-------------|---------|
-| `VITE_API_BASE_URL` | URL absoluta del backend PHP (contribuciones + admin) | `https://tmeduca.org/dird/backend` |
-
-Definidas en `.env.development` (dev remoto) y `.env.production` (bundle final).
+> DIRD+ es 100% local: no requiere variables de entorno ni backend remoto. La inferencia (detección ONNX + narración LLM) corre dentro del proceso Tauri.
 
 ---
 

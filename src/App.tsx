@@ -12,7 +12,6 @@ import LanguageSync from '@/components/LanguageSync';
 import DocumentTitleSync from '@/components/DocumentTitleSync';
 import GlobalReportsList from '@/components/reports/GlobalReportsList';
 import SessionComparison from '@/components/patients/SessionComparison';
-import ContributionMenu from '@/components/contribution/ContributionMenu';
 import AcademyView from '@/components/academy/AcademyView';
 import { db } from '@/lib/db/schema';
 import {type LoadingProgress } from '@/lib/db/demoPatient';
@@ -21,7 +20,6 @@ import { useTokenStore } from '@/stores/token-store';
 import { fetchTokens } from '@/lib/api/token-service';
 import { classManager } from '@/lib/classes/class-manager';
 import { waitForOpenCV } from '@/lib/ai/optic-disc-refiner';
-import { DoomEasterEgg } from '@/components/ui/DoomEasterEgg';
 import { AppGate } from '@/components/auth/AppGate';
 
 function App() {
@@ -128,7 +126,6 @@ function App() {
         duration={4000}
       />
       <AppGate>
-      <DoomEasterEgg />
       <LanguageSync />
       <DocumentTitleSync />
       <Routes>
@@ -201,16 +198,6 @@ function App() {
           element={
             <MainLayout>
               <Settings />
-            </MainLayout>
-          }
-        />
-
-        {/* Contribution menu */}
-        <Route
-          path="/contribute"
-          element={
-            <MainLayout>
-              <ContributionMenu />
             </MainLayout>
           }
         />
