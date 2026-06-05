@@ -15,8 +15,6 @@ import SessionComparison from '@/components/patients/SessionComparison';
 import { db } from '@/lib/db/schema';
 import {type LoadingProgress } from '@/lib/db/demoPatient';
 import { DemoLoadingScreen } from '@/components/demo/DemoLoadingScreen';
-import { useTokenStore } from '@/stores/token-store';
-import { fetchTokens } from '@/lib/api/token-service';
 import { classManager } from '@/lib/classes/class-manager';
 import { waitForOpenCV } from '@/lib/ai/optic-disc-refiner';
 import { AppGate } from '@/components/auth/AppGate';
@@ -33,9 +31,7 @@ function App() {
     total: 1,
     message: t('demo.loading.steps.init'),
   });
-  const setTokens = useTokenStore((state) => state.setTokens);
-
-  // Inicializar paciente demo y cargar tokens al inicio
+  // Inicializar paciente demo al inicio
   useEffect(() => {
     let cancelled = false; // Para evitar race conditions
 
@@ -49,17 +45,6 @@ function App() {
     };
 
     db.on('blocked', handleDbBlocked);
-
-    const loadTokens = async () => {
-      try {
-        const tokenCount = await fetchTokens();
-        if (!cancelled) {
-          setTokens(tokenCount);
-        }
-      } catch (error) {
-        console.error('❌ Error al cargar tokens:', error);
-      }
-    };
 
     const loadModelMetadata = async () => {
       try {
@@ -85,7 +70,7 @@ function App() {
     };
 
     // Ejecutar en paralelo
-    Promise.all([loadTokens(), loadModelMetadata(), initOpenCV()]).then(() => {
+    Promise.all([loadModelMetadata(), initOpenCV()]).then(() => {
       if (!cancelled) {
         setIsInitializing(false);
       }
@@ -102,7 +87,7 @@ function App() {
       // db.on('blocked') does not need to be removed as db is a singleton and long-lived, 
       // but strictly we should unsubscribe if we could. Dexie doesn't provide easy off().
     };
-  }, [setTokens, isInitializing, t]);
+  }, [isInitializing, t]);
 
   // Mostrar pantalla de carga mientras se inicializa
   if (isInitializing) {

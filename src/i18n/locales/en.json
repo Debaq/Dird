@@ -1305,29 +1305,6 @@
       }
     }
   },
-  "tokens": {
-    "modal": {
-      "title": "My Session Token",
-      "description": "This is your unique installation identifier:",
-      "copyButton": "Copy Token",
-      "copied": "Token copied to clipboard",
-      "close": "Close"
-    },
-    "beacon": {
-      "active": "Beacon Active",
-      "adminNotified": "The administrator has been notified of your help request.",
-      "timeRemaining": "Time remaining:",
-      "activate": "🚨 Trigger Beacon",
-      "activating": "Activating...",
-      "activated": "Beacon activated! The administrator will be notified.",
-      "alreadyActive": "Beacon already active ({{time}} remaining)",
-      "error": "Error activating beacon",
-      "info": {
-        "title": "ℹ️ What is the beacon?",
-        "description": "The beacon will alert the administrator for 5 minutes. Use it when you need urgent help."
-      }
-    }
-  },
   "clinical": {
     "warnings": {
       "quadrantUnavailable": "Quadrant analysis unavailable - Rule 4-2-1 precision reduced",

@@ -1305,29 +1305,6 @@
       }
     }
   },
-  "tokens": {
-    "modal": {
-      "title": "Mi Token de Sesión",
-      "description": "Este es tu identificador único de instalación:",
-      "copyButton": "Copiar Token",
-      "copied": "Token copiado al portapapeles",
-      "close": "Cerrar"
-    },
-    "beacon": {
-      "active": "Baliza Activa",
-      "adminNotified": "El administrador ha sido notificado de tu solicitud de ayuda.",
-      "timeRemaining": "Tiempo restante:",
-      "activate": "🚨 Encender Baliza",
-      "activating": "Activando...",
-      "activated": "¡Baliza activada! El administrador será notificado.",
-      "alreadyActive": "Baliza ya está activa ({{time}} restantes)",
-      "error": "Error al activar baliza",
-      "info": {
-        "title": "ℹ️ ¿Qué es la baliza?",
-        "description": "La baliza alertará al administrador durante 5 minutos. Úsala cuando necesites ayuda urgente."
-      }
-    }
-  },
   "clinical": {
     "warnings": {
       "quadrantUnavailable": "Análisis de cuadrantes no disponible - precisión de regla 4-2-1 reducida",

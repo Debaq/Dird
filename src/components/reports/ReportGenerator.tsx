@@ -16,10 +16,8 @@ import {
 import { generateSessionReport } from '@/lib/pdf/report-generator';
 import type { ReportType } from '@/lib/pdf/report-generator';
 import { db } from '@/lib/db/schema';
-import { useTokenStore } from '@/stores/token-store';
 import { useConfigStore } from '@/stores/config-store';
-import { processConclusion, confirmProcessing } from '@/lib/api/token-service';
-import { getSessionClassifications } from '@/lib/analysis/image-classification-service';
+import { processConclusion } from '@/lib/api/report-ai-service';
 import { classifyDiabeticRetinopathy, formatClassificationText } from '@/lib/analysis/dr-classifier';
 
 interface ReportGeneratorProps {
@@ -39,17 +37,8 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
   const [previewGenerated, setPreviewGenerated] = useState(false);
   const [hasInteractedWithPreview, setHasInteractedWithPreview] = useState(false);
   const [forceOffline, setForceOffline] = useState(false);
-  const { tokens, setTokens } = useTokenStore();
 
   const handleGenerateReport = async (type: ReportType) => {
-    // Offline si no hay tokens o si el clínico marcó modo local explícito
-    const noTokensMode = tokens <= 0;
-    const useOffline = noTokensMode || forceOffline;
-
-    if (noTokensMode && !forceOffline) {
-      toast.warning(t('reports.offlineModeWarning', { defaultValue: 'Sin tokens: Generando informe en modo offline (sin validación externa).' }));
-    }
-
     setGenerating(true);
     try {
       // 1. Gather report data
@@ -65,24 +54,8 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
       );
       const detections = allDetections.flat();
 
-      const allSegmentations = await Promise.all(
-        images.map((img) => db.segmentations.where('imageId').equals(img.id!).toArray())
-      );
-      const segmentations = allSegmentations.flat();
-
-      const allMeasurements = await Promise.all(
-        images.map((img) => db.measurements.where('imageId').equals(img.id!).toArray())
-      );
-      const measurements = allMeasurements.flat();
-
-      // Fetch AI Classifications
-      const classifications = await getSessionClassifications(sessionId);
-
-      let systemComment = '';
-      let tokensConsumed = false;
-      let fellBackToOffline = false;
-
-      const generateOfflineComment = async (): Promise<string> => {
+      // 2. Comentario clínico local: la guía activa clasifica (siempre, sin red).
+      const generateLocalComment = async (): Promise<string> => {
         const detectionsByEye = new Map<'OD' | 'OI', any[]>();
         for (const img of images) {
           const imgDetections = detections.filter(d => d.imageId === img.id);
@@ -93,103 +66,26 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         }
         const { config } = useConfigStore.getState();
         const localClassification = await classifyDiabeticRetinopathy(detectionsByEye, patient, config.activeGuideline);
-        return `[OFFLINE GENERATION]\n${formatClassificationText(localClassification)}`;
+        return formatClassificationText(localClassification);
       };
 
-      if (!useOffline) {
-        // --- ONLINE MODE ---
-        // Prepare report data for backend
-        const reportDataForBackend = {
-          patient: {
-            id: patient.id,
-            // Removed personal identifiers for privacy
-          },
-          session: {
-            id: session.id,
-            sessionNumber: session.sessionNumber,
-            date: session.date,
-            notes: session.notes,
-          },
-          images: images.map(img => ({
-            id: img.id,
-            filename: img.filename,
-            width: img.width,
-            height: img.height,
-          })),
-          detections: detections.map(d => ({
-            id: d.id,
-            imageId: d.imageId,
-            type: d.type,
-            bbox: d.bbox,
-            class: d.class,
-            confidence: d.confidence,
-          })),
-          classifications: classifications.map(c => ({
-            eyeType: c.eyeType,
-            severity: c.severity,
-            severityLabel: c.severityLabel,
-            confidence: c.confidence,
-            criteria: c.criteria,
-            lesions: c.lesions,
-            warnings: c.warnings,
-            // Guideline information
-            guideline: c.guideline,
-            guidelineName: c.guidelineName,
-            guidelineVersion: c.guidelineVersion,
-            treatments: c.treatments,
-            followupDays: c.followupDays,
-            urgency: c.urgency,
-            rationale: c.rationale,
-            rule421CriteriaMet: c.rule421CriteriaMet
-          })),
-          segmentations: segmentations.map(s => ({
-            id: s.id,
-            imageId: s.imageId,
-            type: s.type,
-            class: s.class,
-            confidence: s.confidence,
-          })),
-          measurements: measurements.map(m => ({
-            id: m.id,
-            imageId: m.imageId,
-            distancePixels: m.distancePixels,
-            distanceDD: m.distanceDD,
-          })),
-          evaluatorNotes,
-          reportType: type,
-        };
+      let systemComment = await generateLocalComment();
+      let aiPolished = false;
 
+      // 3. Pulido opcional con el LLM local activo (no clasifica, solo redacta).
+      if (!forceOffline) {
         try {
-          const { processed_data: processedData, ai_processed, message } = await processConclusion(reportDataForBackend, i18n.language);
-
-          if (!processedData || !processedData._processing) {
-            throw new Error('Invalid processed data received from server');
+          const draft = evaluatorNotes?.trim()
+            ? `${systemComment}\n\nNotas del evaluador: ${evaluatorNotes.trim()}`
+            : systemComment;
+          const { processed_data, ai_processed } = await processConclusion(draft, i18n.language);
+          if (ai_processed && typeof processed_data === 'string' && processed_data.trim()) {
+            systemComment = processed_data.trim();
+            aiPolished = true;
           }
-
-          systemComment = processedData.ai_analysis || processedData._processing.comment || '';
-
-          if (ai_processed) {
-            const remainingTokens = await confirmProcessing();
-            setTokens(remainingTokens);
-            tokensConsumed = true;
-          } else if (message) {
-            toast.warning(message, { duration: 6000 });
-          }
-        } catch (onlineError) {
-          console.warn('Fallo generacion online, cayendo a modo local:', onlineError);
-          toast.warning(
-            t('reports.onlineFailedFallback', {
-              defaultValue: 'El análisis IA no respondió. Informe generado en modo local sin validación externa.',
-            }),
-            { duration: 6000 }
-          );
-          systemComment = await generateOfflineComment();
-          fellBackToOffline = true;
+        } catch (llmError) {
+          console.warn('Pulido LLM falló, uso comentario local sin pulir:', llmError);
         }
-
-      } else {
-        // --- OFFLINE MODE ---
-        systemComment = await generateOfflineComment();
       }
 
       // Append system comment to notes
@@ -253,23 +149,19 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
         setShowDialog(false);
         onReportGenerated?.();
 
-        if (useOffline || fellBackToOffline) {
-          toast.success(t('reports.generated') + ' ' + t('reports.generatedOffline'));
-        } else if (tokensConsumed) {
-          toast.success(t('reports.generated') + ` (Tokens restantes: ${tokens - 1})`);
-        } else {
+        if (aiPolished) {
           toast.success(t('reports.generated'));
+        } else {
+          toast.success(t('reports.generated') + ' ' + t('reports.generatedOffline'));
         }
       } else {
         // Preview generated successfully
         setPreviewGenerated(true);
 
-        if (useOffline || fellBackToOffline) {
-          toast.success(t('reports.previewGenerated') + ' (' + t('reports.generatedOffline') + ')');
-        } else if (tokensConsumed) {
-          toast.success(t('reports.previewGenerated') + ` (Tokens restantes: ${tokens - 1})`);
-        } else {
+        if (aiPolished) {
           toast.success(t('reports.previewGenerated'));
+        } else {
+          toast.success(t('reports.previewGenerated') + ' (' + t('reports.generatedOffline') + ')');
         }
 
         // Close dialog and refresh to show the preview in the list
@@ -365,7 +257,7 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
               />
             </div>
 
-            {!previewGenerated && tokens > 0 && (
+            {!previewGenerated && (
               <div className="flex items-start gap-2 p-3 rounded-lg border border-smoke-200 bg-smoke-50">
                 <input
                   id="forceOffline"
@@ -376,9 +268,9 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                   className="mt-1 cursor-pointer"
                 />
                 <label htmlFor="forceOffline" className="text-sm text-coal-700 cursor-pointer">
-                  <span className="font-medium">Generar en modo local (sin IA)</span>
+                  <span className="font-medium">Generar sin asistente IA</span>
                   <span className="block text-xs text-smoke-600 mt-0.5">
-                    No consume tokens. Usa clasificación local según la guía activa.
+                    Usa solo la clasificación local de la guía activa, sin pulir el texto con el LLM local.
                   </span>
                 </label>
               </div>

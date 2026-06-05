@@ -1,12 +1,10 @@
 /**
- * Token Service — implementación 100% local con LLM embebido (llama.cpp).
+ * Servicio de redacción de informes con IA — 100% local (llama.cpp embebido).
  *
- * Reemplaza el antiguo servicio remoto que llamaba a un backend de tokens.
- * DIRD+ v2.2+ es local-first: la inferencia LLM se ejecuta dentro del proceso
- * Tauri usando el modelo activo en `Settings → AI → Asistente local`.
- *
- * La firma pública de las funciones se mantiene compatible con los callers
- * existentes (`ReportGenerator`, `MainLayout`) para evitar rewrites.
+ * No hay inferencia remota ni economía de tokens: el LLM activo en
+ * `Ajustes → Modelos IA → Asistente local` solo pule la redacción del
+ * comentario clínico que ya produjo la guía. Si no hay LLM activo, el texto
+ * se devuelve sin tocar.
  */
 
 import { llmActiveId, llmGenerate } from '@/lib/ai/llm-client';
@@ -15,20 +13,6 @@ interface ProcessConclusionResult {
   processed_data: any;
   ai_processed: boolean;
   message?: string;
-}
-
-/**
- * "Tokens disponibles" en el modelo local no tienen sentido:
- *   - si hay un modelo activo → devolvemos un valor alto sentinela (∞).
- *   - si no hay modelo → 0 (la UI debería ocultar el botón de IA).
- */
-export async function fetchTokens(): Promise<number> {
-  try {
-    const active = await llmActiveId();
-    return active ? Number.MAX_SAFE_INTEGER : 0;
-  } catch {
-    return 0;
-  }
 }
 
 function buildSystemPrompt(language: string): string {
@@ -95,12 +79,4 @@ export async function processConclusion(
     console.error('Error en LLM local:', error);
     throw error;
   }
-}
-
-/**
- * Sin tokens remotos no hay nada que confirmar. Mantengo la firma para que
- * los callers existentes no rompan. Devuelve `MAX_SAFE_INTEGER` (inagotable).
- */
-export async function confirmProcessing(): Promise<number> {
-  return Number.MAX_SAFE_INTEGER;
 }

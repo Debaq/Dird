@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Users, Settings, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useConfigStore } from '@/stores/config-store';
-import { useTokenStore } from '@/stores/token-store';
 import { getAssetPath } from '@/utils/assets';
-import TokenCounter from '@/components/tokens/TokenCounter';
-import { TokenInfoModal } from '@/components/tokens/TokenInfoModal';
 import { EncryptionBadge } from '@/components/layout/EncryptionBadge';
 
 interface MainLayoutProps {
@@ -18,8 +15,6 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = false }) => {
   const { t } = useTranslation();
   const location = useLocation();
-  const tokens = useTokenStore((state) => state.tokens);
-  const [showTokenInfo, setShowTokenInfo] = useState(false);
 
   const navItems = [
     { path: '/patients', icon: Users, label: t('patients.title') },
@@ -56,20 +51,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
 
             <div className="flex items-center gap-3">
               <EncryptionBadge />
-              {/* Token Counter */}
-              <div
-                onClick={() => setShowTokenInfo(true)}
-                className="cursor-pointer transition-transform hover:scale-105"
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    setShowTokenInfo(true);
-                  }
-                }}
-              >
-                <TokenCounter tokens={tokens} />
-              </div>
             </div>
           </div>
         </div>
@@ -125,12 +106,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
       >
         {children}
       </main>
-
-      {/* Token Info Modal */}
-      <TokenInfoModal
-        open={showTokenInfo}
-        onOpenChange={setShowTokenInfo}
-      />
     </div>
   );
 };
