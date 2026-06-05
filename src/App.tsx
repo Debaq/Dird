@@ -12,7 +12,6 @@ import LanguageSync from '@/components/LanguageSync';
 import DocumentTitleSync from '@/components/DocumentTitleSync';
 import GlobalReportsList from '@/components/reports/GlobalReportsList';
 import SessionComparison from '@/components/patients/SessionComparison';
-import AcademyView from '@/components/academy/AcademyView';
 import { db } from '@/lib/db/schema';
 import {type LoadingProgress } from '@/lib/db/demoPatient';
 import { DemoLoadingScreen } from '@/components/demo/DemoLoadingScreen';
@@ -198,16 +197,6 @@ function App() {
           element={
             <MainLayout>
               <Settings />
-            </MainLayout>
-          }
-        />
-
-        {/* Academy */}
-        <Route
-          path="/academy"
-          element={
-            <MainLayout>
-              <AcademyView />
             </MainLayout>
           }
         />

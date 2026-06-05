@@ -701,7 +701,7 @@
     "patientSuccess": "Paciente exportado exitosamente",
     "sessionSuccess": "Estudio exportado exitosamente",
     "fullSuccess": "Todos los datos exportados exitosamente",
-    "sessionExport" : "sesion"
+    "sessionExport": "sesion"
   },
   "import": {
     "patientTitle": "Importar paciente(s)",
@@ -1369,115 +1369,6 @@
       "supportedFormats": "Formatos soportados: JPG, PNG, WEBP",
       "submit": "Enviar Comentario",
       "success": "¡Comentario enviado! (Simulado)"
-    }
-  },
-  "academy": {
-    "title": "Academia",
-    "description": "Aprende cómo funciona DIRD y cómo toma decisiones clínicas",
-    "tutorial": {
-      "title": "Tutorial Interactivo",
-      "description": "Un recorrido guiado por la aplicación para aprender a usar todas las funcionalidades de DIRD.",
-      "startButton": "Iniciar Tutorial (Próximamente)"
-    },
-    "howItWorks": {
-      "title": "¿Cómo Funciona DIRD?",
-      "privacy": {
-        "title": "Privacidad Total",
-        "description": "DIRD funciona completamente en tu navegador. Los modelos de inteligencia artificial se ejecutan localmente usando WebAssembly, garantizando que las imágenes de tus pacientes nunca salgan de tu dispositivo."
-      },
-      "ai": {
-        "title": "Inteligencia Artificial Edge-Computing",
-        "description": "Utilizamos modelos de deep learning entrenados específicamente para detectar lesiones de retinopatía diabética. Los modelos se descargan una vez y quedan disponibles offline."
-      },
-      "workflow": {
-        "title": "Flujo de Trabajo",
-        "step1": "Crea un paciente y una estudio de análisis",
-        "step2": "Sube imágenes de fondo de ojo (OD y OI)",
-        "step3": "Ejecuta el análisis automático con IA",
-        "step4": "Revisa, edita y valida las detecciones en el canvas interactivo",
-        "step5": "Genera informes profesionales con clasificación de severidad"
-      }
-    },
-    "drClassification": {
-      "title": "Sistema de Clasificación de Retinopatía Diabética",
-      "protocols": {
-        "title": "Protocolos Médicos",
-        "icdr": "Escala Internacional de Severidad de Retinopatía Diabética Clínica",
-        "etdrs": "Early Treatment Diabetic Retinopathy Study - Estándar de oro para graduación"
-      },
-      "severityLevels": {
-        "title": "Niveles de Severidad",
-        "noDR": {
-          "name": "Sin Retinopatía Diabética",
-          "criteria": "Sin microaneurismas ni otras lesiones"
-        },
-        "mildNPDR": {
-          "name": "RDNP Leve",
-          "criteria": "Solo microaneurismas presentes"
-        },
-        "moderateNPDR": {
-          "name": "RDNP Moderada",
-          "criteria": "Más que microaneurismas, pero menos que severa"
-        },
-        "severeNPDR": {
-          "name": "RDNP Severa",
-          "criteria": "Cumple regla 4-2-1 (Hemorragias en 4Q, Arrosariamiento en 2Q, o IRMA en 1Q)"
-        },
-        "pdr": {
-          "name": "RD Proliferativa",
-          "criteria": "Neovascularización presente"
-        }
-      },
-      "decisionMaking": {
-        "title": "¿Cómo Toma Decisiones el Sistema?",
-        "step1": {
-          "title": "Detección de Lesiones",
-          "description": "El modelo de IA identifica microaneurismas, hemorragias, exudados y neovascularización en cada imagen"
-        },
-        "step2": {
-          "title": "Análisis por Cuadrantes",
-          "description": "Las lesiones se agrupan por cuadrantes retinales (superior, inferior, nasal, temporal) basándose en la ubicación del disco óptico"
-        },
-        "step3": {
-          "title": "Clasificación de Severidad",
-          "description": "Se aplican los criterios ICDR considerando el tipo y distribución de lesiones, factores de riesgo del paciente, y análisis bilateral"
-        }
-      }
-    },
-    "classes": {
-      "title": "Clases Detectadas por el Modelo",
-      "current": {
-        "title": "Actualmente Detectadas",
-        "microaneurysms": "Microaneurismas",
-        "microaneurysmsDesc": "Primera manifestación de retinopatía diabética",
-        "hemorrhages": "Hemorragias",
-        "hemorrhagesDesc": "Sangrado intraretinal por daño vascular",
-        "hardExudates": "Exudados Duros",
-        "hardExudatesDesc": "Depósitos lipídicos, indicadores de edema",
-        "softExudates": "Exudados Blandos",
-        "softExudatesDesc": "Cotton wool spots - indican isquemia retinal",
-        "neovascularization": "Neovascularización",
-        "neovascularizationDesc": "Vasos nuevos anormales - criterio de RD proliferativa"
-      },
-      "future": {
-        "title": "En Desarrollo",
-        "irma": "IRMA",
-        "irmaDesc": "Anomalías microvasculares intraretinales - criterio para RDNP severa",
-        "venousBeading": "Arrosariamiento Venoso",
-        "venousBeadingDesc": "Dilataciones venosas segmentarias - criterio para RDNP severa",
-        "macularEdema": "Edema Macular",
-        "macularEdemaDesc": "Acumulación de fluido en mácula - principal causa de pérdida visual"
-      }
-    },
-    "disclaimer": {
-      "title": "Aviso Médico Importante",
-      "paragraph1": "DIRD es una herramienta de asistencia diagnóstica basada en inteligencia artificial. Las clasificaciones y sugerencias generadas por el sistema NO constituyen un diagnóstico médico definitivo.",
-      "paragraph2": "Siempre se requiere la validación y criterio clínico de un oftalmólogo certificado. Este sistema está diseñado para apoyar, no reemplazar, el juicio médico profesional."
-    },
-    "technicalDocs": {
-      "description": "Documentación técnica detallada sobre el sistema de clasificación",
-      "reviewButton": "Revisión Técnica",
-      "improvementsButton": "Mejoras Planificadas"
     }
   },
   "loading": {

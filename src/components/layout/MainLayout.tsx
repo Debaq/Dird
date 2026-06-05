@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Users, Settings, FileText, GraduationCap } from 'lucide-react';
+import { Users, Settings, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useConfigStore } from '@/stores/config-store';
 import { useTokenStore } from '@/stores/token-store';
@@ -25,7 +25,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, fullScreenOnMobile = 
     { path: '/patients', icon: Users, label: t('patients.title') },
     { path: '/reports', icon: FileText, label: t('reports.title') },
     { path: '/settings', icon: Settings, label: t('settings.title') },
-    { path: '/academy', icon: GraduationCap, label: t('academy.title') },
   ];
 
   return (
