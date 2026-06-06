@@ -530,9 +530,17 @@ pub fn llm_generate(args: GenerateParams) -> Result<String, LlmError> {
 
         if model.is_eog_token(new_token_id) { break; }
 
-        let piece_bytes = model
-            .token_to_bytes(new_token_id, llama_cpp_2::model::Special::Tokenize)
-            .map_err(|e| LlmError::Llama(e.to_string()))?;
+        // Reemplaza el deprecado `token_to_bytes(_, Special::Tokenize)`. Replica su
+        // comportamiento: intenta con un buffer chico y reintenta con el tamaño exacto
+        // si el token (UTF-8 multibyte) no cabe. `special = true` ≡ Special::Tokenize.
+        let piece_bytes = match model.token_to_piece_bytes(new_token_id, 8, true, None) {
+            Err(llama_cpp_2::TokenToStringError::InsufficientBufferSpace(i)) => {
+                let size = usize::try_from(-i).expect("buffer size is positive");
+                model.token_to_piece_bytes(new_token_id, size, true, None)
+            }
+            x => x,
+        }
+        .map_err(|e| LlmError::Llama(e.to_string()))?;
         out.push_str(&String::from_utf8_lossy(&piece_bytes));
 
         batch.clear();

@@ -31,8 +31,6 @@ pub enum DbError {
     Sqlite(String),
     #[error("crypto: {0}")]
     Crypto(String),
-    #[error("invalid param: {0}")]
-    InvalidParam(String),
 }
 
 impl serde::Serialize for DbError {
