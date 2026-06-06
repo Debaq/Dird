@@ -1,10 +1,12 @@
 # DPG Submission Checklist — DIRD+ v2.2.0
 
-**Last updated**: 2026-05-28
+**Last updated**: 2026-06-05
 **Target release**: v2.2.0 (first DPG-compliant cut)
-**Status**: ready to submit
+**Status**: ready to submit — automated QA green; manual GUI QA + tag/release pending (see §4)
 
 This document captures the state of every DPG Standard indicator and every commitment made in the DPGA application form. Open items must be closed before pressing "submit" on the application portal.
+
+> **2026-06-05 cleanup pass** (post 2026-05-28): removed all legacy remote backend (PHP, token economy, contribution/sharing upload, installation beacons), the Academy module, and the dead PWA/web-version framing — DIRD+ is now strictly desktop-only and 100% local, matching every privacy claim. Documentation converted to English (README, wiki, repo About, REFERENCES); internal notes moved under `docs/internal/` with a marker README. See `project_backend_purge` / `project_docs_english_overhaul` history.
 
 ## 1. DPG Standard indicators
 
@@ -14,7 +16,7 @@ This document captures the state of every DPG Standard indicator and every commi
 | 2 | Open Licensing | ✅ | ✅ | `LICENSE` AGPL-3.0; `Debaq/dird_models` AGPL-3.0 (verified via `gh api`) |
 | 3 | Clear Ownership | ✅ | ✅ | README §DPG, Zenodo deposit |
 | 4 | Platform Independence | ✅ | ✅ | Tauri 2 + Rust + ONNX Runtime (all OSS), runs offline |
-| 5 | Documentation | ✅ | ✅ | README, `docs/dird-format.md`, `docs/model-interface.md`, preprint |
+| 5 | Documentation | ✅ | ✅ | README (English), `docs/dird-format.md`, `docs/model-interface.md` (+ `docs/example-card.json`), GitHub Wiki (English, 12 pages), preprint |
 | 6 | Non-PII Data Extraction | ✅ | ✅ | Open formats (ONNX, JSON, SQLite, ZIP); spec docs |
 | 7 | Privacy & Applicable Laws | ✅ | ✅ | `PRIVACY.md` |
 | 8 | Open Standards | ✅ | ✅ | ONNX, PDF, SQLite, JSON, AES-256-GCM, Argon2id (RFC 9106) |
@@ -46,7 +48,7 @@ This document captures the state of every DPG Standard indicator and every commi
 | User-driven download (no bundled weights) with resumable progress events | ✅ | `llm_download` Tauri command + `llm:download_progress` event |
 | Settings → AI Models → "Local assistant" UI | ✅ | `src/components/settings/LocalLLMSection.tsx` |
 | Chat templating per model family (TinyLlama / ChatML / Llama-3 / Phi-3 / Gemma) | ✅ | `render_prompt` in `llm.rs` |
-| Removal of remote LLM service (`token-service` → local implementation) | ✅ | `src/lib/api/token-service.ts` rewritten to call `llmGenerate` |
+| Removal of remote LLM service (`token-service` → local implementation) | ✅ | rewritten to call `llmGenerate`; renamed `src/lib/api/token-service.ts` → `report-ai-service.ts` (2026-06-05) |
 | 100% local inference (no PII transmitted post-download) | ✅ | Documented in `PRIVACY.md` §6 |
 
 ### 2.2 External ONNX model loading (model-agnostic platform)
@@ -68,8 +70,8 @@ This document captures the state of every DPG Standard indicator and every commi
 | GitHub Security Advisories enabled on `Debaq/Dird` | ✅ | Activated 2026-05-26 via `gh api -X PUT … /private-vulnerability-reporting` |
 | GitHub Security Advisories enabled on `Debaq/dird_models` | ✅ | Same procedure |
 | AGPL-3.0 LICENSE in `dird_models` repo | ✅ | Verified via `gh api repos/Debaq/dird_models` (`license.spdx_id = "AGPL-3.0"`) |
-| Website parity EN ↔ ES (landing) | ✅ | `docs/index.html` (ES) + `docs/en.html` (EN) |
-| App UI parity EN ↔ ES | ✅ | 1210/1210 i18n keys, 0 Spanish-only leaf strings remaining |
+| Website parity EN ↔ ES (landing) | ✅ | `docs/index.html` (ES) + `docs/en.html` (EN); web-version framing removed 2026-06-05 |
+| App UI parity EN ↔ ES | ✅ | 1052/1052 i18n keys, 0 mismatches (academy/contribution/token keys removed in both) |
 
 ## 3. Pending items (post-submission tracker)
 
@@ -85,11 +87,12 @@ These were not part of the pre-submission commitments and are openly disclosed i
 
 Run before tagging `v2.2.0`:
 
-- [ ] `pnpm test` — vitest passes (currently 52 tests, 7 files)
+- [x] `pnpm test` — vitest passes (52 tests, 7 files) — verified 2026-06-05
 - [ ] `cargo test --lib --manifest-path src-tauri/Cargo.toml` — Rust unit tests pass (9: crypto 5/5, db 4/4)
-- [ ] `npx tsc --noEmit` — TypeScript clean
+- [x] `npx tsc --noEmit` — TypeScript clean — verified 2026-06-05
 - [ ] `cargo check --manifest-path src-tauri/Cargo.toml` — Rust check clean
 - [ ] `cargo tauri build --debug` — bundle compiles
+- [x] i18n EN↔ES parity — 1052/1052 keys, 0 mismatches — verified 2026-06-05
 - [ ] Run `cargo tauri dev`:
   - [ ] First-launch wizard appears, asks both passwords
   - [ ] Database opens after wizard; `EncryptionBadge` shows "Cifrado / Encrypted"
@@ -102,8 +105,9 @@ Run before tagging `v2.2.0`:
   - [ ] Settings → AI Models → Local assistant → download a small model (SmolLM2 360M, ~230 MB) → activate → "Probar" returns text
   - [ ] `processConclusion` (Report generator) routes through local LLM when one is active
   - [ ] If running upgrade scenario with v1.0.1 IndexedDB data → MigrationWizard appears, backup downloaded, migration completes
-- [ ] `python3 scripts/validate_model_card.py docs/example-card.json` returns 0 (provide an example card)
+- [x] `python3 scripts/validate_model_card.py docs/example-card.json` returns 0 — example card created & validated 2026-06-05
 - [ ] `markdown-link-check` on README, PRIVACY, SECURITY, ROADMAP, docs/dird-format.md, docs/model-interface.md
+- [ ] **Sensitive data**: the old admin credential hash still lives in GitHub PR refs `refs/pull/28` (closed) and `refs/pull/29` (merged) — removed from all branches/tags via `git filter-repo`, but PR refs need GitHub Support to purge. Low risk (the backend it protected no longer exists); rotate only if that backend is still live.
 - [ ] Tag: `git tag v2.2.0 && git push origin v2.2.0` (triggers `.github/workflows/release.yml`)
 - [ ] Verify release artifacts attached on GitHub Releases
 - [ ] Update DPGA submission with link to v2.2.0 release tag
