@@ -87,7 +87,7 @@ For critical vulnerabilities (CVSS ≥ 9.0), we will prioritize a release and co
 - The `.dird` file format specification and implementation
 
 ### Out of scope
-- The project website (https://tmeduca.org/dird/) marketing pages — unless they leak data or host malicious content
+- The project website (https://debaq.github.io/Dird/) marketing pages — unless they leak data or host malicious content
 - Forks of the project maintained by third parties
 - Third-party dependencies (please report those to the respective project; we will coordinate if needed)
 - Issues that require physical access to an unlocked, authenticated session

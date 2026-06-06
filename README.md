@@ -13,7 +13,7 @@
 
 > **Important notice:** DIRD+ is a research-and-development system. It is **not** an approved medical device and must **not** be used as the sole diagnostic criterion in real clinical settings. Every finding must be reviewed by a qualified ophthalmologist.
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](LICENSE) [![DOI](https://zenodo.org/badge/1114058644.svg)](https://doi.org/10.5281/zenodo.19666272) [![Website](https://img.shields.io/badge/Website-tmeduca.org%2Fdird-green)](https://tmeduca.org/dird/) [![DPG](https://img.shields.io/badge/Digital%20Public%20Good-nominee-orange)](https://digitalpublicgoods.net/standard)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](LICENSE) [![DOI](https://zenodo.org/badge/1114058644.svg)](https://doi.org/10.5281/zenodo.19666272) [![Website](https://img.shields.io/badge/Website-debaq.github.io%2FDird-10b981)](https://debaq.github.io/Dird/) [![DPG](https://img.shields.io/badge/Digital%20Public%20Good-nominee-orange)](https://digitalpublicgoods.net/standard)
 
 <p align="center">
   <a href="#the-problem">Problem</a> · 
@@ -480,11 +480,11 @@ DIRD+ aligns with the [Digital Public Goods Standard](https://digitalpublicgoods
 
 | # | Indicator | Status | Evidence |
 |---|-----------|:---:|----------|
-| 1 | **SDG Relevance** | ✅ | SDG 3 (Health), SDG 9 (Innovation), SDG 10 (Reduced Inequalities). See [project website](https://tmeduca.org/dird/). |
+| 1 | **SDG Relevance** | ✅ | SDG 3 (Health), SDG 9 (Innovation), SDG 10 (Reduced Inequalities). See [project website](https://debaq.github.io/Dird/). |
 | 2 | **Open Licensing** | ✅ | [GNU AGPL-3.0](LICENSE) (OSI-approved). Reference AI models published under AGPL-3.0 in [dird_models](https://github.com/Debaq/dird_models). |
-| 3 | **Clear Ownership** | ✅ | Owned by Nicolás Baier Quezada, Universidad Austral de Chile (UACh). See [project website](https://tmeduca.org/dird/) and the Zenodo deposit ([DOI 10.5281/zenodo.19687226](https://doi.org/10.5281/zenodo.19687226)). |
+| 3 | **Clear Ownership** | ✅ | Owned by Nicolás Baier Quezada (lead) and the DIRD+ team, Universidad Austral de Chile (UACh). See [project website](https://debaq.github.io/Dird/) and the Zenodo deposit ([DOI 10.5281/zenodo.19687226](https://doi.org/10.5281/zenodo.19687226)). |
 | 4 | **Platform Independence** | ✅ | Built on a fully open stack (Tauri, React, ONNX Runtime, SQLite, Rust). Runs offline; no proprietary services required. |
-| 5 | **Documentation** | ✅ | This README, [project website](https://tmeduca.org/dird/), [docs/](docs/), [preprint](https://doi.org/10.64898/2026.04.26.26351745), and the [Wiki](https://github.com/Debaq/Dird/wiki). |
+| 5 | **Documentation** | ✅ | This README, [project website](https://debaq.github.io/Dird/), [docs/](docs/), [preprint](https://doi.org/10.64898/2026.04.26.26351745), and the [Wiki](https://github.com/Debaq/Dird/wiki). |
 | 6 | **Non-PII Data Extraction** | ✅ | All non-PII data (models, configurations, derived metrics) uses open standards: ONNX, JSON, SQLite, ZIP. See [docs/dird-format.md](docs/dird-format.md) and [docs/model-interface.md](docs/model-interface.md). |
 | 7 | **Privacy & Applicable Laws** | ✅ | See [PRIVACY.md](PRIVACY.md). Compatible by design with GDPR, HIPAA, and Chilean Laws 19.628 and 21.719. |
 | 8 | **Open Standards & Best Practices** | ✅ | ONNX, ISO 32000 (PDF), SQLite, JSON (RFC 8259), Argon2id (RFC 9106), AES-256-GCM. SemVer 2.0.0, Privacy by Design. |
@@ -504,15 +504,22 @@ DIRD+ aligns with the [Digital Public Goods Standard](https://digitalpublicgoods
 
 If you use DIRD+ in research, please cite:
 
-- **Application**: Baier Quezada, N. (2026). *DIRD+ — Diabetic Imaging Retinopathy Detector*. Zenodo. https://doi.org/10.5281/zenodo.19687226
-- **Reference model**: Baier Quezada, N. (2026). *DIRDv2r0 — Diabetic retinopathy detection model*. Zenodo. https://doi.org/10.5281/zenodo.19685466
-- **Preprint**: Baier Quezada, N. (2026). *External validation of DIRD+ on APTOS 2019*. medRxiv. https://doi.org/10.64898/2026.04.26.26351745
+- **Application**: Baier Quezada, N., Uribe, V., López, F., Almendras, C., Barrientos, H., & Leiva, C. (2026). *DIRD+ — Diabetic Imaging Retinopathy Detector*. Zenodo. https://doi.org/10.5281/zenodo.19687226
+- **Reference model**: Baier Quezada, N., Uribe, V., López, F., Almendras, C., Barrientos, H., & Leiva, C. (2026). *DIRDv2r0 — Diabetic retinopathy detection model*. Zenodo. https://doi.org/10.5281/zenodo.19685466
+- **Preprint**: Baier Quezada, N., Uribe, V., López, F., Almendras, C., Barrientos, H., & Leiva, C. (2026). *External validation of DIRD+ on APTOS 2019*. medRxiv. https://doi.org/10.64898/2026.04.26.26351745
 
 ---
 
-## Author
+## Authors
 
-**Nicolás Baier Quezada** — Universidad Austral de Chile, Puerto Montt 🇨🇱
+Universidad Austral de Chile, Puerto Montt 🇨🇱
+
+- **Nicolás Baier Quezada** — lead author & maintainer
+- **Vanessa Uribe**
+- **Fernanda López**
+- **Carolina Almendras**
+- **Haydee Barrientos**
+- **Cristian Leiva**
 
 Bug reports and contributions via [issues](https://github.com/Debaq/Dird/issues) and pull requests.
 
