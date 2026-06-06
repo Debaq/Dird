@@ -335,8 +335,8 @@ mod tests {
             "SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
             [], |r| r.get(0),
         ).unwrap();
-        // 9 tablas de dominio + meta = 10.
-        assert_eq!(count, 10);
+        // 8 tablas de dominio + meta = 9 (pending_contributions eliminada).
+        assert_eq!(count, 9);
     }
 
     #[test]

@@ -88,9 +88,9 @@ These were not part of the pre-submission commitments and are openly disclosed i
 Run before tagging `v2.2.0`:
 
 - [x] `pnpm test` — vitest passes (52 tests, 7 files) — verified 2026-06-05
-- [ ] `cargo test --lib --manifest-path src-tauri/Cargo.toml` — Rust unit tests pass (9: crypto 5/5, db 4/4)
+- [x] `cargo test --lib` — Rust unit tests pass (9/9) — verified 2026-06-05 (fixed table-count test after removing `pending_contributions`)
 - [x] `npx tsc --noEmit` — TypeScript clean — verified 2026-06-05
-- [ ] `cargo check --manifest-path src-tauri/Cargo.toml` — Rust check clean
+- [x] `cargo check` — Rust check clean (3 warnings) — verified 2026-06-05
 - [ ] `cargo tauri build --debug` — bundle compiles
 - [x] i18n EN↔ES parity — 1052/1052 keys, 0 mismatches — verified 2026-06-05
 - [ ] Run `cargo tauri dev`:
