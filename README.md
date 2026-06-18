@@ -379,6 +379,7 @@ src/
 ├── types/                    # TypeScript interfaces
 └── App.tsx                   # Main router + parallel initialization
 src-tauri/                    # Rust shell: crypto (Argon2id), SQLCipher db, llama.cpp LLM, model registry
+validation/                   # Scientific validation: experiment-1-idrid, experiment-2-aptos (reports + scripts + metrics)
 ```
 
 ---
@@ -457,11 +458,31 @@ The guideline system is extensible — new guidelines are added as JSON files wi
 
 ---
 
+## Scientific Validation
+
+The reference model (`detection-v2.0.0`) has been validated against public fundus datasets.
+All scripts, reports and metrics live under [`validation/`](validation/) — see the
+[validation overview](validation/README.md). The model weights themselves are published in
+[`Debaq/dird_models`](https://github.com/Debaq/dird_models).
+
+| # | Dataset | Task | Result | Headline |
+|---|---------|------|:------:|----------|
+| [1](validation/experiment-1-idrid/REPORT.md) | IDRiD (n=81) | Per-lesion bounding-box detection (mAP) | ❌ | mAP 0.24–0.30; only the optic disc localizes well — instance-level detection is the wrong metric for this model. |
+| [2](validation/experiment-2-aptos/REPORT.md) | APTOS 2019 (n=3662) | Image-level binary screening | ✅ | **Sens 0.978 / Spec 0.931 / MCC 0.91**, AUC 0.95–0.97, out-of-domain, no retraining (5-fold CV). |
+
+Experiment 1's negative result motivated validating the model at the **image level**
+(Experiment 2), where it generalizes strongly out of domain. A third experiment on
+**Messidor-2** is planned to confirm the per-class thresholds on a different population. See
+the [APTOS report](validation/experiment-2-aptos/REPORT.md) for the recommended operating
+point and full methodology.
+
+---
+
 ## Roadmap
 
 See [`ROADMAP.md`](ROADMAP.md) for the full public roadmap. Highlights:
 
-- **Technical validation** on public datasets (APTOS 2019, IDRiD) and per-device inference benchmarks.
+- **Technical validation** on public datasets — done for APTOS 2019 and IDRiD (see [Scientific Validation](#scientific-validation)); next: Messidor-2 and per-device inference benchmarks.
 - **Clinical validation** with 200–500 images graded by Chilean ophthalmologists; sensitivity/specificity against a gold standard; pilot in a rural primary-care clinic.
 - **Technical features**: full IRMA and venous-beading detection (4-2-1 criteria), DICOM camera integration, privacy-preserving federated learning.
 - **Regulatory**: dossier preparation for Chile's ISP (software medical device), alignment with the FDA SaMD framework.
