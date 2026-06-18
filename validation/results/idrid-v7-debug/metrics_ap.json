@@ -1,0 +1,48 @@
+{
+  "mAP": 0.0725,
+  "per_class": {
+    "microaneurysm": {
+      "ap": 0.0,
+      "best_f1": 0.0,
+      "best_f1_threshold": 0.0,
+      "gt_boxes": 3497,
+      "pred_boxes": 0
+    },
+    "hemorrhage": {
+      "ap": 0.0,
+      "best_f1": 0.0,
+      "best_f1_threshold": 0.0,
+      "gt_boxes": 1900,
+      "pred_boxes": 0
+    },
+    "hard_exudate": {
+      "ap": 0.0007,
+      "best_f1": 0.0005,
+      "best_f1_threshold": 5.0,
+      "gt_boxes": 11640,
+      "pred_boxes": 1747
+    },
+    "soft_exudate": {
+      "ap": 0.0,
+      "best_f1": 0.0,
+      "best_f1_threshold": 0.0,
+      "gt_boxes": 150,
+      "pred_boxes": 0
+    },
+    "optic_disc": {
+      "ap": 0.3616,
+      "best_f1": 0.5,
+      "best_f1_threshold": 0.3668,
+      "gt_boxes": 81,
+      "pred_boxes": 55
+    }
+  },
+  "parameters": {
+    "conf_threshold": 0.1,
+    "iou_threshold_matching": 0.1,
+    "iou_threshold_nms": 0.5,
+    "min_component_area": 10,
+    "dataset": "IDRiD test set",
+    "ap_method": "PASCAL VOC 11-point interpolation"
+  }
+}

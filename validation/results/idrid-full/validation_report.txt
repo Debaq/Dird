@@ -1,0 +1,34 @@
+==============================================================
+DIRD+ Validation Report — IDRiD Test Set
+==============================================================
+
+Dataset:              IDRiD test set
+Total images:         81
+Conf threshold:       0.1
+IoU threshold (match):0.1
+IoU threshold (NMS):  0.45
+AP method:            PASCAL VOC 11-point
+
+Class                |     AP | GT boxes | Pred boxes | Best F1
+--------------------------------------------------------------
+Microaneurysms       |  0.005 |     3497 |        273 |   0.007
+Hemorrhages          |  0.091 |     1900 |         56 |   0.050
+Hard exudates        |  0.083 |    11640 |        418 |   0.041
+Soft exudates        |  0.237 |      150 |         62 |   0.344
+Optic disc           |  1.000 |       81 |         82 |   1.000
+--------------------------------------------------------------
+mAP                  |  0.283 |          |            |
+
+--- Inference Performance ---
+Mean time:            0.3039 s
+Std time:             0.0060 s
+Images/second:        3.3
+
+--- Dedicated Benchmark ---
+Mean:                 0.3023 s
+Std:                  0.0064 s
+Median:               0.3023 s
+Images/second:        3.3
+Total images:         81
+
+==============================================================

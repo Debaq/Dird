@@ -1,0 +1,32 @@
+==============================================================
+DIRD+ Validation Report — IDRiD (YOLO end-to-end)
+==============================================================
+
+Total images:         81
+Conf threshold:       0.1
+IoU threshold (match):0.5
+Postproceso:          YOLO e2e (NMS integrado)
+AP method:            PASCAL VOC 11-point
+
+Class                |     AP | GT boxes | Pred boxes | Best F1
+--------------------------------------------------------------
+Microaneurysms       |  0.000 |     3497 |        996 |   0.000
+Hemorrhages          |  0.061 |     1900 |        235 |   0.104
+Hard exudates        |  0.068 |    11640 |       1760 |   0.025
+Soft exudates        |  0.151 |      150 |         65 |   0.233
+Optic disc           |  0.909 |       81 |         86 |   0.982
+--------------------------------------------------------------
+mAP                  |  0.238 |          |            |
+
+--- Inference Performance ---
+Mean time:            0.3217 s
+Std time:             0.1227 s
+Images/second:        3.1
+
+--- Dedicated Benchmark ---
+Mean:                 0.4625 s
+Median:               0.4623 s
+Images/second:        2.2
+Total images:         81
+
+==============================================================

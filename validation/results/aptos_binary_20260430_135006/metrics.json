@@ -1,0 +1,84 @@
+{
+  "experiment": "APTOS binary normal-vs-altered (anatomical-only = normal)",
+  "model": "detection-v2.0.0.onnx",
+  "conf_threshold": 0.25,
+  "n_images": 3662,
+  "n_errors": 0,
+  "binary_rule": "altered if any detection of class != {0 optic_disc, 2 fovea}",
+  "confusion_matrix": {
+    "labels": [
+      "normal(0)",
+      "altered(1)"
+    ],
+    "matrix": [
+      [
+        824,
+        981
+      ],
+      [
+        6,
+        1851
+      ]
+    ],
+    "TN": 824,
+    "FP": 981,
+    "FN": 6,
+    "TP": 1851
+  },
+  "metrics": {
+    "sensitivity_recall": 0.9967689822294022,
+    "specificity": 0.4565096952908587,
+    "ppv_precision": 0.6536016949152542,
+    "npv": 0.9927710843373494,
+    "accuracy": 0.7304751501911524,
+    "f1": 0.7895073576455535,
+    "mcc": 0.5412827344047801,
+    "auc_roc": 0.9488471412354542
+  },
+  "per_grade": {
+    "0": {
+      "n": 1805,
+      "specificity_correct_normal": 0.4565096952908587
+    },
+    "1": {
+      "n": 370,
+      "sensitivity_detected": 0.9891891891891892
+    },
+    "2": {
+      "n": 999,
+      "sensitivity_detected": 0.998998998998999
+    },
+    "3": {
+      "n": 193,
+      "sensitivity_detected": 1.0
+    },
+    "4": {
+      "n": 295,
+      "sensitivity_detected": 0.9966101694915255
+    }
+  },
+  "timing_ms": {
+    "n": 3662,
+    "mean_ms": 112.15005072005651,
+    "median_ms": 109.48707748320885,
+    "std_ms": 9.463957330350631,
+    "min_ms": 104.85206998419017,
+    "max_ms": 221.72057395800948,
+    "p95_ms": 126.73581167473458,
+    "p99_ms": 154.23247165104806,
+    "fps_mean": 8.916625481482404
+  },
+  "detections_per_class_total": {
+    "0": 3626,
+    "2": 3773,
+    "1": 20616,
+    "5": 12326,
+    "4": 2430,
+    "3": 489
+  },
+  "providers": [
+    "AzureExecutionProvider",
+    "CPUExecutionProvider"
+  ],
+  "timestamp": "20260430_135006"
+}

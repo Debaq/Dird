@@ -1,0 +1,33 @@
+APTOS binary experiment — 20260430_135006
+Modelo: detection-v2.0.0.onnx   conf>=0.25
+N=3662  (errores=0)
+
+Confusion matrix [rows=GT, cols=Pred]  labels=[normal, altered]
+  TN=824  FP=981
+  FN=6  TP=1851
+
+Sensibilidad (recall):  0.9968
+Especificidad:          0.4565
+PPV (precision):        0.6536
+NPV:                    0.9928
+Accuracy:               0.7305
+F1:                     0.7895
+MCC:                    0.5413
+AUC-ROC:                0.9488
+
+Por grado APTOS:
+  grado 0: n=1805  {'n': 1805, 'specificity_correct_normal': 0.4565096952908587}
+  grado 1: n=370  {'n': 370, 'sensitivity_detected': 0.9891891891891892}
+  grado 2: n=999  {'n': 999, 'sensitivity_detected': 0.998998998998999}
+  grado 3: n=193  {'n': 193, 'sensitivity_detected': 1.0}
+  grado 4: n=295  {'n': 295, 'sensitivity_detected': 0.9966101694915255}
+
+Tiempos (ms): mean=112.15  median=109.49  p95=126.74  p99=154.23  min=104.85  max=221.72  fps≈8.92
+
+Detecciones totales por clase:
+  clase 0: 3626
+  clase 1: 20616
+  clase 2: 3773
+  clase 3: 489
+  clase 4: 2430
+  clase 5: 12326

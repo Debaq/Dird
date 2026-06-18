@@ -1,0 +1,47 @@
+{
+  "mAP": 0.2759,
+  "per_class": {
+    "microaneurysm": {
+      "ap": 0.0455,
+      "best_f1": 0.0491,
+      "best_f1_threshold": 0.1013,
+      "gt_boxes": 3497,
+      "pred_boxes": 996
+    },
+    "hemorrhage": {
+      "ap": 0.0909,
+      "best_f1": 0.1566,
+      "best_f1_threshold": 0.103,
+      "gt_boxes": 1900,
+      "pred_boxes": 235
+    },
+    "hard_exudate": {
+      "ap": 0.0909,
+      "best_f1": 0.1542,
+      "best_f1_threshold": 0.1001,
+      "gt_boxes": 11640,
+      "pred_boxes": 1760
+    },
+    "soft_exudate": {
+      "ap": 0.243,
+      "best_f1": 0.3697,
+      "best_f1_threshold": 0.1127,
+      "gt_boxes": 150,
+      "pred_boxes": 65
+    },
+    "optic_disc": {
+      "ap": 0.9091,
+      "best_f1": 0.9816,
+      "best_f1_threshold": 0.2209,
+      "gt_boxes": 81,
+      "pred_boxes": 86
+    }
+  },
+  "parameters": {
+    "conf_threshold": 0.1,
+    "iou_threshold_matching": 0.1,
+    "dataset": "IDRiD test set",
+    "ap_method": "PASCAL VOC 11-point interpolation",
+    "postprocess": "YOLO end-to-end (NMS integrado en ONNX)"
+  }
+}

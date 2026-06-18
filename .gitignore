@@ -51,18 +51,24 @@ docs/sample-report-*.pdf
 # Validation datasets and results (large files)
 validation/datasets/*
 !validation/datasets/.gitkeep
-validation/results/
 validation/**/*.zip
 validation/**/*.onnx
 validation/**/*.png
 validation/**/*.jpg
 validation/**/*.jpeg
+# ...pero sí versionar plots/figuras de resultados (las imágenes gigantes
+# de overlays/coco quedan bloqueadas por validation/.gitignore como directorios)
+!validation/results/**/*.png
 validation/**/*.tif
 validation/**/*.tiff
 validation/**/*.webp
 validation/**/*.bmp
 validation/**/*.npy
 validation/**/*.csv
+# ...sí versionar CSVs de métricas/summary de resultados, NO los volcados crudos gigantes
+!validation/results/**/*.csv
+validation/results/raw_detections_bbox.csv
+validation/results/**/raw_detections.csv
 validation/aptos_extracted/
 validation/aptos_markers/
 validation/__pycache__/

@@ -1,0 +1,50 @@
+{
+  "1": {
+    "name": "hard_exudate",
+    "auc_per_class": 0.906156535800005,
+    "tau_youden": 0.5177140235900879,
+    "tau_fpr05": 0.5575399398803711,
+    "tau_fpr10": 0.4937442243099212,
+    "sens_at_youden": 0.777059773828756,
+    "spec_at_youden": 0.9263157894736842,
+    "n_normals_with_det": 771,
+    "n_pathol_with_det": 1691,
+    "tau_fpr02": 0.6333845853805542
+  },
+  "3": {
+    "name": "hemorrhage",
+    "auc_per_class": 0.6392755121372004,
+    "tau_youden": 0.0500891208648681,
+    "tau_fpr05": 0.0500891208648681,
+    "tau_fpr10": 0.0500891208648681,
+    "sens_at_youden": 0.288099084544965,
+    "spec_at_youden": 0.9894736842105263,
+    "n_normals_with_det": 5,
+    "n_pathol_with_det": 272,
+    "tau_fpr02": 0.0500891208648681
+  },
+  "4": {
+    "name": "cotton_wool_spot",
+    "auc_per_class": 0.7097254231574174,
+    "tau_youden": 0.0500513017177581,
+    "tau_fpr05": 0.7448073625564575,
+    "tau_fpr10": 0.3452652096748352,
+    "sens_at_youden": 0.5896607431340872,
+    "spec_at_youden": 0.8288088642659279,
+    "n_normals_with_det": 212,
+    "n_pathol_with_det": 777,
+    "tau_fpr02": 0.8525242805480957
+  },
+  "5": {
+    "name": "microhemorrhages",
+    "auc_per_class": 0.9881967907610195,
+    "tau_youden": 0.1213411390781402,
+    "tau_fpr05": 0.1202796399593353,
+    "tau_fpr10": 0.0694171786308288,
+    "sens_at_youden": 0.968228325255789,
+    "spec_at_youden": 0.9518005540166204,
+    "n_normals_with_det": 38,
+    "n_pathol_with_det": 1716,
+    "tau_fpr02": 0.2582842707633972
+  }
+}

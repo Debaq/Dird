@@ -1,0 +1,86 @@
+APTOS sweep — 20260430_140753
+N=3662
+
+Tiempo: mean=147.79ms  median=115.49ms  p95=268.61ms  p99=411.56ms  fps≈6.77
+
+Reglas:
+rule                                       sens   spec    ppv    npv    acc     f1    mcc      J    AUC
+R1_any_lesion_conf>=0.25                 0.9968 0.4565 0.6536 0.9928 0.7305 0.7895 0.5413 0.4533 0.9488
+R1_any_lesion_conf>=0.30                 0.9925 0.5313 0.6854 0.9856 0.7652 0.8108 0.5928 0.5238 0.9480
+R1_any_lesion_conf>=0.40                 0.9812 0.6776 0.7579 0.9722 0.8315 0.8552 0.6935 0.6587 0.9456
+R1_any_lesion_conf>=0.50                 0.9591 0.8216 0.8469 0.9513 0.8913 0.8995 0.7894 0.7807 0.9391
+R1_any_lesion_conf>=0.60                 0.9122 0.8953 0.8996 0.9084 0.9039 0.9059 0.8078 0.8075 0.9210
+R1_any_lesion_conf>=0.70                 0.8239 0.9346 0.9284 0.8376 0.8785 0.8730 0.7623 0.7585 0.8829
+R2_n_lesions>=1_conf>=0.25               0.9968 0.4565 0.6536 0.9928 0.7305 0.7895 0.5413 0.4533 0.9642
+R2_n_lesions>=2_conf>=0.25               0.9779 0.6920 0.7656 0.9682 0.8370 0.8588 0.7011 0.6699 0.9642
+R2_n_lesions>=3_conf>=0.25               0.9515 0.8155 0.8414 0.9424 0.8845 0.8931 0.7754 0.7670 0.9642
+R2_n_lesions>=5_conf>=0.25               0.8783 0.9169 0.9158 0.8799 0.8973 0.8966 0.7954 0.7952 0.9642
+R3_conf>=0.40_and_n>=2                   0.9316 0.9180 0.9212 0.9288 0.9249 0.9264 0.8498 0.8496 0.9456
+
+Detalle por grado (sens grados 1-4 / spec grado 0):
+  R1_any_lesion_conf>=0.25
+    grado 0 (n=1805): spec=0.4565
+    grado 1 (n= 370): sens=0.9892
+    grado 2 (n= 999): sens=0.9990
+    grado 3 (n= 193): sens=1.0000
+    grado 4 (n= 295): sens=0.9966
+  R1_any_lesion_conf>=0.30
+    grado 0 (n=1805): spec=0.5313
+    grado 1 (n= 370): sens=0.9757
+    grado 2 (n= 999): sens=0.9970
+    grado 3 (n= 193): sens=1.0000
+    grado 4 (n= 295): sens=0.9932
+  R1_any_lesion_conf>=0.40
+    grado 0 (n=1805): spec=0.6776
+    grado 1 (n= 370): sens=0.9378
+    grado 2 (n= 999): sens=0.9930
+    grado 3 (n= 193): sens=1.0000
+    grado 4 (n= 295): sens=0.9831
+  R1_any_lesion_conf>=0.50
+    grado 0 (n=1805): spec=0.8216
+    grado 1 (n= 370): sens=0.8838
+    grado 2 (n= 999): sens=0.9800
+    grado 3 (n= 193): sens=0.9896
+    grado 4 (n= 295): sens=0.9627
+  R1_any_lesion_conf>=0.60
+    grado 0 (n=1805): spec=0.8953
+    grado 1 (n= 370): sens=0.7703
+    grado 2 (n= 999): sens=0.9560
+    grado 3 (n= 193): sens=0.9534
+    grado 4 (n= 295): sens=0.9153
+  R1_any_lesion_conf>=0.70
+    grado 0 (n=1805): spec=0.9346
+    grado 1 (n= 370): sens=0.5730
+    grado 2 (n= 999): sens=0.8919
+    grado 3 (n= 193): sens=0.9482
+    grado 4 (n= 295): sens=0.8271
+  R2_n_lesions>=1_conf>=0.25
+    grado 0 (n=1805): spec=0.4565
+    grado 1 (n= 370): sens=0.9892
+    grado 2 (n= 999): sens=0.9990
+    grado 3 (n= 193): sens=1.0000
+    grado 4 (n= 295): sens=0.9966
+  R2_n_lesions>=2_conf>=0.25
+    grado 0 (n=1805): spec=0.6920
+    grado 1 (n= 370): sens=0.9216
+    grado 2 (n= 999): sens=0.9960
+    grado 3 (n= 193): sens=1.0000
+    grado 4 (n= 295): sens=0.9729
+  R2_n_lesions>=3_conf>=0.25
+    grado 0 (n=1805): spec=0.8155
+    grado 1 (n= 370): sens=0.8270
+    grado 2 (n= 999): sens=0.9880
+    grado 3 (n= 193): sens=1.0000
+    grado 4 (n= 295): sens=0.9525
+  R2_n_lesions>=5_conf>=0.25
+    grado 0 (n=1805): spec=0.9169
+    grado 1 (n= 370): sens=0.6270
+    grado 2 (n= 999): sens=0.9449
+    grado 3 (n= 193): sens=0.9741
+    grado 4 (n= 295): sens=0.9051
+  R3_conf>=0.40_and_n>=2
+    grado 0 (n=1805): spec=0.9180
+    grado 1 (n= 370): sens=0.7811
+    grado 2 (n= 999): sens=0.9750
+    grado 3 (n= 193): sens=0.9845
+    grado 4 (n= 295): sens=0.9390

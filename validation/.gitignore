@@ -5,8 +5,12 @@ data/
 models/*.onnx
 models/*.pt
 
-# Outputs de experimentos (regenerables)
-results/
+# Outputs de experimentos: versionar métricas/plots, NO datasets gigantes
+results/idrid_overlays/
+results/idrid-overlays-best/
+results/idrid-overlays-best-v5/
+results/idrid_overlays.zip
+results/idrid_coco_full/
 
 # Python
 __pycache__/
