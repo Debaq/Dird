@@ -1,16 +1,14 @@
-# Datasets crudos / extraídos (descargar aparte, no versionar)
+# Raw / extracted datasets (download separately, not versioned)
 data/
+datasets/
 
-# Modelos binarios (viven en repo dird_models)
+# Model weights (live in the dird_models repo)
 models/*.onnx
 models/*.pt
 
-# Outputs de experimentos: versionar métricas/plots, NO datasets gigantes
-results/idrid_overlays/
-results/idrid-overlays-best/
-results/idrid-overlays-best-v5/
-results/idrid_overlays.zip
-results/idrid_coco_full/
+# Heavy local-only experiment artifacts (regenerable)
+experiment-1-idrid/results/_local_heavy/
+**/raw_detections*.csv
 
 # Python
 __pycache__/

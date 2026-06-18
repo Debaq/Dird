@@ -48,33 +48,38 @@ docs/sample-report-*.pdf
 *.sln
 *.sw?
 
-# Validation datasets and results (large files)
+# === Validation (experiment-1-idrid / experiment-2-aptos) ===
 validation/datasets/*
 !validation/datasets/.gitkeep
+
+# Large binaries / model weights — never version
 validation/**/*.zip
 validation/**/*.onnx
-validation/**/*.png
+validation/**/*.pt
+validation/**/*.pth
+validation/**/*.npy
+
+# Heavy local-only artifacts (overlays, COCO export, raw detection dumps)
+validation/experiment-1-idrid/results/_local_heavy/
+validation/**/raw_detections*.csv
+
+# Images: version result plots, NOT raw/overlay imagery
 validation/**/*.jpg
 validation/**/*.jpeg
-# ...pero sí versionar plots/figuras de resultados (las imágenes gigantes
-# de overlays/coco quedan bloqueadas por validation/.gitignore como directorios)
-!validation/results/**/*.png
 validation/**/*.tif
 validation/**/*.tiff
 validation/**/*.webp
 validation/**/*.bmp
-validation/**/*.npy
+validation/**/*.png
+!validation/**/results/**/*.png
+
+# CSVs: version metrics/summary, raw dumps already excluded above
 validation/**/*.csv
-# ...sí versionar CSVs de métricas/summary de resultados, NO los volcados crudos gigantes
-!validation/results/**/*.csv
-validation/results/raw_detections_bbox.csv
-validation/results/**/raw_detections.csv
+!validation/**/results/**/*.csv
+validation/**/raw_detections*.csv
+
+# Misc
 validation/aptos_extracted/
 validation/aptos_markers/
 validation/__pycache__/
-validation/*.json
-
-validation/**/*.pt
-validation/**/*.pth
-
 validation/.claude/

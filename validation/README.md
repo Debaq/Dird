@@ -1,59 +1,54 @@
-# Validación Científica DIRD+
+# DIRD+ — Scientific validation
 
-Scripts de validación para evaluar los modelos ONNX de DIRD+ sobre datasets públicos de referencia.
+Validation of the DIRD+ ONNX model (`detection-v2.0.0`) against public reference fundus
+datasets. Each experiment is self-contained: its own report, scripts and results.
 
-## Estructura
+## Layout
 
 ```
 validation/
-├── validate_dird.py          # Script principal de validación
-├── datasets/                 # Datasets (ignorado por git, descargar manualmente)
-│   ├── aptos2019/
-│   │   ├── train.csv
-│   │   └── train_images/
-│   └── idrid/
-│       └── ...
-├── results/                  # Resultados generados (ignorado por git)
+├── models/                 # model metadata (JSON); weights live in the dird_models repo
+├── experiment-1-idrid/     # Exp 1 — lesion detection metrics on IDRiD  (negative result)
+│   ├── REPORT.md
+│   ├── scripts/
+│   └── results/
+├── experiment-2-aptos/     # Exp 2 — binary screening on APTOS 2019      (positive result)
+│   ├── REPORT.md
+│   ├── scripts/
+│   └── results/
 └── README.md
 ```
+
+## Experiments
+
+| # | Dataset | Task | Result | Headline |
+|---|---------|------|--------|----------|
+| [1](experiment-1-idrid/REPORT.md) | IDRiD (n=81) | Per-lesion bounding-box detection (mAP) | ❌ Negative | mAP 0.24–0.30; only the optic disc is localized well. Wrong metric for this model. |
+| [2](experiment-2-aptos/REPORT.md) | APTOS 2019 (n=3662) | Image-level binary screening (normal vs pathological) | ✅ Positive | Sens 0.978 / Spec 0.931 / MCC 0.91, AUC 0.95–0.97, OOD, no retraining. |
+
+**Why two experiments?** Experiment 1 tested the model as an instance-level lesion
+detector on IDRiD and failed — IDRiD's dense mask-derived boxes are the wrong yardstick for
+this model. That negative result motivated Experiment 2, which validates the same model at
+the **image level** on APTOS, where it generalizes strongly.
+
+## Future work — Messidor
+
+A third experiment on **Messidor-2** is planned to confirm the per-class thresholds and
+out-of-domain generalization on a different population/camera distribution. See
+§8.5 of the [APTOS report](experiment-2-aptos/REPORT.md).
 
 ## Setup
 
 ```bash
-pip install onnxruntime numpy opencv-python pandas scikit-learn matplotlib Pillow tqdm
+pip install onnxruntime numpy opencv-python-headless pandas scikit-learn matplotlib Pillow tqdm
 ```
 
-## Dataset APTOS 2019
+Datasets are not versioned — download them separately and place them under each
+experiment's `datasets/` directory. Model weights (`*.onnx`) live in the `dird_models`
+repository. See each experiment's `REPORT.md` (§ Reproducibility) for the exact run order.
 
-Descargar desde Kaggle: [aptos2019-blindness-detection](https://www.kaggle.com/c/aptos2019-blindness-detection/data)
+## What is / isn't versioned
 
-Colocar en `datasets/aptos2019/`:
-- `train.csv` — labels (columnas: id_code, diagnosis)
-- `train_images/` — ~3,600 imágenes .png
-
-## Uso
-
-```bash
-python validate_dird.py \
-    --model /path/to/detection-model.onnx \
-    --csv datasets/aptos2019/train.csv \
-    --images datasets/aptos2019/train_images/ \
-    --output results/aptos2019/ \
-    --classes-json /path/to/detection-metadata.json \
-    --conf-threshold 0.5 \
-    --iou-threshold 0.45 \
-    --benchmark \
-    --n-benchmark 100
-```
-
-## Outputs
-
-| Archivo | Contenido |
-|---------|-----------|
-| `metrics_binary.json` | Sensitivity, specificity, AUC-ROC, accuracy, F1 |
-| `metrics_grading.json` | Quadratic Weighted Kappa, per-class accuracy |
-| `benchmark.json` | Tiempos de inferencia (mean, std, median) |
-| `roc_curve.png` | Curva ROC 300 DPI |
-| `confusion_matrix.png` | Matriz de confusión normalizada 300 DPI |
-| `results_per_image.csv` | Predicción por imagen |
-| `validation_report.txt` | Resumen legible de todas las métricas |
+- **Versioned:** reports, scripts, metrics (`*.json`, summary `*.csv`), plots (`*.png`).
+- **Not versioned:** model weights (`*.onnx`/`*.pt`), raw datasets, overlay imagery, the
+  COCO export, and raw detection dumps (`raw_detections*.csv`) — all large and regenerable.
