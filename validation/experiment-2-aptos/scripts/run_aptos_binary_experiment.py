@@ -69,13 +69,13 @@ def main():
     ap.add_argument("--tag", default="")
     args = ap.parse_args()
 
-    base = Path(__file__).parent
+    base = Path(__file__).parent.parent
     model_path = base / args.model
     csv_path = base / args.csv
     img_dir = base / args.images
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    tag = f"_{args.tag}" if args.tag else ""
-    out_dir = base / args.output / f"aptos_binary_{ts}{tag}"
+    tag = f"-{args.tag}" if args.tag else ""
+    out_dir = base / args.output / f"01-binary{tag}"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"[*] Modelo: {model_path}")

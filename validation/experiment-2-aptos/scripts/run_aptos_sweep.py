@@ -92,9 +92,9 @@ def main():
     ap.add_argument("--limit", type=int, default=0)
     args = ap.parse_args()
 
-    base = Path(__file__).parent
+    base = Path(__file__).parent.parent
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    out_dir = base / args.output / f"aptos_sweep_{ts}"
+    out_dir = base / args.output / "02-sweep"
     out_dir.mkdir(parents=True, exist_ok=True)
     img_dir = base / args.images
     df = pd.read_csv(base / args.csv)

@@ -9,9 +9,8 @@ mpl.rcParams.update({"figure.dpi": 110, "savefig.dpi": 300, "font.size": 10,
                      "axes.grid": True, "grid.alpha": 0.3,
                      "axes.spines.top": False, "axes.spines.right": False})
 
-BASE = Path(__file__).parent
-dirs = sorted((BASE / "results").glob("aptos_cv_*"))
-EXP = dirs[-1] if len(sys.argv) < 2 else BASE / "results" / sys.argv[1]
+BASE = Path(__file__).parent.parent
+EXP = BASE / "results" / (sys.argv[1] if len(sys.argv) > 1 else "04-cv")
 OUT = EXP / "plots"; OUT.mkdir(exist_ok=True)
 data = json.loads((EXP / "cv_full.json").read_text())
 folds = data["folds"]

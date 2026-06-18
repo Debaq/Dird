@@ -17,9 +17,9 @@ mpl.rcParams.update({
     "axes.spines.right": False,
 })
 
-BASE = Path(__file__).parent / "results"
-EXP1 = BASE / "aptos_binary_20260430_135006"
-EXP2 = BASE / "aptos_sweep_20260430_140753"
+BASE = Path(__file__).parent.parent / "results"
+EXP1 = BASE / "01-binary"
+EXP2 = BASE / "02-sweep"
 OUT1 = EXP1 / "plots"; OUT1.mkdir(exist_ok=True)
 OUT2 = EXP2 / "plots"; OUT2.mkdir(exist_ok=True)
 

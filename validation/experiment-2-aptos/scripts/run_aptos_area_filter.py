@@ -25,8 +25,8 @@ LESION_CLASSES = [1, 3, 4, 5]
 CLASS_NAMES = {0: "optic_disc", 1: "hard_exudate", 2: "fovea",
                3: "hemorrhage", 4: "cotton_wool_spot", 5: "microhemorrhages"}
 
-BASE = Path(__file__).parent
-DEFAULT_CACHE = BASE / "results" / "raw_detections_bbox.csv"
+BASE = Path(__file__).parent.parent
+DEFAULT_CACHE = BASE / "results" / "05-area-filter" / "raw_detections_bbox.csv"
 
 REQUIRED_COLS = {"image_id", "class_idx", "score", "x1", "y1", "x2", "y2",
                  "img_w", "img_h"}
@@ -228,7 +228,7 @@ def main():
 
     summary = pd.DataFrame(rows)
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    out_dir = BASE / args.output / f"aptos_area_filter_{ts}"
+    out_dir = BASE / args.output / "05-area-filter"
     out_dir.mkdir(parents=True, exist_ok=True)
     summary.to_csv(out_dir / "area_filter_summary.csv", index=False)
 

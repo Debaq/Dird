@@ -12,10 +12,8 @@ mpl.rcParams.update({"figure.dpi": 110, "savefig.dpi": 300, "font.size": 10,
                      "axes.grid": True, "grid.alpha": 0.3,
                      "axes.spines.top": False, "axes.spines.right": False})
 
-BASE = Path(__file__).parent
-# Detectar último dir aptos_perclass_*
-dirs = sorted((BASE / "results").glob("aptos_perclass_*"))
-EXP = dirs[-1] if not (len(sys.argv) > 1) else BASE / "results" / sys.argv[1]
+BASE = Path(__file__).parent.parent
+EXP = BASE / "results" / (sys.argv[1] if len(sys.argv) > 1 else "03-perclass")
 OUT = EXP / "plots"; OUT.mkdir(exist_ok=True)
 print(f"[*] Exp: {EXP}")
 
@@ -24,7 +22,7 @@ rules = json.loads((EXP / "rules_full.json").read_text())
 summary = pd.read_csv(EXP / "rules_summary.csv")
 
 # Reconstruyo pivot de scores per-class para ROC plots
-SWEEP = BASE / "results" / "aptos_sweep_20260430_140753"
+SWEEP = BASE / "results" / "02-sweep"
 raw = pd.read_csv(SWEEP / "raw_detections.csv")
 gt = pd.read_csv(BASE / "aptos_extracted" / "train.csv")
 gt = gt.rename(columns={"diagnosis": "gt_grade"})

@@ -8,10 +8,10 @@ Genera 3 imágenes por muestra:
 
 Uso:
     python overlay_predictions_e2e.py \
-        --model best.onnx \
-        --dataset datasets/idrid/full \
-        --classes-json best-metadata.json \
-        --out results/idrid-overlays-best \
+        --model ../models/detection-v2.0.0.onnx \
+        --dataset ../datasets/idrid/full \
+        --classes-json ../../models/detection-v2.0.0.json \
+        --out ../results/_local_heavy/idrid-overlays \
         --conf 0.25 --limit 20
 """
 from __future__ import annotations

@@ -18,8 +18,8 @@ from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
 
 np.random.seed(42)
 
-BASE = Path(__file__).parent
-CACHE = BASE / "results" / "raw_detections_bbox.csv"
+BASE = Path(__file__).parent.parent
+CACHE = BASE / "results" / "05-area-filter" / "raw_detections_bbox.csv"
 LESION = [1, 3, 4, 5]
 NAMES = {1: "hard_exudate", 3: "hemorrhage", 4: "cotton_wool_spot", 5: "microhemorrhages"}
 AREAS = [0, 200, 400, 800, 1200]
@@ -77,7 +77,7 @@ def main():
     print(f"[*] N={len(gt)} patológicos={int(gt['gt_binary'].sum())}")
 
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    out_dir = BASE / "results" / f"aptos_area_perclass_{ts}"
+    out_dir = BASE / "results" / "06-area-perclass"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     rows = []

@@ -27,8 +27,8 @@ from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
                              matthews_corrcoef, roc_auc_score, roc_curve)
 from datetime import datetime
 
-BASE = Path(__file__).parent
-SWEEP = BASE / "results" / "aptos_sweep_20260430_140753"
+BASE = Path(__file__).parent.parent
+SWEEP = BASE / "results" / "02-sweep"
 RAW_CSV = SWEEP / "raw_detections.csv"
 CSV = BASE / "aptos_extracted" / "train.csv"
 
@@ -78,7 +78,7 @@ def per_grade_breakdown(df_pred):
 
 def main():
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    out_dir = BASE / "results" / f"aptos_perclass_{ts}"
+    out_dir = BASE / "results" / "03-perclass"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     raw = pd.read_csv(RAW_CSV)

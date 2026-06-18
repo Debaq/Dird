@@ -18,8 +18,8 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
                              matthews_corrcoef, roc_auc_score, roc_curve)
 
-BASE = Path(__file__).parent
-SWEEP = BASE / "results" / "aptos_sweep_20260430_140753"
+BASE = Path(__file__).parent.parent
+SWEEP = BASE / "results" / "02-sweep"
 LESION = [1, 3, 4, 5]
 NAMES = {1: "hard_exudate", 3: "hemorrhage", 4: "cotton_wool_spot", 5: "microhemorrhages"}
 RANDOM_SEED = 42
@@ -66,7 +66,7 @@ def calibrate(df_train):
 
 def main():
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    out_dir = BASE / "results" / f"aptos_cv_{ts}"
+    out_dir = BASE / "results" / "04-cv"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     raw = pd.read_csv(SWEEP / "raw_detections.csv")

@@ -11,7 +11,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw
 
-BASE = Path(__file__).parent / "datasets" / "idrid"
+BASE = Path(__file__).parent.parent / "datasets" / "idrid"
 
 CLASSES = [
     {"id": 1, "name": "MA", "dir": "1. Microaneurysms", "color": (255,   0,   0)},
@@ -114,7 +114,7 @@ def main():
     if not split_dir.exists():
         raise SystemExit(f"missing {split_dir}")
 
-    out_root = Path(args.out) if args.out else Path(__file__).parent / "results" / f"idrid_coco_{args.split}"
+    out_root = Path(args.out) if args.out else Path(__file__).parent.parent / "results" / "_local_heavy" / f"idrid_coco_{args.split}"
     out_root.mkdir(parents=True, exist_ok=True)
 
     print(f"[coco] scanning {split_dir}")

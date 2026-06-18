@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-BASE = Path(__file__).parent / "datasets" / "idrid" / "A. Segmentation"
+BASE = Path(__file__).parent.parent / "datasets" / "idrid" / "A. Segmentation"
 
 CLASSES = {
     "MA": {"dir": "1. Microaneurysms",  "color": (255,   0,   0), "label": "Microaneurysms"},
@@ -120,7 +120,7 @@ def main() -> None:
     ap.add_argument("--split", choices=["train", "test", "both"], default="both")
     ap.add_argument("--alpha", type=float, default=0.5)
     ap.add_argument("--limit", type=int, default=None)
-    ap.add_argument("--out", type=Path, default=Path(__file__).parent / "results" / "idrid_overlays")
+    ap.add_argument("--out", type=Path, default=Path(__file__).parent.parent / "results" / "_local_heavy" / "idrid_overlays")
     args = ap.parse_args()
 
     splits = ["train", "test"] if args.split == "both" else [args.split]

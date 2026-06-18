@@ -11,14 +11,14 @@ mpl.rcParams.update({"figure.dpi": 110, "savefig.dpi": 300, "font.size": 10,
                      "axes.grid": True, "grid.alpha": 0.3,
                      "axes.spines.top": False, "axes.spines.right": False})
 
-BASE = Path(__file__).parent
+BASE = Path(__file__).parent.parent
 RES = BASE / "results"
 
-EXP5 = sorted(RES.glob("aptos_area_filter_*"))[-1]
-EXP6 = sorted(RES.glob("aptos_area_perclass_*"))[-1]
+EXP5 = RES / "05-area-filter"
+EXP6 = RES / "06-area-perclass"
 OUT5 = EXP5 / "plots"; OUT5.mkdir(exist_ok=True)
 OUT6 = EXP6 / "plots"; OUT6.mkdir(exist_ok=True)
-MASTER = RES / "master_plots"; MASTER.mkdir(exist_ok=True)
+MASTER = RES / "master-plots"; MASTER.mkdir(exist_ok=True)
 
 
 # ============================================================
@@ -61,7 +61,7 @@ def plot_exp5():
     fig.tight_layout(); fig.savefig(OUT5 / "02_sens_spec_paths.png"); plt.close(fig)
 
     # 3) Eliminaciones por clase y área (necesita reconstruir desde cache)
-    cache = RES / "raw_detections_bbox.csv"
+    cache = RES / "05-area-filter" / "raw_detections_bbox.csv"
     det = pd.read_csv(cache)
     det["area_px"] = ((det["x2"] - det["x1"]).clip(lower=0)
                       * (det["y2"] - det["y1"]).clip(lower=0))
