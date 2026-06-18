@@ -8,7 +8,7 @@ Genera 3 imágenes por muestra:
 
 Uso:
     python overlay_predictions_e2e.py \
-        --model ../models/detection-v2.0.0.onnx \
+        --model ../../models/detection-v2.0.0.onnx \
         --dataset ../datasets/idrid/full \
         --classes-json ../../models/detection-v2.0.0.json \
         --out ../results/_local_heavy/idrid-overlays \

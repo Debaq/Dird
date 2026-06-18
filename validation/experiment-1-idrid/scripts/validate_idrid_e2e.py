@@ -9,7 +9,7 @@ Reusa GT loading, matching y métricas de validate_idrid.py / validate_dird.py.
 
 Uso:
     python validate_idrid_e2e.py \
-        --model ../models/detection-v2.0.0.onnx \
+        --model ../../models/detection-v2.0.0.onnx \
         --dataset ../datasets/idrid/full \
         --output ../results/match-iou-0.5 \
         --classes-json ../../models/detection-v2.0.0.json \

@@ -99,36 +99,45 @@ opencv-python-headless, numpy, pandas, scikit-learn, matplotlib, tqdm
 
 ### 6.2 Inputs
 
+Relative to `experiment-1-idrid/`:
+
 ```
-detection-v2.0.0.onnx                 (model weights — not versioned)
 datasets/idrid/                       (IDRiD segmentation subset — download separately)
+../models/detection-v2.0.0.onnx       (model weights — not versioned)
 ../models/detection-v2.0.0.json       (class metadata)
 ```
 
 ### 6.3 Run
 
+Run from the `scripts/` directory (paths below are relative to it). This is exactly what
+`run_idrid_full.sh` does — you can just run that script instead.
+
 ```bash
 cd validation/experiment-1-idrid/scripts
 
-# (optional) build a COCO-format view of IDRiD masks
+# (optional) build a COCO-format view of IDRiD masks (output → ../results/_local_heavy/)
 python idrid_to_coco.py
 
 # strict match IoU = 0.5
 python validate_idrid_e2e.py \
-    --model detection-v2.0.0.onnx \
-    --dataset datasets/idrid/full \
+    --model ../../models/detection-v2.0.0.onnx \
+    --dataset ../datasets/idrid/full \
     --output ../results/match-iou-0.5 \
     --classes-json ../../models/detection-v2.0.0.json \
     --conf-threshold 0.1 --iou-threshold 0.5 --benchmark
 
 # lenient match IoU = 0.1
 python validate_idrid_e2e.py \
-    --model detection-v2.0.0.onnx \
-    --dataset datasets/idrid/full \
+    --model ../../models/detection-v2.0.0.onnx \
+    --dataset ../datasets/idrid/full \
     --output ../results/match-iou-0.1 \
     --classes-json ../../models/detection-v2.0.0.json \
     --conf-threshold 0.1 --iou-threshold 0.1 --benchmark
 ```
+
+> Note: all paths are read relative to the current directory (`scripts/`). The model and
+> class metadata use `../../models/` because the weights live in `validation/models/`,
+> two levels up; the dataset and outputs sit one level up under the experiment root.
 
 ### 6.4 Outputs (per run)
 

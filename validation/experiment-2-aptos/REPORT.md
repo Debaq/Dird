@@ -393,15 +393,22 @@ python make_cv_plots.py
 python make_remaining_plots.py
 ```
 
-Dataset preparation: see `scripts/README_prepare_aptos.md` and
-`scripts/prepare_aptos_dataset.py`.
+All paths are resolved relative to the experiment root (`experiment-2-aptos/`). Each
+`run_aptos_*.py` accepts `--model`, `--csv` and `--images`; pass the model weights with
+`--model ../models/detection-v2.0.0.onnx` (or place the `.onnx` at the experiment root).
+
+> `scripts/prepare_aptos_dataset.py` (and `README_prepare_aptos.md`) is an **unrelated
+> utility** that carves a 500-image subset for human markers — it is *not* part of this
+> validation pipeline.
 
 ### 9.3 Inputs
 
+Relative to `experiment-2-aptos/`:
+
 ```
-detection-v2.0.0.onnx                       (model weights — not versioned)
-datasets/aptos2019/train.csv                (3662 rows)
-datasets/aptos2019/train_images/*.png
+aptos_extracted/train.csv                   (3662 rows; APTOS 2019 train split)
+aptos_extracted/train_images/*.png
+../models/detection-v2.0.0.onnx             (model weights — not versioned; pass via --model)
 ```
 
 ### 9.4 Outputs

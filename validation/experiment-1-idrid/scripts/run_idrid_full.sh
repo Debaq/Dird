@@ -3,7 +3,7 @@
 # Run from this scripts/ directory. Paths are relative to the experiment root (..).
 set -e
 
-MODEL=../models/detection-v2.0.0.onnx
+MODEL=../../models/detection-v2.0.0.onnx
 DATASET=../datasets/idrid/full
 CLASSES=../../models/detection-v2.0.0.json
 
