@@ -468,7 +468,7 @@ All scripts, reports and metrics live under [`validation/`](validation/) — see
 | # | Dataset | Task | Result | Headline |
 |---|---------|------|:------:|----------|
 | [1](validation/experiment-1-idrid/REPORT.md) | IDRiD (n=81) | Per-lesion bounding-box detection (mAP) | ❌ | mAP 0.24–0.30; only the optic disc localizes well — instance-level detection is the wrong metric for this model. |
-| [2](validation/experiment-2-aptos/REPORT.md) | APTOS 2019 (n=3662) | Image-level binary screening | ✅ | **Sens 0.978 / Spec 0.931 / MCC 0.91**, AUC 0.95–0.97, out-of-domain, no retraining (5-fold CV). |
+| [2](validation/experiment-2-aptos/REPORT.md) | APTOS 2019 (n=3662) | Image-level binary screening | ✅ | **AUC 0.95–0.97** out-of-domain (threshold-free, weights not retrained). Best operating point **Sens 0.978 / Spec 0.931 / MCC 0.91**, calibrated on APTOS and 5-fold CV-validated (in-distribution; external threshold validation pending). |
 
 Experiment 1's negative result motivated validating the model at the **image level**
 (Experiment 2), where it generalizes strongly out of domain. A third experiment on

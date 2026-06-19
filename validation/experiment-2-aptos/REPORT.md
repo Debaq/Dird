@@ -6,10 +6,17 @@
 **Hardware:** CPU, ONNX Runtime 1.25.1, no batching
 **Experiment author:** Nicolás Baier Quezada
 **Outcome:** ✅ **Strong positive result** — the model generalizes out-of-domain to APTOS
-without retraining (AUC 0.95–0.97).
+without retraining the weights.
 
-> **Headline:** Sens 97.8% / Spec 93.1% / MCC 0.91 at ≈ 9 FPS on CPU, validated
-> out-of-domain on n = 3662 with no retraining.
+> **Headline (two distinct claims, kept separate on purpose):**
+> - **Out-of-domain generalization (threshold-free, no tuning):** AUC-ROC **0.95–0.97** on
+>   n = 3662. This is the genuinely external result — the model weights were not retrained
+>   and nothing was fit to APTOS.
+> - **Best operating point (decision rule tuned on APTOS, 5-fold CV-validated):** Sens
+>   **0.978** / Spec **0.931** / MCC **0.911 ± 0.015** at ≈ 9 FPS on CPU. The per-class
+>   thresholds were calibrated on APTOS, so this is an *in-distribution* operating point
+>   validated by cross-validation — **not** an externally validated threshold. External
+>   threshold validation is pending (Messidor-2, §8.5).
 
 ---
 
@@ -437,5 +444,8 @@ clinically consistent with each class's internal AUC. The area filter and per-cl
 calibration **are redundant levers**; the recommended production operating point uses
 per-class calibration as the only post-model intervention.
 
-> **Headline:** Sens 97.8% / Spec 93.1% / MCC 0.91 at ≈ 9 FPS on CPU, externally validated
-> on n = 3662 with no retraining.
+> **Headline (claims kept separate):** Out-of-domain discrimination is **AUC 0.95–0.97**
+> (threshold-free, nothing fit to APTOS) — the genuinely external result. The **Sens 0.978
+> / Spec 0.931 / MCC 0.911** operating point is *in-distribution*: its per-class thresholds
+> were calibrated on APTOS and validated by 5-fold CV (not externally). Model weights were
+> not retrained. External threshold validation is pending (Messidor-2).
