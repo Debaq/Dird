@@ -1,0 +1,30 @@
+{
+  "experiment": "Messidor binary OOD (anatomical-only = normal)",
+  "model": "detection-v2.0.0.onnx",
+  "conf_threshold": 0.25,
+  "n_images": 1057,
+  "n_errors": 0,
+  "confusion_matrix": {
+    "TN": 327,
+    "FP": 141,
+    "FN": 145,
+    "TP": 444
+  },
+  "metrics": {
+    "sensitivity_recall": 0.7538200339558574,
+    "specificity": 0.6987179487179487,
+    "ppv_precision": 0.7589743589743589,
+    "npv": 0.6927966101694916,
+    "accuracy": 0.7294228949858089,
+    "f1": 0.7563884156729132,
+    "mcc": 0.4521543132681014,
+    "auc_roc": 0.7931540493085484
+  },
+  "timing_ms": {
+    "mean": 163.49936792784032,
+    "median": 148.38234503986314,
+    "p95": 238.1892691832035,
+    "fps_mean": 6.116231595716904
+  },
+  "timestamp": "20260620_155805"
+}

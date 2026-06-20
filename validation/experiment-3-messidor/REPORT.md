@@ -1,10 +1,10 @@
 # Experiment 3 — DIRD+ v2 external threshold validation on Messidor
 
-**Status:** 🚧 in progress (scaffold ready, awaiting dataset + run)
-**Closing date:** _TBD_
+**Status:** ⚠️ first run done on the **preprocessed Messidor-2 mirror** — result is confounded (see §2.1); a clean re-run on ADCIS raw images is pending.
+**Closing date:** 2026-06-20 (preliminary)
 **Model under test:** `detection-v2.0.0.onnx` (YOLOv26s end-to-end NMS, 6 active classes) — **weights not retrained**
-**Dataset:** Messidor-2 (ADCIS), adjudicated DR grade 0–4 — *fallback:* Messidor-1 (grade 0–3)
-**Hardware:** CPU, ONNX Runtime, no batching
+**Dataset:** Messidor-2 — **preprocessed mirror** (`mariaherrerot/messidor2preprocess`, `_PP.png`), adjudicated ICDR grade 0–4 (Krause et al. 2018). N = 1057 of 1748 gradable images present in the mirror.
+**Hardware:** CPU, ONNX Runtime, no batching (mean 163 ms/img, ≈ 6 FPS)
 **Experiment author:** Nicolás Baier Quezada
 
 > **Purpose (the open question from Experiment 2 §8.4–8.5):**
@@ -58,17 +58,47 @@ binary GT is comparable across datasets).
 
 ## 2. Results
 
-> _Pending run. Fill from `results/01-binary/metrics.json` and
-> `results/03-frozen-tau/frozen_tau.json` once the dataset is in place._
+Run `20260620_160112`, N = 1057 (468 normal / 589 pathological), grades {0:468, 1:207, 2:290, 3:71, 4:21}.
 
 | Metric | APTOS (CV, in-dist) | Messidor frozen-τ | Messidor refit-τ |
 |---|---|---|---|
-| AUC OOD (threshold-free) | 0.95–0.97 | _TBD_ | — |
-| Sensitivity | 0.978 | _TBD_ | _TBD_ |
-| Specificity | 0.931 | _TBD_ | _TBD_ |
-| MCC | 0.911 | _TBD_ | _TBD_ |
+| AUC OOD (threshold-free) | 0.95–0.97 | **0.813** | — |
+| Sensitivity | 0.978 | 0.672 | 0.543 |
+| Specificity | 0.931 | 0.831 | 0.929 |
+| PPV / NPV | 0.938 / 0.977 | 0.834 / 0.668 | 0.907 / 0.618 |
+| MCC | 0.911 | **0.503** | 0.498 |
 
-**Headline (to confirm):** _TBD_
+Frozen vs refit per-class τ (FPR = 2% over normals):
+
+| Class | τ frozen (APTOS) | τ refit (Messidor) |
+|---|---|---|
+| hard_exudate | 0.633 | 0.653 |
+| hemorrhage | 0.050 | 0.054 |
+| cotton_wool_spot | 0.853 | 0.316 |
+| microhemorrhages | 0.258 | 0.487 |
+
+**`GAP MCC (refit − frozen) = −0.0049`** — refitting τ on Messidor does **not** beat the
+frozen APTOS τ (it is marginally worse). Other rules: `FROZEN_fpr05` 0.793/0.688 (MCC 0.484),
+`FROZEN_fpr02_n2` 0.256/0.994 (MCC 0.352, high-specificity mode).
+
+**Headline (two claims, kept separate):**
+- ✅ **Threshold transportability — CONFIRMED.** The APTOS per-class τ sit at essentially
+  the same operating point on Messidor (gap ≈ 0). The decision rule is **not overfit to
+  APTOS** — this answers the open question of Experiments 2 §8.5.
+- ⚠️ **Absolute OOD discrimination drops sharply** on this dataset: AUC 0.95–0.97 → **0.813**,
+  MCC 0.91 → **0.50**. *But this number is confounded — see §2.1.*
+
+### 2.1 Confounder — preprocessed mirror, not raw ADCIS
+
+The images used are the **preprocessed mirror** (`_PP.png`: cropped + resized to ~600 px),
+**not** the raw ADCIS fundus. That preprocessing differs from how APTOS images were fed to
+the model, so an unknown share of the AUC drop is an **artifact of the mirror's preprocessing**,
+not a genuine Messidor population/camera shift. The set is also a subset (1057 / 1748).
+
+> **We cannot conclude "the model fails to generalize to Messidor" from this run.** The
+> transportability result (gap ≈ 0) is robust to the confounder (frozen and refit see the
+> *same* images), but the absolute AUC must be re-measured on **raw ADCIS images** before
+> any generalization claim. That re-run is the next step.
 
 ---
 
@@ -109,5 +139,9 @@ results/
 ├── 01-binary/      metrics.json, per_image.csv, roc_curve.json
 ├── 02-sweep/       raw_detections.csv   (cache — not versioned)
 ├── 03-frozen-tau/  frozen_tau.json, rules_summary.csv, per_image_class_scores.csv, report.txt
-└── plots/          01_roc_ood.png, 02_tau_frozen_vs_refit.png, 03_rules_comparison.png
+└── plots/          01_roc_ood · 02_roc_per_class · 03_score_dist_binary ·
+                    04_score_dist_per_class · 05_per_grade_detection ·
+                    06_confusion_matrices · 07_tau_frozen_vs_refit ·
+                    08_rules_comparison · 09_rules_sens_spec_scatter ·
+                    10_aptos_vs_messidor  (.png, 300 dpi)
 ```

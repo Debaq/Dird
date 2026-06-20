@@ -32,7 +32,7 @@ import pandas as pd
 IMG_EXTS = (".png", ".jpg", ".jpeg", ".tif", ".tiff", ".PNG", ".JPG", ".JPEG", ".TIF", ".TIFF")
 
 # nombres de columna tolerados (case-insensitive) para cada fuente
-ID_COLS = ["id_code", "image", "image name", "image_name", "imagename", "filename", "id"]
+ID_COLS = ["id_code", "image_id", "image", "image name", "image_name", "imagename", "filename", "id"]
 GRADE_COLS = [
     "adjudicated_dr_grade", "dr_grade", "diagnosis", "retinopathy grade",
     "retinopathy_grade", "grade", "dr",

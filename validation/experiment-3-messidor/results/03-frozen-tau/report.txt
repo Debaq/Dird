@@ -1,0 +1,17 @@
+Messidor external threshold validation — 20260620_160112
+N=1057  normales=468  patológicas=589
+AUC OOD (threshold-free) = 0.8134
+
+τ congelados (APTOS PCT_fpr02) vs τ recalibrados (Messidor fpr02):
+  hard_exudate       frozen=0.6334   refit=0.6534
+  hemorrhage         frozen=0.0501   refit=0.0536
+  cotton_wool_spot   frozen=0.8525   refit=0.3163
+  microhemorrhages   frozen=0.2583   refit=0.4874
+
+rule                  sens    spec     mcc      f1     auc
+FROZEN_fpr02        0.6723  0.8312  0.5028  0.7444  0.8134
+FROZEN_fpr02_n2     0.2564  0.9936  0.3519  0.4065  0.8134
+FROZEN_fpr05        0.7929  0.6880  0.4840  0.7770  0.8134
+REFIT_fpr02         0.5433  0.9295  0.4979  0.6794  0.8134
+
+GAP MCC (refit - frozen) = -0.0049  (chico = τ de APTOS transportable -> validación externa OK)
