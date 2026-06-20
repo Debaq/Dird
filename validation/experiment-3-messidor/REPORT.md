@@ -7,6 +7,11 @@
 **Hardware:** CPU, ONNX Runtime, no batching (mean 163 ms/img, ≈ 6 FPS)
 **Experiment author:** Nicolás Baier Quezada
 
+> **Data attribution.** The Messidor-2 images are **kindly provided by the Messidor program
+> partners** (see <https://www.adcis.net/en/third-party/messidor/>). Cite Decencière et al.
+> 2014 (database), Abràmoff et al. 2013, and Krause et al. 2018 (adjudicated grades) — see
+> [REFERENCES.md](../../REFERENCES.md) §Public Datasets.
+
 > **Purpose (the open question from Experiment 2 §8.4–8.5):**
 > APTOS gave AUC 0.95–0.97 OOD (threshold-free) and a strong operating point
 > (Sens 0.978 / Spec 0.931 / MCC 0.911) — but that operating point's per-class

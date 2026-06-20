@@ -57,3 +57,15 @@
 21. **Scanlon PH.** "The English National Screening Programme for diabetic retinopathy 2003-2016." *Acta Diabetologica*, 2017; 54(6):515-525.
 
 22. **Shi L, Wu H, Dong J, et al.** "Telemedicine for detecting diabetic retinopathy: a systematic review and meta-analysis." *British Journal of Ophthalmology*, 2015; 99(6):823-831.
+
+### Public Datasets (validation)
+
+The Messidor / Messidor-2 images used in the validation experiments are
+**kindly provided by the Messidor program partners** (see
+<https://www.adcis.net/en/third-party/messidor/>).
+
+23. **Decencière E, Zhang X, Cazuguel G, et al.** "Feedback on a publicly distributed image database: the Messidor database." *Image Analysis & Stereology*, 2014; 33(3):231-234. ISSN 1854-5165. <http://www.ias-iss.org/ojs/IAS/article/view/1155> — <https://doi.org/10.5566/ias.1155>
+
+24. **Abràmoff MD, Folk JC, Han DP, Walker JD, Williams DF, Russell SR, Massin P, Cochener B, Gain P, Tang L, Lamard M, Moga DC, Quellec G, Niemeijer M.** "Automated analysis of retinal images for detection of referable diabetic retinopathy." *JAMA Ophthalmology*, 2013; 131(3):351-357. <https://doi.org/10.1001/jamaophthalmol.2013.1743>
+
+25. **Krause J, Gulshan V, Rahimy E, et al.** "Grader variability and the importance of reference standards for evaluating machine learning models for diabetic retinopathy." *Ophthalmology*, 2018; 125(8):1264-1272. <https://doi.org/10.1016/j.ophtha.2018.01.034> — *source of the adjudicated Messidor-2 grades.*

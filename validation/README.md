@@ -47,6 +47,13 @@ mirror's preprocessing and cannot be read as a true generalization figure. A cle
 on raw ADCIS images is the pending next step. See the
 [Exp 3 report §2.1](experiment-3-messidor/REPORT.md) for the confounder discussion.
 
+## Data attribution
+
+The Messidor / Messidor-2 images are **kindly provided by the Messidor program partners**
+(see <https://www.adcis.net/en/third-party/messidor/>). When using them, cite Decencière
+et al. 2014 (database), Abràmoff et al. 2013, and Krause et al. 2018 (adjudicated Messidor-2
+grades) — full entries in [REFERENCES.md](../REFERENCES.md) §Public Datasets.
+
 ## Setup
 
 ```bash
