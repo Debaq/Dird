@@ -449,3 +449,53 @@ per-class calibration as the only post-model intervention.
 > / Spec 0.931 / MCC 0.911** operating point is *in-distribution*: its per-class thresholds
 > were calibrated on APTOS and validated by 5-fold CV (not externally). Model weights were
 > not retrained. External threshold validation is pending (Messidor-2).
+
+---
+
+## 11. Statistical rigor
+
+### 11.1 Bootstrap 95% confidence intervals (`results/07-bootstrap-ci/`)
+
+Image-level resampling with replacement, 2000 iterations, seed 42, full APTOS set
+(n = 3662). Operating point = PCT_fpr02 (per-class τ from §3); AUC = threshold-free
+(max lesion score). Script: `bootstrap_aptos_ci.py`.
+
+| Metric | Point | 95% CI |
+|---|---|---|
+| Sensitivity | 0.9785 | [0.9711, 0.9847] |
+| Specificity | 0.9330 | [0.9210, 0.9441] |
+| PPV | 0.9376 | [0.9265, 0.9479] |
+| NPV | 0.9768 | [0.9690, 0.9834] |
+| Accuracy | 0.9560 | [0.9489, 0.9623] |
+| F1 | 0.9576 | [0.9507, 0.9636] |
+| MCC | 0.9129 | [0.8991, 0.9253] |
+| AUC-ROC | 0.9493 | [0.9415, 0.9563] |
+
+Intervals are narrow (≈ ±1 pt) thanks to n = 3662 — the estimates are stable, not artifacts
+of a lucky split. (The AUC here, 0.949, uses the raw max-lesion score with a 0.05 floor; the
+0.95–0.97 headline range spans the alternative score definitions in §2–3.)
+
+### 11.2 Audit — strengths and limitations (for publication)
+
+**Sound:**
+- The 5-fold CV (§4) is **leak-free**: ONNX weights are frozen (never retrained); only the
+  decision threshold τ is calibrated on each fold's train split and applied to its test split.
+  Per-class τ are stable across folds (CV < 8%).
+- Large, near-balanced sample (1805 normal / 1857 pathological); deterministic, seeded.
+
+**To address before journal submission:**
+1. *Operating-point selection multiplicity (moderate).* ~12 rules were evaluated on the full
+   set and PCT_fpr02 chosen. CV validates the **chosen** rule's stability, not the selection.
+   We report **all** rules and label PCT_fpr02 as *in-distribution*; the paper must state the
+   rule family was the search space.
+2. *AUC score definition (minor).* The ROC uses the per-image max lesion score with a 0.05
+   confidence floor; sub-0.05 detections read as 0 → "near-threshold-free above 0.05", not
+   strictly threshold-free. State the score definition explicitly.
+3. *Single clean external dataset (moderate).* OOD generalization rests on APTOS alone
+   (Messidor-2 confounded, Exp 3 §2.1). A second **public** external set (DDR, DiaRetDB1, or
+   IDRiD at image level) is needed to turn n = 1 external into a pattern.
+4. *Per-class AUC is a proxy (minor).* It measures whether class-c presence discriminates
+   *any* DR against the image-level binary GT — not class-c localization (Exp 1's remit, where
+   the model is weak). Do not claim lesion-level accuracy from it.
+5. *Independence (minor).* APTOS `id_code`s are treated as independent images; if any patient
+   contributed > 1 image, resampling should be patient-level. State the assumption.

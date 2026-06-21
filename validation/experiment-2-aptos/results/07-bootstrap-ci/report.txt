@@ -1,0 +1,14 @@
+APTOS bootstrap 95% CI — 20260620_200305
+N=3662  n_boot=2000  seed=42  resample=image-level
+Operating point: PCT_fpr02 (τ per-clase congelados de 03-perclass)
+AUC = libre de umbral (score = máx clases lesión)
+
+metric            point   CI95_low  CI95_high
+sensitivity      0.9785     0.9711     0.9847
+specificity      0.9330     0.9210     0.9441
+ppv              0.9376     0.9265     0.9479
+npv              0.9768     0.9690     0.9834
+accuracy         0.9560     0.9489     0.9623
+f1               0.9576     0.9507     0.9636
+mcc              0.9129     0.8991     0.9253
+auc_roc          0.9493     0.9415     0.9563
