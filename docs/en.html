@@ -802,9 +802,9 @@
       padding: 0.75rem;
       text-align: center;
     }
-    /* Validation cards are 3-across (narrow): 2x2 metrics so nothing overflows */
-    #validacion .metrics { grid-template-columns: repeat(2, 1fr); }
-    #validacion .metric { min-width: 0; }
+    /* APTOS full-width on top; Messidor+DDR as a compact pair below (2x2 metrics) */
+    .val-pair .metrics { grid-template-columns: repeat(2, 1fr); }
+    .val-pair .metric { min-width: 0; }
     .metric-value {
       font-size: 1.15rem;
       font-weight: 800;
@@ -2209,7 +2209,7 @@
         <p class="section-subtitle">Binary evaluation (normal vs. retinopathy) on public datasets not used for training. No retraining, only operating-point calibration.</p>
       </div>
 
-      <div class="model-grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));">
+      <div class="model-grid" style="grid-template-columns:1fr;">
 
         <div class="model-card is-latest animate-in">
           <div class="model-header">
@@ -2260,6 +2260,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           </a>
         </div>
+      </div>
+
+      <div class="model-grid val-pair" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));margin-top:1.5rem;">
 
         <div class="model-card animate-in">
           <div class="model-header">
