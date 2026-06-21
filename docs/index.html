@@ -2263,53 +2263,62 @@
           <div class="model-header">
             <div>
               <div class="model-version">
-                Validación externa
-                <small>DDR (China) · Messidor-2 (Francia)</small>
+                Messidor-2
+                <small>n=1.057 · Francia · mirror preprocesado</small>
               </div>
             </div>
-            <span class="model-badge badge-prev">Completado</span>
+            <span class="model-badge badge-pre">Preliminar</span>
           </div>
           <div class="model-meta">
-            <span><b>Pregunta:</b> ¿el umbral de APTOS generaliza a otras poblaciones?</span>
+            <span><b>Cierre:</b> 2026-06-20</span>
+            <span><b>Diseño:</b> τ de APTOS congelado (sin recalibrar)</span>
           </div>
 
-          <div class="model-note" style="margin-top:1.25rem;">
-            <b>Transportabilidad del umbral: confirmada.</b> Los umbrales τ per-clase calibrados sobre APTOS se aplicaron <i>congelados</i> (sin recalibrar) a <b>DDR</b> (China, n=12.522, imágenes crudas) y <b>Messidor-2</b> (Francia, n=1.057). Recalibrar sobre la población destino no mejora el resultado (ΔMCC = +0.007 en DDR): el punto de operación es estable entre cohortes distintas.
+          <div class="metrics">
+            <div class="metric"><div class="metric-value">0.672</div><div class="metric-label">Sens</div></div>
+            <div class="metric"><div class="metric-value">0.831</div><div class="metric-label">Spec</div></div>
+            <div class="metric"><div class="metric-value">0.503</div><div class="metric-label"><a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a></div></div>
+            <div class="metric"><div class="metric-value">0.813</div><div class="metric-label"><a class="wlink" href="https://es.wikipedia.org/wiki/Curva_ROC" target="_blank" rel="noopener">AUC-ROC</a></div></div>
+          </div>
+
+          <div class="model-status">
+            <b>Transportabilidad confirmada</b> (ΔMCC ≈ 0 vs. recalibrar), pero el AUC absoluto está <b>confundido por el mirror preprocesado</b> (no ADCIS crudas).
           </div>
 
           <div class="model-note">
-            <b>Discriminación fuera de dominio, cuantificada.</b> El AUC baja de 0.95 (APTOS, <i>in-distribution</i>) a <b>0.84</b> (DDR, externo limpio) — una caída real de población/cámara, modesta. Messidor-2 (0.81) usó un mirror preprocesado, por lo que su valor está parcialmente confundido; DDR, con imágenes crudas, lo confirma sin ese sesgo. <a href="https://github.com/Debaq/Dird/tree/main/validation" class="wlink" target="_blank" rel="noopener">Ver experimentos 3 y 4 →</a>
+            Parte de la caída de AUC es artefacto del preprocesado del mirror, no un shift real de población. DDR (imágenes crudas) es la versión limpia de esta prueba. Re-corrida sobre ADCIS crudas pendiente. <a href="https://github.com/Debaq/Dird/tree/main/validation/experiment-3-messidor" class="wlink" target="_blank" rel="noopener">Ver experimento 3 →</a>
+          </div>
+        </div>
+
+        <div class="model-card animate-in">
+          <div class="model-header">
+            <div>
+              <div class="model-version">
+                DDR
+                <small>n=12.522 · China · crudo · 50/50</small>
+              </div>
+            </div>
+            <span class="model-badge badge-current">Completado</span>
+          </div>
+          <div class="model-meta">
+            <span><b>Cierre:</b> 2026-06-20</span>
+            <span><b>Diseño:</b> τ de APTOS congelado (sin recalibrar)</span>
+            <span><b>Hardware:</b> CPU, <a class="wlink" href="https://es.wikipedia.org/wiki/ONNX" target="_blank" rel="noopener">ONNX</a> Runtime</span>
+          </div>
+
+          <div class="metrics">
+            <div class="metric"><div class="metric-value">0.603</div><div class="metric-label">Sens</div></div>
+            <div class="metric"><div class="metric-value">0.914</div><div class="metric-label">Spec</div></div>
+            <div class="metric"><div class="metric-value">0.544</div><div class="metric-label"><a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a></div></div>
+            <div class="metric"><div class="metric-value">0.840</div><div class="metric-label"><a class="wlink" href="https://es.wikipedia.org/wiki/Curva_ROC" target="_blank" rel="noopener">AUC-ROC</a></div></div>
+          </div>
+
+          <div class="model-status ok">
+            <b>Transportabilidad confirmada y limpia:</b> ΔMCC = +0.007 (recalibrar en DDR no mejora). Población distinta (China), imágenes crudas, sin confounder.
           </div>
 
           <div class="model-note">
-            Reentrenamiento dirigido (próxima versión del modelo): recall sobre hemorragias grandes (AUC clase 0.64), reducción de FPR en exudado duro, separación microhemorragia/microaneurisma con anotaciones dedicadas.
-          </div>
-
-          <div class="subscribe-box">
-            <div class="subscribe-title">
-              <span class="subscribe-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-              </span>
-              ¡No te pierdas la próxima validación!
-            </div>
-            <p class="subscribe-text">
-              Suscríbete a las <b>releases</b> del proyecto en GitHub. Recibirás un correo cada vez que publiquemos una nueva validación, modelo o versión de la app.
-            </p>
-            <div class="subscribe-actions">
-              <a href="https://github.com/Debaq/Dird/subscription" class="btn-gold">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-                Suscribirme en GitHub
-              </a>
-              <a href="https://github.com/Debaq/Dird/releases" class="btn-gold-ghost">
-                <svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-                Ver releases
-              </a>
-            </div>
-
-            <div class="subscribe-star">
-              <span class="star-spark">★</span>
-              <span>¿Te sirve el proyecto? <a href="https://github.com/Debaq/Dird" class="star-link">Déjanos una estrellita en GitHub <span class="star-icon">★</span></a> — nos motiva un montón.</span>
-            </div>
+            <a class="wlink" href="https://es.wikipedia.org/wiki/Curva_ROC" target="_blank" rel="noopener">AUC</a> OOD 0.840 [0.833–0.847] (<a class="wlink" href="https://es.wikipedia.org/wiki/Bootstrapping_(estad%C3%ADstica)" target="_blank" rel="noopener">bootstrap</a> 95%, 2000 iter). En el punto <code>FROZEN_fpr02</code> el operating point queda conservador (sens 0.60); <code>FROZEN_fpr05</code> rebalancea a sens 0.73 / spec 0.85 sin refit. Caída OOD real y modesta (0.95 → 0.84). <a href="https://github.com/Debaq/Dird/tree/main/validation/experiment-4-ddr" class="wlink" target="_blank" rel="noopener">Ver experimento 4 →</a>
           </div>
         </div>
 

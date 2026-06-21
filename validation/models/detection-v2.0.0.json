@@ -192,7 +192,7 @@
   },
   "confidence_threshold": 0.25,
   "training_info": {
-    "framework": "ultralytics (YOLOv26n)",
+    "framework": "ultralytics (YOLOv26s)",
     "input_resolution": "640x640",
     "known_issues": [
       "microhemorrhages and microaneurysm merged into a single class (microhemorrhages, index 5)",

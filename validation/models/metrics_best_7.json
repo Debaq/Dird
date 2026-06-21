@@ -1,5 +1,5 @@
 {
-  "model": "yolo26n",
+  "model": "yolo26s",
   "imgsz": 640,
   "num_classes": 6,
   "class_names": [
