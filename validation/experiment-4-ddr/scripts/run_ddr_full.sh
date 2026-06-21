@@ -13,7 +13,10 @@
 # DDR son ~13k imágenes -> la inferencia en CPU tarda ~30-40 min.
 #
 # IMAGES = carpeta DR_grading (raíz de la columna relpath de labels.csv). Obligatorio.
-#   IMAGES=../data/ddr/DR_grading ./run_ddr_full.sh
+# OJO: se resuelve contra la raíz del experimento (run_ddr_binary hace base/IMAGES), NO contra
+# scripts/. Usá ruta ABSOLUTA o root-relative (un solo ../). Ej:
+#   IMAGES=/ruta/abs/a/DDR-dataset/DR_grading ./run_ddr_full.sh
+#   IMAGES=../data/ddr/DDR-dataset/DR_grading ./run_ddr_full.sh   # root-relative
 #
 # Python env: default usa `uv run` con deps efímeras. Override: PY="python" ./run_ddr_full.sh
 set -e

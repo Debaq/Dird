@@ -1,0 +1,30 @@
+{
+  "experiment": "DDR binary OOD (anatomical-only = normal)",
+  "model": "detection-v2.0.0.onnx",
+  "conf_threshold": 0.25,
+  "n_images": 12522,
+  "n_errors": 0,
+  "confusion_matrix": {
+    "TN": 4542,
+    "FP": 1724,
+    "FN": 1218,
+    "TP": 5038
+  },
+  "metrics": {
+    "sensitivity_recall": 0.805306905370844,
+    "specificity": 0.7248643472709863,
+    "ppv_precision": 0.7450458444247264,
+    "npv": 0.7885416666666667,
+    "accuracy": 0.7650535058297396,
+    "f1": 0.7740052235366416,
+    "mcc": 0.531876639033301,
+    "auc_roc": 0.8169100019550972
+  },
+  "timing_ms": {
+    "mean": 158.84315045815333,
+    "median": 144.27457252168097,
+    "p95": 220.86065202311144,
+    "fps_mean": 6.295518548427724
+  },
+  "timestamp": "20260620_212002"
+}

@@ -1,0 +1,13 @@
+DDR bootstrap 95% CI — 20260620_220420
+N=12522  n_boot=2000  seed=42  resample=image-level
+Operating point: FROZEN_fpr02 (τ per-clase congelados de APTOS)
+
+metric            point   CI95_low  CI95_high
+sensitivity      0.6034     0.5916     0.6156
+specificity      0.9138     0.9069     0.9209
+ppv              0.8749     0.8652     0.8848
+npv              0.6977     0.6877     0.7076
+accuracy         0.7587     0.7514     0.7663
+f1               0.7142     0.7048     0.7243
+mcc              0.5442     0.5308     0.5581
+auc_roc          0.8402     0.8334     0.8469

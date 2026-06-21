@@ -1,0 +1,17 @@
+DDR external threshold validation — 20260620_220418
+N=12522  normales=6266  patológicas=6256
+AUC OOD (threshold-free) = 0.8402
+
+τ congelados (APTOS PCT_fpr02) vs τ recalibrados (DDR fpr02):
+  hard_exudate       frozen=0.6334   refit=0.7131
+  hemorrhage         frozen=0.0501   refit=0.0501
+  cotton_wool_spot   frozen=0.8525   refit=0.7423
+  microhemorrhages   frozen=0.2583   refit=0.3210
+
+rule                  sens    spec     mcc      f1     auc
+FROZEN_fpr02        0.6034  0.9138  0.5442  0.7142  0.8402
+FROZEN_fpr02_n2     0.2788  0.9923  0.3871  0.4334  0.8402
+FROZEN_fpr05        0.7318  0.8460  0.5816  0.7760  0.8402
+REFIT_fpr02         0.5847  0.9317  0.5507  0.7074  0.8402
+
+GAP MCC (refit - frozen) = +0.0065  (chico = τ de APTOS transportable a población china -> validación externa OK)

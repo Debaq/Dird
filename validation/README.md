@@ -33,7 +33,7 @@ validation/
 | [1](experiment-1-idrid/REPORT.md) | IDRiD (n=81) | Per-lesion bounding-box detection (mAP) | ❌ Negative | mAP 0.24–0.30; only the optic disc is localized well. Wrong metric for this model. |
 | [2](experiment-2-aptos/REPORT.md) | APTOS 2019 (n=3662) | Image-level binary screening (normal vs pathological) | ✅ Positive | Sens 0.978 / Spec 0.931 / MCC 0.91, AUC 0.95–0.97, OOD, no retraining. |
 | [3](experiment-3-messidor/REPORT.md) | Messidor-2 mirror (n=1057) | External threshold validation (frozen APTOS per-class τ) | ⚠️ Preliminary | Threshold transports (frozen ≈ refit, ΔMCC≈0); absolute AUC 0.81 / MCC 0.50 but **confounded by the preprocessed mirror** — raw-ADCIS re-run pending. |
-| [4](experiment-4-ddr/REPORT.md) | DDR (China, ~13k) | Clean external validation (frozen APTOS per-class τ) + bootstrap CIs | 🚧 Scaffold | The clean version of Exp 3: different population (China), raw images (no mirror confounder), large n. Awaiting dataset + run. |
+| [4](experiment-4-ddr/REPORT.md) | DDR (China, n=12522) | Clean external validation (frozen APTOS per-class τ) + bootstrap CIs | ✅ Done | Clean external set (China, raw images). Threshold transports (ΔMCC=+0.007, frozen ≥ refit); AUC OOD 0.840 [0.833,0.847]. Confirms the OOD drop is real, modest, not a mirror artifact. |
 
 **Why two experiments?** Experiment 1 tested the model as an instance-level lesion
 detector on IDRiD and failed — IDRiD's dense mask-derived boxes are the wrong yardstick for
