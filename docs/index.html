@@ -802,6 +802,9 @@
       padding: 0.75rem;
       text-align: center;
     }
+    /* Validation cards are 3-across (narrow): 2x2 metrics so nothing overflows */
+    #validacion .metrics { grid-template-columns: repeat(2, 1fr); }
+    #validacion .metric { min-width: 0; }
     .metric-value {
       font-size: 1.15rem;
       font-weight: 800;
