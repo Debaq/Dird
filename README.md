@@ -468,13 +468,17 @@ All scripts, reports and metrics live under [`validation/`](validation/) — see
 | # | Dataset | Task | Result | Headline |
 |---|---------|------|:------:|----------|
 | [1](validation/experiment-1-idrid/REPORT.md) | IDRiD (n=81) | Per-lesion bounding-box detection (mAP) | ❌ | mAP 0.24–0.30; only the optic disc localizes well — instance-level detection is the wrong metric for this model. |
-| [2](validation/experiment-2-aptos/REPORT.md) | APTOS 2019 (n=3662) | Image-level binary screening | ✅ | **AUC 0.95–0.97** out-of-domain (threshold-free, weights not retrained). Best operating point **Sens 0.978 / Spec 0.931 / MCC 0.91**, calibrated on APTOS and 5-fold CV-validated (in-distribution; external threshold validation pending). |
+| [2](validation/experiment-2-aptos/REPORT.md) | APTOS 2019 (n=3662) | Image-level binary screening | ✅ | **AUC 0.95–0.97** out-of-domain (threshold-free, weights not retrained). Best operating point **Sens 0.978 / Spec 0.931 / MCC 0.91** (bootstrap 95% CIs in §11), calibrated on APTOS and 5-fold CV-validated (in-distribution). |
+| [3](validation/experiment-3-messidor/REPORT.md) | Messidor-2 mirror (n=1057) | External threshold validation (frozen APTOS τ) | ⚠️ | Threshold transports (ΔMCC≈0); absolute AUC 0.81 **confounded by the preprocessed mirror** — superseded by Exp 4. |
+| [4](validation/experiment-4-ddr/REPORT.md) | DDR (China, n=12522) | Clean external validation (frozen APTOS τ) + bootstrap CIs | ✅ | The clean external set (China, raw images). Threshold transports (ΔMCC = +0.007, frozen ≥ refit); **AUC OOD 0.840 [0.833, 0.847]**. Confirms the OOD drop is real and modest, not a mirror artifact. |
 
 Experiment 1's negative result motivated validating the model at the **image level**
-(Experiment 2), where it generalizes strongly out of domain. A third experiment on
-**Messidor-2** is planned to confirm the per-class thresholds on a different population. See
-the [APTOS report](validation/experiment-2-aptos/REPORT.md) for the recommended operating
-point and full methodology.
+(Experiment 2), where it generalizes strongly in-domain. Experiments 3–4 then tested the
+operating point **out of domain**: the per-class thresholds calibrated on APTOS transport
+unchanged to a French (Messidor-2) and a Chinese (DDR) population, while absolute
+discrimination drops modestly out of domain (AUC 0.95 → 0.84 on DDR). The honest summary:
+**strong in-domain, a quantified OOD drop, and a stable/transportable threshold.** See the
+[validation overview](validation/README.md) for full methodology and CIs.
 
 ---
 
@@ -482,7 +486,7 @@ point and full methodology.
 
 See [`ROADMAP.md`](ROADMAP.md) for the full public roadmap. Highlights:
 
-- **Technical validation** on public datasets — done for APTOS 2019 and IDRiD (see [Scientific Validation](#scientific-validation)); next: Messidor-2 and per-device inference benchmarks.
+- **Technical validation** on public datasets — done for APTOS 2019, IDRiD, Messidor-2 and DDR (see [Scientific Validation](#scientific-validation)); next: per-device inference benchmarks and raw-ADCIS Messidor re-run.
 - **Clinical validation** with 200–500 images graded by Chilean ophthalmologists; sensitivity/specificity against a gold standard; pilot in a rural primary-care clinic.
 - **Technical features**: full IRMA and venous-beading detection (4-2-1 criteria), DICOM camera integration, privacy-preserving federated learning.
 - **Regulatory**: dossier preparation for Chile's ISP (software medical device), alignment with the FDA SaMD framework.

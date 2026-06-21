@@ -2263,18 +2263,22 @@
           <div class="model-header">
             <div>
               <div class="model-version">
-                Messidor-2
-                <small>cohorte europea · cámaras heterogéneas</small>
+                Validación externa
+                <small>DDR (China) · Messidor-2 (Francia)</small>
               </div>
             </div>
-            <span class="model-badge badge-prev">En curso</span>
+            <span class="model-badge badge-prev">Completado</span>
           </div>
           <div class="model-meta">
-            <span><b>Objetivo:</b> Confirmar generalización poblacional</span>
+            <span><b>Pregunta:</b> ¿el umbral de APTOS generaliza a otras poblaciones?</span>
           </div>
 
           <div class="model-note" style="margin-top:1.25rem;">
-            Próxima validación externa para confirmar que los umbrales τ per-clase derivados sobre APTOS son estables en otra población (Francia, fondo de cámara distinto). Replica el protocolo de los experimentos 3 y 4 del informe APTOS.
+            <b>Transportabilidad del umbral: confirmada.</b> Los umbrales τ per-clase calibrados sobre APTOS se aplicaron <i>congelados</i> (sin recalibrar) a <b>DDR</b> (China, n=12.522, imágenes crudas) y <b>Messidor-2</b> (Francia, n=1.057). Recalibrar sobre la población destino no mejora el resultado (ΔMCC = +0.007 en DDR): el punto de operación es estable entre cohortes distintas.
+          </div>
+
+          <div class="model-note">
+            <b>Discriminación fuera de dominio, cuantificada.</b> El AUC baja de 0.95 (APTOS, <i>in-distribution</i>) a <b>0.84</b> (DDR, externo limpio) — una caída real de población/cámara, modesta. Messidor-2 (0.81) usó un mirror preprocesado, por lo que su valor está parcialmente confundido; DDR, con imágenes crudas, lo confirma sin ese sesgo. <a href="https://github.com/Debaq/Dird/tree/main/validation" class="wlink" target="_blank" rel="noopener">Ver experimentos 3 y 4 →</a>
           </div>
 
           <div class="model-note">
@@ -2312,7 +2316,7 @@
       </div>
 
       <p style="text-align:center;margin-top:2rem;font-size:0.85rem;color:var(--text-dim);">
-        Limitación: APTOS no entrega anotaciones a nivel de lesión, por lo que la validación es a nivel de clasificación binaria por imagen (no <a class="wlink" href="https://es.wikipedia.org/wiki/%C3%8Dndice_Jaccard" target="_blank" rel="noopener">IoU</a>/<a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP</a>). La validación sobre Messidor-2 / EyePACS confirmará la generalización a otras cohortes.
+        Limitación: APTOS no entrega anotaciones a nivel de lesión, por lo que la validación es a nivel de clasificación binaria por imagen (no <a class="wlink" href="https://es.wikipedia.org/wiki/%C3%8Dndice_Jaccard" target="_blank" rel="noopener">IoU</a>/<a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP</a>). La validación externa sobre DDR (China) y Messidor-2 (Francia) confirma que el umbral transporta entre cohortes, con una caída de discriminación cuantificada (AUC OOD ≈ 0.84).
       </p>
     </div>
   </section>
@@ -2785,7 +2789,7 @@
         <p>Lo que <em>no</em> abarca este experimento:</p>
         <ul style="margin: 0 0 0.75rem 1.1rem; padding: 0; font-size: 0.85rem; line-height: 1.6;">
           <li><strong>Modo human-in-the-loop:</strong> el caso de uso primario del producto. Su validación es un <em>estudio clínico aparte</em> — tecnólogos marcando con y sin IA, decisión con y sin algoritmo, verificador como árbitro. Otra historia, ya planificada, no parte de esta validación técnica.</li>
-          <li><strong>Cohorte única:</strong> APTOS 2019 (India, cámaras heterogéneas). Cross-validación externa con Messidor-2 / EyePACS es el siguiente paso para confirmar τ poblacionales.</li>
+          <li><strong>Multi-cohorte:</strong> validado en APTOS 2019 (India) y externamente en DDR (China, n=12.522, crudo) y Messidor-2 (Francia). El umbral τ congelado de APTOS transporta entre poblaciones (ΔMCC≈0); el AUC fuera de dominio es 0.84 (DDR) — una caída real y cuantificada respecto del 0.95 in-distribution.</li>
           <li><strong>Granularidad clínica:</strong> el output operacional es binario "requiere atención sí/no". El estadiaje ICDR 0-4 es tarea distinta y propia del especialista.</li>
           <li><strong>Métricas a nivel de imagen:</strong> APTOS no provee anotaciones por lesión, así que se reporta clasificación binaria — coherente con el caso de uso.</li>
         </ul>

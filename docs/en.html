@@ -2262,18 +2262,22 @@
           <div class="model-header">
             <div>
               <div class="model-version">
-                Messidor-2
-                <small>European cohort · heterogeneous cameras</small>
+                External validation
+                <small>DDR (China) · Messidor-2 (France)</small>
               </div>
             </div>
-            <span class="model-badge badge-prev">In progress</span>
+            <span class="model-badge badge-prev">Completed</span>
           </div>
           <div class="model-meta">
-            <span><b>Goal:</b> Confirm population generalization</span>
+            <span><b>Question:</b> does the APTOS threshold generalize to other populations?</span>
           </div>
 
           <div class="model-note" style="margin-top:1.25rem;">
-            Upcoming external validation to confirm that the per-class τ thresholds derived on APTOS are stable in a different population (France, different fundus camera). Replicates the protocol of experiments 3 and 4 from the APTOS report.
+            <b>Threshold transportability: confirmed.</b> The per-class τ thresholds calibrated on APTOS were applied <i>frozen</i> (no refit) to <b>DDR</b> (China, n=12,522, raw images) and <b>Messidor-2</b> (France, n=1,057). Refitting on the target population yields no gain (ΔMCC = +0.007 on DDR): the operating point is stable across distinct cohorts.
+          </div>
+
+          <div class="model-note">
+            <b>Out-of-domain discrimination, quantified.</b> AUC drops from 0.95 (APTOS, <i>in-distribution</i>) to <b>0.84</b> (DDR, clean external) — a real, modest population/camera shift. Messidor-2 (0.81) used a preprocessed mirror, so its value is partly confounded; DDR, with raw images, confirms the drop without that bias. <a href="https://github.com/Debaq/Dird/tree/main/validation" class="wlink" target="_blank" rel="noopener">See experiments 3 and 4 →</a>
           </div>
 
           <div class="model-note">
@@ -2311,7 +2315,7 @@
       </div>
 
       <p style="text-align:center;margin-top:2rem;font-size:0.85rem;color:var(--text-dim);">
-        Limitation: APTOS does not provide lesion-level annotations, so validation is at the per-image binary classification level (no <a class="wlink" href="https://en.wikipedia.org/wiki/Jaccard_index" target="_blank" rel="noopener">IoU</a>/<a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP</a>). Validation on Messidor-2 / EyePACS will confirm generalization to other cohorts.
+        Limitation: APTOS does not provide lesion-level annotations, so validation is at the per-image binary classification level (no <a class="wlink" href="https://en.wikipedia.org/wiki/Jaccard_index" target="_blank" rel="noopener">IoU</a>/<a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP</a>). External validation on DDR (China) and Messidor-2 (France) confirms the threshold transports across cohorts, with a quantified discrimination drop (OOD AUC ≈ 0.84).
       </p>
     </div>
   </section>
@@ -2785,7 +2789,7 @@
         <p>What this experiment does <em>not</em> cover:</p>
         <ul style="margin: 0 0 0.75rem 1.1rem; padding: 0; font-size: 0.85rem; line-height: 1.6;">
           <li><strong>Human-in-the-loop mode:</strong> the product's primary use case. Its validation is a <em>separate clinical study</em> — technologists labeling with and without AI, decisions with and without the algorithm, verifier as adjudicator. Another story, planned, not part of this technical validation.</li>
-          <li><strong>Single cohort:</strong> APTOS 2019 (India, heterogeneous cameras). External <a class="wlink" href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)" target="_blank" rel="noopener">cross-validation</a> on Messidor-2 / EyePACS is the next step to confirm population τ values.</li>
+          <li><strong>Cross-cohort:</strong> validated on APTOS 2019 (India) and externally on DDR (China, n=12,522, raw) and Messidor-2 (France). The frozen APTOS τ transports across populations (ΔMCC≈0); out-of-domain AUC is 0.84 (DDR) — a real, quantified drop from the 0.95 in-distribution figure.</li>
           <li><strong>Clinical granularity:</strong> the operational output is binary "needs attention yes/no". ICDR 0-4 staging is a distinct task, owned by the specialist.</li>
           <li><strong>Image-level metrics:</strong> APTOS provides no lesion-level annotations, so validation is reported as image-level binary classification — consistent with the use case.</li>
         </ul>
