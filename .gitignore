@@ -81,6 +81,7 @@ validation/**/raw_detections*.csv
 # Misc
 validation/aptos_extracted/
 validation/**/messidor_extracted/
+validation/**/ddr_extracted/
 validation/aptos_markers/
 validation/__pycache__/
 validation/.claude/
