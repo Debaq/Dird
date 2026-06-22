@@ -3,6 +3,7 @@ import type { Detection } from './onnx-manager';
 import type { ModelMetadata } from './model-metadata';
 import { db } from '@/lib/db/schema';
 import { modelDownloader, type DownloadProgressCallback } from './model-downloader';
+import { getActiveModel, getModelFiles, readModelBytes } from './model-registry';
 import { useConfigStore } from '@/stores/config-store';
 import { useInferenceMetricsStore } from '@/stores/inference-metrics-store';
 import { classManager } from '@/lib/classes/class-manager';
@@ -31,12 +32,46 @@ export class InferenceService {
       return;
     }
 
+    // Bring Your Own Model: if the user installed and activated a custom model
+    // (Settings → Models), use it instead of downloading from the repo.
+    const activeModel = await this.tryLoadActiveDetectionModel();
+    if (activeModel) return;
+
     // Otherwise, download from GitHub
     const { modelUrl, metadata: downloadedMetadata } = await modelDownloader.downloadModel('detection', onProgress);
     this.detectionModel = new ONNXModelManager();
     await this.detectionModel.loadModel(modelUrl, downloadedMetadata);
     // Update class manager with loaded metadata
     classManager.setModelMetadata(downloadedMetadata);
+  }
+
+  /**
+   * Load the user-installed active model from the registry (BYOM), if any.
+   * Returns true if a custom model was loaded; false to fall back to the repo.
+   * Safe outside Tauri (invoke fails -> caught -> false).
+   */
+  private async tryLoadActiveDetectionModel(): Promise<boolean> {
+    try {
+      const activeId = await getActiveModel();
+      if (!activeId) return false;
+
+      const files = await getModelFiles(activeId);
+      const metadata = JSON.parse(files.card_json) as ModelMetadata;
+      const bytes = await readModelBytes(activeId);
+      const blobUrl = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/octet-stream' }));
+      try {
+        this.detectionModel = new ONNXModelManager();
+        await this.detectionModel.loadModel(blobUrl, metadata);
+        classManager.setModelMetadata(metadata);
+      } finally {
+        URL.revokeObjectURL(blobUrl);
+      }
+      return true;
+    } catch (error) {
+      // No registry (non-Tauri) or load failure -> fall back to repo download.
+      console.warn('Active custom model unavailable, falling back to repo model:', error);
+      return false;
+    }
   }
 
   /**

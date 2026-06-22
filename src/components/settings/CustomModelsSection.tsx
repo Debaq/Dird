@@ -11,6 +11,7 @@ import {
   type InstalledModel,
   type InstallResult,
 } from '@/lib/ai/model-registry';
+import { inferenceService } from '@/lib/ai/inference-service';
 
 export function CustomModelsSection() {
   const [models, setModels] = useState<InstalledModel[]>([]);
@@ -69,7 +70,9 @@ export function CustomModelsSection() {
   const handleActivate = async (id: string) => {
     try {
       await setActiveModel(id);
-      toast.success('Modelo activado.');
+      // Reload the inference pipeline so the newly activated model is used now.
+      await inferenceService.loadDetectionModel();
+      toast.success('Modelo activado y cargado para inferencia.');
       await refresh();
     } catch (e) {
       toast.error('No se pudo activar: ' + String(e));
