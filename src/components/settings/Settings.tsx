@@ -509,7 +509,7 @@ export function Settings() {
                           detection: { ...config.localModels.detection, modelPath: e.target.value }
                         })
                       }
-                      placeholder="/models/detection-v1.0.0.onnx"
+                      placeholder="/models/detection-v2.0.0.onnx"
                       disabled={!config.localModels.detection.enabled}
                       className="dark:bg-dark-surface dark:border-coal-600 dark:text-dark-text"
                     />

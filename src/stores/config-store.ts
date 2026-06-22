@@ -155,7 +155,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   localModels: {
     detection: {
       enabled: true,
-      modelPath: '/models/detection-v1.0.0.onnx',
+      modelPath: '/models/detection-v2.0.0.onnx',
       sensitivity: 0.5
     },
     segmentation: {

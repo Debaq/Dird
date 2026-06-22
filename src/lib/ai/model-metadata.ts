@@ -131,9 +131,9 @@ export async function getAvailableModels(): Promise<ModelFile[]> {
 
   try {
     // Detection model
-    const detectionMetadata = await loadModelMetadata('/models/detection-v1.0.0.json');
+    const detectionMetadata = await loadModelMetadata('/models/detection-v2.0.0.json');
     models.push({
-      path: '/models/detection-v1.0.0.onnx',
+      path: '/models/detection-v2.0.0.onnx',
       metadata: detectionMetadata,
     });
   } catch (error) {

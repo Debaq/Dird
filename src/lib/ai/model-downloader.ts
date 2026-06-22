@@ -27,7 +27,7 @@ const DEFAULT_CONFIG: ModelConfig = {
   detection: {
     type: 'github',
     branch: 'main',
-    path: 'detection-v1.0.0.onnx',
+    path: 'detection-v2.0.0.onnx',
   },
   segmentation: {
     type: 'github',
