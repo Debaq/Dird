@@ -85,3 +85,7 @@ validation/**/ddr_extracted/
 validation/aptos_markers/
 validation/__pycache__/
 validation/.claude/
+
+# Internal-only docs (not for the public repo)
+AUDIT.md
+docs/internal/sample-report-2026-01-05.pdf
