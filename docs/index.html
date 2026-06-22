@@ -1858,7 +1858,7 @@
         <article class="explain-card explain-card-highlight">
           <div class="explain-num">5</div>
           <h3>¿Qué tan buena es?</h3>
-          <p>Validada externamente sobre <b>3.662 imágenes</b> de pacientes que el modelo nunca había visto: detecta correctamente <b>97 de cada 100</b> casos con retinopatía y descarta correctamente <b>93 de cada 100</b> ojos sanos.</p>
+          <p>Evaluada sobre <b>3.662 imágenes</b> de pacientes que el modelo nunca había visto. En su punto de operación (calibrado y verificado con validación cruzada) detecta correctamente <b>97 de cada 100</b> casos con retinopatía y descarta <b>93 de cada 100</b> ojos sanos. En pacientes de otros países el poder de discriminación se mantiene alto (AUC 0,84–0,95).</p>
           <a href="#validacion" class="explain-link">Ver detalle de la validación →</a>
         </article>
       </div>
@@ -1977,7 +1977,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <h3>Soberanía de datos</h3>
-          <p>Cero transferencia a servidores externos. Cumple con principios de privacidad estrictos y regulación sanitaria local.</p>
+          <p>Cero transferencia a servidores externos. Diseñado con principios de privacidad estrictos y buenas prácticas de protección de datos.</p>
         </div>
         <div class="feature-card animate-in">
           <div class="feature-icon">
@@ -2111,7 +2111,7 @@
             <div class="metric"><div class="metric-value">0.911</div><div class="metric-label"><a class="wlink" href="https://es.wikipedia.org/wiki/Coeficiente_phi" target="_blank" rel="noopener">MCC</a></div></div>
             <div class="metric"><div class="metric-value">0.967</div><div class="metric-label"><a class="wlink" href="https://es.wikipedia.org/wiki/Curva_ROC" target="_blank" rel="noopener">AUC-ROC</a></div></div>
           </div>
-          <p style="margin:0.6rem 0 0;font-size:0.75rem;color:var(--text-dim);">Validación binaria sobre <b>APTOS 2019</b> (n=3.662, OOD, <a class="wlink" href="https://es.wikipedia.org/wiki/Validaci%C3%B3n_cruzada" target="_blank" rel="noopener">5-fold CV</a>). Ver detalle más abajo.</p>
+          <p style="margin:0.6rem 0 0;font-size:0.75rem;color:var(--text-dim);">Punto de operación calibrado sobre <b>APTOS 2019</b> (n=3.662) y verificado con <a class="wlink" href="https://es.wikipedia.org/wiki/Validaci%C3%B3n_cruzada" target="_blank" rel="noopener">5-fold CV</a> — <i>in-distribution</i>. Discriminación fuera de dominio (libre de umbral): AUC 0,95. Ver detalle más abajo.</p>
 
           <div class="per-class">
             <h4><a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP@50</a> por clase (entrenamiento interno)</h4>

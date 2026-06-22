@@ -1857,7 +1857,7 @@
         <article class="explain-card explain-card-highlight">
           <div class="explain-num">5</div>
           <h3>How good is it?</h3>
-          <p>Externally validated on <b>3,662 images</b> the model had never seen: correctly detects <b>97 out of 100</b> cases with retinopathy and correctly rules out <b>93 out of 100</b> healthy eyes.</p>
+          <p>Evaluated on <b>3,662 images</b> the model had never seen. At its operating point (calibrated and cross-validated) it correctly detects <b>97 out of 100</b> cases with retinopathy and rules out <b>93 out of 100</b> healthy eyes. On patients from other countries its discriminative power stays high (AUC 0.84–0.95).</p>
           <a href="#validacion" class="explain-link">See validation details →</a>
         </article>
       </div>
@@ -1976,7 +1976,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           </div>
           <h3>Data sovereignty</h3>
-          <p>Zero transfer to external servers. Aligns with strict privacy principles and local healthcare regulation.</p>
+          <p>Zero transfer to external servers. Built around strict privacy principles and data-protection best practices.</p>
         </div>
         <div class="feature-card animate-in">
           <div class="feature-icon">
@@ -2110,7 +2110,7 @@
             <div class="metric"><div class="metric-value">0.911</div><div class="metric-label"><a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a></div></div>
             <div class="metric"><div class="metric-value">0.967</div><div class="metric-label"><a class="wlink" href="https://en.wikipedia.org/wiki/Receiver_operating_characteristic" target="_blank" rel="noopener">AUC-ROC</a></div></div>
           </div>
-          <p style="margin:0.6rem 0 0;font-size:0.75rem;color:var(--text-dim);">Binary validation on <b>APTOS 2019</b> (n=3,662, OOD, <a class="wlink" href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)" target="_blank" rel="noopener">5-fold CV</a>). See details below.</p>
+          <p style="margin:0.6rem 0 0;font-size:0.75rem;color:var(--text-dim);">Operating point calibrated on <b>APTOS 2019</b> (n=3,662) and verified with <a class="wlink" href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)" target="_blank" rel="noopener">5-fold CV</a> — <i>in-distribution</i>. Out-of-domain discrimination (threshold-free): AUC 0.95. See details below.</p>
 
           <div class="per-class">
             <h4><a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP@50</a> per class (internal training)</h4>
