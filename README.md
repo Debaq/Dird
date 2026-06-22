@@ -268,10 +268,10 @@ DIRD+'s edge-computing architecture is compliant **by design**: there is no data
 │  │                │  │                   │  │  (AES-256)    │  │
 │  │  ┌──────────┐  │  │  ONNX models:     │  │  8 tables:    │  │
 │  │  │ Canvas   │  │  │  - Detection      │  │  - patients   │  │
-│  │  │ Konva    │◄─┼──┤  - Segmentation   │  │  - sessions   │  │
+│  │  │ Konva    │◄─┼──┤  - Segmentation*  │  │  - sessions   │  │
 │  │  │ layers   │  │  │                   │  │  - images     │  │
 │  │  └──────────┘  │  │  Analysis:        │  │  - detections │  │
-│  │                │  │  - DR classifier  │  │  - segments   │  │
+│  │                │  │  - DR classifier  │  │  - segments*  │  │
 │  │  ┌──────────┐  │  │  - Quadrants      │  │  - reports    │  │
 │  │  │ PDF      │  │  │  - Macular edema  │  │  - measures   │  │
 │  │  │ jsPDF    │  │  │  - Cup/disc       │  │  - classif.   │  │
@@ -289,6 +289,8 @@ DIRD+'s edge-computing architecture is compliant **by design**: there is no data
 │         100% local — no backend, no network                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+\* Segmentation model and the `segments` table are **planned (v3+), not yet released** — v2.0 ships detection only.
 
 ### Technology Stack
 
@@ -340,7 +342,7 @@ Local **SQLite database encrypted at rest with SQLCipher (AES-256)**, 8 tables:
 | **sessions** | patientId, date, modelVersions, locked, type (normal/combined) | Clinical visits |
 | **images** | sessionId, eyeType (OD/OI), originalBlob, order | Fundus images |
 | **detections** | imageId, type (ai/manual), bbox, class, confidence | Lesion bounding boxes |
-| **segmentations** | imageId, type (ai/manual), maskData, class, opacity | Segmentation masks |
+| **segmentations** | imageId, type (ai/manual), maskData, class, opacity | Segmentation masks (planned, not yet released) |
 | **imageClassifications** | imageId, severity, guideline, treatments[], followupDays, urgency, rationale, manuallyModified | Per-guideline DR classification |
 | **reports** | sessionId, type (preview/final), pdfBlob, evaluatorNotes, conclusionEdited | Generated PDF reports |
 | **measurements** | imageId, origin, destination, distancePixels, distanceDD | Calibrated measurements |
@@ -388,7 +390,7 @@ validation/                   # Scientific validation: experiment-1-idrid, exper
 
 - **Patient & session management** — create, edit, archive, and search patients; clinical data (diabetes type/duration, HTN, dyslipidemia, medications); sessions as clinical visits; preloaded demo patient; combined sessions for longitudinal analysis.
 - **On-device AI analysis** — an ONNX detection model on ONNX Runtime (WebAssembly) with SIMD and multi-threading (a segmentation model is planned, not yet released); models downloaded once from [`Debaq/dird_models`](https://github.com/Debaq/dird_models) and stored locally; configurable confidence threshold; per-CPU optimization; batch processing; persistent per-inference performance metrics exportable to JSON.
-- **Interactive annotation canvas** — 5 layers (original image, AI detections, AI segmentations, manual annotations, measurements); tools for selection, freehand, polygon, distance/area measurement, zoom, pan; per-layer visibility/opacity/lock; clinical overlays (retinal quadrants, macular zone, optic-disc area); human correction over AI results.
+- **Interactive annotation canvas** — 5 layers (original image, AI detections, AI segmentations [planned], manual annotations, measurements); tools for selection, freehand, polygon, distance/area measurement, zoom, pan; per-layer visibility/opacity/lock; clinical overlays (retinal quadrants, macular zone, optic-disc area); human correction over AI results.
 - **Multi-guideline clinical classification** — severity per selected guideline; per-quadrant analysis; specialized detectors (hemorrhages, microaneurysms, macular edema, cup/disc); 4-2-1 rule; output of severity, treatments, follow-up, urgency, rationale; clinician can adjust the generated classification.
 - **PDF report generation** — editable preview and final report; clinical conclusion produced locally by the active guideline, with **optional prose polishing by the embedded local LLM (no network)**; configurable sections; customizable gallery; evaluator notes and signature; patient fields hideable for privacy.
 - **At-rest encryption** — first-run wizard sets up a dual-password model (application + export); SQLCipher AES-256 database and AES-256-GCM `.dird` containers; Argon2id key derivation; encryption-status badge always visible.
