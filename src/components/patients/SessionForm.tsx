@@ -35,6 +35,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
     name: '',
     date: new Date().toISOString().split('T')[0],
     notes: '',
+    operator: '',
   });
 
   const isEditMode = sessionToEdit !== undefined;
@@ -46,6 +47,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
           name: sessionToEdit.name || '',
           date: new Date(sessionToEdit.date).toISOString().split('T')[0],
           notes: sessionToEdit.notes || '',
+          operator: sessionToEdit.operator || '',
         });
       } else {
         const getNextSessionInfo = async () => {
@@ -58,6 +60,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
             name: t('sessions.session') + ` N° ${sessionNumber}`,
             date: new Date().toISOString().split('T')[0],
             notes: '',
+            operator: '',
           });
         };
         getNextSessionInfo();
@@ -76,6 +79,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
           name: formData.name,
           date: new Date(formData.date),
           notes: formData.notes,
+          operator: formData.operator.trim() || undefined,
           updatedAt: new Date(),
         });
       } else {
@@ -93,6 +97,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
           sessionNumber,
           date: new Date(formData.date),
           notes: formData.notes,
+          operator: formData.operator.trim() || undefined,
           modelVersions: {},
           locked: false,
           createdAt: now,
@@ -144,6 +149,17 @@ const SessionForm: React.FC<SessionFormProps> = ({
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
               required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="operator">{t('sessions.form.operator')}</Label>
+            <Input
+              id="operator"
+              type="text"
+              value={formData.operator}
+              onChange={(e) => setFormData({ ...formData, operator: e.target.value })}
+              placeholder={t('sessions.form.operatorPlaceholder')}
             />
           </div>
 

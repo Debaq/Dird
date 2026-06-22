@@ -382,13 +382,17 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         // onDragEnd o onTransformEnd - actualizar BD inmediatamente para evitar "saltos"
         // Update basic detection data in DB (Visual update)
         if (detection.type === 'ai') {
+          // Audit trail: AI box corrected by a human -> record origin + when
           await db.detections.update(id, {
             bbox,
-            type: 'manual'
+            type: 'manual',
+            originalType: 'ai',
+            modifiedAt: new Date()
           });
         } else {
           await db.detections.update(id, {
-            bbox
+            bbox,
+            modifiedAt: new Date()
           });
         }
 
@@ -400,13 +404,17 @@ const AnnotationCanvas: React.FC<AnnotationCanvasProps> = ({
         // Movimiento con teclado - debounce la actualización de BD
         dbUpdateTimeoutRef.current = setTimeout(async () => {
           if (detection.type === 'ai') {
+            // Audit trail: AI box corrected by a human -> record origin + when
             await db.detections.update(id, {
               bbox,
-              type: 'manual'
+              type: 'manual',
+              originalType: 'ai',
+              modifiedAt: new Date()
             });
           } else {
             await db.detections.update(id, {
-              bbox
+              bbox,
+              modifiedAt: new Date()
             });
           }
 

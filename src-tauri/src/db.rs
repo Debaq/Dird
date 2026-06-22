@@ -116,6 +116,40 @@ fn ensure_schema(conn: &Connection) -> Result<(), DbError> {
     Ok(())
 }
 
+/// True if `table` already has a column named `column`.
+fn column_exists(conn: &Connection, table: &str, column: &str) -> Result<bool, DbError> {
+    let mut stmt = conn.prepare(&format!("PRAGMA table_info({})", table))?;
+    let mut found = false;
+    let rows = stmt.query_map([], |r| r.get::<_, String>(1))?;
+    for name in rows {
+        if name? == column {
+            found = true;
+            break;
+        }
+    }
+    Ok(found)
+}
+
+/// Idempotent additive migrations (no incremental migration runner exists, so
+/// we ADD COLUMN only when missing — covers both new and pre-existing DBs).
+/// Traceability fields:
+///   detections.original_type  — origin ('ai') before a human edited the box
+///   detections.modified_at    — when a human last edited the box
+///   sessions.operator         — who operated the session (record provenance)
+fn ensure_columns(conn: &Connection) -> Result<(), DbError> {
+    let additive: &[(&str, &str, &str)] = &[
+        ("detections", "original_type", "TEXT"),
+        ("detections", "modified_at", "TEXT"),
+        ("sessions", "operator", "TEXT"),
+    ];
+    for (table, column, ty) in additive {
+        if !column_exists(conn, table, column)? {
+            conn.execute_batch(&format!("ALTER TABLE {} ADD COLUMN {} {};", table, column, ty))?;
+        }
+    }
+    Ok(())
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(tag = "t", content = "v", rename_all = "lowercase")]
 pub enum SqlParam {
@@ -210,6 +244,7 @@ pub fn db_open(handle: tauri::AppHandle, password: String) -> Result<(), DbError
          PRAGMA synchronous = NORMAL;",
     )?;
     ensure_schema(&conn)?;
+    ensure_columns(&conn)?;
 
     *guard = Some(conn);
     Ok(())

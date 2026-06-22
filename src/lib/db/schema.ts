@@ -33,6 +33,7 @@ export interface Session {
   lockedAt?: Date;
   type?: 'normal' | 'combined'; // Tipo de sesión: normal o combinada
   combinedSessionIds?: number[]; // IDs de las sesiones que se combinaron (solo para type: 'combined')
+  operator?: string; // Clínico/operador que realizó la sesión (trazabilidad de quién creó los registros)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -66,6 +67,10 @@ export interface Detection {
   customLabel?: string;
   visible: boolean;
   metadata?: Record<string, any>; // For storing additional data like painted pixels, precise points, etc.
+  // Audit trail: an AI box that a human edits keeps type='ai' here only until the edit,
+  // at which point type flips to 'manual' AND these record the provenance:
+  originalType?: 'ai' | 'manual'; // origin before the human edit (e.g. 'ai' = AI-marked, then corrected)
+  modifiedAt?: Date; // when a human last edited this detection
   createdAt: Date;
 }
 

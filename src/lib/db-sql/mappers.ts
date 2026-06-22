@@ -97,7 +97,7 @@ export const sessionsMapper: TableMapper<Session> = {
     return [
       'patient_id', 'name', 'session_number', 'date', 'notes',
       'model_versions', 'locked', 'locked_at', 'type', 'combined_session_ids',
-      'created_at', 'updated_at',
+      'operator', 'created_at', 'updated_at',
     ];
   },
   rowToObject(r): Session {
@@ -115,6 +115,7 @@ export const sessionsMapper: TableMapper<Session> = {
       combinedSessionIds: r.combined_session_ids
         ? maybeJSON<number[]>(r.combined_session_ids, [])
         : undefined,
+      operator: (r.operator as string | null) ?? undefined,
       createdAt: asDate(r.created_at),
       updatedAt: asDate(r.updated_at),
     };
@@ -132,6 +133,7 @@ export const sessionsMapper: TableMapper<Session> = {
     if ('type' in o) row.type = o.type ? P.text(o.type) : P.null();
     if ('combinedSessionIds' in o)
       row.combined_session_ids = o.combinedSessionIds ? P.json(o.combinedSessionIds) : P.null();
+    if ('operator' in o) row.operator = o.operator ? P.text(o.operator) : P.null();
     if (o.createdAt !== undefined) row.created_at = P.date(o.createdAt);
     row.updated_at = P.date(o.updatedAt ?? new Date());
     if (o.createdAt === undefined && !('created_at' in row)) row.created_at = P.date(new Date());
@@ -202,7 +204,8 @@ export const detectionsMapper: TableMapper<Detection> = {
     return [
       'image_id', 'type', 'model_version',
       'bbox_x', 'bbox_y', 'bbox_width', 'bbox_height',
-      'class', 'confidence', 'custom_label', 'visible', 'metadata', 'created_at',
+      'class', 'confidence', 'custom_label', 'visible', 'metadata',
+      'original_type', 'modified_at', 'created_at',
     ];
   },
   rowToObject(r): Detection {
@@ -222,6 +225,8 @@ export const detectionsMapper: TableMapper<Detection> = {
       customLabel: (r.custom_label as string | null) ?? undefined,
       visible: intToBool(r.visible),
       metadata: r.metadata ? maybeJSON<Record<string, any>>(r.metadata, {}) : undefined,
+      originalType: (r.original_type as Detection['originalType']) ?? undefined,
+      modifiedAt: r.modified_at ? asDate(r.modified_at) : undefined,
       createdAt: asDate(r.created_at),
     };
   },
@@ -241,6 +246,8 @@ export const detectionsMapper: TableMapper<Detection> = {
     if ('customLabel' in o) row.custom_label = o.customLabel ? P.text(o.customLabel) : P.null();
     if (o.visible !== undefined) row.visible = P.bool(o.visible);
     if ('metadata' in o) row.metadata = o.metadata ? P.json(o.metadata) : P.null();
+    if ('originalType' in o) row.original_type = o.originalType ? P.text(o.originalType) : P.null();
+    if ('modifiedAt' in o) row.modified_at = o.modifiedAt ? P.date(o.modifiedAt) : P.null();
     if (o.createdAt !== undefined) row.created_at = P.date(o.createdAt);
     if (!('created_at' in row)) row.created_at = P.date(new Date());
     return row;

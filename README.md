@@ -156,7 +156,7 @@ DIRD+ includes a **guideline-agnostic clinical classification engine** — a cap
 | **Multiple simultaneous guidelines** | Classify the same image under ICDR (international) and MINSAL (Chile) to compare criteria. Useful in research and teaching |
 | **Integrated treatment protocols** | Each severity level defines clinical actions, urgency (routine/accelerated/urgent), and follow-up interval in days |
 | **AI → clinical class mapping** | Translates model detections (microaneurysm, hemorrhage, cotton_wool_spot…) into the guideline's clinical categories |
-| **Preserved human correction** | The clinician can modify the generated classification. The system flags `manuallyModified: true` for traceability |
+| **Auditable human correction** | When the clinician corrects an AI detection, the box records its origin (`originalType: 'ai'`) and edit time (`modifiedAt`), and the derived classification is flagged `manuallyModified: true` — an auditable trail of what the AI marked vs. what the human changed |
 | **Automatic validation** | On load, the system validates structure, level coherence, rules, and protocols. It reports errors and warnings |
 
 **Currently implemented guidelines:** ICDR 2024 (International Council of Ophthalmology) and MINSAL Chile 2017 (Chilean national GES protocol).

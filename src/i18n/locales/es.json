@@ -219,6 +219,8 @@
       "date": "Fecha",
       "notes": "Notas (opcional)",
       "notesPlaceholder": "Agregar notas sobre el estudio...",
+      "operator": "Operador (clínico)",
+      "operatorPlaceholder": "Nombre del profesional que realiza el estudio",
       "create": "Crear Estudio",
       "createDescription": "Completa la información para crear un nuevo estudio",
       "update": "Actualizar Estudio",

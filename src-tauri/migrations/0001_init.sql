@@ -38,6 +38,7 @@ CREATE TABLE sessions (
   locked_at       TEXT,
   type            TEXT    CHECK (type IN ('normal','combined') OR type IS NULL),
   combined_session_ids TEXT,
+  operator        TEXT,
   created_at      TEXT    NOT NULL,
   updated_at      TEXT    NOT NULL
 );
@@ -77,6 +78,8 @@ CREATE TABLE detections (
   custom_label    TEXT,
   visible         INTEGER NOT NULL DEFAULT 1,
   metadata        TEXT,
+  original_type   TEXT,
+  modified_at     TEXT,
   created_at      TEXT    NOT NULL
 );
 CREATE INDEX idx_detections_image_id ON detections(image_id);

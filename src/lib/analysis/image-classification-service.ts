@@ -23,6 +23,16 @@ export async function saveImageClassification(
     .equals(classification.imageId)
     .first();
 
+  // Audit trail: the classification is "manually modified" when it derives from
+  // detections a human created or corrected (manual boxes, or AI boxes since edited).
+  const imageDetections = await db.detections
+    .where('imageId')
+    .equals(classification.imageId)
+    .toArray();
+  const manuallyModified = imageDetections.some(
+    (d) => d.type === 'manual' || d.originalType === 'ai'
+  );
+
   const record: ImageClassification = {
     imageId: classification.imageId,
     eyeType: classification.eyeType,
@@ -44,6 +54,7 @@ export async function saveImageClassification(
     followupDays: classification.followupDays,
     urgency: classification.urgency,
     rationale: classification.rationale,
+    manuallyModified,
 
     createdAt: existing?.createdAt || now,
     updatedAt: now
