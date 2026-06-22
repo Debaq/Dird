@@ -8,6 +8,7 @@
 import type {
   ClinicalGuideline,
   GuidelineIndex,
+  GuidelineIndexEntry,
   GuidelineValidationError,
   GuidelineValidationResult,
 } from '@/types/clinical-guidelines';
@@ -18,6 +19,65 @@ import type {
 
 const guidelineCache = new Map<string, ClinicalGuideline>();
 let indexCache: GuidelineIndex | null = null;
+
+// ============================================================================
+// User-installed guidelines (runtime-pluggable, persisted in localStorage).
+// The bundled guidelines under public/ are read-only; these let a clinic import
+// and use its own guideline JSON without rebuilding the app.
+// ============================================================================
+
+const USER_GUIDELINES_KEY = 'dird_user_guidelines';
+
+function readUserStore(): Record<string, ClinicalGuideline> {
+  try {
+    const raw = localStorage.getItem(USER_GUIDELINES_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, ClinicalGuideline>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeUserStore(store: Record<string, ClinicalGuideline>): void {
+  localStorage.setItem(USER_GUIDELINES_KEY, JSON.stringify(store));
+  indexCache = null; // the merged index changed
+}
+
+/** Persist (install/update) a user guideline so the loader and classifier use it. */
+export function saveUserGuideline(guideline: ClinicalGuideline): void {
+  const store = readUserStore();
+  store[guideline.guideline_id] = guideline;
+  writeUserStore(store);
+  guidelineCache.set(guideline.guideline_id, guideline);
+}
+
+/** Remove a user guideline. */
+export function deleteUserGuideline(id: string): void {
+  const store = readUserStore();
+  delete store[id];
+  writeUserStore(store);
+  guidelineCache.delete(id);
+}
+
+export function isUserGuideline(id: string): boolean {
+  return Object.prototype.hasOwnProperty.call(readUserStore(), id);
+}
+
+function userGuidelineEntries(): GuidelineIndexEntry[] {
+  return Object.values(readUserStore()).map((g) => {
+    const m = g.metadata ?? ({} as ClinicalGuideline['metadata']);
+    return {
+      id: g.guideline_id,
+      name: m?.name ?? g.guideline_id,
+      description: m?.description ?? 'User-imported guideline',
+      country: m?.country ?? '',
+      language: m?.language ?? '',
+      status: 'custom' as const,
+      file: `user:${g.guideline_id}`,
+      version: m?.version ?? '1.0.0',
+      date_published: m?.date_published,
+    };
+  });
+}
 
 // ============================================================================
 // Guideline Index Loader
@@ -49,12 +109,28 @@ export async function loadGuidelineIndex(): Promise<GuidelineIndex> {
       throw new Error('Invalid guideline index structure');
     }
 
-    // Cache the index
-    indexCache = index;
+    // Merge user-installed guidelines (override bundled ones with the same id)
+    const userEntries = userGuidelineEntries();
+    const userIds = new Set(userEntries.map((e) => e.id));
+    const merged: GuidelineIndex = {
+      version: index.version,
+      guidelines: [...index.guidelines.filter((e) => !userIds.has(e.id)), ...userEntries],
+    };
 
-    return index;
+    // Cache the merged index
+    indexCache = merged;
+
+    return merged;
   } catch (error) {
     console.error('Error loading guideline index:', error);
+    // If the bundled index is unavailable but the user imported guidelines,
+    // still expose those so runtime-pluggable guidelines keep working.
+    const userEntries = userGuidelineEntries();
+    if (userEntries.length > 0) {
+      const fallback: GuidelineIndex = { version: '0.0.0', guidelines: userEntries };
+      indexCache = fallback;
+      return fallback;
+    }
     throw new Error('Failed to load clinical guidelines index');
   }
 }
@@ -67,6 +143,14 @@ export async function loadGuideline(guidelineId: string): Promise<ClinicalGuidel
   // Return cached guideline if available
   if (guidelineCache.has(guidelineId)) {
     return guidelineCache.get(guidelineId)!;
+  }
+
+  // User-installed guideline takes precedence over bundled ones
+  const userStore = readUserStore();
+  if (userStore[guidelineId]) {
+    const g = userStore[guidelineId];
+    guidelineCache.set(guidelineId, g);
+    return g;
   }
 
   try {

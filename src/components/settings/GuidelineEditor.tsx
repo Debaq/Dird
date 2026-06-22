@@ -37,6 +37,7 @@ import type {
   RuleCondition,
   RuleOperator,
 } from '@/types/clinical-guidelines';
+import { saveUserGuideline } from '@/lib/clinical-guidelines/guideline-loader';
 
 type TabType = 'metadata' | 'severity' | 'rules' | 'rule421' | 'treatment' | 'emcs';
 
@@ -1687,8 +1688,9 @@ export function GuidelineEditor({
               if (validationErrors.length > 0) {
                 setErrors(validationErrors);
               } else {
-                // Export and close
-                handleExportJSON();
+                // Persist into the app's user-guideline store so the classifier
+                // actually uses it (runtime-pluggable), then close.
+                saveUserGuideline(guideline);
                 setSuccess(t('settings.guidelines.editor.messages.saveSuccess'));
                 setTimeout(() => {
                   setSuccess(null);

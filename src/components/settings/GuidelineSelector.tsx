@@ -5,8 +5,8 @@
  * Shows available guidelines with preview of severity levels
  */
 
-import { useState, useEffect } from 'react';
-import { Check, AlertTriangle, Globe, MapPin, Edit, Plus, ArrowLeftRight } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Check, AlertTriangle, Globe, MapPin, Edit, Plus, ArrowLeftRight, Upload, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useConfigStore } from '@/stores/config-store';
 import {
@@ -14,6 +14,9 @@ import {
   loadGuideline,
   getGuidelineSeverityLevels,
   clearGuidelineCache,
+  validateGuideline,
+  saveUserGuideline,
+  deleteUserGuideline,
 } from '@/lib/clinical-guidelines/guideline-loader';
 import { GuidelineEditor } from './GuidelineEditor';
 import type {
@@ -156,6 +159,34 @@ export function GuidelineSelector() {
     loadGuidelineIndex().then((index) => setGuidelines(index.guidelines));
   };
 
+  // Import a guideline JSON file (runtime-pluggable, persisted as a user guideline)
+  const importInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportGuideline = async (file: File) => {
+    try {
+      const parsed = JSON.parse(await file.text()) as ClinicalGuideline;
+      const result = validateGuideline(parsed);
+      if (!result.valid) {
+        setError('Guía inválida: ' + result.errors.map((e) => e.message).join('; '));
+        return;
+      }
+      saveUserGuideline(parsed);
+      const index = await loadGuidelineIndex();
+      setGuidelines(index.guidelines);
+      setError(null);
+    } catch (e) {
+      setError('No se pudo importar la guía: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  };
+
+  const handleDeleteCustom = async (id: string) => {
+    if (!confirm('¿Eliminar esta guía importada?')) return;
+    deleteUserGuideline(id);
+    if (config.activeGuideline === id) setActiveGuideline('icdr_2024');
+    const index = await loadGuidelineIndex();
+    setGuidelines(index.guidelines);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -188,13 +219,33 @@ export function GuidelineSelector() {
           </p>
         </div>
 
-        <button
-          onClick={handleCreateNew}
-          className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm font-medium"
-        >
-          <Plus className="w-4 h-4" />
-          Nueva guía
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json,application/json"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) handleImportGuideline(f);
+              e.target.value = '';
+            }}
+          />
+          <button
+            onClick={() => importInputRef.current?.click()}
+            className="flex items-center gap-2 px-4 py-2 border border-sky-600 text-sky-700 rounded-lg hover:bg-sky-50 transition-colors text-sm font-medium"
+          >
+            <Upload className="w-4 h-4" />
+            Importar
+          </button>
+          <button
+            onClick={handleCreateNew}
+            className="flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Nueva guía
+          </button>
+        </div>
       </div>
 
       {/* Guidelines List */}
@@ -268,6 +319,19 @@ export function GuidelineSelector() {
                 >
                   <Edit className="w-4 h-4" />
                 </button>
+
+                {guideline.status === 'custom' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteCustom(guideline.id);
+                    }}
+                    className="flex-shrink-0 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Eliminar guía importada"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
           );
