@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { Check, AlertTriangle, Globe, MapPin, Edit, Plus, ArrowLeftRight, Upload, Trash2 } from 'lucide-react';
+import { Check, AlertTriangle, Globe, MapPin, Edit, Plus, ArrowLeftRight, Upload, Download, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useConfigStore } from '@/stores/config-store';
 import {
@@ -179,6 +179,22 @@ export function GuidelineSelector() {
     }
   };
 
+  // Export a guideline (bundled or custom) to a .json file for sharing/re-import
+  const handleExportGuideline = async (id: string) => {
+    try {
+      const g = await loadGuideline(id);
+      const blob = new Blob([JSON.stringify(g, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${id}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError('No se pudo exportar: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  };
+
   const handleDeleteCustom = async (id: string) => {
     if (!confirm('¿Eliminar esta guía importada?')) return;
     deleteUserGuideline(id);
@@ -318,6 +334,17 @@ export function GuidelineSelector() {
                   title={guideline.status === 'official' ? 'Crear copia para editar' : 'Editar guía'}
                 >
                   <Edit className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleExportGuideline(guideline.id);
+                  }}
+                  className="flex-shrink-0 p-2 text-gray-400 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
+                  title="Exportar guía (.json)"
+                >
+                  <Download className="w-4 h-4" />
                 </button>
 
                 {guideline.status === 'custom' && (
