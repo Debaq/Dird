@@ -134,7 +134,7 @@ Fundus images are processed locally — **patient data never leaves the device**
 1. CAPTURE             2. UPLOAD              3. AI ANALYSIS          4. REVIEW
 Fundus camera       →  Upload images       →  Automatic lesion     →  Interactive
 (any camera)           into the desktop        detection (ONNX)        multi-layer canvas
-                       app, OD / OI            + segmentation          with annotation tools
+                       app, OD / OI            (segmentation: planned) with annotation tools
 
 5. CLASSIFICATION      6. REPORT              7. EXPORT
 Severity per        →  Configurable PDF    →  .dird format
@@ -296,7 +296,7 @@ DIRD+'s edge-computing architecture is compliant **by design**: there is no data
 
 **Frontend:** React 18.3, TypeScript 5.7 (strict), Vite 6, Tailwind CSS 3.4, Radix UI, React Router 6, Zustand 5 (global state: config, canvas, patient), Framer Motion 11, i18next 24.2 (Spanish/English), Vitest + happy-dom.
 
-**AI & inference:** ONNX Runtime Web 1.23 (WebAssembly engine running inside the Tauri webview), ONNX models (detection bounding boxes + segmentation masks), OpenCV.js (optic-disc refinement), llama.cpp via the `llama-cpp-2` Rust crate (optional in-process LLM for report prose).
+**AI & inference:** ONNX Runtime Web 1.23 (WebAssembly engine running inside the Tauri webview), an ONNX detection model (bounding boxes; a segmentation model is planned, not yet released), OpenCV.js (optic-disc refinement), llama.cpp via the `llama-cpp-2` Rust crate (optional in-process LLM for report prose).
 
 **Storage:** SQLite with SQLCipher (`rusqlite`, `bundled-sqlcipher-vendored-openssl`) for the AES-256-encrypted local database; Argon2id key derivation (`src-tauri/src/crypto.rs`); JSZip for the portable `.dird` (ZIP) export format.
 
@@ -312,7 +312,7 @@ Fundus image (any camera)
   ▼ 1. PREPROCESS    Resize to 640×640, normalize pixel values
   │
   ▼ 2. ONNX INFERENCE   Detection model → boxes with class + confidence
-  │                     Segmentation model → per-lesion pixel masks
+  │                     Segmentation model (planned, not released) → per-lesion pixel masks
   │                     (SIMD enabled, Intel/AMD/ARM CPU profiles)
   │
   ▼ 3. POST-PROCESS   Non-Maximum Suppression (IoU 0.45), confidence threshold
@@ -387,7 +387,7 @@ validation/                   # Scientific validation: experiment-1-idrid, exper
 ## Features
 
 - **Patient & session management** — create, edit, archive, and search patients; clinical data (diabetes type/duration, HTN, dyslipidemia, medications); sessions as clinical visits; preloaded demo patient; combined sessions for longitudinal analysis.
-- **On-device AI analysis** — dual models (detection + segmentation) on ONNX Runtime (WebAssembly) with SIMD and multi-threading; models downloaded once from [`Debaq/dird_models`](https://github.com/Debaq/dird_models) and stored locally; configurable confidence threshold; per-CPU optimization; batch processing; persistent per-inference performance metrics exportable to JSON.
+- **On-device AI analysis** — an ONNX detection model on ONNX Runtime (WebAssembly) with SIMD and multi-threading (a segmentation model is planned, not yet released); models downloaded once from [`Debaq/dird_models`](https://github.com/Debaq/dird_models) and stored locally; configurable confidence threshold; per-CPU optimization; batch processing; persistent per-inference performance metrics exportable to JSON.
 - **Interactive annotation canvas** — 5 layers (original image, AI detections, AI segmentations, manual annotations, measurements); tools for selection, freehand, polygon, distance/area measurement, zoom, pan; per-layer visibility/opacity/lock; clinical overlays (retinal quadrants, macular zone, optic-disc area); human correction over AI results.
 - **Multi-guideline clinical classification** — severity per selected guideline; per-quadrant analysis; specialized detectors (hemorrhages, microaneurysms, macular edema, cup/disc); 4-2-1 rule; output of severity, treatments, follow-up, urgency, rationale; clinician can adjust the generated classification.
 - **PDF report generation** — editable preview and final report; clinical conclusion produced locally by the active guideline, with **optional prose polishing by the embedded local LLM (no network)**; configurable sections; customizable gallery; evaluator notes and signature; patient fields hideable for privacy.
