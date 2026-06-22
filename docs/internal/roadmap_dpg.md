@@ -8,7 +8,7 @@
 
 | Compromiso | Estado | Evidencia |
 |---|---|---|
-| PRIVACY.md / SECURITY.md / ROADMAP.md / docs/dird-format.md / docs/model-interface.md | ✅ copiados al repo (2026-05-20) | archivos en raíz + `docs/` |
+| PRIVACY.md / SECURITY.md / ROADMAP.md / docs/reference/dird-format.md / docs/reference/model-interface.md | ✅ copiados al repo (2026-05-20) | archivos en raíz + `docs/` |
 | DPG Compliance en README | ✅ sección agregada + TOC actualizada | `README.md` antes de "## Autor" |
 | AES-256-GCM para `.dird` | ❌ cero | `dird-exporter.ts` empaqueta plano con JSZip |
 | SQLCipher (AES-256) base local | ⚠️ **inconsistencia grave** | hoy no hay SQLite, hay **IndexedDB/Dexie v16**. Ver ⚠️1 |
@@ -24,7 +24,7 @@
 | Registro persistente `<user_data>/models/` | ❌ no existe | hoy Cache API del browser (`dird-onnx-models`); Tauri FS sin comandos |
 | GitHub Security Advisories activado | ❓ fuera del repo | acción en GitHub UI |
 | LICENSE AGPL-3.0 en `dird_models` | ❓ no verificable desde acá | repo externo |
-| Web EN feature parity | ✅ landing bilingüe (`docs/index.html` + `docs/en.html`) | ✅ |
+| Web EN feature parity | ✅ landing bilingüe (`docs/landing_pages/index.html` + `docs/landing_pages/en.html`) | ✅ |
 | App UI i18n EN/ES | ✅ i18next configurado, `es.json` 69 KB, `en.json` 57 KB | ⚠️ verificar paridad de claves |
 | LICENSE AGPL-3.0 repo principal | ✅ | `LICENSE` en raíz |
 
@@ -54,11 +54,11 @@
 
 ### F0.2 — Documentación DPG (los 5 archivos) ✅ HECHO (2026-05-20)
 
-- **Qué:** copiar al repo PRIVACY.md, SECURITY.md, ROADMAP.md, docs/dird-format.md, docs/model-interface.md. Sumar sección "DPG Standard Compliance" al README (9 indicadores DPGA).
+- **Qué:** copiar al repo PRIVACY.md, SECURITY.md, ROADMAP.md, docs/reference/dird-format.md, docs/reference/model-interface.md. Sumar sección "DPG Standard Compliance" al README (9 indicadores DPGA).
 - **Archivos:** raíz + `docs/` + `README.md`. TOC del README también actualizada.
 - **Pendiente derivado:**
   - Ajustar `PRIVACY.md` §5 ("Encryption at rest") cuando F0.5 cierre: hoy describe estado v2.0 que aún no existe.
-  - Ajustar `docs/model-interface.md` cuando F0.9 cierre: hoy asume cargador externo implementado.
+  - Ajustar `docs/reference/model-interface.md` cuando F0.9 cierre: hoy asume cargador externo implementado.
   - Re-leer `SECURITY.md` tras F0.1 para que coincida con la decisión cripto elegida.
   - Validar links rotos con un linter (`markdown-link-check`) antes del envío.
 
@@ -75,7 +75,7 @@
 ### F0.4 — Cifrado del `.dird` (AES-256-GCM)
 
 - **Qué:** modificar `dird-exporter.ts` e `importer.ts`: tras generar ZIP, cifrar bytes con DEK (random por export), envolver DEK con KEK derivada de contraseña de export, escribir contenedor `.dird` con header versionado (magic `DIRD`, version u16, KDF params, salt, nonce, wrapped-DEK, ciphertext, tag). Bump `export_version` a `2.0.0`. Importer detecta header v1.0.1 plano vs v2.0.0 cifrado.
-- **Archivos:** `src/lib/export/dird-exporter.ts`, `src/lib/export/dird-importer.ts`, nuevo `src/lib/export/dird-container.ts`, `docs/dird-format.md`.
+- **Archivos:** `src/lib/export/dird-exporter.ts`, `src/lib/export/dird-importer.ts`, nuevo `src/lib/export/dird-container.ts`, `docs/reference/dird-format.md`.
 - **Esfuerzo:** 3 días.
 - **Dependencias:** F0.3.
 - **Aceptación:** round-trip de export→import con contraseña correcta restaura datos; contraseña errónea falla con error claro; import de `.dird` v1.0.1 sigue funcionando (compat).
@@ -133,14 +133,14 @@
 
 - **Qué:**
   - Settings → AI Models → "Add Model" abre file picker (`.onnx` + `.json` model card).
-  - Validador `src/lib/ai/model-card-validator.ts` con JSON-Schema (Zod o Ajv) según spec `docs/model-interface.md`.
+  - Validador `src/lib/ai/model-card-validator.ts` con JSON-Schema (Zod o Ajv) según spec `docs/reference/model-interface.md`.
   - Validación de shapes input/output contra metadata (extender `onnx-manager.ts:251`).
   - Sanity-check: imagen de prueba embebida (`public/test-fundus.png`) → run inference → verificar que devuelve tensor con shape esperado y no NaN.
   - Registro persistente: Tauri command `save_model(name, onnx_bytes, card_json)` → escribe en `<app_data_dir>/models/<id>/`. Web fallback: IndexedDB blob store.
   - Lista de modelos instalados, botón "Activar".
 - **Archivos:** `src/lib/ai/model-card-validator.ts`, `src/lib/ai/model-registry.ts`, `src/components/settings/ModelSettings.tsx` (extender), `src-tauri/src/commands/models.rs`, `scripts/validate_model_card.py`.
 - **Esfuerzo:** 5–7 días.
-- **Dependencias:** `docs/model-interface.md` final (F0.2). Independiente de F0.3–F0.8.
+- **Dependencias:** `docs/reference/model-interface.md` final (F0.2). Independiente de F0.3–F0.8.
 - **Aceptación:** instalar modelo de tercero válido → aparece en lista → activar → inferencia funciona. Modelo inválido (shape distinto, card malformada) rechazado con mensaje claro. Script `validate_model_card.py` valida desde CLI con exit codes.
 - **Riesgo:** modelo malicioso (ONNX puede contener custom ops). Mitigación: lista blanca de opsets, warning explícito al instalar.
 

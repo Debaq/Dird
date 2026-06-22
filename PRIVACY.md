@@ -65,7 +65,7 @@ The location of these files depends on the operating system and the application'
 Starting with DIRD+ v2.0:
 
 - The local SQLite database is encrypted using **AES-256** via SQLCipher. Page-level AES-256-CBC + HMAC-SHA-512 page authentication.
-- Exported `.dird` files are encrypted using **AES-256-GCM** with authenticated headers (see `docs/dird-format.md` §1.1 for the binary container layout).
+- Exported `.dird` files are encrypted using **AES-256-GCM** with authenticated headers (see `docs/reference/dird-format.md` §1.1 for the binary container layout).
 - Encryption keys are derived from user-supplied passphrases using **Argon2id** with OWASP 2025 parameters (memory cost 64 MiB, time cost 3, parallelism 4; RFC 9106). The 32-byte derived key is passed directly to SQLCipher as a raw key (`PRAGMA key = x'<hex>'`), bypassing SQLCipher's internal PBKDF2 in favor of the stronger Argon2id derivation.
 
 ### 5.1 Dual-password model

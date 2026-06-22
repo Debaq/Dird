@@ -1,4 +1,4 @@
-// Validador del schema model card v2.0 según docs/model-interface.md.
+// Validador del schema model card v2.0 según docs/reference/model-interface.md.
 //
 // Validación manual sin dependencias externas. Devuelve estructura tipada o
 // lista de errores enumerados.

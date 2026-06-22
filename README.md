@@ -201,10 +201,10 @@ The local LLM is an **optional writing aid** that runs in-process via llama.cpp 
 
 DIRD+ ships with reference models (DIRDv1r1, DIRDv2r0) but is **model-agnostic by design**: any organization can train and plug in its own ONNX model — calibrated to its own population — **without modifying the application**.
 
-The full contract is specified in **[`docs/model-interface.md`](docs/model-interface.md)**. In short, a custom model needs:
+The full contract is specified in **[`docs/reference/model-interface.md`](docs/reference/model-interface.md)**. In short, a custom model needs:
 
 - **Format**: ONNX, runnable by ONNX Runtime. Input tensor `[1, 3, 640, 640]` (RGB, normalized), output as detection boxes `[x, y, w, h, confidence, class…]`.
-- **A model card** (`.json` companion) declaring its class mapping, input/output shapes, and metadata. See [`docs/model-interface.md` §6](docs/model-interface.md) for required fields and [`docs/example-card.json`](docs/example-card.json) for a complete, validated example.
+- **A model card** (`.json` companion) declaring its class mapping, input/output shapes, and metadata. See [`docs/reference/model-interface.md` §6](docs/reference/model-interface.md) for required fields and [`docs/reference/example-card.json`](docs/reference/example-card.json) for a complete, validated example.
 - **Class definitions**: the reference models use class IDs `0–10` (`optic_disc`, `fovea`, `hard_exudate`, `hemorrhage`, `cotton_wool_spot`, `microhemorrhages`, `edema`, `microaneurysm`, `neovascularization`, `venous_beading`, `IRMA`). Custom models may declare **their own classes** in the model card; DIRD+ uses that mapping to label detections in the UI and feed the clinical-guideline engine.
 
 Load it from **Settings → AI Models → Add Model** (file picker). DIRD+ validates the model card schema, checks input/output tensor shapes, and runs an inference sanity check before registering it under `<user_data>/models/`. A standalone validator is also provided:
@@ -347,7 +347,7 @@ Local **SQLite database encrypted at rest with SQLCipher (AES-256)**, 8 tables:
 | **reports** | sessionId, type (preview/final), pdfBlob, evaluatorNotes, conclusionEdited | Generated PDF reports |
 | **measurements** | imageId, origin, destination, distancePixels, distanceDD | Calibrated measurements |
 
-The `.dird` container format is specified in [`docs/dird-format.md`](docs/dird-format.md).
+The `.dird` container format is specified in [`docs/reference/dird-format.md`](docs/reference/dird-format.md).
 
 ### Project Structure
 
@@ -512,7 +512,7 @@ DIRD+ aligns with the [Digital Public Goods Standard](https://digitalpublicgoods
 | 3 | **Clear Ownership** | ✅ | Owned by Nicolás Baier Quezada (lead) and the DIRD+ team, Universidad Austral de Chile (UACh). See [project website](https://debaq.github.io/Dird/) and the Zenodo deposit ([DOI 10.5281/zenodo.19687226](https://doi.org/10.5281/zenodo.19687226)). |
 | 4 | **Platform Independence** | ✅ | Built on a fully open stack (Tauri, React, ONNX Runtime, SQLite, Rust). Runs offline; no proprietary services required. |
 | 5 | **Documentation** | ✅ | This README, [project website](https://debaq.github.io/Dird/), [docs/](docs/), [preprint](https://doi.org/10.64898/2026.04.26.26351745), and the [Wiki](https://github.com/Debaq/Dird/wiki). |
-| 6 | **Non-PII Data Extraction** | ✅ | All non-PII data (models, configurations, derived metrics) uses open standards: ONNX, JSON, SQLite, ZIP. See [docs/dird-format.md](docs/dird-format.md) and [docs/model-interface.md](docs/model-interface.md). |
+| 6 | **Non-PII Data Extraction** | ✅ | All non-PII data (models, configurations, derived metrics) uses open standards: ONNX, JSON, SQLite, ZIP. See [docs/reference/dird-format.md](docs/reference/dird-format.md) and [docs/reference/model-interface.md](docs/reference/model-interface.md). |
 | 7 | **Privacy & Applicable Laws** | ✅ | See [PRIVACY.md](PRIVACY.md). Compatible by design with GDPR, HIPAA, and Chilean Laws 19.628 and 21.719. |
 | 8 | **Open Standards & Best Practices** | ✅ | ONNX, ISO 32000 (PDF), SQLite, JSON (RFC 8259), Argon2id (RFC 9106), AES-256-GCM. SemVer 2.0.0, Privacy by Design. |
 | 9A | **Data Privacy & Security** | ✅ | Local-only processing. AES-256 at-rest encryption (SQLCipher + `.dird` GCM) with Argon2id key derivation and a dual-password model. See [PRIVACY.md](PRIVACY.md) and [SECURITY.md](SECURITY.md). |
@@ -524,8 +524,8 @@ DIRD+ aligns with the [Digital Public Goods Standard](https://digitalpublicgoods
 - 📄 [PRIVACY.md](PRIVACY.md) — privacy policy and data handling
 - 🔒 [SECURITY.md](SECURITY.md) — vulnerability disclosure policy
 - 🗺️ [ROADMAP.md](ROADMAP.md) — public development roadmap
-- 📦 [docs/dird-format.md](docs/dird-format.md) — `.dird` file-format specification
-- 🧠 [docs/model-interface.md](docs/model-interface.md) — ONNX model contract for plug-in models
+- 📦 [docs/reference/dird-format.md](docs/reference/dird-format.md) — `.dird` file-format specification
+- 🧠 [docs/reference/model-interface.md](docs/reference/model-interface.md) — ONNX model contract for plug-in models
 
 ### Scientific citation
 

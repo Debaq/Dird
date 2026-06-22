@@ -2,7 +2,7 @@
   "schema_version": "2.0",
   "name": "DIRDv2r0",
   "version": "2.0.0",
-  "description": "Reference DIRD+ detection model (YOLOv26s, end2end NMS). Example model card for the DIRD+ model interface specification — see docs/model-interface.md.",
+  "description": "Reference DIRD+ detection model (YOLOv26s, end2end NMS). Example model card for the DIRD+ model interface specification — see docs/reference/model-interface.md.",
   "license": "AGPL-3.0",
   "doi": "10.5281/zenodo.19685466",
   "authors": [

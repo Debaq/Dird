@@ -96,7 +96,7 @@ export function CustomModelsSection() {
         <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
           DIRD+ es model-agnostic. Carga modelos ONNX de terceros que cumplan con la
           {' '}
-          <a href="/docs/model-interface.md" target="_blank" className="text-blue-600 hover:underline">
+          <a href="/docs/reference/model-interface.md" target="_blank" className="text-blue-600 hover:underline">
             especificación model-interface v2.0
           </a>.
         </p>

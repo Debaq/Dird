@@ -22,14 +22,14 @@ Target: before submission to the Digital Public Goods Alliance (DPGA).
 - [ ] **External ONNX model loader**: in-app dialog to select a local `.onnx` model file.
 - [ ] **Model registry** within the application configuration directory.
 - [ ] **Model validation** on load: input/output tensor shapes, class metadata.
-- [ ] **Documentation**: `docs/model-interface.md` specifying the model contract.
+- [ ] **Documentation**: `docs/reference/model-interface.md` specifying the model contract.
 
 ### Documentation
 - [ ] `PRIVACY.md` published.
 - [ ] `SECURITY.md` published.
 - [ ] `ROADMAP.md` published (this document).
-- [ ] `docs/dird-format.md` published.
-- [ ] `docs/model-interface.md` published.
+- [ ] `docs/reference/dird-format.md` published.
+- [ ] `docs/reference/model-interface.md` published.
 - [ ] `LICENSE` confirmed in `dird_models`.
 - [ ] DPG Standard compliance section added to README.
 - [ ] GitHub Security Advisories enabled on the repository.
