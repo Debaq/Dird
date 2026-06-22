@@ -7,7 +7,7 @@ This document describes how DIRD+ handles patient data, what it stores, and the 
 
 ## 1. Scope
 
-DIRD+ is a desktop and web application for AI-assisted diabetic retinopathy screening. It runs entirely on the device of the healthcare professional who operates it. **The DIRD+ project does not operate any server, cloud service, or backend that receives data from the application.** This privacy policy describes what the application does locally; the legal responsibility for patient data handling lies with the deploying institution and the operating clinician under their local jurisdiction.
+DIRD+ is a desktop application for AI-assisted diabetic retinopathy screening. It runs entirely on the device of the healthcare professional who operates it. **The DIRD+ project does not operate any server, cloud service, or backend that receives data from the application.** This privacy policy describes what the application does locally; the legal responsibility for patient data handling lies with the deploying institution and the operating clinician under their local jurisdiction.
 
 ## 2. Privacy principles
 
