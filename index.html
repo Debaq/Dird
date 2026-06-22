@@ -1,254 +1,2859 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DIRD+ — On-device AI for Diabetic Retinopathy Screening</title>
-<meta name="description" content="DIRD+ is an open-source desktop application that detects signs of diabetic retinopathy with 100% local AI. No cloud, no per-screening cost, patient data never leaves the device.">
-<meta property="og:title" content="DIRD+ — On-device AI for Diabetic Retinopathy Screening">
-<meta property="og:description" content="Open-source desktop app. 100% local AI, encrypted at rest, model-agnostic and guideline-agnostic. Patient data never leaves the device.">
-<meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2310b981'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%23042f2e'/%3E%3C/svg%3E">
-<style>
-  :root{
-    --bg:#04110f; --bg2:#08201c; --card:#0c2723; --line:#16463d;
-    --txt:#dff5ee; --muted:#8db5ac; --accent:#10b981; --accent2:#34d399; --warn:#fbbf24;
-    --radius:16px; --maxw:1080px;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>DIRD+ — Diabetic Retinopathy Detection with Edge AI</title>
+  <meta name="description" content="Desktop application for assisted diabetic retinopathy detection. AI runs entirely on-device. Full privacy, no cloud, open source.">
+  <meta name="keywords" content="diabetic retinopathy, DIRD, AI detection, ophthalmology, YOLO, ONNX, edge AI, screening, Tauri, open source">
+  <meta name="author" content="Nicolás Baier Quezada">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://tmeduca.org/dird/en.html">
+  <link rel="alternate" hreflang="es" href="https://tmeduca.org/dird/">
+  <link rel="alternate" hreflang="en" href="https://tmeduca.org/dird/en.html">
+  <link rel="icon" type="image/svg+xml" href="img/logo.svg">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tmeduca.org/dird/en.html">
+  <meta property="og:title" content="DIRD+ — Diabetic Retinopathy Detection with Edge AI">
+  <meta property="og:description" content="Diabetic retinopathy screening with 100% local AI. Tauri desktop + YOLO ONNX model. No cloud, no per-screening fees.">
+  <meta property="og:image" content="https://tmeduca.org/dird/img/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:site_name" content="DIRD+">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DIRD+ — Diabetic Retinopathy Detection with Edge AI">
+  <meta name="twitter:description" content="Diabetic retinopathy screening with 100% local AI. Desktop application. Open source.">
+  <meta name="twitter:image" content="https://tmeduca.org/dird/img/og-image.jpg">
+
+  <!-- Schema.org JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "DIRD+",
+    "url": "https://tmeduca.org/dird/",
+    "description": "Assisted diabetic retinopathy detection platform powered by edge-computing artificial intelligence.",
+    "applicationCategory": "MedicalApplication",
+    "operatingSystem": "Windows, Linux, Web",
+    "author": {
+      "@type": "Person",
+      "name": "Nicolás Baier Quezada",
+      "affiliation": {
+        "@type": "EducationalOrganization",
+        "name": "Universidad Austral de Chile"
+      }
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "license": "https://github.com/Debaq/Dird/blob/main/LICENSE",
+    "codeRepository": "https://github.com/Debaq/Dird"
   }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg); color:var(--txt); line-height:1.6; -webkit-font-smoothing:antialiased;
-    background-image:radial-gradient(900px 500px at 80% -10%, rgba(16,185,129,.18), transparent 60%),
-                     radial-gradient(700px 400px at -10% 10%, rgba(52,211,153,.10), transparent 55%);
-  }
-  a{color:var(--accent2); text-decoration:none}
-  a:hover{text-decoration:underline}
-  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 22px}
-  .chip{display:inline-flex; align-items:center; gap:6px; font-size:.82rem; color:var(--muted);
-    border:1px solid var(--line); background:rgba(255,255,255,.02); padding:5px 11px; border-radius:999px}
+  </script>
 
-  /* NAV */
-  nav{position:sticky; top:0; z-index:20; backdrop-filter:blur(10px);
-    background:rgba(4,17,15,.7); border-bottom:1px solid var(--line)}
-  .nav-in{display:flex; align-items:center; gap:18px; height:60px}
-  .brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:.3px}
-  .brand .dot{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--accent2),var(--accent));box-shadow:0 0 16px rgba(16,185,129,.6)}
-  .nav-links{margin-left:auto; display:flex; gap:20px; align-items:center}
-  .nav-links a{color:var(--muted); font-size:.92rem}
-  .nav-links a:hover{color:var(--txt); text-decoration:none}
-  .btn{display:inline-flex; align-items:center; gap:8px; font-weight:600; font-size:.92rem;
-    padding:10px 18px; border-radius:11px; border:1px solid transparent; cursor:pointer; transition:.15s}
-  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#042f2e}
-  .btn-primary:hover{filter:brightness(1.08); text-decoration:none; transform:translateY(-1px)}
-  .btn-ghost{border-color:var(--line); color:var(--txt); background:rgba(255,255,255,.02)}
-  .btn-ghost:hover{border-color:var(--accent); text-decoration:none}
-  @media(max-width:720px){.nav-links a:not(.btn){display:none}}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* HERO */
-  header.hero{padding:78px 0 56px; text-align:center}
-  .hero .chip{margin-bottom:20px}
-  .hero h1{font-size:clamp(2.1rem,5.4vw,3.7rem); line-height:1.08; font-weight:850; letter-spacing:-.5px}
-  .grad{background:linear-gradient(120deg,var(--accent2),#7dd3fc); -webkit-background-clip:text; background-clip:text; color:transparent}
-  .hero p.sub{max-width:660px; margin:20px auto 0; color:var(--muted); font-size:1.12rem}
-  .hero-btns{display:flex; gap:13px; justify-content:center; flex-wrap:wrap; margin-top:32px}
-  .badges{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:30px}
-  .badges img{height:22px}
+    :root {
+      /* Paleta DIRD */
+      --bg: #0a1414;
+      --bg-subtle: #0f1c1c;
+      --surface: rgba(255,255,255,0.03);
+      --surface-hover: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.07);
+      --border-accent: rgba(32,181,174,0.25);
+      --text: #f0f2f2;
+      --text-secondary: #9ba8a8;
+      --text-dim: #6b7878;
 
-  /* SECTIONS */
-  section{padding:54px 0}
-  .eyebrow{color:var(--accent2); font-weight:700; font-size:.82rem; letter-spacing:.14em; text-transform:uppercase}
-  h2{font-size:clamp(1.6rem,3.4vw,2.3rem); font-weight:800; letter-spacing:-.3px; margin:8px 0 6px}
-  .lead{color:var(--muted); max-width:680px; font-size:1.04rem}
+      /* Cian Médico — primary */
+      --primary: #20b5ae;
+      --primary-bright: #4dcac4;
+      --primary-glow: rgba(32,181,174,0.15);
 
-  .grid{display:grid; gap:18px; margin-top:30px}
-  .g3{grid-template-columns:repeat(3,1fr)}
-  .g2{grid-template-columns:repeat(2,1fr)}
-  @media(max-width:860px){.g3{grid-template-columns:1fr 1fr}}
-  @media(max-width:600px){.g3,.g2{grid-template-columns:1fr}}
-  .card{background:linear-gradient(180deg,var(--card),var(--bg2)); border:1px solid var(--line);
-    border-radius:var(--radius); padding:24px; transition:.18s}
-  .card:hover{border-color:var(--accent); transform:translateY(-3px); box-shadow:0 14px 40px rgba(0,0,0,.35)}
-  .card .ic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;
-    background:rgba(16,185,129,.12); border:1px solid var(--line); margin-bottom:14px; font-size:1.3rem}
-  .card h3{font-size:1.12rem; margin-bottom:6px}
-  .card p{color:var(--muted); font-size:.96rem}
+      /* Naranja Iris — accent (marcadores de lesión) */
+      --accent: #d87a1a;
+      --accent-bright: #f8b05c;
+      --accent-deep: #b34b00;
 
-  /* FLOW */
-  .flow{counter-reset:step; display:grid; gap:14px; margin-top:30px;
-    grid-template-columns:repeat(4,1fr)}
-  @media(max-width:860px){.flow{grid-template-columns:1fr 1fr}}
-  @media(max-width:520px){.flow{grid-template-columns:1fr}}
-  .step{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; position:relative}
-  .step::before{counter-increment:step; content:counter(step); position:absolute; top:-12px; left:16px;
-    width:28px;height:28px; border-radius:50%; display:grid; place-items:center; font-weight:800; font-size:.85rem;
-    color:#042f2e; background:linear-gradient(135deg,var(--accent),var(--accent2))}
-  .step h4{margin:10px 0 4px; font-size:1rem}
-  .step p{color:var(--muted); font-size:.88rem}
+      /* Grises DIRD */
+      --coal: #575756;
 
-  /* SPLIT highlight */
-  .split{display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:28px}
-  @media(max-width:780px){.split{grid-template-columns:1fr}}
-  .panel{background:linear-gradient(180deg,var(--card),var(--bg2)); border:1px solid var(--line); border-radius:var(--radius); padding:26px}
-  .panel h3{font-size:1.2rem; margin-bottom:10px; display:flex; align-items:center; gap:9px}
-  .panel ul{list-style:none; margin-top:6px}
-  .panel li{color:var(--muted); padding:7px 0 7px 26px; position:relative; font-size:.96rem}
-  .panel li::before{content:"✓"; position:absolute; left:0; color:var(--accent2); font-weight:800}
+      --gradient-1: #20b5ae;
+      --gradient-2: #4dcac4;
+      --gradient-3: #d87a1a;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --red: #ef4444;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
 
-  .chips{display:flex; flex-wrap:wrap; gap:9px; margin-top:24px}
+    html { scroll-behavior: smooth; }
 
-  .cta{background:linear-gradient(135deg,rgba(16,185,129,.14),rgba(52,211,153,.06));
-    border:1px solid var(--line); border-radius:22px; padding:46px 28px; text-align:center; margin:18px 0 10px}
-  .cta h2{margin-bottom:10px}
-  .cta p{color:var(--muted); max-width:560px; margin:0 auto 24px}
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
 
-  .note{display:flex; gap:12px; align-items:flex-start; background:rgba(251,191,36,.07);
-    border:1px solid rgba(251,191,36,.3); border-radius:14px; padding:16px 18px; margin-top:30px; font-size:.94rem}
-  .note b{color:var(--warn)}
+    a { color: var(--primary-bright); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: #fff; }
+    a.wlink { color: inherit; border-bottom: 1px dotted var(--primary-bright); }
+    a.wlink:hover { color: var(--primary-bright); border-bottom-style: solid; }
 
-  footer{border-top:1px solid var(--line); padding:40px 0; margin-top:30px; color:var(--muted); font-size:.92rem}
-  .foot-grid{display:flex; flex-wrap:wrap; gap:30px; justify-content:space-between; align-items:flex-start}
-  .foot-links{display:flex; gap:26px; flex-wrap:wrap}
-  .foot-links a{color:var(--muted)}
-  .foot-links a:hover{color:var(--txt)}
-</style>
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
+
+    /* ANIMATIONS */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes glow-pulse {
+      0%, 100% { opacity: 0.4; }
+      50%      { opacity: 0.7; }
+    }
+    .animate-in {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .animate-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1rem 0;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(10,20,20,0.8);
+      border-bottom: 1px solid var(--border);
+      transition: padding 0.3s;
+    }
+    nav.scrolled { padding: 0.6rem 0; }
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      font-weight: 800;
+      font-size: 1.35rem;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+    }
+    .nav-links { display: flex; gap: 2rem; align-items: center; }
+    .nav-links a {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: #fff; }
+    .lang-switch {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      padding: 0.3rem 0.55rem !important;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 0.72rem !important;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary) !important;
+      background: rgba(255,255,255,0.03);
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .lang-switch:hover {
+      color: var(--primary-bright) !important;
+      border-color: rgba(32,181,174,0.4);
+      background: rgba(32,181,174,0.08);
+    }
+    .nav-cta {
+      background: linear-gradient(135deg, var(--primary), var(--primary-bright)) !important;
+      color: #04201f !important;
+      -webkit-text-fill-color: #04201f !important;
+      padding: 0.5rem 1.25rem !important;
+      border-radius: 8px;
+      font-weight: 700 !important;
+      font-size: 0.85rem !important;
+      transition: opacity 0.2s, transform 0.2s !important;
+    }
+    .nav-cta:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* HERO */
+    .hero {
+      position: relative;
+      padding: 10rem 0 6rem;
+      text-align: center;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -40%; left: 50%;
+      transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+      animation: glow-pulse 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 10%; right: -10%;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(216,122,26,0.08) 0%, transparent 70%);
+      animation: glow-pulse 8s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border-accent);
+      border-radius: 99px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--primary-bright);
+      margin-bottom: 2rem;
+      animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+      position: relative;
+      z-index: 2;
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: glow-pulse 2s infinite;
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      animation: fade-up 0.8s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+      position: relative;
+      z-index: 2;
+    }
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2), var(--gradient-3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero .subtitle {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      max-width: 620px;
+      margin: 0 auto 2.5rem;
+      line-height: 1.8;
+      animation: fade-up 0.8s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+      position: relative;
+      z-index: 2;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fade-up 0.8s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+      position: relative;
+      z-index: 2;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.85rem 2rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-bright));
+      color: #04201f;
+      box-shadow: 0 0 30px rgba(32,181,174,0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(32,181,174,0.5);
+      color: #04201f;
+    }
+    .btn-accent {
+      background: linear-gradient(135deg, var(--accent), var(--accent-bright));
+      color: #2a1405;
+      box-shadow: 0 0 30px rgba(216,122,26,0.25);
+    }
+    .btn-accent:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(216,122,26,0.45);
+      color: #2a1405;
+    }
+    .btn-ghost {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+    .btn-ghost:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+      color: #fff;
+    }
+    .btn svg { width: 18px; height: 18px; }
+
+    .hero-cite {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      justify-content: center;
+      align-items: center;
+      margin-top: 1.5rem;
+      animation: fade-up 0.8s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+      position: relative;
+      z-index: 2;
+    }
+    .cite-label {
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .cite-badge {
+      display: inline-flex;
+      align-items: stretch;
+      border-radius: 6px;
+      overflow: hidden;
+      font-size: 0.78rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .cite-badge:hover {
+      border-color: var(--primary);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(32,181,174,0.25);
+    }
+    .cite-badge .cite-key {
+      background: rgba(255,255,255,0.06);
+      color: var(--text-muted);
+      padding: 0.4rem 0.7rem;
+      font-weight: 600;
+    }
+    .cite-badge .cite-val {
+      background: var(--primary);
+      color: #04201f;
+      padding: 0.4rem 0.7rem;
+      font-weight: 700;
+    }
+    .cite-badge.cite-preprint .cite-val {
+      background: var(--accent);
+      color: #2a1405;
+    }
+
+    .hero-stack {
+      margin-top: 3rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      animation: fade-up 0.8s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+      position: relative;
+      z-index: 2;
+    }
+    .hero-stack span {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* HERO SCREENSHOT */
+    .hero-screenshot {
+      margin-top: 4rem;
+      animation: fade-up 1s 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+      position: relative;
+      z-index: 2;
+    }
+    .hero-screenshot::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--gradient-1), var(--gradient-3));
+      opacity: 0.3;
+      z-index: -1;
+      filter: blur(1px);
+    }
+    .screenshot-frame {
+      background: #0d1a1a;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 80px rgba(32,181,174,0.08);
+    }
+    .screenshot-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      background: rgba(0,0,0,0.4);
+      border-bottom: 1px solid var(--border);
+    }
+    .screenshot-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .screenshot-dot:nth-child(1) { background: #ef4444; }
+    .screenshot-dot:nth-child(2) { background: #f59e0b; }
+    .screenshot-dot:nth-child(3) { background: #22c55e; }
+    .screenshot-titlebar span {
+      margin-left: 8px;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+    .screenshot-frame img {
+      width: 100%;
+      display: block;
+    }
+    .screenshot-placeholder {
+      width: 100%;
+      aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      background: linear-gradient(135deg, #0d1a1a, #162626);
+    }
+
+    /* SHOWCASE */
+    .showcase {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+    .showcase.reverse { direction: rtl; }
+    .showcase.reverse > * { direction: ltr; }
+    .showcase-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--primary-bright);
+      margin-bottom: 0.75rem;
+    }
+    .showcase-title {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .showcase-desc {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      line-height: 1.75;
+    }
+    .showcase-img {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .showcase-img:hover { transform: scale(1.02); }
+    .showcase-img img { width: 100%; display: block; }
+    .showcase-img .screenshot-placeholder { aspect-ratio: 4/3; }
+
+    @media (max-width: 768px) {
+      .showcase { grid-template-columns: 1fr; gap: 2rem; }
+      .showcase.reverse { direction: ltr; }
+      .hero-screenshot { margin-top: 2.5rem; }
+    }
+
+    /* SECTIONS */
+    section { padding: 5rem 0; }
+    .section-header {
+      text-align: center;
+      margin-bottom: 3.5rem;
+    }
+    .section-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--primary-bright);
+      margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    .section-subtitle {
+      margin-top: 1rem;
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      max-width: 550px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* FEATURES */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .feature-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+      background: var(--primary-glow);
+    }
+    .feature-icon svg { width: 22px; height: 22px; color: var(--primary-bright); }
+    .feature-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+      letter-spacing: -0.01em;
+    }
+    .feature-card p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    /* MODEL SECTION */
+    .model-section { background: var(--bg-subtle); }
+    .model-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: stretch;
+    }
+    @media (max-width: 860px) {
+      .model-grid { grid-template-columns: 1fr; }
+    }
+    .model-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .model-card.is-latest {
+      border-color: rgba(32,181,174,0.35);
+      background: rgba(32,181,174,0.04);
+    }
+    .model-card.is-latest::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+    }
+    .corner-ribbon {
+      position: absolute;
+      top: 18px;
+      right: -58px;
+      transform: rotate(40deg);
+      width: 220px;
+      padding: 0.45rem 0;
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #fff;
+      background: linear-gradient(90deg, var(--accent), #f59e0b);
+      box-shadow: 0 6px 18px rgba(216,122,26,0.35), 0 0 0 1px rgba(255,255,255,0.08) inset;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .hero-ribbon-wrap {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 260px;
+      height: 260px;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .hero-ribbon {
+      position: absolute;
+      pointer-events: auto;
+      top: 55px;
+      right: -110px;
+      transform: rotate(40deg);
+      width: 400px;
+      padding: 0.7rem 0;
+      text-align: center;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #fff;
+      background: linear-gradient(90deg, #ef4444, var(--accent), #f59e0b);
+      background-size: 200% 100%;
+      box-shadow:
+        0 14px 40px rgba(216,122,26,0.55),
+        0 0 0 1px rgba(255,255,255,0.12) inset,
+        0 -1px 0 rgba(0,0,0,0.3) inset;
+      z-index: 200;
+      text-decoration: none;
+      font-size: 0.82rem;
+      line-height: 1.18;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      animation: ribbon-shine 5s ease-in-out infinite, ribbon-pulse 2.4s ease-in-out infinite;
+    }
+    .hero-ribbon:hover {
+      transform: rotate(40deg) scale(1.04);
+      animation: none;
+      box-shadow:
+        0 20px 55px rgba(239,68,68,0.6),
+        0 0 0 1px rgba(255,255,255,0.18) inset;
+    }
+    .hero-ribbon strong {
+      display: block;
+      font-size: 1rem;
+      letter-spacing: 0.12em;
+    }
+    .hero-ribbon small {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: none;
+      opacity: 0.97;
+      margin-top: 2px;
+    }
+    @keyframes ribbon-shine {
+      0%, 100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
+    }
+    @keyframes ribbon-pulse {
+      0%, 100% { box-shadow: 0 14px 40px rgba(216,122,26,0.45), 0 0 0 1px rgba(255,255,255,0.12) inset, 0 -1px 0 rgba(0,0,0,0.3) inset; }
+      50%      { box-shadow: 0 14px 40px rgba(216,122,26,0.45), 0 0 0 1px rgba(255,255,255,0.12) inset, 0 -1px 0 rgba(0,0,0,0.3) inset, 0 0 28px rgba(239,68,68,0.45); }
+    }
+    @media (max-width: 900px) {
+      .hero-ribbon-wrap { width: 200px; height: 200px; top: 0; }
+      .hero-ribbon { width: 320px; right: -90px; top: 42px; font-size: 0.72rem; padding: 0.55rem 0; }
+      .hero-ribbon strong { font-size: 0.85rem; }
+    }
+    @media (max-width: 600px) {
+      .hero-ribbon { display: none; }
+      .hero-spark { display: none; }
+    }
+    .hero-spark {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff7e0 0%, rgba(255,200,120,0.7) 40%, transparent 70%);
+      box-shadow: 0 0 8px rgba(255,200,120,0.8);
+      pointer-events: none;
+      opacity: 0;
+      animation: spark-twinkle 4s ease-in-out infinite;
+    }
+    .hero-spark.s1 { top: 40px;  right: 130px; animation-delay: 0s;   width: 5px; height: 5px; }
+    .hero-spark.s2 { top: 64px;  right: 22px;  animation-delay: 1.1s; width: 6px; height: 6px; }
+    .hero-spark.s3 { top: 188px; right: 32px;  animation-delay: 2.2s; width: 4px; height: 4px; }
+    .hero-spark.s4 { top: 212px; right: 150px; animation-delay: 3.0s; width: 5px; height: 5px; }
+    .hero-spark.s5 { top: 28px;  right: 46px;  animation-delay: 1.7s; width: 4px; height: 4px; }
+    @keyframes spark-twinkle {
+      0%, 100%   { opacity: 0; transform: scale(0.6); }
+      45%        { opacity: 0; transform: scale(0.6); }
+      55%        { opacity: 0.95; transform: scale(1); }
+      65%        { opacity: 0; transform: scale(0.6); }
+    }
+    .corner-ribbon small {
+      display: block;
+      font-size: 0.6rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: none;
+      opacity: 0.92;
+      margin-top: 1px;
+    }
+    .model-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .model-version {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .model-version small {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      letter-spacing: 0.02em;
+      margin-top: 0.15rem;
+    }
+    .model-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.3rem 0.75rem;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+    .badge-current { background: rgba(52,211,153,0.12); color: var(--green); border: 1px solid rgba(52,211,153,0.25); }
+    .badge-prev    { background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--border); }
+    .model-meta {
+      display: flex;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 1.25rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .model-meta b { color: var(--text-secondary); font-weight: 600; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .metric {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem;
+      text-align: center;
+    }
+    /* APTOS full-width on top; Messidor+DDR as a compact pair below (2x2 metrics) */
+    .val-pair .metrics { grid-template-columns: repeat(2, 1fr); }
+    .val-pair .metric { min-width: 0; }
+    .metric-value {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary-bright);
+      letter-spacing: -0.02em;
+    }
+    .is-latest .metric-value { color: var(--primary); }
+    .metric-label {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 0.2rem;
+    }
+    .per-class {
+      font-size: 0.82rem;
+    }
+    .per-class h4 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 0.75rem;
+      font-weight: 700;
+    }
+    .class-row {
+      display: grid;
+      grid-template-columns: 1fr auto 120px;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.4rem 0;
+      border-bottom: 1px dashed rgba(255,255,255,0.05);
+    }
+    .class-row:last-child { border-bottom: none; }
+    .class-name { color: var(--text); }
+    .class-map { color: var(--text-secondary); font-variant-numeric: tabular-nums; font-weight: 600; }
+    .class-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .class-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-bright));
+      border-radius: 999px;
+    }
+    .model-status {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: rgba(251,191,36,0.08);
+      border: 1px solid rgba(251,191,36,0.2);
+      border-radius: 10px;
+      font-size: 0.8rem;
+      color: var(--amber);
+    }
+    .model-status b { color: var(--amber); }
+    .model-status.ok {
+      background: rgba(52,211,153,0.08);
+      border-color: rgba(52,211,153,0.22);
+      color: var(--green);
+    }
+    .model-status.ok b { color: var(--green); }
+    .model-note {
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+    .model-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--primary-bright);
+    }
+    .model-link svg { width: 14px; height: 14px; }
+
+    /* SUBSCRIBE BOX (gold) */
+    .subscribe-box {
+      margin-top: 1.25rem;
+      padding: 1.25rem 1.25rem 1.1rem;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(251,191,36,0.10), rgba(216,122,26,0.08));
+      border: 1px solid rgba(251,191,36,0.32);
+      box-shadow: 0 0 0 1px rgba(251,191,36,0.05) inset, 0 6px 22px rgba(216,122,26,0.10);
+      position: relative;
+      overflow: hidden;
+    }
+    .subscribe-box::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(251,191,36,0.18), transparent 60%);
+      pointer-events: none;
+    }
+    .subscribe-title {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #fcd34d;
+      letter-spacing: -0.005em;
+    }
+    .subscribe-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fbbf24, #d87a1a);
+      color: #1a1410;
+      box-shadow: 0 4px 14px rgba(251,191,36,0.45);
+      animation: bell-shake 4.5s ease-in-out infinite;
+    }
+    .subscribe-icon svg { width: 16px; height: 16px; }
+    @keyframes bell-shake {
+      0%, 92%, 100% { transform: rotate(0); }
+      94%           { transform: rotate(-12deg); }
+      96%           { transform: rotate(10deg); }
+      98%           { transform: rotate(-6deg); }
+    }
+    .subscribe-text {
+      margin: 0.7rem 0 1rem;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+    .subscribe-text b { color: #fcd34d; }
+    .subscribe-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+    .btn-gold {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1.25rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      letter-spacing: 0.01em;
+      color: #1a1410;
+      background: linear-gradient(135deg, #fcd34d, #fbbf24 45%, #d87a1a);
+      background-size: 200% 100%;
+      box-shadow:
+        0 6px 20px rgba(251,191,36,0.45),
+        0 0 0 1px rgba(255,255,255,0.18) inset,
+        0 -2px 0 rgba(0,0,0,0.18) inset;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background-position 0.4s ease;
+      animation: gold-shine 4s ease-in-out infinite;
+    }
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      background-position: 100% 50%;
+      box-shadow:
+        0 10px 28px rgba(251,191,36,0.6),
+        0 0 0 1px rgba(255,255,255,0.25) inset;
+    }
+    @keyframes gold-shine {
+      0%, 100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
+    }
+    .btn-gold-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.7rem 1.1rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #fcd34d;
+      background: transparent;
+      border: 1px solid rgba(251,191,36,0.45);
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+    }
+    .btn-gold-ghost:hover {
+      background: rgba(251,191,36,0.10);
+      color: #fff7e0;
+      border-color: rgba(251,191,36,0.7);
+    }
+    .subscribe-star {
+      margin-top: 1rem;
+      padding-top: 0.85rem;
+      border-top: 1px dashed rgba(251,191,36,0.25);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      line-height: 1.55;
+    }
+    .star-spark {
+      flex-shrink: 0;
+      font-size: 1.1rem;
+      color: #fcd34d;
+      filter: drop-shadow(0 0 6px rgba(251,191,36,0.6));
+      animation: star-twinkle 2.4s ease-in-out infinite;
+    }
+    .star-link {
+      color: #fcd34d;
+      font-weight: 700;
+      text-decoration: none;
+      border-bottom: 1px dotted rgba(251,191,36,0.5);
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .star-link:hover { color: #fff7e0; border-bottom-color: #fcd34d; }
+    .star-icon {
+      display: inline-block;
+      transform: translateY(1px);
+      animation: star-pop 2.4s ease-in-out infinite;
+    }
+    @keyframes star-twinkle {
+      0%, 100% { opacity: 0.6; transform: scale(0.95); }
+      50%      { opacity: 1;   transform: scale(1.1); }
+    }
+    @keyframes star-pop {
+      0%, 100% { transform: translateY(1px) scale(1); }
+      50%      { transform: translateY(1px) scale(1.25) rotate(8deg); }
+    }
+
+    .classes-overview {
+      margin-top: 3rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.6rem;
+    }
+    .class-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.82rem;
+    }
+    .class-chip-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .class-chip-name { color: var(--text); font-weight: 600; flex: 1; }
+    .class-chip-sev {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .class-chip.reserved { opacity: 0.55; }
+    .class-chip.reserved .class-chip-sev::after { content: ' · reservada'; }
+
+    /* RELEASES */
+    .releases-section { border-top: 1px solid var(--border); }
+    #releases-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .release-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      transition: border-color 0.3s;
+    }
+    .release-card:hover { border-color: var(--border-accent); }
+    .release-card.is-latest {
+      border-color: rgba(52,211,153,0.3);
+      background: rgba(52,211,153,0.03);
+    }
+    .release-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .release-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .release-tag { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.02em; }
+    .release-date { font-size: 0.85rem; color: var(--text-dim); font-weight: 500; }
+    .release-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.25rem 0.75rem;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .badge-latest { background: rgba(52,211,153,0.12); color: var(--green); }
+    .badge-pre { background: rgba(251,191,36,0.12); color: var(--amber); }
+    .release-body {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.25rem;
+      white-space: pre-wrap;
+      max-height: 160px;
+      overflow: hidden;
+      line-height: 1.7;
+      mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+    }
+    .release-body h2, .release-body h3, .release-body h4 {
+      color: var(--text); margin: 1rem 0 0.5rem; font-size: 1rem; font-weight: 700;
+    }
+    .release-body h2:first-child, .release-body h3:first-child { margin-top: 0; }
+    .release-body ul, .release-body ol { padding-left: 1.25rem; margin: 0.5rem 0; }
+    .release-body li { margin: 0.25rem 0; }
+    .release-body strong { color: var(--text); }
+    .release-body code {
+      background: rgba(255,255,255,0.06);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    .release-body a { color: var(--primary-bright); }
+    .release-assets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+    .asset-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1.1rem;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.2s;
+    }
+    .asset-btn:hover {
+      border-color: var(--primary);
+      background: var(--primary-glow);
+      color: #fff;
+    }
+    .asset-btn svg { width: 16px; height: 16px; opacity: 0.7; }
+    .asset-size { color: var(--text-dim); font-size: 0.75rem; }
+    .release-link {
+      display: inline-block;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .no-releases, .loading {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    /* INSTITUTIONAL */
+    .institutional {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      padding: 2.5rem 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .institutional-logo { height: 90px; transition: opacity 0.3s; }
+    .institutional-text {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      max-width: 420px;
+      line-height: 1.6;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 0;
+      margin-top: 1rem;
+    }
+    .footer-grid {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+    .footer-brand .logo { font-size: 1.2rem; }
+    .footer-brand p {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      max-width: 320px;
+    }
+    .footer-col h4 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+    }
+    .footer-col a {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      padding: 0.25rem 0;
+      transition: color 0.2s;
+    }
+    .footer-col a:hover { color: var(--text); }
+    .footer-bottom {
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+    .disclaimer {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1rem 1.25rem;
+      background: rgba(239,68,68,0.05);
+      border: 1px solid rgba(239,68,68,0.18);
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      text-align: center;
+    }
+    .disclaimer b { color: var(--red); }
+
+    /* OPEN / FREE BANNER */
+    .open-banner {
+      max-width: 1000px;
+      margin: 1.5rem auto 0;
+      padding: 1.4rem 1.5rem;
+      background: linear-gradient(135deg, rgba(32,181,174,0.06), rgba(52,211,153,0.04));
+      border: 1px solid rgba(52,211,153,0.22);
+      border-radius: 14px;
+      text-align: center;
+    }
+    .open-banner-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+    }
+    .ob-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+    }
+    .ob-pill-strong {
+      background: rgba(52,211,153,0.14);
+      border-color: rgba(52,211,153,0.4);
+      color: #6ee7b7;
+    }
+    .ob-pill-mit {
+      background: rgba(251,191,36,0.12);
+      border-color: rgba(251,191,36,0.35);
+      color: #fcd34d;
+    }
+    .open-banner-text {
+      margin: 0;
+      font-size: 0.9rem;
+      line-height: 1.65;
+      color: var(--text-secondary);
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .open-banner-text b { color: var(--text); }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .hero { padding: 8rem 0 4rem; }
+      .nav-links a:not(.nav-cta) { display: none; }
+      section { padding: 3.5rem 0; }
+      .footer-grid { flex-direction: column; }
+      .class-row { grid-template-columns: 1fr auto; }
+      .class-bar { display: none; }
+      .institutional { flex-direction: column; text-align: center; }
+    }
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* LIGHTBOX */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+      cursor: zoom-out;
+    }
+    .lightbox.open { opacity: 1; visibility: visible; }
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+      transform: scale(0.92);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .lightbox.open img { transform: scale(1); }
+    .lightbox-close {
+      position: absolute;
+      top: 1.5rem; right: 1.5rem;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1.25rem;
+      transition: background 0.2s;
+    }
+    .lightbox-close:hover { background: rgba(255,255,255,0.2); }
+    .screenshot-frame img,
+    .showcase-img img { cursor: zoom-in; }
+
+    /* hamburger mobile */
+    .mobile-toggle { display: none; background: none; border: none; color: var(--text); cursor: pointer; padding: 0.5rem; }
+    @media (max-width: 768px) {
+      .mobile-toggle { display: block; }
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 100%; left: 0; right: 0;
+        background: rgba(10,20,20,0.95);
+        backdrop-filter: blur(20px);
+        padding: 1rem 2rem;
+        border-bottom: 1px solid var(--border);
+        gap: 0.5rem;
+      }
+      .nav-links.open a { display: block; padding: 0.5rem 0; }
+    }
+
+    /* CARRUSEL */
+    .carousel-section { background: var(--bg-subtle); }
+    .carousel {
+      position: relative;
+      max-width: 1100px;
+      margin: 0 auto;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #000;
+      border: 1px solid var(--border);
+      aspect-ratio: 16 / 10;
+    }
+    .carousel-track {
+      position: absolute; inset: 0;
+    }
+    .carousel-slide {
+      position: absolute; inset: 0;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .carousel-slide.is-active { opacity: 1; }
+    .carousel-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .carousel-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      z-index: 2;
+    }
+    .carousel-btn:hover { background: rgba(0,0,0,0.85); }
+    .carousel-btn.prev { left: 12px; }
+    .carousel-btn.next { right: 12px; }
+    .carousel-btn svg { width: 22px; height: 22px; }
+    .carousel-counter {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-variant-numeric: tabular-nums;
+      z-index: 2;
+    }
+    .carousel-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      max-width: 1100px;
+      margin: 2rem auto 0;
+    }
+    .carousel-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      text-align: center;
+    }
+    .carousel-stat .v {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--primary-bright);
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    .carousel-stat .l {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 0.35rem;
+    }
+    .carousel-note {
+      max-width: 1100px;
+      margin: 1.25rem auto 0;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    @media (max-width: 720px) {
+      .carousel-stats { grid-template-columns: 1fr; }
+      .carousel-btn { width: 38px; height: 38px; }
+    }
+
+    /* === Experiments modal === */
+    .exp-trigger {
+      cursor: pointer;
+      border-bottom: 1px dashed currentColor;
+      background: none;
+      border-top: 0; border-left: 0; border-right: 0;
+      padding: 0;
+      font: inherit;
+      color: inherit;
+    }
+    .exp-trigger:hover { opacity: 0.85; }
+    .exp-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-left: 0.75rem;
+      font-size: 0.78rem;
+      color: var(--primary-bright);
+      cursor: pointer;
+      background: none;
+      border: 1px solid var(--border-accent);
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .exp-link:hover {
+      background: var(--primary-glow);
+      border-color: var(--primary);
+    }
+
+    .exp-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(5,12,12,0.78);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      z-index: 1000;
+      padding: 2rem 1rem;
+      overflow-y: auto;
+    }
+    .exp-modal-overlay.is-open { display: flex; }
+    .exp-modal {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-accent);
+      border-radius: 14px;
+      max-width: 920px;
+      width: 100%;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+      animation: expFadeIn 0.25s ease;
+    }
+    @keyframes expFadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .exp-modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.5rem 1.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .exp-modal-header h2 {
+      margin: 0 0 0.35rem;
+      font-size: 1.25rem;
+      color: var(--text);
+    }
+    .exp-modal-header p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .exp-close {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .exp-close:hover { color: var(--text); border-color: var(--primary); }
+    .exp-modal-body {
+      padding: 1.5rem 1.75rem;
+      font-size: 0.9rem;
+      line-height: 1.65;
+      color: var(--text-secondary);
+    }
+    .exp-modal-body h3 {
+      color: var(--primary-bright);
+      font-size: 1rem;
+      margin: 1.75rem 0 0.6rem;
+      letter-spacing: 0.02em;
+    }
+    .exp-modal-body h3:first-child { margin-top: 0; }
+    .exp-modal-body p { margin: 0 0 0.75rem; }
+    .exp-modal-body code {
+      background: rgba(32,181,174,0.10);
+      color: var(--primary-bright);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    .exp-modal-body strong { color: var(--text); }
+    .exp-callout {
+      background: rgba(32,181,174,0.07);
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      margin: 0.75rem 0 1rem;
+      font-size: 0.85rem;
+    }
+    .exp-callout b { color: var(--primary-bright); }
+    .exp-tau-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.5rem;
+      margin: 0.75rem 0 0.5rem;
+    }
+    .exp-tau-grid div {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+    }
+    .exp-tau-grid b { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 0.15rem; }
+    .exp-tau-grid span { color: var(--primary-bright); font-weight: 600; font-size: 1rem; }
+
+    .exp-timeline { margin: 0.5rem 0 1rem; counter-reset: exp-counter; }
+    .exp-step {
+      position: relative;
+      padding: 0.85rem 0 0.85rem 2.2rem;
+      border-left: 2px solid var(--border-accent);
+      margin-left: 0.6rem;
+    }
+    .exp-step::before {
+      content: counter(exp-counter);
+      counter-increment: exp-counter;
+      position: absolute;
+      left: -14px;
+      top: 0.8rem;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 2px solid var(--primary);
+      color: var(--primary-bright);
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .exp-step h4 {
+      margin: 0 0 0.25rem;
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+    .exp-step .exp-q {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-style: italic;
+      margin: 0 0 0.4rem;
+    }
+    .exp-step .exp-a {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin: 0 0 0.35rem;
+    }
+    .exp-step .exp-metric {
+      font-size: 0.78rem;
+      color: var(--green);
+      font-family: var(--mono, ui-monospace, monospace);
+    }
+
+    .exp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      margin: 0.5rem 0 0.75rem;
+    }
+    .exp-table th, .exp-table td {
+      padding: 0.4rem 0.55rem;
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+    }
+    .exp-table th:first-child, .exp-table td:first-child { text-align: left; }
+    .exp-table th {
+      color: var(--text-dim);
+      font-weight: 500;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .exp-table tr.is-best td {
+      background: rgba(52,211,153,0.06);
+      color: var(--text);
+      font-weight: 600;
+    }
+    .exp-table tr.is-best td:first-child { color: var(--green); }
+
+    .exp-modal-footer {
+      padding: 1rem 1.75rem 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .exp-modal-footer a {
+      font-size: 0.83rem;
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-accent);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .exp-modal-footer a.primary {
+      background: var(--primary);
+      color: var(--bg);
+      border-color: var(--primary);
+    }
+    .exp-modal-footer a.primary:hover { background: var(--primary-bright); }
+
+    @media (max-width: 640px) {
+      .exp-modal { border-radius: 10px; }
+      .exp-modal-header, .exp-modal-body, .exp-modal-footer { padding-left: 1.1rem; padding-right: 1.1rem; }
+      .exp-modal-body { font-size: 0.85rem; }
+      .exp-link { display: block; margin: 0.5rem 0 0; width: max-content; }
+    }
+  </style>
 </head>
 <body>
 
-<nav>
-  <div class="wrap nav-in">
-    <div class="brand"><span class="dot"></span> DIRD+</div>
-    <div class="nav-links">
-      <a href="#what">Overview</a>
-      <a href="#how">How it works</a>
-      <a href="#open">Open by design</a>
-      <a href="https://github.com/Debaq/Dird/wiki">Wiki</a>
-      <a class="btn btn-ghost" href="https://github.com/Debaq/Dird">GitHub ↗</a>
+  <!-- NAV -->
+  <nav id="nav">
+    <div class="container">
+      <span class="logo">DIRD+</span>
+      <button class="mobile-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <div class="nav-links">
+        <a href="#explicame">Explain</a>
+        <a href="#caracteristicas">Project</a>
+        <a href="#ejemplos">Examples</a>
+        <a href="#modelo">AI Model</a>
+        <a href="#validacion">Validation</a>
+        <a href="#descargas">Downloads</a>
+        <a href="https://tmeduca.org/dird/" class="lang-switch" title="Versión en español" aria-label="Versión en español">ES</a>
+        <a href="https://github.com/Debaq/Dird" class="nav-cta">
+          <svg viewBox="0 0 16 16" fill="currentColor" style="width:14px;height:14px;vertical-align:middle;margin-right:2px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+      </div>
     </div>
-  </div>
-</nav>
+  </nav>
 
-<header class="hero">
-  <div class="wrap">
-    <span class="chip">● Edge AI · Open Source · Digital Public Good nominee</span>
-    <h1>Diabetic retinopathy screening,<br><span class="grad">100% on the device</span></h1>
-    <p class="sub">DIRD+ is an open-source desktop application that detects signs of diabetic retinopathy with local AI. No cloud, no per-screening fee — <strong>patient data never leaves the device</strong>.</p>
-    <div class="hero-btns">
-      <a class="btn btn-primary" href="https://github.com/Debaq/Dird/releases">⬇ Download</a>
-      <a class="btn btn-ghost" href="https://github.com/Debaq/Dird">View source</a>
-      <a class="btn btn-ghost" href="https://github.com/Debaq/Dird/wiki">Documentation</a>
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-ribbon-wrap">
+      <a href="#validacion" class="hero-ribbon" aria-label="See APTOS external validation">
+        <strong>★ Just validated</strong>
+        <small>Sens 97.8% · Spec 93.1%</small>
+      </a>
+      <span class="hero-spark s1" aria-hidden="true"></span>
+      <span class="hero-spark s2" aria-hidden="true"></span>
+      <span class="hero-spark s3" aria-hidden="true"></span>
+      <span class="hero-spark s4" aria-hidden="true"></span>
+      <span class="hero-spark s5" aria-hidden="true"></span>
     </div>
-    <div class="badges">
-      <img alt="License AGPLv3" src="https://img.shields.io/badge/License-AGPLv3-10b981.svg">
-      <img alt="DOI" src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo-34d399">
-      <img alt="Platforms" src="https://img.shields.io/badge/Linux%20·%20Windows%20·%20macOS-Tauri%20v2-7dd3fc">
-    </div>
-    <div class="note" style="max-width:720px;margin-left:auto;margin-right:auto">
-      <span>⚠️</span><div><b>Research tool.</b> DIRD+ is not an approved medical device and must not be used as the sole diagnostic criterion. Every finding must be reviewed by a qualified ophthalmologist.</div>
-    </div>
-  </div>
-</header>
+    <div class="container">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        Diabetic retinopathy detection · Edge AI · Open Source
+      </div>
+      <h1>
+        Diabetic retinopathy screening<br>
+        <span class="gradient-text">with AI 100% on your device</span>
+      </h1>
+      <p class="subtitle">
+        DIRD+ detects retinal lesions using <a class="wlink" href="https://en.wikipedia.org/wiki/You_Only_Look_Once" target="_blank" rel="noopener">YOLO</a> <a class="wlink" href="https://en.wikipedia.org/wiki/Open_Neural_Network_Exchange" target="_blank" rel="noopener">ONNX</a> models running 100% locally as a Tauri desktop app. No cloud. No per-screening fees. Full privacy for patient data.
+      </p>
+      <div class="hero-buttons">
+        <a href="#descargas" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download desktop app
+        </a>
+        <a href="https://github.com/Debaq/Dird" class="btn btn-ghost">
+          <svg viewBox="0 0 16 16" fill="currentColor" style="width:18px;height:18px"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          View source
+        </a>
+      </div>
 
-<section id="what">
-  <div class="wrap">
-    <span class="eyebrow">Why DIRD+</span>
-    <h2>Screening that respects privacy, cost and connectivity</h2>
-    <p class="lead">Diabetic retinopathy is the leading cause of blindness in working-age adults — and over 80% of it is preventable with timely screening. DIRD+ brings AI screening to clinics that lack specialists, budget, or stable internet.</p>
-    <div class="grid g3">
-      <div class="card"><div class="ic">🔒</div><h3>Full privacy</h3><p>All AI inference runs on the device. Zero transmission to external servers. The database is encrypted at rest (AES-256).</p></div>
-      <div class="card"><div class="ic">📡</div><h3>Works offline</h3><p>After a one-time model download, everything runs locally. Built for areas with no reliable connectivity.</p></div>
-      <div class="card"><div class="ic">💸</div><h3>Zero cost</h3><p>No licenses, no per-screening fee, no proprietary hardware. Works with any existing fundus camera.</p></div>
-      <div class="card"><div class="ic">🧩</div><h3>Model-agnostic</h3><p>Plug in your own ONNX model via a simple model card — calibrated to your own population, no code changes.</p></div>
-      <div class="card"><div class="ic">📋</div><h3>Guideline-agnostic</h3><p>Clinical guidelines are JSON files. Ships with ICDR 2024 and MINSAL Chile 2017; add new ones without coding.</p></div>
-      <div class="card"><div class="ic">📖</div><h3>Open source</h3><p>Fully auditable under GNU AGPLv3. Algorithms, thresholds and criteria are transparent and verifiable.</p></div>
-    </div>
-  </div>
-</section>
+      <div class="hero-cite">
+        <span class="cite-label">Cite:</span>
+        <a href="https://doi.org/10.64898/2026.04.26.26351745" class="cite-badge cite-preprint">
+          <span class="cite-key">Preprint</span>
+          <span class="cite-val">medRxiv 2026.04.26</span>
+        </a>
+        <a href="https://doi.org/10.5281/zenodo.19687226" class="cite-badge">
+          <span class="cite-key">DOI app</span>
+          <span class="cite-val">10.5281/zenodo.19687226</span>
+        </a>
+        <a href="https://doi.org/10.5281/zenodo.19685466" class="cite-badge">
+          <span class="cite-key">DOI model</span>
+          <span class="cite-val">10.5281/zenodo.19685466</span>
+        </a>
+      </div>
+      <div class="hero-stack">
+        <span>Tauri 2</span>
+        <span>React</span>
+        <span><a class="wlink" href="https://en.wikipedia.org/wiki/Open_Neural_Network_Exchange" target="_blank" rel="noopener">ONNX</a> Runtime</span>
+        <span>YOLOv26</span>
+        <span>SQLite</span>
+        <span>TypeScript</span>
+        <span>Rust</span>
+      </div>
 
-<section id="how" style="background:linear-gradient(180deg,transparent,rgba(8,32,28,.5),transparent)">
-  <div class="wrap">
-    <span class="eyebrow">How it works</span>
-    <h2>From fundus image to clinical report — on-device</h2>
-    <p class="lead">A deterministic, auditable pipeline. The clinical guideline makes the decision; the optional local LLM only writes the prose.</p>
-    <div class="flow">
-      <div class="step"><h4>Capture &amp; upload</h4><p>Load fundus images (OD/OI) from any camera into the desktop app.</p></div>
-      <div class="step"><h4>AI detection</h4><p>Local ONNX models find lesions (hemorrhages, exudates, edema, microaneurysms…).</p></div>
-      <div class="step"><h4>Review</h4><p>Inspect, correct and annotate on a multi-layer canvas with measurement tools.</p></div>
-      <div class="step"><h4>Classify</h4><p>The pluggable guideline grades severity with treatment and follow-up — deterministic, no black box.</p></div>
-      <div class="step"><h4>Report</h4><p>A configurable PDF; an optional in-process LLM polishes the prose, never the decision.</p></div>
-      <div class="step"><h4>Export</h4><p>Portable, encrypted <code>.dird</code> containers move data between installations.</p></div>
+      <!-- HERO SCREENSHOT -->
+      <div class="hero-screenshot">
+        <div class="screenshot-frame">
+          <div class="screenshot-titlebar">
+            <div class="screenshot-dot"></div>
+            <div class="screenshot-dot"></div>
+            <div class="screenshot-dot"></div>
+            <span>DIRD+</span>
+          </div>
+          <img src="img/hero.webp" alt="DIRD+ — Main view with lesion detections" onerror="this.outerHTML='<div class=screenshot-placeholder>Image: hero.webp</div>'">
+        </div>
+      </div>
     </div>
-  </div>
-</section>
+  </header>
 
-<section id="open">
-  <div class="wrap">
-    <span class="eyebrow">Open by design</span>
-    <h2>A platform, not a black box</h2>
-    <div class="split">
-      <div class="panel">
-        <h3>🧩 Bring your own model</h3>
-        <p style="color:var(--muted)">Train on your own cohort and deploy inside DIRD+ — no vendor lock-in.</p>
-        <ul>
-          <li>Standard ONNX, input <code>[1,3,640,640]</code></li>
-          <li>Declare classes &amp; metadata in a JSON model card</li>
-          <li>Schema + tensor-shape + inference validation on load</li>
-          <li>CLI validator and a documented contract</li>
+  <!-- EXPLAIN SIMPLE -->
+  <section id="explicame" style="padding: 5rem 0 2rem; background: var(--bg-subtle);">
+    <div class="container">
+      <div class="section-header animate-in">
+        <div class="section-label">Plain language</div>
+        <h2 class="section-title">Explain it simply</h2>
+        <p class="section-subtitle">What DIRD+ does, why it matters, and how it's used — in clear language, no jargon.</p>
+      </div>
+
+      <div class="explain-grid animate-in">
+        <article class="explain-card">
+          <div class="explain-num">1</div>
+          <h3>What is this?</h3>
+          <p>An application that looks at fundus photographs of your eye and detects signs of damage caused by diabetes. The AI marks the lesions; the clinician reviews and decides.</p>
+        </article>
+
+        <article class="explain-card">
+          <div class="explain-num">2</div>
+          <h3>Why does it matter?</h3>
+          <p>Diabetes can damage the retina <b>without the patient noticing</b> until vision is already affected. Catching it early prevents the leading cause of preventable blindness in working-age adults.</p>
+        </article>
+
+        <article class="explain-card">
+          <div class="explain-num">3</div>
+          <h3>Who uses it?</h3>
+          <p>Healthcare professionals: ophthalmology, optometry, general practice, primary care. The AI <b>assists</b>, it does not diagnose on its own — the clinician validates every finding before the report.</p>
+        </article>
+
+        <article class="explain-card">
+          <div class="explain-num">4</div>
+          <h3>Is my data safe?</h3>
+          <p>Yes. All analysis runs <b>on the clinician's device</b>. Images are never uploaded to the cloud or to any external server. Zero patient data exposure to the internet.</p>
+        </article>
+
+        <article class="explain-card explain-card-highlight">
+          <div class="explain-num">5</div>
+          <h3>How good is it?</h3>
+          <p>Evaluated on <b>3,662 images</b> the model had never seen. At its operating point (calibrated and cross-validated) it correctly detects <b>97 out of 100</b> cases with retinopathy and rules out <b>93 out of 100</b> healthy eyes. On patients from other countries its discriminative power stays high (AUC 0.84–0.95).</p>
+          <a href="#validacion" class="explain-link">See validation details →</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .explain-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-top: 2.5rem;
+    }
+    .explain-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem 1.5rem;
+      position: relative;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s, background 0.3s;
+    }
+    .explain-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(32,181,174,0.35);
+      background: var(--surface-hover);
+    }
+    .explain-num {
+      position: absolute;
+      top: -14px;
+      left: 1.5rem;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-bright));
+      box-shadow: 0 6px 18px rgba(32,181,174,0.35);
+    }
+    .explain-card h3 {
+      margin: 0.5rem 0 0.75rem;
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+    .explain-card p {
+      margin: 0;
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: var(--text-secondary);
+    }
+    .explain-card-highlight {
+      grid-column: 1 / -1;
+      border-color: rgba(216,122,26,0.35);
+      background: linear-gradient(135deg, rgba(216,122,26,0.06), rgba(32,181,174,0.04));
+    }
+    .explain-card-highlight .explain-num {
+      background: linear-gradient(135deg, var(--accent), #f59e0b);
+      box-shadow: 0 6px 18px rgba(216,122,26,0.4);
+    }
+    .explain-link {
+      display: inline-block;
+      margin-top: 0.85rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--primary-bright);
+    }
+    .explain-link:hover { color: #fff; }
+    @media (max-width: 720px) {
+      .explain-card-highlight { grid-column: auto; }
+    }
+  </style>
+
+  <!-- FEATURES -->
+  <section id="caracteristicas">
+    <div class="container">
+      <div class="section-header animate-in">
+        <div class="section-label">Platform</div>
+        <h2 class="section-title">Assisted detection for ophthalmology</h2>
+        <p class="section-subtitle"><a class="wlink" href="https://www.ultralytics.com/yolo" target="_blank" rel="noopener">YOLO</a> model trained on fundus images, run locally, with clinical reports generated on-device.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card animate-in">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+          <h3>Multiclass detection</h3>
+          <p>Optic disc, fovea, hemorrhages, hard and soft exudates, microhemorrhages, and edema. 11 classes defined, 7 active.</p>
+        </div>
+        <div class="feature-card animate-in">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 4v4"/><path d="M16 4v4"/></svg>
+          </div>
+          <h3>Local AI, no cloud</h3>
+          <p><a class="wlink" href="https://en.wikipedia.org/wiki/Open_Neural_Network_Exchange" target="_blank" rel="noopener">ONNX</a> model running locally via ONNX Runtime inside the Tauri binary. Patient data never leaves the device.</p>
+        </div>
+        <div class="feature-card animate-in">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <h3>Clinical reports</h3>
+          <p>Automatic PDF report generation with findings, metrics, and visualization. Pluggable clinical-guidelines engine.</p>
+        </div>
+        <div class="feature-card animate-in">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h3>Fast screening</h3>
+          <p>Inference in seconds per image. Designed for high-volume screening workflows in primary care and telemedicine.</p>
+        </div>
+        <div class="feature-card animate-in">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3>Data sovereignty</h3>
+          <p>Zero transfer to external servers. Built around strict privacy principles and data-protection best practices.</p>
+        </div>
+        <div class="feature-card animate-in">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <h3>Cross-platform architecture</h3>
+          <p>Tauri desktop (Windows/Linux/macOS). The <a class="wlink" href="https://en.wikipedia.org/wiki/Open_Neural_Network_Exchange" target="_blank" rel="noopener">ONNX</a> model runs inside the app, fully on-device.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHOWCASE: DETECCIÓN -->
+  <section style="background: var(--bg-subtle);">
+    <div class="container">
+      <div class="showcase animate-in">
+        <div class="showcase-text">
+          <div class="showcase-label">Detection on fundus</div>
+          <h3 class="showcase-title">Boxes and scores on the fundus image</h3>
+          <p class="showcase-desc">The model marks each lesion with a color according to type (hemorrhage, exudate, microhemorrhage) and severity. The clinician reviews, corrects, and validates before generating the report.</p>
+        </div>
+        <div class="showcase-img">
+          <img src="img/deteccion.webp" alt="Lesion detection on fundus image" onerror="this.outerHTML='<div class=screenshot-placeholder>Image: deteccion.webp</div>'">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHOWCASE: REPORTS -->
+  <section>
+    <div class="container">
+      <div class="showcase reverse animate-in">
+        <div class="showcase-text">
+          <div class="showcase-label">Reports</div>
+          <h3 class="showcase-title">Decision-support report — the clinician decides</h3>
+          <p class="showcase-desc">Editable PDF template with the analyzed image, detected findings, and severity suggested by the model. The clinician reviews, adjusts as needed, and signs. The AI provides an organized format; diagnostic judgment and the final report always remain with the clinician.</p>
+        </div>
+        <div class="showcase-img">
+          <img src="img/reporte.webp" alt="Clinical PDF report generated by DIRD+" onerror="this.outerHTML='<div class=screenshot-placeholder>Image: reporte.webp</div>'">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHOWCASE: CLINICAL FLOW -->
+  <section style="background: var(--bg-subtle);">
+    <div class="container">
+      <div class="showcase animate-in">
+        <div class="showcase-text">
+          <div class="showcase-label">Clinical workflow</div>
+          <h3 class="showcase-title">From image to screening in minutes</h3>
+          <p class="showcase-desc">Fundus upload, local inference, clinician review, validation of findings, and report generation. All without opening the browser to the internet.</p>
+        </div>
+        <div class="showcase-img">
+          <img src="img/flujo.svg" alt="DIRD+ clinical flow: capture, local inference, clinician review, validation, and signed report">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARRUSEL EJEMPLOS DIRDv2r0 -->
+  <section id="ejemplos" class="carousel-section">
+    <div class="container">
+      <div class="section-header animate-in">
+        <div class="section-label">Live examples</div>
+        <h2 class="section-title">DIRDv2r0 on real fundus images</h2>
+        <p class="section-subtitle">Local inference with YOLOv26s end2end <a class="wlink" href="https://en.wikipedia.org/wiki/Object_detection" target="_blank" rel="noopener">NMS</a>. Boxes and scores generated without sending images to the internet.</p>
+      </div>
+
+      <div class="carousel animate-in" id="dirdCarousel" aria-roledescription="carousel" aria-label="DIRDv2r0 detection examples">
+        <div class="carousel-track" id="carouselTrack"></div>
+        <button class="carousel-btn prev" id="carouselPrev" aria-label="Previous">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="carousel-btn next" id="carouselNext" aria-label="Next">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="carousel-counter" id="carouselCounter">1 / 1</div>
+      </div>
+
+      <div class="carousel-stats animate-in">
+        <div class="carousel-stat">
+          <div class="v">3,662</div>
+          <div class="l">Images inferred</div>
+        </div>
+        <div class="carousel-stat">
+          <div class="v">1,250.75 s</div>
+          <div class="l">Total time</div>
+        </div>
+        <div class="carousel-stat">
+          <div class="v">~2.93 img/s</div>
+          <div class="l">Throughput (~341 ms/img)</div>
+        </div>
+      </div>
+      <p class="carousel-note">Client-side benchmark, PC without GPU, DIRDv2r0 (YOLOv26s end2end <a class="wlink" href="https://www.ultralytics.com/glossary/non-maximum-suppression-nms" target="_blank" rel="noopener">NMS</a>, 640×640). 100% local inference on the desktop.</p>
+    </div>
+  </section>
+
+  <!-- MODEL -->
+  <section id="modelo" class="model-section">
+    <div class="container">
+      <div class="section-header animate-in">
+        <div class="section-label">AI Model</div>
+        <h2 class="section-title">Progress in <code style="font-family:inherit;color:var(--primary-bright)">dird_models</code></h2>
+        <p class="section-subtitle"><a class="wlink" href="https://en.wikipedia.org/wiki/Open_Neural_Network_Exchange" target="_blank" rel="noopener">ONNX</a> models published in the <a href="https://github.com/Debaq/dird_models">dird_models</a> repository. Open weights, documented, reproducible.</p>
+      </div>
+
+      <div class="model-grid">
+
+        <!-- v2.0.0 -->
+        <div class="model-card is-latest animate-in">
+          <div class="corner-ribbon"><a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a> 0.91<small>APTOS · <a class="wlink" href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)" target="_blank" rel="noopener">5-fold CV</a></small></div>
+          <div class="model-header">
+            <div>
+              <div class="model-version">
+                DIRDv2r0
+                <small>detection-v2.0.0 · YOLOv26s end2end <a class="wlink" href="https://www.ultralytics.com/glossary/non-maximum-suppression-nms" target="_blank" rel="noopener">NMS</a></small>
+              </div>
+            </div>
+            <span class="model-badge badge-current">Externally validated</span>
+          </div>
+          <div class="model-meta">
+            <span><b>Trained:</b> 2026-04-21</span>
+            <span><b>Input:</b> 640×640</span>
+            <span><b>Classes:</b> 6 active</span>
+          </div>
+
+          <div class="metrics">
+            <div class="metric"><div class="metric-value">0.978</div><div class="metric-label">Sensitivity</div></div>
+            <div class="metric"><div class="metric-value">0.933</div><div class="metric-label">Specificity</div></div>
+            <div class="metric"><div class="metric-value">0.911</div><div class="metric-label"><a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a></div></div>
+            <div class="metric"><div class="metric-value">0.967</div><div class="metric-label"><a class="wlink" href="https://en.wikipedia.org/wiki/Receiver_operating_characteristic" target="_blank" rel="noopener">AUC-ROC</a></div></div>
+          </div>
+          <p style="margin:0.6rem 0 0;font-size:0.75rem;color:var(--text-dim);">Operating point calibrated on <b>APTOS 2019</b> (n=3,662) and verified with <a class="wlink" href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)" target="_blank" rel="noopener">5-fold CV</a> — <i>in-distribution</i>. Out-of-domain discrimination (threshold-free): AUC 0.95. See details below.</p>
+
+          <div class="per-class">
+            <h4><a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP@50</a> per class (internal training)</h4>
+            <div class="class-row"><span class="class-name">Optic disc</span><span class="class-map">0.995</span><div class="class-bar"><div class="class-bar-fill" style="width:99.5%"></div></div></div>
+            <div class="class-row"><span class="class-name">Fovea</span><span class="class-map">0.855</span><div class="class-bar"><div class="class-bar-fill" style="width:85.5%"></div></div></div>
+            <div class="class-row"><span class="class-name">Cotton wool spot</span><span class="class-map">0.590</span><div class="class-bar"><div class="class-bar-fill" style="width:59.0%"></div></div></div>
+            <div class="class-row"><span class="class-name">Microhemorrhages</span><span class="class-map">0.502</span><div class="class-bar"><div class="class-bar-fill" style="width:50.2%"></div></div></div>
+            <div class="class-row"><span class="class-name">Hard exudate</span><span class="class-map">0.364</span><div class="class-bar"><div class="class-bar-fill" style="width:36.4%"></div></div></div>
+            <div class="class-row"><span class="class-name">Hemorrhage</span><span class="class-map">0.161</span><div class="class-bar"><div class="class-bar-fill" style="width:16.1%"></div></div></div>
+          </div>
+
+          <div class="model-status ok">
+            <b>Status:</b> VALIDATED · Recommended operating point <code>PCT_fpr02</code> (per-class τ calibrated to FPR≤2%). <a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a> 0.91 stable on <a class="wlink" href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)" target="_blank" rel="noopener">5-fold CV</a> (σ≤0.015). ~9 FPS CPU.
+          </div>
+
+          <a href="https://github.com/Debaq/dird_models/blob/main/detection-v2.0.0.json" class="model-link">
+            View v2.0.0 metadata
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+
+        <!-- v1.0.1 -->
+        <div class="model-card animate-in">
+          <div class="model-header">
+            <div>
+              <div class="model-version">
+                DIRDv1r1
+                <small>detection-v1.0.1 · YOLOv11</small>
+              </div>
+            </div>
+            <span class="model-badge badge-prev">Previous stable</span>
+          </div>
+          <div class="model-meta">
+            <span><b>Trained:</b> 2024-12-15</span>
+            <span><b>Input:</b> 640×640</span>
+            <span><b>Classes:</b> 11 (7 active)</span>
+          </div>
+
+          <div class="metrics">
+            <div class="metric"><div class="metric-value">0.826</div><div class="metric-label"><a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP50</a></div></div>
+            <div class="metric"><div class="metric-value">0.450</div><div class="metric-label"><a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP50-95</a></div></div>
+            <div class="metric"><div class="metric-value">0.820</div><div class="metric-label">Precision</div></div>
+            <div class="metric"><div class="metric-value">0.790</div><div class="metric-label">Recall</div></div>
+          </div>
+
+          <div class="per-class">
+            <h4><a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP50</a> per class</h4>
+            <div class="class-row"><span class="class-name">Optic disc</span><span class="class-map">0.984</span><div class="class-bar"><div class="class-bar-fill" style="width:98.4%"></div></div></div>
+            <div class="class-row"><span class="class-name">Fovea</span><span class="class-map">0.957</span><div class="class-bar"><div class="class-bar-fill" style="width:95.7%"></div></div></div>
+            <div class="class-row"><span class="class-name">Edema *</span><span class="class-map">0.995</span><div class="class-bar"><div class="class-bar-fill" style="width:99.5%"></div></div></div>
+            <div class="class-row"><span class="class-name">Cotton wool spot</span><span class="class-map">0.830</span><div class="class-bar"><div class="class-bar-fill" style="width:83.0%"></div></div></div>
+            <div class="class-row"><span class="class-name">Hard exudate</span><span class="class-map">0.781</span><div class="class-bar"><div class="class-bar-fill" style="width:78.1%"></div></div></div>
+            <div class="class-row"><span class="class-name">Hemorrhage</span><span class="class-map">0.698</span><div class="class-bar"><div class="class-bar-fill" style="width:69.8%"></div></div></div>
+            <div class="class-row"><span class="class-name">Microhemorrhages</span><span class="class-map">0.538</span><div class="class-bar"><div class="class-bar-fill" style="width:53.8%"></div></div></div>
+          </div>
+
+          <div class="model-note">
+            * edema with low validation support (severe class imbalance). Global metrics better than v2, but v2 uses end2end <a class="wlink" href="https://www.ultralytics.com/glossary/non-maximum-suppression-nms" target="_blank" rel="noopener">NMS</a> architecture with tighter integration for edge deployment.
+          </div>
+
+          <a href="https://github.com/Debaq/dird_models/blob/main/detection-v1.0.1.json" class="model-link">
+            View v1.0.1 metadata
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Classes overview -->
+      <div class="classes-overview animate-in" style="margin-top:3rem;">
+        <div class="class-chip"><span class="class-chip-dot" style="background:#4dcac4"></span><span class="class-chip-name">Optic disc</span><span class="class-chip-sev">landmark</span></div>
+        <div class="class-chip"><span class="class-chip-dot" style="background:#4dcac4"></span><span class="class-chip-name">Fovea</span><span class="class-chip-sev">landmark</span></div>
+        <div class="class-chip"><span class="class-chip-dot" style="background:#fbbf24"></span><span class="class-chip-name">Hard exudate</span><span class="class-chip-sev">moderate</span></div>
+        <div class="class-chip"><span class="class-chip-dot" style="background:#fb923c"></span><span class="class-chip-name">Hemorrhage</span><span class="class-chip-sev">mod–severe</span></div>
+        <div class="class-chip"><span class="class-chip-dot" style="background:#fb923c"></span><span class="class-chip-name">Cotton wool spot</span><span class="class-chip-sev">mod–severe</span></div>
+        <div class="class-chip"><span class="class-chip-dot" style="background:#fcd34d"></span><span class="class-chip-name">Microhemorrhages</span><span class="class-chip-sev">mild–mod</span></div>
+        <div class="class-chip"><span class="class-chip-dot" style="background:#ef4444"></span><span class="class-chip-name">Edema</span><span class="class-chip-sev">severe</span></div>
+        <div class="class-chip reserved"><span class="class-chip-dot" style="background:#a3a3a3"></span><span class="class-chip-name">Microaneurysm</span><span class="class-chip-sev">mild</span></div>
+        <div class="class-chip reserved"><span class="class-chip-dot" style="background:#a3a3a3"></span><span class="class-chip-name">Neovascularization</span><span class="class-chip-sev">severe</span></div>
+        <div class="class-chip reserved"><span class="class-chip-dot" style="background:#a3a3a3"></span><span class="class-chip-name">Venous beading</span><span class="class-chip-sev">severe</span></div>
+        <div class="class-chip reserved"><span class="class-chip-dot" style="background:#a3a3a3"></span><span class="class-chip-name">IRMA</span><span class="class-chip-sev">severe</span></div>
+      </div>
+
+      <p style="text-align:center;margin-top:2rem;font-size:0.85rem;color:var(--text-dim);">
+        Segmentation (vessels, MA, exudates, hemorrhages, neovascularization) in active development — not yet released.
+      </p>
+    </div>
+  </section>
+
+  <!-- VALIDATION -->
+  <section id="validacion" class="model-section" style="padding-top:0;">
+    <div class="container">
+      <div class="section-header animate-in">
+        <div class="section-label">Clinical validation</div>
+        <h2 class="section-title">External validation of <code style="font-family:inherit;color:var(--primary-bright)">DIRDv2r0</code></h2>
+        <p class="section-subtitle">Binary evaluation (normal vs. retinopathy) on public datasets not used for training. No retraining, only operating-point calibration.</p>
+      </div>
+
+      <div class="model-grid" style="grid-template-columns:1fr;">
+
+        <div class="model-card is-latest animate-in">
+          <div class="model-header">
+            <div>
+              <div class="model-version">
+                APTOS 2019
+                <small>n=3,662 · India · 49.3% normal / 50.7% DR</small>
+              </div>
+            </div>
+            <span class="model-badge badge-current">Completed</span>
+          </div>
+          <div class="model-meta">
+            <span><b>Closed:</b> 2026-04-30</span>
+            <span><b>Design:</b> Stratified <a class="wlink" href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)" target="_blank" rel="noopener">5-fold CV</a></span>
+            <span><b>Hardware:</b> CPU, <a class="wlink" href="https://en.wikipedia.org/wiki/Open_Neural_Network_Exchange" target="_blank" rel="noopener">ONNX</a> Runtime</span>
+          </div>
+
+          <div class="metrics">
+            <div class="metric"><div class="metric-value">0.978</div><div class="metric-label">Sens (±0.013)</div></div>
+            <div class="metric"><div class="metric-value">0.933</div><div class="metric-label">Spec (±0.004)</div></div>
+            <div class="metric"><div class="metric-value">0.911</div><div class="metric-label"><a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a> (±0.015)</div></div>
+            <div class="metric"><div class="metric-value">0.967</div><div class="metric-label"><a class="wlink" href="https://en.wikipedia.org/wiki/Receiver_operating_characteristic" target="_blank" rel="noopener">AUC-ROC</a></div></div>
+          </div>
+
+          <div class="per-class">
+            <h4>Sensitivity by APTOS grade (baseline conf=0.25)</h4>
+            <div class="class-row"><span class="class-name">Grade 1 — Mild DR</span><span class="class-map">0.989</span><div class="class-bar"><div class="class-bar-fill" style="width:98.9%"></div></div></div>
+            <div class="class-row"><span class="class-name">Grade 2 — Moderate DR</span><span class="class-map">0.999</span><div class="class-bar"><div class="class-bar-fill" style="width:99.9%"></div></div></div>
+            <div class="class-row"><span class="class-name">Grade 3 — Severe DR</span><span class="class-map">1.000</span><div class="class-bar"><div class="class-bar-fill" style="width:100%"></div></div></div>
+            <div class="class-row"><span class="class-name">Grade 4 — Proliferative DR</span><span class="class-map">0.997</span><div class="class-bar"><div class="class-bar-fill" style="width:99.7%"></div></div></div>
+          </div>
+
+          <div class="model-status ok">
+            <b>Operating point:</b> <button type="button" class="exp-trigger" data-exp-open aria-haspopup="dialog"><code>PCT_fpr02</code></button> — per-class τ calibrated to FPR≤2% on normals: hard_exudate 0.63 · microhemorrhages 0.26 · cotton_wool_spot 0.85 · hemorrhage 0.05.
+            <button type="button" class="exp-link" data-exp-open aria-haspopup="dialog">View experiments →</button>
+          </div>
+
+          <div class="model-note">
+            6 experiments (baseline run, conf/N sweep, per-class calibration, <a class="wlink" href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)" target="_blank" rel="noopener">5-fold CV</a>, area filter, area×per-class). <a class="wlink" href="https://en.wikipedia.org/wiki/Positive_and_negative_predictive_values" target="_blank" rel="noopener">PPV</a> 0.876 · <a class="wlink" href="https://en.wikipedia.org/wiki/Positive_and_negative_predictive_values" target="_blank" rel="noopener">NPV</a> 0.995 · <a class="wlink" href="https://en.wikipedia.org/wiki/Youden%27s_J_statistic" target="_blank" rel="noopener">Youden J</a> 0.909. Median latency 112 ms (p95 127 ms) on CPU.
+          </div>
+
+          <a href="INFORME_COMPLETO_APTOS.md" class="model-link" target="_blank" rel="noopener">
+            View full report
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+          <a href="dird-aptos-scripts.zip" class="model-link" download>
+            Download validation scripts (.zip, 37 KB)
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="model-grid val-pair" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));margin-top:1.5rem;">
+
+        <div class="model-card animate-in">
+          <div class="model-header">
+            <div>
+              <div class="model-version">
+                Messidor-2
+                <small>n=1,057 · France · preprocessed mirror</small>
+              </div>
+            </div>
+            <span class="model-badge badge-pre">Preliminary</span>
+          </div>
+          <div class="model-meta">
+            <span><b>Closed:</b> 2026-06-20</span>
+            <span><b>Design:</b> frozen APTOS τ (no refit)</span>
+          </div>
+
+          <div class="metrics">
+            <div class="metric"><div class="metric-value">0.672</div><div class="metric-label">Sens</div></div>
+            <div class="metric"><div class="metric-value">0.831</div><div class="metric-label">Spec</div></div>
+            <div class="metric"><div class="metric-value">0.503</div><div class="metric-label"><a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a></div></div>
+            <div class="metric"><div class="metric-value">0.813</div><div class="metric-label"><a class="wlink" href="https://en.wikipedia.org/wiki/Receiver_operating_characteristic" target="_blank" rel="noopener">AUC-ROC</a></div></div>
+          </div>
+
+          <div class="model-status">
+            <b>Transportability confirmed</b> (ΔMCC ≈ 0 vs. refit), but the absolute AUC is <b>confounded by the preprocessed mirror</b> (not raw ADCIS).
+          </div>
+
+          <div class="model-note">
+            Part of the AUC drop is an artifact of the mirror's preprocessing, not a real population shift. DDR (raw images) is the clean version of this test. Raw-ADCIS re-run pending. <a href="https://github.com/Debaq/Dird/tree/main/validation/experiment-3-messidor" class="wlink" target="_blank" rel="noopener">See experiment 3 →</a>
+          </div>
+        </div>
+
+        <div class="model-card animate-in">
+          <div class="model-header">
+            <div>
+              <div class="model-version">
+                DDR
+                <small>n=12,522 · China · raw · 50/50</small>
+              </div>
+            </div>
+            <span class="model-badge badge-current">Completed</span>
+          </div>
+          <div class="model-meta">
+            <span><b>Closed:</b> 2026-06-20</span>
+            <span><b>Design:</b> frozen APTOS τ (no refit)</span>
+            <span><b>Hardware:</b> CPU, <a class="wlink" href="https://en.wikipedia.org/wiki/Open_Neural_Network_Exchange" target="_blank" rel="noopener">ONNX</a> Runtime</span>
+          </div>
+
+          <div class="metrics">
+            <div class="metric"><div class="metric-value">0.603</div><div class="metric-label">Sens</div></div>
+            <div class="metric"><div class="metric-value">0.914</div><div class="metric-label">Spec</div></div>
+            <div class="metric"><div class="metric-value">0.544</div><div class="metric-label"><a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a></div></div>
+            <div class="metric"><div class="metric-value">0.840</div><div class="metric-label"><a class="wlink" href="https://en.wikipedia.org/wiki/Receiver_operating_characteristic" target="_blank" rel="noopener">AUC-ROC</a></div></div>
+          </div>
+
+          <div class="model-status ok">
+            <b>Transportability confirmed and clean:</b> ΔMCC = +0.007 (refitting on DDR gives no gain). Different population (China), raw images, no confounder.
+          </div>
+
+          <div class="model-note">
+            <a class="wlink" href="https://en.wikipedia.org/wiki/Receiver_operating_characteristic" target="_blank" rel="noopener">AUC</a> OOD 0.840 [0.833–0.847] (<a class="wlink" href="https://en.wikipedia.org/wiki/Bootstrapping_(statistics)" target="_blank" rel="noopener">bootstrap</a> 95%, 2000 iters). At <code>FROZEN_fpr02</code> the operating point is conservative (sens 0.60); <code>FROZEN_fpr05</code> rebalances to sens 0.73 / spec 0.85 without refit. Real, modest OOD drop (0.95 → 0.84). <a href="https://github.com/Debaq/Dird/tree/main/validation/experiment-4-ddr" class="wlink" target="_blank" rel="noopener">See experiment 4 →</a>
+          </div>
+        </div>
+
+      </div>
+
+      <p style="text-align:center;margin-top:2rem;font-size:0.85rem;color:var(--text-dim);">
+        Limitation: APTOS does not provide lesion-level annotations, so validation is at the per-image binary classification level (no <a class="wlink" href="https://en.wikipedia.org/wiki/Jaccard_index" target="_blank" rel="noopener">IoU</a>/<a class="wlink" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)#Mean_average_precision" target="_blank" rel="noopener">mAP</a>). External validation on DDR (China) and Messidor-2 (France) confirms the threshold transports across cohorts, with a quantified discrimination drop (OOD AUC ≈ 0.84).
+      </p>
+    </div>
+  </section>
+
+  <!-- RELEASES -->
+  <section id="descargas" class="releases-section">
+    <div class="container">
+      <div class="section-header animate-in">
+        <div class="section-label">Downloads</div>
+        <h2 class="section-title">Get the latest version</h2>
+        <p class="section-subtitle">Desktop executable (Linux, Windows, macOS), updated directly from GitHub Releases.</p>
+      </div>
+
+      <div id="releases-container">
+        <div class="loading">Loading releases...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DISCLAIMER + INSTITUTIONAL -->
+  <section style="padding: 2rem 0 0;">
+    <div class="container">
+      <div class="disclaimer animate-in">
+        <b>Important notice:</b> DIRD+ is a research and development system. It is not an approved medical device. It must not be used as the sole diagnostic criterion in real clinical settings. Every finding must be reviewed by a qualified ophthalmologist.
+      </div>
+    </div>
+  </section>
+
+  <section style="padding: 2.5rem 0 0;">
+    <div class="container">
+      <div class="institutional animate-in">
+        <div class="institutional-text">
+          Project developed at <strong>Universidad Austral de Chile</strong>, <strong>Puerto Montt, Chile</strong> 🇨🇱 campus. DIRD+ aims to close the screening gap in diabetic retinopathy: the leading preventable cause of blindness in working-age adults.
+        </div>
+      </div>
+
+      <div class="open-banner animate-in">
+        <div class="open-banner-row">
+          <span class="ob-pill ob-pill-strong">100% free</span>
+          <span class="ob-pill">Free software</span>
+          <span class="ob-pill ob-pill-mit">AGPLv3 license</span>
+          <span class="ob-pill">Open source</span>
+          <span class="ob-pill">🇨🇱 Made in Puerto Montt</span>
+        </div>
+        <p class="open-banner-text">
+          <b>DIRD+</b> (the app) and <b>dird_models</b> (the AI models) are <b>free and gratis</b>, distributed under <b>GNU AGPLv3</b>. No cloud, no subscription, no fine print.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <span class="logo">DIRD+</span>
+          <p>Diabetic retinopathy detection with edge-computing AI. Full privacy, open source.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Project</h4>
+          <a href="https://github.com/Debaq/Dird">Repository</a>
+          <a href="https://github.com/Debaq/Dird/releases">Releases</a>
+        </div>
+        <div class="footer-col">
+          <h4>Model</h4>
+          <a href="https://github.com/Debaq/dird_models">dird_models</a>
+          <a href="https://doi.org/10.5281/zenodo.19685466">Model DOI</a>
+          <a href="https://doi.org/10.5281/zenodo.19687226">App DOI</a>
+          <a href="https://doi.org/10.64898/2026.04.26.26351745">medRxiv preprint</a>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
+          <a href="https://github.com/Debaq/Dird/issues">Report an issue</a>
+          <a href="https://github.com/Debaq/Dird/discussions">Discussions</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>Nicolás Baier Quezada &mdash; Universidad Austral de Chile, Puerto Montt 🇨🇱</span>
+        <span>Free software · <a href="https://github.com/Debaq/Dird/blob/main/LICENSE" style="color:#fcd34d;">GNU AGPLv3</a> · Made with Tauri, React, and Rust</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- LIGHTBOX -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" aria-label="Close">&times;</button>
+    <img src="" alt="">
+  </div>
+
+  <script>
+    /* Lightbox */
+    (function() {
+      const lb = document.getElementById('lightbox');
+      const lbImg = lb.querySelector('img');
+      const lbClose = lb.querySelector('.lightbox-close');
+
+      function open(src, alt) {
+        lbImg.src = src;
+        lbImg.alt = alt || '';
+        requestAnimationFrame(() => lb.classList.add('open'));
+        document.body.style.overflow = 'hidden';
+      }
+      function close() {
+        lb.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+      document.addEventListener('click', function(e) {
+        const img = e.target.closest('.screenshot-frame img, .showcase-img img');
+        if (img) { e.preventDefault(); open(img.src, img.alt); }
+      });
+      lb.addEventListener('click', function(e) {
+        if (e.target === lb || e.target === lbClose || lbClose.contains(e.target)) close();
+      });
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && lb.classList.contains('open')) close();
+      });
+    })();
+
+    /* Scroll animations */
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('visible'), i * 80);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+
+    /* Nav scroll effect */
+    window.addEventListener('scroll', () => {
+      document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    /* Releases (GitHub API) */
+    const REPO = 'Debaq/Dird';
+    const API = `https://api.github.com/repos/${REPO}/releases`;
+
+    const PLATFORM_MAP = {
+      '.msi':      { label: 'Windows (MSI)',      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.45H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.45L0 20.699M10.949 12.6H24V24l-13.051-1.851"/></svg>' },
+      '.exe':      { label: 'Windows (EXE)',      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.45H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.45L0 20.699M10.949 12.6H24V24l-13.051-1.851"/></svg>' },
+      '.deb':      { label: 'Linux (DEB)',        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>' },
+      '.rpm':      { label: 'Linux (RPM)',        icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>' },
+      '.AppImage': { label: 'Linux (AppImage)',   icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>' },
+      '.zip':      { label: 'Web (bundle)',       icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18"/></svg>' },
+      '.tar.gz':   { label: 'Linux (tarball)',    icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>' },
+    };
+
+    function detectPlatform(name) {
+      if (name.endsWith('.tar.gz')) return PLATFORM_MAP['.tar.gz'];
+      for (const [ext, data] of Object.entries(PLATFORM_MAP)) {
+        if (name.endsWith(ext)) return data;
+      }
+      return null;
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function formatDate(dateStr) {
+      return new Date(dateStr).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric'
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function renderRelease(release, isLatest) {
+      const assets = release.assets
+        .filter(a => detectPlatform(a.name))
+        .map(a => {
+          const p = detectPlatform(a.name);
+          return `<a href="${a.browser_download_url}" class="asset-btn">
+            ${p.icon} ${p.label}
+            <span class="asset-size">${formatSize(a.size)}</span>
+          </a>`;
+        }).join('');
+
+      const badge = release.prerelease
+        ? '<span class="release-badge badge-pre">Pre-release</span>'
+        : isLatest
+          ? '<span class="release-badge badge-latest">Latest version</span>'
+          : '';
+
+      const bodyHtml = release.body_html || '';
+      const body = bodyHtml ? `<div class="release-body">${bodyHtml}</div>` : '';
+      const latestClass = isLatest && !release.prerelease ? ' is-latest' : '';
+
+      return `
+        <div class="release-card${latestClass}">
+          <div class="release-header">
+            <div class="release-title-row">
+              <span class="release-tag">${escapeHtml(release.tag_name)}</span>
+              ${badge}
+            </div>
+            <span class="release-date">${formatDate(release.published_at)}</span>
+          </div>
+          ${body}
+          ${assets ? `<div class="release-assets">${assets}</div>` : ''}
+          <a href="${release.html_url}" class="release-link">View full notes on GitHub &rarr;</a>
+        </div>`;
+    }
+
+    async function loadReleases() {
+      const container = document.getElementById('releases-container');
+      try {
+        const res = await fetch(API, {
+          headers: { 'Accept': 'application/vnd.github.full+json' }
+        });
+        if (!res.ok) throw new Error(res.status);
+        const releases = await res.json();
+
+        if (!releases.length) {
+          container.innerHTML = `
+            <div class="no-releases">
+              No releases published yet.<br>
+              <a href="https://github.com/${REPO}">Follow development on GitHub &rarr;</a>
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = releases
+          .slice(0, 5)
+          .map((r, i) => renderRelease(r, i === 0 && !r.prerelease))
+          .join('');
+      } catch (e) {
+        container.innerHTML = `
+          <div class="no-releases">
+            Could not load releases.<br>
+            <a href="https://github.com/${REPO}/releases">View on GitHub &rarr;</a>
+          </div>`;
+      }
+    }
+
+    loadReleases();
+
+    /* CARRUSEL DIRDv2r0 */
+    (function initCarousel() {
+      const TOTAL_EJEMPLOS = 36;
+      const files = Array.from({ length: TOTAL_EJEMPLOS }, (_, i) =>
+        `ejemplo-${String(i + 1).padStart(2, '0')}.webp`
+      );
+
+      const track = document.getElementById('carouselTrack');
+      const counter = document.getElementById('carouselCounter');
+      const prevBtn = document.getElementById('carouselPrev');
+      const nextBtn = document.getElementById('carouselNext');
+      if (!track) return;
+
+      files.forEach((name, i) => {
+        const slide = document.createElement('div');
+        slide.className = 'carousel-slide' + (i === 0 ? ' is-active' : '');
+        const img = document.createElement('img');
+        img.src = 'img/carrusel/' + encodeURIComponent(name);
+        img.alt = 'DIRDv2r0 detection — example ' + (i + 1);
+        img.loading = i === 0 ? 'eager' : 'lazy';
+        img.decoding = 'async';
+        slide.appendChild(img);
+        track.appendChild(slide);
+      });
+
+      let idx = 0;
+      const total = files.length;
+      const slides = track.children;
+      let timer = null;
+
+      function go(n) {
+        slides[idx].classList.remove('is-active');
+        idx = (n + total) % total;
+        slides[idx].classList.add('is-active');
+        counter.textContent = (idx + 1) + ' / ' + total;
+      }
+      function next() { go(idx + 1); }
+      function prev() { go(idx - 1); }
+      function start() { stop(); timer = setInterval(next, 3500); }
+      function stop()  { if (timer) { clearInterval(timer); timer = null; } }
+
+      counter.textContent = '1 / ' + total;
+      nextBtn.addEventListener('click', () => { next(); start(); });
+      prevBtn.addEventListener('click', () => { prev(); start(); });
+
+      const carousel = document.getElementById('dirdCarousel');
+      carousel.addEventListener('mouseenter', stop);
+      carousel.addEventListener('mouseleave', start);
+
+      // Pausa si no es visible
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach(e => e.isIntersecting ? start() : stop());
+        }, { threshold: 0.25 });
+        io.observe(carousel);
+      } else {
+        start();
+      }
+    })();
+  </script>
+
+  <!-- ============== PCT_fpr02 experiments modal ============== -->
+  <div class="exp-modal-overlay" id="expModal" role="dialog" aria-modal="true" aria-labelledby="expModalTitle" hidden>
+    <div class="exp-modal" role="document">
+      <div class="exp-modal-header">
+        <div>
+          <h2 id="expModalTitle">PCT_fpr02 — recommended operating point</h2>
+          <p>How we calibrated DIRD+ v2 on APTOS 2019 (n=3,662) and why this point is the default.</p>
+        </div>
+        <button type="button" class="exp-close" data-exp-close aria-label="Close">×</button>
+      </div>
+
+      <div class="exp-modal-body">
+
+        <h3>0 · Context — what problem we solve</h3>
+        <p>
+          DIRD+ is designed primarily as a <strong>human-in-the-loop (HITL)</strong> tool:
+          a medical technologist or ophthalmologist works with the model, not replaced by it.
+          The model flags, suggests and prioritizes; the human reviews, validates and decides.
+          As a secondary mode, it can run as <strong>autonomous screening</strong> when context
+          requires it (rural posts, mass screening, no specialist on site).
+        </p>
+        <p>
+          This validation evaluates the <strong>autonomous mode</strong> — the model alone,
+          unassisted — because that is the setup measurable against APTOS labels. It is
+          deliberately the most demanding scenario: the worst case from the product's standpoint,
+          since the real use case (HITL) adds clinical judgment on top of the model output. The
+          operational question answered here is the binary screening one:
+          <strong>does this image need an ophthalmologist's attention, yes or no?</strong>
+        </p>
+        <p>
+          To validate that we used <strong>APTOS 2019 Blindness Detection</strong> (Kaggle,
+          n=3,662 images), labeled with the International Clinical Diabetic Retinopathy (ICDR)
+          scale, grades 0 to 4:
+        </p>
+        <table class="exp-table">
+          <thead>
+            <tr><th>ICDR grade</th><th>Meaning</th><th>Binary label</th><th>n</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td style="text-align:left">No retinopathy</td><td>NORMAL</td><td>1,805</td></tr>
+            <tr><td>1</td><td style="text-align:left">Mild DR</td><td>PATHOLOGICAL</td><td>370</td></tr>
+            <tr><td>2</td><td style="text-align:left">Moderate DR</td><td>PATHOLOGICAL</td><td>999</td></tr>
+            <tr><td>3</td><td style="text-align:left">Severe DR</td><td>PATHOLOGICAL</td><td>193</td></tr>
+            <tr><td>4</td><td style="text-align:left">Proliferative DR</td><td>PATHOLOGICAL</td><td>295</td></tr>
+          </tbody>
+        </table>
+        <p>
+          We <strong>binarize</strong> the ground truth: grade 0 → <code>NORMAL</code>, grades 1-4 →
+          <code>PATHOLOGICAL</code> (1,805 healthy vs 1,857 pathological, 49.3% / 50.7% — balanced).
+          The validation task reduces to <em>"given the detector output, which confidence thresholds
+          best separate healthy from pathological?"</em>. That is the question the whole experiment
+          chain pursues — and PCT_fpr02 is the calibrated answer.
+        </p>
+        <div class="exp-callout">
+          <b>Design note:</b> the model is a <em>lesion detector</em> (6 classes: hard_exudate,
+          hemorrhage, cotton_wool_spot, microhemorrhages, optic_disc, fovea), not a grade classifier.
+          The binary rule is: if <em>at least one</em> lesion fires above its threshold, the image is
+          flagged pathological. Anatomical classes (optic disc, fovea) are deliberately ignored
+          because they appear in every retina.
+        </div>
+
+        <h3>1 · What is PCT_fpr02?</h3>
+        <p>
+          <strong>PCT</strong> = <em>Per-Class Thresholds</em>.
+          <strong>FPR02</strong> = <em>False Positive Rate ≤ 2%</em> measured on normal fundi.
+        </p>
+        <p>
+          Instead of applying the same confidence threshold to every lesion class
+          (e.g. uniform 0.25), <strong>each lesion has its own threshold</strong>, calibrated so that
+          the false positive rate on healthy retinas stays below 2% per class.
+        </p>
+        <div class="exp-tau-grid">
+          <div><b>hard_exudate</b><span>τ = 0.63</span></div>
+          <div><b>microhemorrhages</b><span>τ = 0.26</span></div>
+          <div><b>cotton_wool_spot</b><span>τ = 0.85</span></div>
+          <div><b>hemorrhage</b><span>τ = 0.05</span></div>
+        </div>
+        <p>
+          Decision rule: <code>ABNORMAL ⇔ ∃ class c with score(c) ≥ τ[c]</code>. If only anatomical
+          landmarks (optic disc, fovea) or nothing is detected, the image is <code>NORMAL</code>.
+        </p>
+        <div class="exp-callout">
+          <b>Why it matters:</b> each lesion class has a different score distribution.
+          <code>microhemorrhages</code> is the model's strongest class (AUC 0.988) but flooded false
+          positives at τ=0.25 because its distribution starts lower. <code>hard_exudate</code> is the
+          opposite: it over-fires on normals and needs a high τ. Per-class calibration unlocks each
+          detector's actual capacity.
+        </div>
+
+        <h3>2 · How did we get there?</h3>
+        <p>
+          It wasn't an a-priori choice. <strong>Six chained experiments</strong>, each answering the
+          question the previous one left open:
+        </p>
+        <div class="exp-timeline">
+          <div class="exp-step">
+            <h4>Binary baseline — does it generalize out-of-domain?</h4>
+            <p class="exp-q">Question: trained on IDRiD; does it work on APTOS without retraining?</p>
+            <p class="exp-a">Yes, generalizes well (AUC 0.95). But at uniform conf=0.25 it produces <strong>981 false positives</strong> on 1,805 normals. Useful for screening, not for production.</p>
+            <p class="exp-metric">Sens 0.997 · Spec 0.456 · <a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a> 0.541</p>
+          </div>
+          <div class="exp-step">
+            <h4>conf/N sweep — what is the best uniform threshold?</h4>
+            <p class="exp-q">Question: does raising the threshold or requiring multiple detections fix it?</p>
+            <p class="exp-a">Best uniform point: <code>R3: conf≥0.40 ∧ N≥2</code>. We noticed something: using lesion <em>count</em> as score discriminated better (AUC 0.964) than max score (0.949). A hint that classes contributed heterogeneous signal.</p>
+            <p class="exp-metric">R3 → Sens 0.932 · Spec 0.918 · <a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a> 0.850</p>
+          </div>
+          <div class="exp-step">
+            <h4>Per-class calibration — what if each lesion gets its own threshold?</h4>
+            <p class="exp-a">We computed <a class="wlink" href="https://en.wikipedia.org/wiki/Receiver_operating_characteristic" target="_blank" rel="noopener">ROC</a> curves <em>per class</em> against the binary ground truth and picked τ with three criteria: <a class="wlink" href="https://en.wikipedia.org/wiki/Youden%27s_J_statistic" target="_blank" rel="noopener">Youden J</a>, FPR≤5%, FPR≤2%. <strong>FPR≤2% won</strong>: <a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a> jumped from 0.85 to 0.913 without sacrificing sensitivity. PCT_fpr02 was born here.</p>
+            <p class="exp-metric">PCT_fpr02 → Sens 0.978 · Spec 0.933 · <a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a> 0.913</p>
+          </div>
+          <div class="exp-step">
+            <h4><a class="wlink" href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)" target="_blank" rel="noopener">5-fold cross-validation</a> — overfitting or stable?</h4>
+            <p class="exp-q">Question: would those τ work on another sample, or did we memorize APTOS?</p>
+            <p class="exp-a">Stable. Max coefficient of variation: 8% (one τ only). Rest &lt;1%. Reproducible <a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a> 0.911 ± 0.015 across folds.</p>
+            <p class="exp-metric">CV: <a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a> 0.911 ± 0.015 · σ Spec ≤ 0.004</p>
+          </div>
+          <div class="exp-step">
+            <h4>Area filter — are FPs small bboxes?</h4>
+            <p class="exp-a">Partially true. Filtering bboxes &lt;800 px² lifted R3 <a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a> (0.85 → 0.88), but <strong>still below PCT_fpr02</strong>. Per-class calibration already discards low-quality detections in a score-driven way.</p>
+            <p class="exp-metric">R3+area800 → <a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a> 0.879</p>
+          </div>
+          <div class="exp-step">
+            <h4>Area × per-class — additive or redundant?</h4>
+            <p class="exp-a"><strong>Redundant.</strong> Combining both does not improve over PCT_fpr02 alone. Internal AUC rises with the filter but τ readjusts and compensates: the final result is invariant. Conclusion: ship per-class calibration as the only post-model intervention.</p>
+            <p class="exp-metric">PCT_fpr02 + area1200 → <a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a> 0.913 (unchanged)</p>
+          </div>
+        </div>
+
+        <h3>3 · Master table — all points compared</h3>
+        <table class="exp-table">
+          <thead>
+            <tr><th>Configuration</th><th>Sens</th><th>Spec</th><th><a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a></th><th><a class="wlink" href="https://en.wikipedia.org/wiki/Youden%27s_J_statistic" target="_blank" rel="noopener">Youden J</a></th></tr>
+          </thead>
+          <tbody>
+            <tr><td>conf=0.25 uniform (baseline)</td><td>0.997</td><td>0.456</td><td>0.541</td><td>0.453</td></tr>
+            <tr><td>R3 — conf≥0.40 ∧ N≥2</td><td>0.932</td><td>0.918</td><td>0.850</td><td>0.850</td></tr>
+            <tr class="is-best"><td>PCT_fpr02 (recommended)</td><td>0.978</td><td>0.933</td><td>0.913</td><td>0.911</td></tr>
+            <tr><td>PCT_fpr02 (<a class="wlink" href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)" target="_blank" rel="noopener">5-fold CV</a>)</td><td>0.978 ± 0.013</td><td>0.931 ± 0.004</td><td>0.911 ± 0.015</td><td>0.909 ± 0.014</td></tr>
+            <tr><td>R3 + area filter 800 px²</td><td>0.925</td><td>0.954</td><td>0.879</td><td>0.879</td></tr>
+            <tr><td>PCT_youden_n2 (high-spec)</td><td>0.915</td><td>0.974</td><td>0.890</td><td>0.889</td></tr>
+          </tbody>
+        </table>
+
+        <h3>4 · Alternative modes by use case</h3>
+        <table class="exp-table">
+          <thead>
+            <tr><th>Mode</th><th>Sens</th><th>Spec</th><th>When</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Max-sens screening</td><td>0.997</td><td>0.456</td><td style="text-align:left">Mass screening, no missed cases tolerated</td></tr>
+            <tr class="is-best"><td>Balanced production (PCT_fpr02)</td><td>0.978</td><td>0.933</td><td style="text-align:left"><strong>Recommended default</strong></td></tr>
+            <tr><td>High-spec assistive</td><td>0.915</td><td>0.974</td><td style="text-align:left">Triage where over-flagging is costly</td></tr>
+            <tr><td>Confirmation / second opinion</td><td>0.747</td><td>0.997</td><td style="text-align:left">PCT_fpr02 + N≥2</td></tr>
+          </tbody>
+        </table>
+
+        <h3>5 · Scope of this validation</h3>
+        <p>
+          What this experiment measures is DIRD+'s <strong>autonomous mode</strong> — the model
+          operating alone against APTOS ground truth, unassisted. It's the most demanding scenario
+          for the product, and the numbers hold up: Sens 97.8% / Spec 93.1% / <a class="wlink" href="https://en.wikipedia.org/wiki/Phi_coefficient" target="_blank" rel="noopener">MCC</a> 0.91 at ~9 FPS
+          on CPU, with τ stable under <a class="wlink" href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)" target="_blank" rel="noopener">5-fold CV</a>.
+        </p>
+        <p>What this experiment does <em>not</em> cover:</p>
+        <ul style="margin: 0 0 0.75rem 1.1rem; padding: 0; font-size: 0.85rem; line-height: 1.6;">
+          <li><strong>Human-in-the-loop mode:</strong> the product's primary use case. Its validation is a <em>separate clinical study</em> — technologists labeling with and without AI, decisions with and without the algorithm, verifier as adjudicator. Another story, planned, not part of this technical validation.</li>
+          <li><strong>Cross-cohort:</strong> validated on APTOS 2019 (India) and externally on DDR (China, n=12,522, raw) and Messidor-2 (France). The frozen APTOS τ transports across populations (ΔMCC≈0); out-of-domain AUC is 0.84 (DDR) — a real, quantified drop from the 0.95 in-distribution figure.</li>
+          <li><strong>Clinical granularity:</strong> the operational output is binary "needs attention yes/no". ICDR 0-4 staging is a distinct task, owned by the specialist.</li>
+          <li><strong>Image-level metrics:</strong> APTOS provides no lesion-level annotations, so validation is reported as image-level binary classification — consistent with the use case.</li>
         </ul>
-        <a class="btn btn-ghost" style="margin-top:16px" href="https://github.com/Debaq/Dird/wiki/09.-Model-Interface">Model interface →</a>
-      </div>
-      <div class="panel">
-        <h3>📋 Pluggable clinical guidelines</h3>
-        <p style="color:var(--muted)">Adapt classification to any national protocol — guidelines are data, not code.</p>
-        <ul>
-          <li>5+ severity levels with treatment &amp; urgency</li>
-          <li>Per-quadrant spatial analysis (ICDR 4-2-1 rule)</li>
-          <li>Add a country's guideline as a JSON file</li>
-          <li>Human corrections preserved and traceable</li>
-        </ul>
-        <a class="btn btn-ghost" style="margin-top:16px" href="https://github.com/Debaq/Dird/wiki/10.-Clinical-Guidelines">Clinical guidelines →</a>
-      </div>
-    </div>
-    <div class="chips">
-      <span class="chip">Tauri v2</span><span class="chip">Rust</span><span class="chip">React + TypeScript</span>
-      <span class="chip">ONNX Runtime</span><span class="chip">llama.cpp (local LLM)</span><span class="chip">SQLite + SQLCipher</span>
-      <span class="chip">Argon2id</span><span class="chip">AES-256</span>
-    </div>
-  </div>
-</section>
+        <p>
+          In short: this validation covers the <strong>floor</strong> of the product (model alone).
+          The <strong>ceiling</strong> — performance in real HITL flow — is measured in a dedicated
+          clinical study.
+        </p>
 
-<section>
-  <div class="wrap">
-    <div class="cta">
-      <span class="eyebrow">Digital Public Good</span>
-      <h2>Built for equitable, sovereign health screening</h2>
-      <p>DIRD+ aligns with the Digital Public Goods Standard: open licensing, clear ownership, platform independence, privacy by design, and open standards (ONNX, PDF, SQLite, JSON, AES-256, Argon2id).</p>
-      <div class="hero-btns">
-        <a class="btn btn-primary" href="https://github.com/Debaq/Dird">Explore the project</a>
-        <a class="btn btn-ghost" href="https://github.com/Debaq/dird_models">AI models (AGPLv3)</a>
+      </div>
+
+      <div class="exp-modal-footer">
+        <a class="primary" href="INFORME_COMPLETO_APTOS.md" target="_blank" rel="noopener">Full report (Markdown)</a>
+        <a href="dird-aptos-scripts.zip" download>Validation scripts (.zip)</a>
       </div>
     </div>
   </div>
-</section>
 
-<footer>
-  <div class="wrap foot-grid">
-    <div>
-      <div class="brand" style="margin-bottom:8px"><span class="dot"></span> DIRD+</div>
-      <div>Diabetic Imaging Retinopathy Detector<br>Nicolás Baier Quezada, Vanessa Uribe, Fernanda López, Carolina Almendras, Haydee Barrientos &amp; Cristian Leiva<br>Universidad Austral de Chile, Puerto Montt 🇨🇱</div>
-      <div style="margin-top:8px">Free software under <a href="https://github.com/Debaq/Dird/blob/main/LICENSE">GNU AGPLv3</a>.</div>
-    </div>
-    <div class="foot-links">
-      <a href="https://github.com/Debaq/Dird">Repository</a>
-      <a href="https://github.com/Debaq/Dird/wiki">Wiki</a>
-      <a href="https://github.com/Debaq/Dird/releases">Releases</a>
-      <a href="https://github.com/Debaq/Dird/blob/main/PRIVACY.md">Privacy</a>
-      <a href="https://github.com/Debaq/Dird/blob/main/SECURITY.md">Security</a>
-      <a href="https://github.com/Debaq/dird_models">Models</a>
-    </div>
-  </div>
-</footer>
+  <script>
+    (function(){
+      var modal = document.getElementById('expModal');
+      if (!modal) return;
+      var openers = document.querySelectorAll('[data-exp-open]');
+      var closers = modal.querySelectorAll('[data-exp-close]');
+      var lastFocus = null;
+
+      function open(e){
+        e && e.preventDefault();
+        lastFocus = document.activeElement;
+        modal.hidden = false;
+        modal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+        var closeBtn = modal.querySelector('.exp-close');
+        if (closeBtn) closeBtn.focus();
+      }
+      function close(){
+        modal.classList.remove('is-open');
+        modal.hidden = true;
+        document.body.style.overflow = '';
+        if (lastFocus && lastFocus.focus) lastFocus.focus();
+      }
+      openers.forEach(function(b){ b.addEventListener('click', open); });
+      closers.forEach(function(b){ b.addEventListener('click', close); });
+      modal.addEventListener('click', function(e){ if (e.target === modal) close(); });
+      document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape' && modal.classList.contains('is-open')) close();
+      });
+    })();
+  </script>
 
 </body>
 </html>
