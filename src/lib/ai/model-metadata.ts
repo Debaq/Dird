@@ -107,11 +107,6 @@ export interface TrainingInfo {
   recommended_improvements?: string[];
 }
 
-export interface ModelFile {
-  path: string;
-  metadata: ModelMetadata;
-}
-
 export async function loadModelMetadata(metadataPath: string): Promise<ModelMetadata> {
   try {
     const response = await fetch(metadataPath);
@@ -124,34 +119,6 @@ export async function loadModelMetadata(metadataPath: string): Promise<ModelMeta
     console.error('Error loading model metadata:', error);
     throw error;
   }
-}
-
-export async function getAvailableModels(): Promise<ModelFile[]> {
-  const models: ModelFile[] = [];
-
-  try {
-    // Detection model
-    const detectionMetadata = await loadModelMetadata('/models/detection-v2.0.0.json');
-    models.push({
-      path: '/models/detection-v2.0.0.onnx',
-      metadata: detectionMetadata,
-    });
-  } catch (error) {
-    console.warn('Detection model not available:', error);
-  }
-
-  try {
-    // Segmentation model
-    const segmentationMetadata = await loadModelMetadata('/models/segmentation-v1.0.0.json');
-    models.push({
-      path: '/models/segmentation-v1.0.0.onnx',
-      metadata: segmentationMetadata,
-    });
-  } catch (error) {
-    console.warn('Segmentation model not available:', error);
-  }
-
-  return models;
 }
 
 export function getClassColor(className: string, metadata?: ModelMetadata): string {
