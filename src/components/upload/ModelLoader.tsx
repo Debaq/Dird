@@ -17,7 +17,6 @@ const ModelLoader: React.FC<ModelLoaderProps> = ({ onModelsReady }) => {
   const { t } = useTranslation();
   const [models, setModels] = useState<ModelFile[]>([]);
   const [detectionStatus, setDetectionStatus] = useState<ModelStatus>('idle');
-  const [segmentationStatus, setSegmentationStatus] = useState<ModelStatus>('idle');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,29 +54,8 @@ const ModelLoader: React.FC<ModelLoaderProps> = ({ onModelsReady }) => {
     }
   };
 
-  const loadSegmentationModel = async () => {
-    const segmentationModel = models.find((m) => m.metadata.model_type === 'segmentation');
-    if (!segmentationModel) {
-      setError(t('models.loader.segmentationUnavailable'));
-      return;
-    }
-
-    setSegmentationStatus('loading');
-    setError(null);
-
-    try {
-      await inferenceService.loadSegmentationModel(
-        segmentationModel.path,
-        segmentationModel.metadata
-      );
-      setSegmentationStatus('loaded');
-      checkAllModelsLoaded();
-    } catch (error) {
-      console.error('Error loading segmentation model:', error);
-      setSegmentationStatus('error');
-      setError(t('models.loader.segmentationLoadError'));
-    }
-  };
+  // Segmentation is planned (v3+), not yet released — the model is shown as
+  // informational only and cannot be loaded (segmentImage() is not wired up).
 
   const checkAllModelsLoaded = () => {
     if (inferenceService.isDetectionModelLoaded()) {
@@ -144,15 +122,7 @@ const ModelLoader: React.FC<ModelLoaderProps> = ({ onModelsReady }) => {
               <p className="text-xs text-smoke-500">
                 {segmentationModel.metadata.model_version}
               </p>
-              <p className="text-xs text-accent-600 mt-1">{t('models.beta')}</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              {getStatusIcon(segmentationStatus)}
-              {segmentationStatus === 'idle' && (
-                <Button size="sm" variant="outline" onClick={loadSegmentationModel}>
-                  {t('models.loader.load')}
-                </Button>
-              )}
+              <p className="text-xs text-accent-600 mt-1">{t('models.planned')}</p>
             </div>
           </div>
         )}

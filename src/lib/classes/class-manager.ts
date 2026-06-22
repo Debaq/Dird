@@ -1,6 +1,7 @@
 import { db } from '@/lib/db/schema';
 import { getClassColor, type ModelMetadata, type ClassDefinitionMetadata } from '@/lib/ai/model-metadata';
 import { getClassName } from '@/lib/ai/class-translations';
+import { ModelDownloader } from '@/lib/ai/model-downloader';
 import { useConfigStore } from '@/stores/config-store';
 
 export interface ClassDefinition {
@@ -72,13 +73,17 @@ export class ClassManager {
         }
       }
 
-      // PRIORITY 2: Load from GitHub (always latest version)
-      const response = await fetch('https://raw.githubusercontent.com/Debaq/dird_models/main/detection-v1.0.1.json');
-      if (response.ok) {
-        const metadata = await response.json();
-        this.setModelMetadata(metadata);
-        this.cleanupIncorrectColors();
-        return;
+      // PRIORITY 2: Load from GitHub — discover the latest detection model
+      // dynamically from the models repo (no hardcoded version).
+      const latest = await new ModelDownloader().findLatestModel('detection');
+      if (latest) {
+        const response = await fetch(latest.jsonUrl);
+        if (response.ok) {
+          const metadata = await response.json();
+          this.setModelMetadata(metadata);
+          this.cleanupIncorrectColors();
+          return;
+        }
       }
     } catch (error) {
       // Error handling without logging

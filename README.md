@@ -294,7 +294,7 @@ DIRD+'s edge-computing architecture is compliant **by design**: there is no data
 
 ### Technology Stack
 
-**Desktop shell:** Tauri v2 (native cross-platform shell, Rust + WebView), WebKitGTK 4.1 (Linux webview), Rust 1.93+.
+**Desktop shell:** Tauri v2 (native cross-platform shell, Rust + WebView), WebKitGTK 4.1 (Linux webview), Rust 1.77+.
 
 **Frontend:** React 18.3, TypeScript 5.7 (strict), Vite 6, Tailwind CSS 3.4, Radix UI, React Router 6, Zustand 5 (global state: config, canvas, patient), Framer Motion 11, i18next 24.2 (Spanish/English), Vitest + happy-dom.
 
@@ -330,7 +330,7 @@ Fundus image (any camera)
   ▼ 6. STORAGE   Persist to the encrypted SQLite database
 ```
 
-**Detectable classes:** microaneurysms, hemorrhages (dot/blot), hard exudates, cotton-wool spots, neovascularization, optic disc, fovea, edema, venous beading, IRMA. **Severity levels (ICDR 2024):** no DR → mild NPDR → moderate NPDR → severe NPDR → proliferative DR.
+**Classes the pipeline understands** (class space `0–10`): optic disc, fovea, hard exudates, hemorrhages (dot/blot), cotton-wool spots, microhemorrhages, microaneurysms, edema, neovascularization, venous beading, IRMA. The **active subset depends on the loaded model card** (`currently_detected` flag): the current reference model in [`Debaq/dird_models`](https://github.com/Debaq/dird_models) detects optic disc, fovea, hard exudates, hemorrhages, cotton-wool spots and microhemorrhages; the remaining classes (incl. venous beading and IRMA, used by the 4-2-1 criteria) are defined for forthcoming model versions — see [Roadmap](#roadmap). **Severity levels (ICDR 2024):** no DR → mild NPDR → moderate NPDR → severe NPDR → proliferative DR.
 
 ### Database Schema
 

@@ -665,6 +665,7 @@
     "detection": "Detection",
     "segmentation": "Segmentation",
     "beta": "Beta",
+    "planned": "Planned (not yet available)",
     "classes": {
       "microaneurysm": "Microaneurysm",
       "hard_exudate": "Hard Exudate",
