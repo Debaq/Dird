@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 import { db } from '@/lib/db/schema';
-import type { Patient, Detection, Segmentation, Measurement } from '@/lib/db/schema';
+import type { Patient, Detection, Segmentation, Measurement, ImageClassification } from '@/lib/db/schema';
 import type { DirdExportMetadata } from './dird-exporter';
 import { isEncryptedContainer, decryptContainer, DirdContainerError } from './dird-container';
 
@@ -28,6 +28,7 @@ export interface ImportResult {
   detectionsImported: number;
   segmentationsImported: number;
   measurementsImported: number;
+  classificationsImported?: number;
   reportsImported: number;
   patientsImported?: number;
   error?: string;
@@ -46,10 +47,11 @@ async function deletePatientData(patientId: number) {
     const images = await db.images.where('sessionId').equals(session.id!).toArray();
 
     for (const image of images) {
-      // Delete detections and segmentations
+      // Delete detections, segmentations, measurements and classifications
       await db.detections.where('imageId').equals(image.id!).delete();
       await db.segmentations.where('imageId').equals(image.id!).delete();
       await db.measurements.where('imageId').equals(image.id!).delete();
+      await db.imageClassifications.where('imageId').equals(image.id!).delete();
     }
 
     // Delete images
@@ -266,6 +268,23 @@ async function importSessionZip(zip: JSZip, metadata: DirdExportMetadata, target
       }
     }
 
+    // import classifications (the clinical conclusion — DR diagnosis per image)
+    let classificationsImported = 0;
+    const classificationsFile = zip.file(`classifications.json`);
+    if (classificationsFile) {
+      const classifications: ImageClassification[] = JSON.parse(await classificationsFile.async('text'));
+      for (const classification of classifications) {
+        const newImageId = imageIdMap.get(classification.imageId as number);
+        if (!newImageId) continue;
+        await db.imageClassifications.add({
+          ...classification,
+          id: undefined,
+          imageId: newImageId,
+        });
+        classificationsImported++;
+      }
+    }
+
     return {
       success: true,
       sessionsImported,
@@ -273,6 +292,7 @@ async function importSessionZip(zip: JSZip, metadata: DirdExportMetadata, target
       detectionsImported,
       segmentationsImported,
       measurementsImported,
+      classificationsImported,
       reportsImported,
       import_type: 'session'
     };
@@ -303,6 +323,7 @@ async function importSessionsToPatient(zip: JSZip, metadata: DirdExportMetadata,
     let detectionsImported = 0;
     let segmentationsImported = 0;
     let measurementsImported = 0;
+    let classificationsImported = 0;
     let reportsImported = 0;
 
     // import sessions
@@ -406,6 +427,23 @@ async function importSessionsToPatient(zip: JSZip, metadata: DirdExportMetadata,
         }
       }
 
+      // import classifications (DR diagnosis per image)
+      const classificationsFile = zip.file(`${sessionFolderPath}/classifications.json`);
+      if (classificationsFile) {
+        const classifications: ImageClassification[] = JSON.parse(await classificationsFile.async('text'));
+        for (const classification of classifications) {
+          const newImageId = imageIdMap.get(classification.imageId as number);
+          if (!newImageId) continue;
+
+          await db.imageClassifications.add({
+            ...classification,
+            id: undefined,
+            imageId: newImageId
+          });
+          classificationsImported++;
+        }
+      }
+
       // import reports
       const reportFiles = Object.keys(zip.files).filter(
         name =>
@@ -438,6 +476,7 @@ async function importSessionsToPatient(zip: JSZip, metadata: DirdExportMetadata,
       detectionsImported,
       segmentationsImported,
       measurementsImported,
+      classificationsImported,
       reportsImported,
       import_type: 'session'
     };
@@ -502,6 +541,7 @@ async function importPatientZip(zip: JSZip, metadata: DirdExportMetadata): Promi
     let detectionsImported = 0;
     let segmentationsImported = 0;
     let measurementsImported = 0;
+    let classificationsImported = 0;
     let reportsImported = 0;
 
     // Import sessions
@@ -616,6 +656,22 @@ async function importPatientZip(zip: JSZip, metadata: DirdExportMetadata): Promi
           }
         }
 
+        // Import classifications (DR diagnosis per image)
+        const classificationsFile = zip.file(`${sessionFolderName}/classifications.json`);
+        if (classificationsFile) {
+          const classifications: ImageClassification[] = JSON.parse(await classificationsFile.async('text'));
+          for (const classification of classifications) {
+            const newImageId = imageIdMap.get(classification.imageId as number);
+            if (!newImageId) continue;
+            await db.imageClassifications.add({
+              ...classification,
+              id: undefined,
+              imageId: newImageId,
+            });
+            classificationsImported++;
+          }
+        }
+
         // Import reports
         const reportFiles = Object.keys(zip.files).filter(
           (name) => name.startsWith(`${sessionFolderName}/reports/`) && name.endsWith('.pdf')
@@ -647,6 +703,7 @@ async function importPatientZip(zip: JSZip, metadata: DirdExportMetadata): Promi
       detectionsImported,
       segmentationsImported,
       measurementsImported,
+      classificationsImported,
       reportsImported,
       import_type: 'patient'
     };
@@ -716,6 +773,7 @@ async function importPatientFromFolder(zip: JSZip, basePath: string): Promise<Im
   let detectionsImported = 0;
   let segmentationsImported = 0;
   let measurementsImported = 0;
+  let classificationsImported = 0;
   let reportsImported = 0;
 
   // Import sessions
@@ -847,6 +905,22 @@ async function importPatientFromFolder(zip: JSZip, basePath: string): Promise<Im
           measurementsImported++;
       }
     }
+
+    // Import classifications (DR diagnosis per image)
+    const classificationsFile = zip.file(`${sessionBasePath}/classifications.json`);
+    if (classificationsFile) {
+      const classifications: ImageClassification[] = JSON.parse(await classificationsFile.async('text'));
+      for (const classification of classifications) {
+        const newImageId = imageIdMap.get(classification.imageId as number);
+        if (!newImageId) continue;
+        await db.imageClassifications.add({
+          ...classification,
+          id: undefined,
+          imageId: newImageId,
+        });
+        classificationsImported++;
+      }
+    }
   }
 
   return {
@@ -856,6 +930,7 @@ async function importPatientFromFolder(zip: JSZip, basePath: string): Promise<Im
     detectionsImported,
     segmentationsImported,
     measurementsImported,
+    classificationsImported,
     reportsImported,
     patient: await db.patients.get(patientId as number),
   };
@@ -870,6 +945,7 @@ async function importFullZip(zip: JSZip, _metadata: DirdExportMetadata): Promise
   let totalSegmentations = 0;
   let totalReports = 0;
   let totalMeasurements = 0;
+  let totalClassifications = 0;
 
   // Only treat real folders (ending with /) as patient folders
   const patientFolders = Object.keys(zip.files).filter(name => {
@@ -897,6 +973,7 @@ async function importFullZip(zip: JSZip, _metadata: DirdExportMetadata): Promise
       totalSegmentations += result.segmentationsImported;
       totalReports += result.reportsImported;
       totalMeasurements += result.measurementsImported;
+      totalClassifications += result.classificationsImported || 0;
 
     } catch (error) {
       return {
@@ -925,6 +1002,7 @@ async function importFullZip(zip: JSZip, _metadata: DirdExportMetadata): Promise
     patientsImported: totalPatients,
     segmentationsImported: totalSegmentations,
     measurementsImported: totalMeasurements,
+    classificationsImported: totalClassifications,
     reportsImported: totalReports,
     import_type: 'full'
   };

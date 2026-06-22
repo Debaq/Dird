@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 import { db } from '@/lib/db/schema';
-import type { Patient, Session, Detection, Segmentation, Measurement } from '@/lib/db/schema';
+import type { Patient, Session, Detection, Segmentation, Measurement, ImageClassification } from '@/lib/db/schema';
 import { encryptContainer } from './dird-container';
 
 const EXPORT_VERSION = '2.0.0';
@@ -77,18 +77,21 @@ export async function exportPatient(patientId: number, password?: string): Promi
     const allDetections: Detection[] = [];
     const allSegmentations: Segmentation[] = [];
     const allMeasurements: Measurement[] = [];
+    const allClassifications: ImageClassification[] = [];
 
 
     for (const image of images) {
       const detections = await db.detections.where('imageId').equals(image.id!).toArray();
       const segmentations = await db.segmentations.where('imageId').equals(image.id!).toArray();
       const measurements = await db.measurements.where('imageId').equals(image.id!).toArray();
+      const classifications = await db.imageClassifications.where('imageId').equals(image.id!).toArray();
       allDetections.push(...detections);
       allSegmentations.push(...segmentations);
       allMeasurements.push(...measurements);
+      allClassifications.push(...classifications);
     }
 
-    // Save detections, measurements and segmentations as JSON
+    // Save detections, measurements, segmentations and classifications as JSON
     if (allDetections.length > 0) {
       sessionFolder.file('detections.json', JSON.stringify(allDetections, null, 2));
     }
@@ -99,6 +102,10 @@ export async function exportPatient(patientId: number, password?: string): Promi
 
     if (allMeasurements.length > 0) {
       sessionFolder.file('measurements.json', JSON.stringify(allMeasurements, null, 2));
+    }
+
+    if (allClassifications.length > 0) {
+      sessionFolder.file('classifications.json', JSON.stringify(allClassifications, null, 2));
     }
 
     // Get reports for this session
@@ -154,6 +161,7 @@ export async function exportSession(sessionId: number, password?: string): Promi
   const allDetections: Detection[] = [];
   const allSegmentations: Segmentation[] = [];
   const allMeasurements: Measurement[] = [];
+  const allClassifications: ImageClassification[] = [];
   for (const image of images) {
     const detections = await db.detections.where('imageId').equals(image.id!).toArray();
     allDetections.push(...detections);
@@ -161,6 +169,8 @@ export async function exportSession(sessionId: number, password?: string): Promi
     allSegmentations.push(...segmentations);
     const measurements = await db.measurements.where('imageId').equals(image.id!).toArray();
     allMeasurements.push(...measurements);
+    const classifications = await db.imageClassifications.where('imageId').equals(image.id!).toArray();
+    allClassifications.push(...classifications);
   }
 
   if (allDetections.length > 0) {
@@ -171,6 +181,9 @@ export async function exportSession(sessionId: number, password?: string): Promi
   }
   if (allMeasurements.length > 0) {
     zip.file('measurements.json', JSON.stringify(allMeasurements, null, 2));
+  }
+  if (allClassifications.length > 0) {
+    zip.file('classifications.json', JSON.stringify(allClassifications, null, 2));
   }
 
   const reports = await db.reports.where('sessionId').equals(sessionId).toArray();
@@ -240,16 +253,19 @@ export async function exportAllData(password?: string): Promise<Blob> {
       const allDetections: Detection[] = [];
       const allSegmentations: Segmentation[] = [];
       const allMeasurements: Measurement[] = [];
+      const allClassifications: ImageClassification[] = [];
 
       for (const image of images) {
         allDetections.push(...(await db.detections.where('imageId').equals(image.id!).toArray()));
         allSegmentations.push(...(await db.segmentations.where('imageId').equals(image.id!).toArray()));
         allMeasurements.push(...(await db.measurements.where('imageId').equals(image.id!).toArray()));
+        allClassifications.push(...(await db.imageClassifications.where('imageId').equals(image.id!).toArray()));
       }
 
       if (allDetections.length > 0) {sessionFolder.file('detections.json', JSON.stringify(allDetections, null, 2));}
       if (allSegmentations.length > 0) {sessionFolder.file('segmentations.json', JSON.stringify(allSegmentations, null, 2));}
       if (allMeasurements.length > 0) {sessionFolder.file('measurements.json', JSON.stringify(allMeasurements, null, 2));}
+      if (allClassifications.length > 0) {sessionFolder.file('classifications.json', JSON.stringify(allClassifications, null, 2));}
 
       const reports = await db.reports.where('sessionId').equals(session.id!).toArray();
       if (reports.length > 0) {
