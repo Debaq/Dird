@@ -143,7 +143,7 @@ const SessionView: React.FC = () => {
 
   const handleDeleteImage = async (imageId: number) => {
     const confirmed = await confirm({
-      title: t('confirmations.deleteImageTitle') || t('upload.deleteImage'),
+      title: t('confirmations.deleteImageTitle'),
       description: t('confirmations.deleteImage'),
       confirmText: t('common.delete'),
       cancelText: t('common.cancel'),

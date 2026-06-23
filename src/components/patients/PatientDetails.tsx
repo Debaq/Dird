@@ -41,7 +41,7 @@ const PatientDetails: React.FC = () => {
 
   const handleDeleteSession = async (sessionId: number) => {
     const confirmed = await confirm({
-      title: t('confirmations.deleteSessionTitle') || t('sessions.delete'),
+      title: t('confirmations.deleteSessionTitle'),
       description: t('confirmations.deleteSession'),
       confirmText: t('common.delete'),
       cancelText: t('common.cancel'),
@@ -78,7 +78,7 @@ const PatientDetails: React.FC = () => {
 
   const handleDuplicateSession = async (sessionId: number) => {
     const confirmed = await confirm({
-      title: t('confirmations.duplicateSessionTitle') || t('sessions.duplicate'),
+      title: t('confirmations.duplicateSessionTitle'),
       description: t('confirmations.duplicateSession'),
       confirmText: t('common.confirm'),
       cancelText: t('common.cancel'),

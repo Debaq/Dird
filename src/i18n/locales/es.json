@@ -85,7 +85,8 @@
     "drClassification": {
       "noClassification": "No se pudo generar la clasificación",
       "noClassifications": "No se pudieron generar las clasificaciones"
-    }
+    },
+    "sessionCreation": "Error al crear el estudio"
   },
   "confirmations": {
     "deleteImage": "¿Estás seguro de que quieres eliminar esta imagen y todos sus análisis asociados?",
@@ -98,7 +99,10 @@
     "archivePatientTitle": "Archivar Paciente",
     "unarchivePatientTitle": "Desarchivar Paciente",
     "deleteReportTitle": "Eliminar Informe",
-    "finalizeReportTitle": "Finalizar Informe"
+    "finalizeReportTitle": "Finalizar Informe",
+    "deleteImageTitle": "Eliminar Imagen",
+    "deleteSessionTitle": "Eliminar Estudio",
+    "duplicateSessionTitle": "Duplicar Estudio"
   },
   "patients": {
     "title": "Pacientes",
@@ -232,7 +236,8 @@
     },
     "duplicate": "Duplicar Estudio",
     "duplicateSuccess": "Estudio duplicado exitosamente",
-    "compareSuccess": "Estudio combinado creado exitosamente"
+    "compareSuccess": "Estudio combinado creado exitosamente",
+    "deleteSuccess": "Estudio eliminado exitosamente"
   },
   "upload": {
     "selectEye": "Seleccionar ojo:",
@@ -266,11 +271,14 @@
       "deleteImageSuccess": "Imagen eliminada exitosamente",
       "reprocessAI": "Reprocesar con IA",
       "moveToRight": "A Ojo Derecho",
-      "moveToLeft": "A Ojo Izquierdo"
+      "moveToLeft": "A Ojo Izquierdo",
+      "imageLoadError": "Error al cargar imagen"
     },
     "photoLimitExceeded": "Límite de {{limit}} fotos por estudio alcanzado. No se pueden subir más imágenes.",
     "photoLimitWarning": "Solo se pueden subir {{available}} imágenes más (máximo {{limit}} por estudio).",
-    "imagesCount": "{{count}} de {{limit}} imágenes subidas"
+    "imagesCount": "{{count}} de {{limit}} imágenes subidas",
+    "deleteImage": "Eliminar imagen",
+    "deleteImageSuccess": "Imagen eliminada exitosamente"
   },
   "canvas": {
     "tools": {
@@ -660,7 +668,8 @@
       "updateError": "Error al actualizar las conclusiones",
       "updateSuccess": "Conclusión actualizada exitosamente",
       "mustInteractFirst": "Debe visualizar, descargar o editar el preview primero"
-    }
+    },
+    "generatedOffline": "sin conexión"
   },
   "models": {
     "title": "Modelos de IA",
@@ -1223,7 +1232,10 @@
         "accuracy": "Precisión: ",
         "noModels": "No hay modelos disponibles",
         "load": "Cargar"
-      }
+      },
+      "numAnnotations": "Anotaciones",
+      "numImages": "Imágenes",
+      "trainingInfo": "Información de Entrenamiento"
     },
     "processing": {
       "title": "Configuración de Procesamiento",

@@ -274,7 +274,7 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
           {enrichedMetadata?.training_info && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">{t('settings.models.trainingInfo') || 'Training Information'}</CardTitle>
+                <CardTitle className="text-lg">{t('settings.models.trainingInfo')}</CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-4 text-sm">
                 {enrichedMetadata.training_info.dataset && (
@@ -285,13 +285,13 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
                 )}
                 {enrichedMetadata.training_info.num_images && (
                   <div>
-                    <span className="text-smoke-600">{t('settings.models.numImages') || 'Images'}</span>
+                    <span className="text-smoke-600">{t('settings.models.numImages')}</span>
                     <div className="font-medium text-coal-800">{enrichedMetadata.training_info.num_images.toLocaleString()}</div>
                   </div>
                 )}
                 {enrichedMetadata.training_info.num_annotations && (
                   <div>
-                    <span className="text-smoke-600">{t('settings.models.numAnnotations') || 'Annotations'}</span>
+                    <span className="text-smoke-600">{t('settings.models.numAnnotations')}</span>
                     <div className="font-medium text-coal-800">{enrichedMetadata.training_info.num_annotations.toLocaleString()}</div>
                   </div>
                 )}
