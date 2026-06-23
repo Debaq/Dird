@@ -116,33 +116,65 @@ async function applyFilter(
   }
 }
 
-// ============ BASIC (Canvas 2D CSS filters — correct & fast) ============
+// ============ BASIC (OpenCV — the WebKitGTK webview ignores ctx.filter) ============
 
-function applyBrightness(canvas: HTMLCanvasElement, brightness: number): HTMLCanvasElement {
-  const output = makeCanvas(canvas.width, canvas.height);
-  const ctx = output.getContext('2d')!;
-  ctx.filter = `brightness(${100 + brightness}%)`;
-  ctx.drawImage(canvas, 0, 0);
-  ctx.filter = 'none';
-  return output;
+/** Brightness: pixel += value (value ∈ [-100, 100]). */
+function applyBrightness(canvas: HTMLCanvasElement, value: number): HTMLCanvasElement {
+  let rgb: any = null;
+  let dst: any = null;
+  try {
+    rgb = readRGB(canvas);
+    dst = new cv.Mat();
+    cv.convertScaleAbs(rgb, dst, 1.0, value);
+    const output = makeCanvas(canvas.width, canvas.height);
+    showMat(dst, output);
+    return output;
+  } finally {
+    if (rgb) rgb.delete();
+    if (dst) dst.delete();
+  }
 }
 
-function applyContrast(canvas: HTMLCanvasElement, contrast: number): HTMLCanvasElement {
-  const output = makeCanvas(canvas.width, canvas.height);
-  const ctx = output.getContext('2d')!;
-  ctx.filter = `contrast(${contrast * 100}%)`;
-  ctx.drawImage(canvas, 0, 0);
-  ctx.filter = 'none';
-  return output;
+/** Contrast: pixel = (pixel - 128) * factor + 128 (factor ∈ [0.5, 3]). */
+function applyContrast(canvas: HTMLCanvasElement, factor: number): HTMLCanvasElement {
+  let rgb: any = null;
+  let dst: any = null;
+  try {
+    rgb = readRGB(canvas);
+    dst = new cv.Mat();
+    cv.convertScaleAbs(rgb, dst, factor, 128 * (1 - factor));
+    const output = makeCanvas(canvas.width, canvas.height);
+    showMat(dst, output);
+    return output;
+  } finally {
+    if (rgb) rgb.delete();
+    if (dst) dst.delete();
+  }
 }
 
-function applySaturation(canvas: HTMLCanvasElement, saturation: number): HTMLCanvasElement {
-  const output = makeCanvas(canvas.width, canvas.height);
-  const ctx = output.getContext('2d')!;
-  ctx.filter = `saturate(${saturation * 100}%)`;
-  ctx.drawImage(canvas, 0, 0);
-  ctx.filter = 'none';
-  return output;
+/** Saturation: scale the S channel in HSV (factor ∈ [0, 2]). */
+function applySaturation(canvas: HTMLCanvasElement, factor: number): HTMLCanvasElement {
+  let rgb: any = null;
+  let hsv: any = null;
+  let chans: any = null;
+  try {
+    rgb = readRGB(canvas);
+    hsv = new cv.Mat();
+    cv.cvtColor(rgb, hsv, cv.COLOR_RGB2HSV);
+    chans = new cv.MatVector();
+    cv.split(hsv, chans);
+    const s = chans.get(1);
+    cv.convertScaleAbs(s, s, factor, 0);
+    cv.merge(chans, hsv);
+    cv.cvtColor(hsv, rgb, cv.COLOR_HSV2RGB);
+    const output = makeCanvas(canvas.width, canvas.height);
+    showMat(rgb, output);
+    return output;
+  } finally {
+    if (rgb) rgb.delete();
+    if (hsv) hsv.delete();
+    if (chans) chans.delete();
+  }
 }
 
 /** Gamma correction via LUT — brightens dark periphery (gamma>1) without clipping highlights. */
