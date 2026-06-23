@@ -285,7 +285,7 @@
       "pan": "Pan",
       "zoom": "Zoom",
       "cup": "Optic Cup",
-      "imageProcessing": "Procesamiento Avanzado",
+      "imageProcessing": "Image enhancement",
       "selectInstruction": "Click on an annotation to select it. You can drag to move or use handles to resize.",
       "bboxInstruction": "Click and drag to draw a detection box",
       "eraserInstruction": "Click on any annotation or measurement to delete it permanently.",

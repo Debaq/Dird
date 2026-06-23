@@ -285,7 +285,7 @@
       "pan": "Desplazar",
       "zoom": "Zoom",
       "cup": "Copa Óptica",
-      "imageProcessing": "Procesamiento Avanzado",
+      "imageProcessing": "Realce de imagen",
       "selectInstruction": "Haz clic en una anotación para seleccionarla. Puedes arrastrar para mover o usar los puntos para redimensionar.",
       "bboxInstruction": "Haz clic y arrastra para dibujar una caja de detección",
       "eraserInstruction": "Haz clic sobre cualquier anotación o medida para eliminarla permanentemente.",

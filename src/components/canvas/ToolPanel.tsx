@@ -31,7 +31,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
     { id: 'landmark' as CanvasTool, icon: Target, label: t('canvas.tools.landmark') || 'Landmarks' },
     { id: 'cup' as CanvasTool, icon: Eye, label: t('canvas.tools.cup') || 'Dibujar Copa' },
     { id: 'ruler' as CanvasTool, icon: Ruler, label: t('canvas.tools.ruler') },
-    { id: 'image-processing' as CanvasTool, icon: Wand2, label: t('canvas.tools.imageProcessing') || 'Procesamiento Avanzado' },
+    { id: 'image-processing' as CanvasTool, icon: Wand2, label: t('canvas.tools.imageProcessing') || 'Realce de imagen' },
     { id: 'eraser' as CanvasTool, icon: Eraser, label: t('canvas.tools.eraser') },
     { id: 'pan' as CanvasTool, icon: Move, label: t('canvas.tools.pan') },
     { id: 'zoom' as CanvasTool, icon: ZoomIn, label: t('canvas.tools.zoom') },

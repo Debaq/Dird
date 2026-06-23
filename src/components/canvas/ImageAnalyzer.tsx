@@ -23,8 +23,6 @@ import { analyzeOpticDiscCupping } from '@/lib/analysis/optic-disc-cupping-detec
 import { useConfigStore } from '@/stores/config-store';
 import { useImageProcessingStore } from '@/stores/image-processing-store';
 import { logger } from '@/utils/logger';
-import { useAdvancedEditorMode } from '@/hooks/useAdvancedEditorMode';
-import { AdvancedEditorLayout, AdvancedEditorDialog } from './advanced-editor';
 
 const DEFAULT_LAYERS: CanvasLayer[] = [
   { id: 'original', name: 'canvas.layers.original', visible: true, opacity: 1, locked: true, zIndex: 0 },
@@ -105,17 +103,6 @@ const ImageAnalyzer: React.FC = () => {
   const { selectedAnnotationId, setSelectedAnnotation } = useCanvasStore();
   const [selectedMeasurementId, setSelectedMeasurementId] = useState<number | null>(null);
 
-  // Advanced Editor Mode
-  const advancedEditor = useAdvancedEditorMode();
-  const [showAdvancedDialog, setShowAdvancedDialog] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(window.matchMedia('(min-width: 1280px)').matches);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(min-width: 1280px)');
-    const handleChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
 
   // History State
   const [detectionHistory, setDetectionHistory] = useState<HistoryEntry[]>([]);
@@ -439,15 +426,6 @@ const ImageAnalyzer: React.FC = () => {
     );
   };
 
-  const handleLayerReorder = (oldIndex: number, newIndex: number) => {
-    setLayers((prev) => {
-      const newLayers = [...prev];
-      const [movedLayer] = newLayers.splice(oldIndex, 1);
-      newLayers.splice(newIndex, 0, movedLayer);
-      return newLayers;
-    });
-  };
-
   // Find optic disc for cup drawer
   const opticDiscDetection = allDetections?.find(d =>
     d.class && typeof d.class === 'string' &&
@@ -539,14 +517,10 @@ const ImageAnalyzer: React.FC = () => {
     // useLiveQuery automáticamente detectará cambios en db.detections
   };
 
-  // Handle tool change with advanced mode detection
+  // Handle tool change
   const handleToolChange = (tool: CanvasTool) => {
     if (tool === 'image-processing') {
-      if (isDesktop && !advancedEditor.state.isActive) {
-        setShowAdvancedDialog(true);
-        return;
-      }
-      // Dim original layer when processing tool is active
+      // Dim original layer so processed/enhanced view stands out
       handleLayerUpdate('original', { opacity: 0.4 });
     } else {
       // Restore original layer opacity when switching away
@@ -556,24 +530,6 @@ const ImageAnalyzer: React.FC = () => {
       }
     }
     setActiveTool(tool);
-  };
-
-  // Advanced mode handlers
-  const handleAdvancedModeConfirm = () => {
-    setShowAdvancedDialog(false);
-    advancedEditor.enterAdvancedMode();
-    setActiveTool('image-processing');
-  };
-
-  const handleAdvancedModeCancel = () => {
-    setShowAdvancedDialog(false);
-    // Activar la herramienta de procesamiento normal
-    setActiveTool('image-processing');
-  };
-
-  const handleAdvancedModeExit = () => {
-    advancedEditor.exitAdvancedMode();
-    setActiveTool('select');
   };
 
   if (!image) {
@@ -589,11 +545,10 @@ const ImageAnalyzer: React.FC = () => {
 
   const mainContent = (
     <div className={cn(
-      "flex flex-col h-[100vh] xl:h-[calc(100vh-11rem)] relative bg-ice dark:bg-gray-900",
-      advancedEditor.state.isActive && "h-full xl:h-full bg-transparent dark:bg-transparent"
+      "flex flex-col h-[100vh] xl:h-[calc(100vh-11rem)] relative bg-ice dark:bg-gray-900"
     )}>
       {/* Header - Visible on Mobile (Portrait & Landscape) and Desktop */}
-      {!advancedEditor.state.isActive && (
+      {(
         <div className={cn(
           "flex items-center justify-between mb-2 flex-shrink-0",
           // Add padding on mobile because MainLayout(fullScreenOnMobile) removes it
@@ -643,7 +598,7 @@ const ImageAnalyzer: React.FC = () => {
       )}
 
       {/* Mobile Collapsible Panels */}
-      {!advancedEditor.state.isActive && (
+      {(
       <div className="xl:hidden px-2 flex-shrink-0 relative z-10">
          {showMobileTools && (
            <div className="absolute top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg p-2 rounded-b-lg border-t border-coal-100 dark:border-gray-700">
@@ -681,17 +636,14 @@ const ImageAnalyzer: React.FC = () => {
 
       {/* Main Content */}
       <div className={cn(
-        "flex flex-col xl:grid xl:grid-cols-4 gap-6 flex-grow overflow-hidden relative",
-        advancedEditor.state.isActive && "xl:flex xl:gap-0"
+        "flex flex-col xl:grid xl:grid-cols-4 gap-6 flex-grow overflow-hidden relative"
       )}>
         {/* Canvas Area */}
         <div className={cn(
-          "xl:col-span-3 h-full w-full",
-          advancedEditor.state.isActive && "xl:col-span-4"
+          "xl:col-span-3 h-full w-full"
         )}>
           <Card className={cn(
-            "h-full flex flex-col border-0 xl:border shadow-none xl:shadow-sm bg-transparent xl:bg-white xl:dark:bg-gray-800 rounded-none xl:rounded-lg overflow-hidden",
-            advancedEditor.state.isActive && "xl:border-0 xl:shadow-none xl:bg-transparent xl:rounded-none"
+            "h-full flex flex-col border-0 xl:border shadow-none xl:shadow-sm bg-transparent xl:bg-white xl:dark:bg-gray-800 rounded-none xl:rounded-lg overflow-hidden"
           )}>
             <CardContent className="flex-grow p-0 h-full relative group">
               <AnnotationCanvas
@@ -757,7 +709,7 @@ const ImageAnalyzer: React.FC = () => {
         </div>
 
         {/* Desktop Side Panel */}
-        {!advancedEditor.state.isActive && (
+        {(
           <div className="hidden xl:block h-full overflow-hidden pr-2">
           <div className="flex flex-col h-full space-y-3">
             {/* Fixed Tools Section - Always visible */}
@@ -823,85 +775,7 @@ const ImageAnalyzer: React.FC = () => {
     </div>
   );
 
-  return (
-    <>
-      <AdvancedEditorDialog
-        isOpen={showAdvancedDialog}
-        onConfirm={handleAdvancedModeConfirm}
-        onCancel={handleAdvancedModeCancel}
-      />
-
-      <AdvancedEditorLayout
-        isActive={advancedEditor.state.isActive}
-        activeTool={activeTool}
-        layers={layers}
-        canUndo={historyIndex >= 0}
-        canRedo={historyIndex < detectionHistory.length - 1}
-        showGrid={advancedEditor.state.showGrid}
-        showRulers={advancedEditor.state.showRulers}
-        snapEnabled={advancedEditor.state.snapToGrid}
-        showMiniMap={advancedEditor.state.showMiniMap}
-        showLeftPanel={advancedEditor.state.showLeftPanel}
-        showRightPanel={advancedEditor.state.showRightPanel}
-        imageUrl={image?.originalBlob ? URL.createObjectURL(image.originalBlob) : undefined}
-        onExit={handleAdvancedModeExit}
-        onToolChange={handleToolChange}
-        onLayerToggle={(layerId) => {
-          handleLayerUpdate(layerId, {
-            visible: !layers.find(l => l.id === layerId)?.visible
-          });
-        }}
-        onLayerOpacityChange={(layerId, opacity) => {
-          handleLayerUpdate(layerId, { opacity });
-        }}
-        onLayerLockToggle={(layerId) => {
-          handleLayerUpdate(layerId, {
-            locked: !layers.find(l => l.id === layerId)?.locked
-          });
-        }}
-        onLayerReorder={handleLayerReorder}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        onToggleGrid={advancedEditor.toggleGrid}
-        onToggleRulers={advancedEditor.toggleRulers}
-        onToggleSnap={advancedEditor.toggleSnapToGrid}
-        onToggleMiniMap={advancedEditor.toggleMiniMap}
-        layerData={{
-          'detections-ai': aiDetections,
-          'manual-annotations': manualDetections,
-          'measurements': allMeasurements || [],
-        }}
-        onSelectAnnotation={(layerId, id) => {
-          if (layerId === 'measurements') {
-            setSelectedMeasurementId(id as number);
-          } else {
-            setSelectedAnnotation(String(id));
-          }
-        }}
-        onDeleteAnnotation={async (layerId, id) => {
-          try {
-            if (layerId === 'measurements') {
-              await db.measurements.delete(id as number);
-            } else {
-              const detection = allDetections?.find(d => d.id === id);
-              if (detection) {
-                addToHistory({ type: 'delete', detection });
-                await db.detections.delete(Number(id));
-              }
-            }
-          } catch (error) {
-            logger.canvas.error('Error deleting item', error);
-          }
-        }}
-        selectedLandmarkType={selectedLandmarkType}
-        onLandmarkTypeChange={setSelectedLandmarkType}
-        imageBlob={image?.originalBlob || null}
-        onProcessedImage={setProcessedImageCanvas}
-      >
-        {mainContent}
-      </AdvancedEditorLayout>
-    </>
-  );
+  return mainContent;
 };
 
 export default ImageAnalyzer;
