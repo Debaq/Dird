@@ -121,7 +121,7 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
   };
 
   return (
-    <div className="bg-white rounded-lg border border-coal-200 p-3 space-y-3">
+    <div className="bg-white rounded-lg border border-coal-200 p-3 space-y-3 h-full flex flex-col min-h-0">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-coal-800 text-sm flex items-center gap-2">
@@ -182,8 +182,8 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
       </div>
 
       {/* Pipeline de Filtros */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
+      <div className="space-y-2 flex-1 min-h-0 flex flex-col">
+        <div className="flex items-center justify-between flex-shrink-0">
           <span className="text-xs font-medium text-coal-700">
             Filtros ({filters.length}/10)
           </span>
@@ -206,7 +206,7 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
             onDragEnd={handleDragEnd}
           >
             <SortableContext items={filters.map(f => f.id)} strategy={verticalListSortingStrategy}>
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1">
                 {filters.map((filter, index) => (
                   <FilterItem
                     key={filter.id}

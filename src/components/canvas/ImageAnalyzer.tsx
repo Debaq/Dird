@@ -642,20 +642,24 @@ const ImageAnalyzer: React.FC = () => {
       )}>
         {/* Left rail — advanced enhancement config (enhance mode only) */}
         {enhanceMode && (
-          <aside className="hidden xl:flex xl:flex-col w-80 flex-shrink-0 h-full overflow-y-auto space-y-3 pr-1">
-            <ToolPanel
-              activeTool={activeTool}
-              onToolChange={handleToolChange}
-              enhanceMode={enhanceMode}
-              disabled={session?.locked}
-              selectedLandmarkType={selectedLandmarkType}
-              onLandmarkTypeChange={setSelectedLandmarkType}
-            />
-            <ImageProcessingPanel
-              imageBlob={image?.originalBlob || null}
-              onProcessedImage={setProcessedImageCanvas}
-              disabled={session?.locked}
-            />
+          <aside className="hidden xl:flex xl:flex-col w-80 flex-shrink-0 h-full min-h-0 space-y-3 pr-1">
+            <div className="flex-shrink-0">
+              <ToolPanel
+                activeTool={activeTool}
+                onToolChange={handleToolChange}
+                enhanceMode={enhanceMode}
+                disabled={session?.locked}
+                selectedLandmarkType={selectedLandmarkType}
+                onLandmarkTypeChange={setSelectedLandmarkType}
+              />
+            </div>
+            <div className="flex-1 min-h-0">
+              <ImageProcessingPanel
+                imageBlob={image?.originalBlob || null}
+                onProcessedImage={setProcessedImageCanvas}
+                disabled={session?.locked}
+              />
+            </div>
           </aside>
         )}
 
