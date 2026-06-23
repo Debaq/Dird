@@ -543,6 +543,10 @@ const ImageAnalyzer: React.FC = () => {
     );
   }
 
+  // "Enhance mode": when the image-processing tool is active, use a full-width
+  // workspace with two side rails (left = filter config, right = layers).
+  const enhanceMode = activeTool === 'image-processing';
+
   const mainContent = (
     <div className={cn(
       "flex flex-col h-[100vh] xl:h-[calc(100vh-11rem)] relative bg-ice dark:bg-gray-900"
@@ -636,11 +640,31 @@ const ImageAnalyzer: React.FC = () => {
 
       {/* Main Content */}
       <div className={cn(
-        "flex flex-col xl:grid xl:grid-cols-4 gap-6 flex-grow overflow-hidden relative"
+        "flex flex-col gap-6 flex-grow overflow-hidden relative",
+        enhanceMode ? "xl:flex xl:flex-row xl:gap-3" : "xl:grid xl:grid-cols-4"
       )}>
+        {/* Left rail — advanced enhancement config (enhance mode only) */}
+        {enhanceMode && (
+          <aside className="hidden xl:flex xl:flex-col w-80 flex-shrink-0 h-full overflow-y-auto space-y-3 pr-1">
+            <ToolPanel
+              activeTool={activeTool}
+              onToolChange={handleToolChange}
+              disabled={session?.locked}
+              selectedLandmarkType={selectedLandmarkType}
+              onLandmarkTypeChange={setSelectedLandmarkType}
+            />
+            <ImageProcessingPanel
+              imageBlob={image?.originalBlob || null}
+              onProcessedImage={setProcessedImageCanvas}
+              disabled={session?.locked}
+            />
+          </aside>
+        )}
+
         {/* Canvas Area */}
         <div className={cn(
-          "xl:col-span-3 h-full w-full"
+          "h-full w-full",
+          enhanceMode ? "xl:flex-1 xl:min-w-0" : "xl:col-span-3"
         )}>
           <Card className={cn(
             "h-full flex flex-col border-0 xl:border shadow-none xl:shadow-sm bg-transparent xl:bg-white xl:dark:bg-gray-800 rounded-none xl:rounded-lg overflow-hidden"
@@ -708,28 +732,21 @@ const ImageAnalyzer: React.FC = () => {
           </Card>
         </div>
 
-        {/* Desktop Side Panel */}
-        {(
-          <div className="hidden xl:block h-full overflow-hidden pr-2">
+        {/* Desktop Side Panel (right) — layers; in enhance mode it's the layers rail */}
+        <div className={cn(
+          "hidden xl:block h-full overflow-hidden pr-2",
+          enhanceMode && "w-80 flex-shrink-0"
+        )}>
           <div className="flex flex-col h-full space-y-3">
-            {/* Fixed Tools Section - Always visible */}
-            <div className="flex-shrink-0 space-y-3">
-              <ToolPanel
-                activeTool={activeTool}
-                onToolChange={handleToolChange}
-                disabled={session?.locked}
-                selectedLandmarkType={selectedLandmarkType}
-                onLandmarkTypeChange={setSelectedLandmarkType}
-              />
-            </div>
-
-            {/* Conditional: Image Processing Panel */}
-            {activeTool === 'image-processing' && (
-              <div className="flex-shrink-0">
-                <ImageProcessingPanel
-                  imageBlob={image?.originalBlob || null}
-                  onProcessedImage={setProcessedImageCanvas}
+            {/* Tools — in normal mode here; in enhance mode they live in the left rail */}
+            {!enhanceMode && (
+              <div className="flex-shrink-0 space-y-3">
+                <ToolPanel
+                  activeTool={activeTool}
+                  onToolChange={handleToolChange}
                   disabled={session?.locked}
+                  selectedLandmarkType={selectedLandmarkType}
+                  onLandmarkTypeChange={setSelectedLandmarkType}
                 />
               </div>
             )}
@@ -754,7 +771,6 @@ const ImageAnalyzer: React.FC = () => {
             </div>
           </div>
         </div>
-        )}
       </div>
 
       {/* Optic Disc Cup Drawer Modal */}
