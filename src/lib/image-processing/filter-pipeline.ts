@@ -518,30 +518,66 @@ function applyTopHat(canvas: HTMLCanvasElement, kernelSize: number): HTMLCanvasE
   }
 }
 
-/** Pseudo-color view: map grayscale luminance through an OpenCV colormap (false color). */
+const clamp255 = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
+
+/** Map a normalized value t∈[0,1] to an [R,G,B] triplet for the chosen palette. */
+function colormapRGB(t: number, palette: string): [number, number, number] {
+  if (palette === 'hsv') {
+    // hue ramp 0..300° (rainbow), full saturation/value
+    const h = t * 300;
+    const c = 255;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    if (h < 60) return [c, x, 0];
+    if (h < 120) return [x, c, 0];
+    if (h < 180) return [0, c, x];
+    if (h < 240) return [0, x, c];
+    if (h < 300) return [x, 0, c];
+    return [c, 0, x];
+  }
+  if (palette === 'ycrcb') {
+    // "hot": black -> red -> yellow -> white
+    return [clamp255(t * 3 * 255), clamp255((t * 3 - 1) * 255), clamp255((t * 3 - 2) * 255)];
+  }
+  // default 'lab' -> JET (blue -> cyan -> green -> yellow -> red)
+  const r = clamp255(255 * (1.5 - Math.abs(4 * t - 3)));
+  const g = clamp255(255 * (1.5 - Math.abs(4 * t - 2)));
+  const b = clamp255(255 * (1.5 - Math.abs(4 * t - 1)));
+  return [r, g, b];
+}
+
+/**
+ * Pseudo-color (false color) view: map grayscale luminance through a palette.
+ * Built with a manual LUT because cv.applyColorMap is absent in this OpenCV.js build.
+ */
 function applyColorMapping(canvas: HTMLCanvasElement, colorSpace: string): HTMLCanvasElement {
   let rgb: any = null;
   let gray: any = null;
-  let colored: any = null;
+  let gray3: any = null;
+  let lut: any = null;
+  let dst: any = null;
   try {
     rgb = readRGB(canvas);
     gray = new cv.Mat();
     cv.cvtColor(rgb, gray, cv.COLOR_RGB2GRAY);
-    const maps: Record<string, number> = {
-      hsv: cv.COLORMAP_HSV,
-      lab: cv.COLORMAP_JET,
-      ycrcb: cv.COLORMAP_VIRIDIS ?? cv.COLORMAP_JET,
-    };
-    colored = new cv.Mat();
-    cv.applyColorMap(gray, colored, maps[colorSpace] ?? cv.COLORMAP_JET);
-    // applyColorMap outputs BGR -> swap to RGB for display
-    cv.cvtColor(colored, colored, cv.COLOR_BGR2RGB);
+    gray3 = new cv.Mat();
+    cv.cvtColor(gray, gray3, cv.COLOR_GRAY2RGB); // 3 equal channels so per-channel LUT works
+
+    lut = new cv.Mat(1, 256, cv.CV_8UC3);
+    for (let i = 0; i < 256; i++) {
+      const [r, g, b] = colormapRGB(i / 255, colorSpace);
+      const p = lut.ucharPtr(0, i);
+      p[0] = r; p[1] = g; p[2] = b;
+    }
+    dst = new cv.Mat();
+    cv.LUT(gray3, lut, dst); // dst(x,c) = lut(gray(x), c) -> colored RGB
     const output = makeCanvas(canvas.width, canvas.height);
-    showMat(colored, output);
+    showMat(dst, output);
     return output;
   } finally {
     if (rgb) rgb.delete();
     if (gray) gray.delete();
-    if (colored) colored.delete();
+    if (gray3) gray3.delete();
+    if (lut) lut.delete();
+    if (dst) dst.delete();
   }
 }
