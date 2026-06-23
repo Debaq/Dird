@@ -1,4 +1,4 @@
-import { Sun, Circle, Palette, Target, Scan, Sparkles, Blend, Grid3x3, Contrast, Wand, FlipVertical2 } from 'lucide-react';
+import { Sun, Circle, Palette, Target, Scan, Sparkles, Blend, Grid3x3, Contrast, Wand, FlipVertical2, SunDim } from 'lucide-react';
 import type { FilterType } from '@/stores/image-processing-store';
 import {
   Dialog,
@@ -21,7 +21,8 @@ const filterCategories = [
     filters: [
       { type: 'brightness' as FilterType, label: 'Brillo', icon: Sun, description: 'Ajustar brillo de la imagen' },
       { type: 'contrast' as FilterType, label: 'Contraste', icon: Circle, description: 'Ajustar contraste' },
-      { type: 'saturation' as FilterType, label: 'Saturación', icon: Palette, description: 'Ajustar saturación de color' }
+      { type: 'saturation' as FilterType, label: 'Saturación', icon: Palette, description: 'Ajustar saturación de color' },
+      { type: 'gamma' as FilterType, label: 'Gamma', icon: SunDim, description: 'Aclarar periferia oscura sin quemar luces' }
     ]
   },
   {
@@ -36,7 +37,7 @@ const filterCategories = [
     name: 'Conversión',
     filters: [
       { type: 'grayscale' as FilterType, label: 'Escala de Grises', icon: Contrast, description: 'Convertir a blanco y negro' },
-      { type: 'color_mapping' as FilterType, label: 'Espacio de Color', icon: Palette, description: 'HSV, LAB, YCrCb' },
+      { type: 'color_mapping' as FilterType, label: 'Falso color', icon: Palette, description: 'Mapa de calor (resalta variaciones sutiles)' },
       { type: 'invert' as FilterType, label: 'Invertir Colores', icon: FlipVertical2, description: 'Negativo de la imagen' }
     ]
   },
@@ -59,14 +60,14 @@ const filterCategories = [
     name: 'Morfología',
     filters: [
       { type: 'morphology' as FilterType, label: 'Dilatación/Erosión', icon: Grid3x3, description: 'Operaciones morfológicas' },
-      { type: 'tophat' as FilterType, label: 'Top-Hat', icon: Grid3x3, description: 'Morfología matemática' }
+      { type: 'tophat' as FilterType, label: 'Top-Hat (exudados)', icon: Grid3x3, description: 'Resalta estructuras claras (exudados) en canal verde' }
     ]
   },
   {
     name: 'Filtros',
     filters: [
       { type: 'blur' as FilterType, label: 'Desenfoque', icon: Blend, description: 'Gaussian, Median, Bilateral' },
-      { type: 'frangi' as FilterType, label: 'Realce de Vasos', icon: Target, description: 'Frangi vessel enhancement' }
+      { type: 'frangi' as FilterType, label: 'Realce de Vasos', icon: Target, description: 'Black-hat en canal verde (vasos/microhemorragias)' }
     ]
   }
 ];

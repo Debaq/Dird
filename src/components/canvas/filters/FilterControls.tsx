@@ -63,6 +63,24 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
           </div>
         );
 
+      case 'gamma':
+        return (
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Label className="text-xs">Gamma</Label>
+              <span className="text-xs text-smoke-600">{(config.value || 1.2).toFixed(2)}</span>
+            </div>
+            <Slider
+              min={0.3}
+              max={3.0}
+              step={0.05}
+              value={[config.value || 1.2]}
+              onValueChange={([value]) => onChange({ value })}
+            />
+            <p className="text-[10px] text-smoke-500">&gt;1 aclara la periferia oscura; &lt;1 oscurece.</p>
+          </div>
+        );
+
       case 'green_channel':
       case 'red_channel':
       case 'blue_channel':
@@ -78,6 +96,20 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
       case 'clahe':
         return (
           <div className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-xs">Canal</Label>
+              <Select
+                value={config.channel || 'luminance'}
+                onValueChange={(value) => onChange({ ...config, channel: value as any })}
+                options={[
+                  { value: 'luminance', label: 'Luminancia (preserva color)' },
+                  { value: 'green', label: 'Verde (vasos/lesiones)' },
+                  { value: 'red', label: 'Rojo' },
+                  { value: 'blue', label: 'Azul' }
+                ]}
+                className="h-8 text-xs"
+              />
+            </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <Label className="text-xs">Clip Limit</Label>

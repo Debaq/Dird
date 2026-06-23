@@ -23,6 +23,7 @@ const getFilterDisplayName = (type: string): string => {
     brightness: 'Brillo',
     contrast: 'Contraste',
     saturation: 'Saturación',
+    gamma: 'Gamma',
     green_channel: 'Canal Verde',
     red_channel: 'Canal Rojo',
     blue_channel: 'Canal Azul',
@@ -36,8 +37,8 @@ const getFilterDisplayName = (type: string): string => {
     histogram_equalization: 'Ecualización de Histograma',
     invert: 'Invertir Colores',
     frangi: 'Realce de Vasos',
-    tophat: 'Top-Hat',
-    color_mapping: 'Espacio de Color'
+    tophat: 'Top-Hat (exudados)',
+    color_mapping: 'Falso color'
   };
   return names[type] || type;
 };

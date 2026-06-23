@@ -1,11 +1,13 @@
 import { create } from 'zustand';
 
 export type FilterType =
-  | 'brightness' | 'contrast' | 'saturation'
+  | 'brightness' | 'contrast' | 'saturation' | 'gamma'
   | 'green_channel' | 'red_channel' | 'blue_channel'
   | 'grayscale' | 'clahe' | 'threshold' | 'edge_detection'
   | 'sharpening' | 'blur' | 'morphology'
   | 'histogram_equalization' | 'invert' | 'frangi' | 'tophat' | 'color_mapping';
+
+export type ClaheChannel = 'luminance' | 'green' | 'red' | 'blue';
 
 export interface FilterConfig {
   // Básicos
@@ -14,6 +16,7 @@ export interface FilterConfig {
   // CLAHE
   clipLimit?: number;
   tileGridSize?: number;
+  channel?: ClaheChannel;    // 'luminance' (color-preserving) o un canal RGB (mostrado en gris)
 
   // Threshold
   type?: 'binary' | 'binary_inv' | 'trunc' | 'tozero' | 'tozero_inv' | 'otsu';
@@ -69,11 +72,12 @@ const DEFAULT_CONFIGS: Record<FilterType, FilterConfig> = {
   brightness: { value: 0 },
   contrast: { value: 1.0 },
   saturation: { value: 1.0 },
+  gamma: { value: 1.2 },
   green_channel: {},
   red_channel: {},
   blue_channel: {},
   grayscale: {},
-  clahe: { clipLimit: 2.0, tileGridSize: 8 },
+  clahe: { clipLimit: 2.0, tileGridSize: 8, channel: 'luminance' },
   threshold: { type: 'binary', threshold: 127 },
   edge_detection: { method: 'canny', threshold1: 50, threshold2: 150 },
   sharpening: { value: 1.0 },
