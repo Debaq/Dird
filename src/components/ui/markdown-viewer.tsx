@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, FileText } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -23,6 +24,7 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
   filePath,
   title
 }) => {
+  const { t } = useTranslation();
   const [content, setContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,12 +41,12 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
     try {
       const response = await fetch(filePath);
       if (!response.ok) {
-        throw new Error('No se pudo cargar el archivo');
+        throw new Error(t('ui.markdownLoadError'));
       }
       const text = await response.text();
       setContent(text);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      setError(err instanceof Error ? err.message : t('ui.unknownError'));
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +71,7 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
 
           {error && (
             <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400">
-              <p className="font-medium">Error al cargar el archivo</p>
+              <p className="font-medium">{t('ui.markdownLoadErrorTitle')}</p>
               <p className="text-sm mt-1">{error}</p>
             </div>
           )}
@@ -105,7 +107,7 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
         <div className="border-t dark:border-coal-700 px-6 py-4">
           <Button onClick={onClose} variant="outline" className="w-full sm:w-auto">
             <X className="h-4 w-4 mr-2" />
-            Cerrar
+            {t('ui.close')}
           </Button>
         </div>
       </DialogContent>

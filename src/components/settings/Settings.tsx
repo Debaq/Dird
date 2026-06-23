@@ -196,18 +196,18 @@ export function Settings() {
       const deletedCount = await cleanupInvalidAnnotations();
 
       if (deletedCount > 0) {
-        toast.success(`Se eliminaron ${deletedCount} anotación(es) inválida(s)`, {
-          description: 'Las anotaciones con valores NaN o inválidos han sido limpiadas de la base de datos.'
+        toast.success(t('settings.general.cleanup.successTitle', { count: deletedCount }), {
+          description: t('settings.general.cleanup.successDesc')
         });
       } else {
-        toast.info('No se encontraron anotaciones inválidas', {
-          description: 'La base de datos está limpia.'
+        toast.info(t('settings.general.cleanup.noneTitle'), {
+          description: t('settings.general.cleanup.noneDesc')
         });
       }
     } catch (error) {
       console.error('Error cleaning invalid annotations:', error);
-      toast.error('Error al limpiar anotaciones', {
-        description: error instanceof Error ? error.message : 'Ocurrió un error desconocido.'
+      toast.error(t('settings.general.cleanup.errorTitle'), {
+        description: error instanceof Error ? error.message : t('settings.general.cleanup.unknownError')
       });
     } finally {
       setIsCleaningAnnotations(false);
@@ -262,23 +262,23 @@ export function Settings() {
             </TabsTrigger>
             <TabsTrigger value="analysis" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <Microscope className="h-4 w-4 mr-2" />
-              Análisis Avanzado
+              {t('settings.tabs.analysis')}
             </TabsTrigger>
             <TabsTrigger value="guidelines" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <BookOpen className="h-4 w-4 mr-2" />
-              Clinical Guidelines
+              {t('settings.tabs.guidelines')}
             </TabsTrigger>
             <TabsTrigger value="metrics" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <Activity className="h-4 w-4 mr-2" />
-              Métricas
+              {t('settings.tabs.metrics')}
             </TabsTrigger>
             <TabsTrigger value="debug" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <Bug className="h-4 w-4 mr-2" />
-              Depuración
+              {t('settings.tabs.debug')}
             </TabsTrigger>
             <TabsTrigger value="security" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <Shield className="h-4 w-4 mr-2" />
-              Seguridad
+              {t('settings.tabs.security')}
             </TabsTrigger>
             <TabsTrigger value="about" className="flex-shrink-0 dark:text-gray-100 dark:data-[state=active]:text-white">
               <Info className="h-4 w-4 mr-2" />
@@ -785,10 +785,10 @@ export function Settings() {
         <TabsContent value="analysis">
           <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
             <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-2">
-              Análisis Avanzado
+              {t('settings.analysis.title')}
             </h2>
             <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mb-6">
-              Configura qué análisis automáticos deseas activar en el canvas.
+              {t('settings.analysis.description')}
             </p>
 
             <div className="space-y-6">
@@ -796,10 +796,10 @@ export function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="font-semibold dark:text-dark-text">
-                    Patrones Circinados
+                    {t('settings.analysis.circinatePattern')}
                   </Label>
                   <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-                    Detecta anillos circinados de exudados duros alrededor de la fóvea
+                    {t('settings.analysis.circinatePatternDesc')}
                   </p>
                 </div>
                 <Switch
@@ -812,10 +812,10 @@ export function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="font-semibold dark:text-dark-text">
-                    Hemorragias Retinianas
+                    {t('settings.analysis.hemorrhages')}
                   </Label>
                   <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-                    Analiza hemorragias y su distribución por cuadrantes
+                    {t('settings.analysis.hemorrhagesDesc')}
                   </p>
                 </div>
                 <Switch
@@ -828,10 +828,10 @@ export function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="font-semibold dark:text-dark-text">
-                    Microaneurismas
+                    {t('settings.analysis.microaneurysms')}
                   </Label>
                   <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-                    Detecta y cuenta microaneurismas con análisis de distribución
+                    {t('settings.analysis.microaneurysmsDesc')}
                   </p>
                 </div>
                 <Switch
@@ -844,10 +844,10 @@ export function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="font-semibold dark:text-dark-text">
-                    Excavación del Disco Óptico
+                    {t('settings.analysis.opticDiscCupping')}
                   </Label>
                   <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-                    Calcula la relación copa/disco (C/D ratio) y distancias del anillo neuroretiniano
+                    {t('settings.analysis.opticDiscCuppingDesc')}
                   </p>
                 </div>
                 <Switch
@@ -870,7 +870,7 @@ export function Settings() {
         <TabsContent value="metrics">
           <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
             <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-4">
-              Métricas de rendimiento y uso
+              {t('settings.metrics.tabTitle')}
             </h2>
             <MetricsSettings />
           </Card>
@@ -880,16 +880,16 @@ export function Settings() {
         <TabsContent value="debug">
           <Card className="p-6 dark:bg-dark-surface dark:border-coal-700">
             <h2 className="text-xl font-semibold text-coal-800 dark:text-dark-text mb-2">
-              Depuración
+              {t('settings.debug.title')}
             </h2>
             <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mb-6">
-              Controla qué categorías de logs deseas ver en la consola del navegador durante el desarrollo.
+              {t('settings.debug.description')}
             </p>
 
             {!config.debug ? (
               <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md">
                 <p className="text-sm text-amber-800 dark:text-amber-200">
-                  La configuración de depuración no está disponible. Por favor, resetea la configuración desde la pestaña "Acerca de".
+                  {t('settings.debug.unavailable')}
                 </p>
               </div>
             ) : (
@@ -898,10 +898,10 @@ export function Settings() {
                 <div className="flex items-center justify-between p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-md">
                   <div>
                     <Label className="font-semibold dark:text-dark-text">
-                      Activar Depuración
+                      {t('settings.debug.enable')}
                     </Label>
                     <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-                      Interruptor maestro. Si está desactivado, no se mostrará ningún log.
+                      {t('settings.debug.enableDesc')}
                     </p>
                   </div>
                   <Switch
@@ -913,17 +913,17 @@ export function Settings() {
               {/* Category Controls */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-coal-800 dark:text-dark-text">
-                  Categorías de Logs
+                  {t('settings.debug.logCategories')}
                 </h3>
 
                 {/* API */}
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="font-medium dark:text-dark-text">
-                      API & Red
+                      {t('settings.debug.categories.api')}
                     </Label>
                     <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-                      Llamadas a APIs, peticiones de red, respuestas HTTP
+                      {t('settings.debug.categories.apiDesc')}
                     </p>
                   </div>
                   <Switch
@@ -939,10 +939,10 @@ export function Settings() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="font-medium dark:text-dark-text">
-                      Inteligencia Artificial
+                      {t('settings.debug.categories.ai')}
                     </Label>
                     <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-                      Inferencia de modelos, carga de modelos ONNX, predicciones
+                      {t('settings.debug.categories.aiDesc')}
                     </p>
                   </div>
                   <Switch
@@ -958,10 +958,10 @@ export function Settings() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="font-medium dark:text-dark-text">
-                      Procesamiento de Imágenes
+                      {t('settings.debug.categories.imageProcessing')}
                     </Label>
                     <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-                      Análisis de imágenes, transformaciones, detecciones
+                      {t('settings.debug.categories.imageProcessingDesc')}
                     </p>
                   </div>
                   <Switch
@@ -977,10 +977,10 @@ export function Settings() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="font-medium dark:text-dark-text">
-                      Guías Clínicas
+                      {t('settings.debug.categories.clinicalGuidelines')}
                     </Label>
                     <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-                      Procesamiento de guías clínicas, aplicación de criterios
+                      {t('settings.debug.categories.clinicalGuidelinesDesc')}
                     </p>
                   </div>
                   <Switch
@@ -996,10 +996,10 @@ export function Settings() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="font-medium dark:text-dark-text">
-                      Base de Datos
+                      {t('settings.debug.categories.database')}
                     </Label>
                     <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-                      Operaciones de IndexedDB, queries, transacciones
+                      {t('settings.debug.categories.databaseDesc')}
                     </p>
                   </div>
                   <Switch
@@ -1015,10 +1015,10 @@ export function Settings() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="font-medium dark:text-dark-text">
-                      Clasificación DR
+                      {t('settings.debug.categories.drClassification')}
                     </Label>
                     <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-                      Lógica de clasificación de retinopatía diabética
+                      {t('settings.debug.categories.drClassificationDesc')}
                     </p>
                   </div>
                   <Switch
@@ -1034,10 +1034,10 @@ export function Settings() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="font-medium dark:text-dark-text">
-                      Canvas
+                      {t('settings.debug.categories.canvas')}
                     </Label>
                     <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-                      Operaciones de canvas, anotaciones, dibujo
+                      {t('settings.debug.categories.canvasDesc')}
                     </p>
                   </div>
                   <Switch
@@ -1053,10 +1053,10 @@ export function Settings() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="font-medium dark:text-dark-text">
-                      General
+                      {t('settings.debug.categories.general')}
                     </Label>
                     <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-                      Logs generales de la aplicación
+                      {t('settings.debug.categories.generalDesc')}
                     </p>
                   </div>
                   <Switch
@@ -1072,24 +1072,24 @@ export function Settings() {
               {/* Info Box */}
               <div className="bg-ice p-4 rounded-md dark:bg-dark-surface dark:border dark:border-coal-600">
                 <h3 className="font-semibold text-coal-800 dark:text-dark-text mb-2">
-                  Nota sobre Depuración
+                  {t('settings.debug.note.title')}
                 </h3>
                 <ul className="space-y-2 text-sm text-smoke-600 dark:text-dark-textSecondary">
                   <li className="flex items-start gap-2">
                     <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
-                    <span>Los logs solo aparecen en la consola del navegador (F12)</span>
+                    <span>{t('settings.debug.note.item1')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
-                    <span>Los errores siempre se muestran en modo desarrollo</span>
+                    <span>{t('settings.debug.note.item2')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
-                    <span>En producción, todos los logs están desactivados por defecto</span>
+                    <span>{t('settings.debug.note.item3')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="h-4 w-4 text-primary-500 flex-shrink-0 mt-0.5 dark:text-primary-400" />
-                    <span>Esta configuración es útil para diagnosticar problemas</span>
+                    <span>{t('settings.debug.note.item4')}</span>
                   </li>
                 </ul>
               </div>
@@ -1099,7 +1099,7 @@ export function Settings() {
                 <div className="flex items-center gap-2 mb-4">
                   <Wrench className="h-5 w-5 text-coal-800 dark:text-dark-text" />
                   <h3 className="text-lg font-semibold text-coal-800 dark:text-dark-text">
-                    Herramientas de Mantenimiento
+                    {t('settings.debug.maintenance.title')}
                   </h3>
                 </div>
 
@@ -1109,10 +1109,10 @@ export function Settings() {
                     <Trash2 className="h-5 w-5 text-amber-700 dark:text-amber-300 flex-shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <h4 className="font-semibold text-coal-800 dark:text-dark-text mb-1">
-                        Limpiar Anotaciones Inválidas
+                        {t('settings.debug.maintenance.cleanupTitle')}
                       </h4>
                       <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mb-3">
-                        Elimina anotaciones con valores NaN, Infinity o inválidos que pueden causar advertencias en el canvas.
+                        {t('settings.debug.maintenance.cleanupDesc')}
                       </p>
                       <Button
                         onClick={handleCleanupInvalidAnnotations}
@@ -1124,12 +1124,12 @@ export function Settings() {
                         {isCleaningAnnotations ? (
                           <>
                             <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                            Limpiando...
+                            {t('settings.debug.maintenance.cleaning')}
                           </>
                         ) : (
                           <>
                             <Trash2 className="h-4 w-4 mr-2" />
-                            Ejecutar Limpieza
+                            {t('settings.debug.maintenance.runCleanup')}
                           </>
                         )}
                       </Button>

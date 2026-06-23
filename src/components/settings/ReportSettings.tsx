@@ -184,9 +184,9 @@ export default function ReportSettings() {
                 />
                 {report.customLogo && (
                   <div className="w-16 h-16 border rounded flex items-center justify-center p-1 bg-white">
-                    <img 
-                      src={report.customLogo} 
-                      alt="Custom Logo" 
+                    <img
+                      src={report.customLogo}
+                      alt={t('settings.reportCfg.customLogoAlt')}
                       className="max-w-full max-h-full object-contain"
                     />
                   </div>
@@ -441,21 +441,21 @@ export default function ReportSettings() {
           </h2>
           <div className="space-y-4">
             <div className="flex flex-col space-y-2">
-              <Label htmlFor="images-per-row" className="dark:text-dark-text">Images per Row</Label>
+              <Label htmlFor="images-per-row" className="dark:text-dark-text">{t('settings.reportCfg.imagesPerRow')}</Label>
               <Select
                 value={report.gallery.imagesPerRow?.toString() || '2'}
                 onValueChange={(value) => updateReportConfig({
                   gallery: { ...report.gallery, imagesPerRow: parseInt(value) }
                 })}
                 options={[
-                  { label: "1 Image (Large)", value: "1" },
-                  { label: "2 Images (Grid)", value: "2" }
+                  { label: t('settings.reportCfg.imagesPerRowOptions.one'), value: "1" },
+                  { label: t('settings.reportCfg.imagesPerRowOptions.two'), value: "2" }
                 ]}
               />
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="show-quadrants" className="dark:text-dark-text">Show Quadrant Lines</Label>
+              <Label htmlFor="show-quadrants" className="dark:text-dark-text">{t('settings.reportCfg.showQuadrantLines')}</Label>
               <Switch
                 id="show-quadrants"
                 checked={report.gallery.showQuadrantLines !== false}
@@ -466,7 +466,7 @@ export default function ReportSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="show-measurements" className="dark:text-dark-text">Show Measurements</Label>
+              <Label htmlFor="show-measurements" className="dark:text-dark-text">{t('settings.reportCfg.showMeasurements')}</Label>
               <Switch
                 id="show-measurements"
                 checked={report.gallery.showMeasurements !== false}
@@ -477,7 +477,7 @@ export default function ReportSettings() {
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="show-optic-disc" className="dark:text-dark-text">Show Optic Disc Area</Label>
+              <Label htmlFor="show-optic-disc" className="dark:text-dark-text">{t('settings.reportCfg.showOpticDiscArea')}</Label>
               <Switch
                 id="show-optic-disc"
                 checked={report.gallery.showOpticDiscArea !== false}

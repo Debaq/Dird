@@ -210,12 +210,12 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
       if (existingPreview) {
         await db.reports.delete(existingPreview.id!);
         setPreviewGenerated(false);
-        toast.success('Vista previa eliminada');
+        toast.success(t('reports.previewDeleted'));
         onReportGenerated?.(); // Refresh reports list
       }
     } catch (error) {
       console.error('Error deleting preview:', error);
-      toast.error('Error al eliminar la vista previa');
+      toast.error(t('reports.previewDeleteError'));
     }
   };
 
@@ -268,9 +268,9 @@ const ReportGeneratorComponent: React.FC<ReportGeneratorProps> = ({
                   className="mt-1 cursor-pointer"
                 />
                 <label htmlFor="forceOffline" className="text-sm text-coal-700 cursor-pointer">
-                  <span className="font-medium">Generar sin asistente IA</span>
+                  <span className="font-medium">{t('reports.generateWithoutAI')}</span>
                   <span className="block text-xs text-smoke-600 mt-0.5">
-                    Usa solo la clasificación local de la guía activa, sin pulir el texto con el LLM local.
+                    {t('reports.generateWithoutAIDescription')}
                   </span>
                 </label>
               </div>

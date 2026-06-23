@@ -45,7 +45,10 @@
     "cancel": "Cancel",
     "exit": "Exit",
     "loadingPDF": "Loading PDF...",
-    "failedToLoadPDF": "Failed to load PDF document"
+    "failedToLoadPDF": "Failed to load PDF document",
+    "markdownLoadError": "Could not load the file",
+    "unknownError": "Unknown error",
+    "markdownLoadErrorTitle": "Error loading the file"
   },
   "common": {
     "confirm": "Confirm",
@@ -380,7 +383,118 @@
       "invalidBboxError": "The annotation has invalid values. Please try again."
     },
     "undo": "Undo",
-    "redo": "Redo"
+    "redo": "Redo",
+    "opticDiscCupping": {
+      "title": "Optic Disc Cupping",
+      "description": "Cup/disc ratio analysis",
+      "noData": "Optic disc and cup were not detected to perform the analysis.",
+      "cupDiscRatio": "Cup/Disc Ratio (C/D)",
+      "vertical": "Vertical",
+      "horizontal": "Horizontal",
+      "average": "Average",
+      "rimDistances": "Neuroretinal Rim Distances (μm)",
+      "superior": "Superior",
+      "inferior": "Inferior",
+      "nasal": "Nasal",
+      "temporal": "Temporal",
+      "noteTitle": "⚠️ Note",
+      "glaucomaNote": "C/D ratio > 0.6 may require additional evaluation for glaucoma.",
+      "importantInfoTitle": "ℹ️ Important information",
+      "disclaimerPart1": "Measurements in micrometers (μm) assume the optic disc has a standard diameter of",
+      "standardDiameter": "1500 μm",
+      "disclaimerPart2": ". The actual diameter may vary between individuals, which can affect the accuracy of these measurements."
+    },
+    "microaneurysm": {
+      "scattered": "Scattered",
+      "clustered": "Clustered",
+      "diffuse": "Diffuse",
+      "title": "Microaneurysm Analysis",
+      "description": "Detection of retinal microaneurysms",
+      "totalDetected": "Total Detected",
+      "distributionPattern": "Distribution Pattern",
+      "infoTitle": "ℹ️ Information",
+      "infoText": "Microaneurysms are one of the earliest signs of diabetic retinopathy."
+    },
+    "hemorrhage": {
+      "title": "Retinal Hemorrhage Analysis",
+      "description": "Detection of hemorrhages in the retina",
+      "totalDetected": "Total Detected",
+      "distributionByQuadrant": "Distribution by Quadrant",
+      "superior": "Superior",
+      "temporal": "Temporal",
+      "nasal": "Nasal",
+      "inferior": "Inferior"
+    },
+    "circinate": {
+      "title": "Circinate Ring Analysis",
+      "description": "Detection of hard exudate patterns forming rings around the fovea",
+      "method": "Method:",
+      "exudatesInMacularZone": "Exudates in macular zone:"
+    },
+    "quadrant": {
+      "noAnalysisAvailable": "No analysis available",
+      "title": "Quadrant Analysis",
+      "anatomical": "Anatomical",
+      "fallback": "Fallback",
+      "opticDisc": "Optic Disc",
+      "fovea": "Fovea",
+      "totalLesions": "Total Lesions",
+      "fallbackWarning": "Using center-based division. Place landmarks for accurate anatomical reference."
+    },
+    "imageProcessing": {
+      "errorProcessing": "Error processing image",
+      "filterAdded": "Filter added",
+      "noProcessedImage": "No processed image to download",
+      "errorGenerating": "Error generating image",
+      "imageDownloaded": "Image downloaded",
+      "filtersReset": "Filters reset",
+      "title": "Advanced Processing",
+      "downloadTitle": "Download processed image",
+      "resetTitle": "Reset filters",
+      "overlayOriginal": "Overlay Original",
+      "originalOpacity": "Original Opacity",
+      "filters": "Filters ({{count}}/10)",
+      "add": "Add",
+      "noFilters": "No filters applied",
+      "processing": "Processing image..."
+    },
+    "cupDrawer": {
+      "opticDiscLabel": "Optic Disc",
+      "title": "Define Optic Disc and Cup",
+      "descStep1": "Step 1: Mark 4 points on the optic disc boundaries (superior, inferior, nasal, temporal)",
+      "descStep2": "Step 2: Paint the cup (excavation) inside the optic disc",
+      "noDiscDetected": "⚠️ No optic disc was detected in this image. You must first mark the optic disc.",
+      "step1Title": "📍 Step 1: Mark 4 points on the disc boundaries",
+      "step1Hint": "Click the points: superior, inferior, nasal and temporal (in any order)",
+      "pointsCount": "{{count}}/4 points",
+      "step2Title": "🎨 Step 2: Paint the cup",
+      "step2Hint": "Use the brush to paint the cup (the darkest part inside the disc). Adjust the brush size in the side panel.",
+      "legendDisc": "Optic Disc (detected)",
+      "legendPoints": "Disc points",
+      "legendCup": "Cup (painted)",
+      "tools": "Tools",
+      "reset": "Reset",
+      "tool": "Tool",
+      "brush": "Brush",
+      "eraser": "Eraser",
+      "brushSize": "Brush Size",
+      "eraserSize": "Eraser Size",
+      "brightness": "Brightness",
+      "contrast": "Contrast",
+      "clahe": "CLAHE (adaptive enhancement)",
+      "greenChannel": "Green Channel",
+      "grayscale": "Grayscale",
+      "sharpening": "Sharpening",
+      "tipLabel": "Tip:",
+      "tipText": "Enable \"Green Channel\" or \"CLAHE\" to better see the cup. Processing does not affect the original image.",
+      "continueToStep2": "Continue to Step 2 →",
+      "backToStep1": "← Back to Step 1",
+      "clearPoints": "Clear Points",
+      "clearCup": "Clear Cup",
+      "clearAll": "Clear All",
+      "cancel": "Cancel",
+      "save": "Save"
+    }
   },
   "advancedEditor": {
     "dialogTitle": "Modo Editor Avanzado",
@@ -669,7 +783,11 @@
       "updateSuccess": "Conclusions updated successfully",
       "mustInteractFirst": "You must view, download or edit the preview first"
     },
-    "generatedOffline": "offline"
+    "generatedOffline": "offline",
+    "previewDeleted": "Preview deleted",
+    "previewDeleteError": "Error deleting the preview",
+    "generateWithoutAI": "Generate without AI assistant",
+    "generateWithoutAIDescription": "Uses only the active guideline's local classification, without polishing the text with the local LLM."
   },
   "models": {
     "title": "AI Models",
@@ -886,7 +1004,12 @@
       "models": "Models",
       "processing": "Processing",
       "about": "About",
-      "report": "Report"
+      "report": "Report",
+      "analysis": "Advanced Analysis",
+      "guidelines": "Clinical Guidelines",
+      "metrics": "Metrics",
+      "debug": "Debug",
+      "security": "Security"
     },
     "guidelines": {
       "copy": "Copy",
@@ -944,7 +1067,17 @@
           "datePublished": "Date Published",
           "organization": "Organization",
           "description": "Description",
-          "descriptionPlaceholder": "Brief description of this guideline..."
+          "descriptionPlaceholder": "Brief description of this guideline...",
+          "languageOptions": {
+            "es": "Spanish",
+            "en": "English"
+          },
+          "statusOptions": {
+            "draft": "Draft",
+            "official": "Official",
+            "custom": "Custom",
+            "deprecated": "Deprecated"
+          }
         },
         "severity": {
           "description": "Define severity levels for DR classification (in order from least to most severe)",
@@ -956,7 +1089,9 @@
             "name": "Name (ES)",
             "color": "Color",
             "description": "Description (ES)",
-            "unnamed": "Unnamed Level"
+            "unnamed": "Unnamed Level",
+            "namePlaceholder": "No Apparent DR",
+            "descriptionPlaceholder": "Description of this severity level..."
           }
         },
         "rules": {
@@ -988,14 +1123,16 @@
             "minQuadrants": "Min Quadrants",
             "minPerQuadrant": "Min per Quadrant",
             "minDiscAreas": "Min Disc Areas",
-            "description": "Description"
+            "description": "Description",
+            "descriptionPlaceholder": "Description of this criterion..."
           },
           "mapping": {
             "0met": "0 criteria met →",
             "1met": "1 criterion met →",
             "2met": "2 or more criteria met →",
             "none": "None"
-          }
+          },
+          "descriptionPlaceholder": "NPDR severity criteria per ETDRS..."
         },
         "treatment": {
           "description": "Define treatment protocols and follow-up recommendations for each severity level",
@@ -1012,7 +1149,9 @@
             "routine": "Routine",
             "accelerated": "Accelerated",
             "urgent": "Urgent"
-          }
+          },
+          "actionPlaceholder": "Treatment action...",
+          "rationalePlaceholder": "Clinical rationale for this protocol..."
         },
         "emcs": {
           "enable": "Enable EMCS (Clinically Significant Macular Edema) Criteria",
@@ -1047,7 +1186,8 @@
           "rules": "{{count}} rules",
           "protocols": "{{count}} protocols"
         }
-      }
+      },
+      "deleteImported": "Delete imported guideline"
     },
     "classes": {
       "title": "Model Class Management",
@@ -1268,6 +1408,199 @@
       "updateNow": "Update Now",
       "noUpdates": "You have the latest version",
       "checkError": "Error checking for updates"
+    },
+    "metrics": {
+      "tabTitle": "Performance and usage metrics",
+      "usageMetrics": "Usage metrics",
+      "processedStudies": "Processed studies",
+      "processedImages": "Processed images",
+      "totalInferenceTime": "Total inference time",
+      "totalSessionTime": "Total session time",
+      "firstUse": "First use",
+      "lastUse": "Last use",
+      "perImageMetrics": "Per-image metrics (N={{count}})",
+      "noInferences": "No inferences yet.",
+      "perSessionMetrics": "Per-session metrics (N={{count}})",
+      "noSessions": "No sessions processed.",
+      "meanSessionDuration": "Mean session duration",
+      "meanPerImageSession": "Mean per image (session E2E)",
+      "overheadVsInference": "Overhead vs pure inference",
+      "copied": "Copied",
+      "exportJson": "Export JSON",
+      "clearHistory": "Clear history",
+      "resetAll": "Full reset (includes counters)",
+      "table": {
+        "phase": "Phase",
+        "meanMs": "Mean ms",
+        "mean": "Mean",
+        "median": "Median",
+        "min": "Min",
+        "max": "Max",
+        "std": "Std",
+        "pctE2E": "% E2E",
+        "totalE2E": "Total E2E"
+      },
+      "sessionTable": {
+        "date": "Date",
+        "images": "Images",
+        "modelLoad": "Model load",
+        "sessionTotal": "Session total",
+        "meanPerImage": "Mean/img"
+      }
+    },
+    "modelInfo": {
+      "dataset": "Dataset",
+      "epochs": "Epochs",
+      "framework": "Framework",
+      "measuredPerformance": "Measured performance",
+      "noMeasuredInferences": "No measured inferences yet. Process an image to see the metrics.",
+      "measuredPerformanceCount_one": "Measured performance ({{count}} inference)",
+      "measuredPerformanceCount_other": "Measured performance ({{count}} inferences)",
+      "lastInference": "Last inference",
+      "lastFields": {
+        "model": "Model:",
+        "image": "Image:",
+        "detections": "Detections:",
+        "preprocess": "Preprocess:",
+        "onnxInference": "ONNX Inference:",
+        "postProcessing": "Post-processing:",
+        "nms": "NMS:",
+        "spatialAnalysis": "Spatial analysis:",
+        "clinicalClassification": "Clinical classification:",
+        "endToEnd": "End-to-end:"
+      },
+      "aggregatedE2E": "Aggregated E2E (N={{count}}) · total mean {{mean}} ms",
+      "table": {
+        "mean": "Mean"
+      },
+      "copyJson": "Copy JSON"
+    },
+    "reportCfg": {
+      "customLogoAlt": "Custom Logo",
+      "imagesPerRow": "Images per Row",
+      "imagesPerRowOptions": {
+        "one": "1 Image (Large)",
+        "two": "2 Images (Grid)"
+      },
+      "showQuadrantLines": "Show Quadrant Lines",
+      "showMeasurements": "Show Measurements",
+      "showOpticDiscArea": "Show Optic Disc Area"
+    },
+    "general": {
+      "cleanup": {
+        "successTitle": "Removed {{count}} invalid annotation(s)",
+        "successDesc": "Annotations with NaN or invalid values have been cleaned from the database.",
+        "noneTitle": "No invalid annotations found",
+        "noneDesc": "The database is clean.",
+        "errorTitle": "Error cleaning annotations",
+        "unknownError": "An unknown error occurred."
+      }
+    },
+    "analysis": {
+      "title": "Advanced Analysis",
+      "description": "Configure which automatic analyses you want to enable on the canvas.",
+      "circinatePattern": "Circinate Patterns",
+      "circinatePatternDesc": "Detects circinate rings of hard exudates around the fovea",
+      "hemorrhages": "Retinal Hemorrhages",
+      "hemorrhagesDesc": "Analyzes hemorrhages and their distribution by quadrant",
+      "microaneurysms": "Microaneurysms",
+      "microaneurysmsDesc": "Detects and counts microaneurysms with distribution analysis",
+      "opticDiscCupping": "Optic Disc Cupping",
+      "opticDiscCuppingDesc": "Calculates the cup/disc ratio (C/D ratio) and neuroretinal rim distances"
+    },
+    "debug": {
+      "title": "Debug",
+      "description": "Control which log categories you want to see in the browser console during development.",
+      "unavailable": "Debug configuration is not available. Please reset the configuration from the \"About\" tab.",
+      "enable": "Enable Debugging",
+      "enableDesc": "Master switch. If disabled, no logs will be shown.",
+      "logCategories": "Log Categories",
+      "categories": {
+        "api": "API & Network",
+        "apiDesc": "API calls, network requests, HTTP responses",
+        "ai": "Artificial Intelligence",
+        "aiDesc": "Model inference, ONNX model loading, predictions",
+        "imageProcessing": "Image Processing",
+        "imageProcessingDesc": "Image analysis, transformations, detections",
+        "clinicalGuidelines": "Clinical Guidelines",
+        "clinicalGuidelinesDesc": "Clinical guideline processing, criteria application",
+        "database": "Database",
+        "databaseDesc": "IndexedDB operations, queries, transactions",
+        "drClassification": "DR Classification",
+        "drClassificationDesc": "Diabetic retinopathy classification logic",
+        "canvas": "Canvas",
+        "canvasDesc": "Canvas operations, annotations, drawing",
+        "general": "General",
+        "generalDesc": "General application logs"
+      },
+      "note": {
+        "title": "Note on Debugging",
+        "item1": "Logs only appear in the browser console (F12)",
+        "item2": "Errors are always shown in development mode",
+        "item3": "In production, all logs are disabled by default",
+        "item4": "This configuration is useful for diagnosing problems"
+      },
+      "maintenance": {
+        "title": "Maintenance Tools",
+        "cleanupTitle": "Clean Invalid Annotations",
+        "cleanupDesc": "Removes annotations with NaN, Infinity or invalid values that may cause warnings on the canvas.",
+        "cleaning": "Cleaning...",
+        "runCleanup": "Run Cleanup"
+      }
+    },
+    "security": {
+      "title": "Security and encryption",
+      "changeLoginTitle": "Change application password",
+      "changeLoginDesc": "Re-encrypts the local database with the new key. The operation is atomic.",
+      "newPassword": "New password",
+      "repeat": "Repeat",
+      "noMatch": "They do not match.",
+      "changeWarning": "The previous password will stop working immediately. There is no recovery.",
+      "updating": "Updating...",
+      "changePassword": "Change password",
+      "exportPwTitle": "Export password",
+      "exportPwDescPre": "Stored only in memory during this session. Used to encrypt exported",
+      "exportPwDescPost": "files.",
+      "replacePassword": "Replace password",
+      "setPassword": "Set password",
+      "update": "Update",
+      "set": "Set",
+      "lockTitle": "Lock session",
+      "lockDesc": "Closes the encrypted database and returns to the login screen.",
+      "lockNow": "Lock now",
+      "loginPwUpdated": "Application password updated.",
+      "errorPrefix": "Error: ",
+      "minChars": "Minimum {{count}} characters.",
+      "exportPwUpdated": "Export password updated for this session."
+    },
+    "customModels": {
+      "title": "External models",
+      "descriptionPre": "DIRD+ is model-agnostic. Load third-party ONNX models that comply with the",
+      "specLink": "model-interface v2.0 specification",
+      "installNew": "Install new model",
+      "onnxFile": ".onnx file",
+      "modelCardFile": "Model card .json",
+      "installing": "Validating and installing…",
+      "validateInstall": "Validate and install",
+      "installedOk": "Installed successfully",
+      "sanityCheck": "Sanity check: {{ms}} ms · output shape {{shape}}",
+      "validationFailed": "Validation failed",
+      "installedTitle": "Installed models ({{n}})",
+      "loading": "Loading…",
+      "noModels": "No custom models installed.",
+      "active": "Active",
+      "modelMeta": "{{size}} MB · installed {{date}}",
+      "activate": "Activate",
+      "listError": "Could not list models: ",
+      "selectBothFiles": "Select both files (.onnx + .json).",
+      "installed": "Model \"{{name}}\" installed.",
+      "validationFailedToast": "Validation failed — check details.",
+      "errorPrefix": "Error: ",
+      "activated": "Model activated and loaded for inference.",
+      "activateError": "Could not activate: ",
+      "confirmDelete": "Delete the model \"{{name}}\"?",
+      "deleted": "Model deleted.",
+      "deleteError": "Could not delete: "
     }
   },
   "processing": {
@@ -1365,5 +1698,186 @@
       "recommendations": "Recommendations",
       "warnings": "Warnings"
     }
+  },
+  "filters": {
+    "controls": {
+      "brightness": "Brightness",
+      "contrast": "Contrast",
+      "saturation": "Saturation",
+      "gamma": "Gamma",
+      "gammaHint": ">1 brightens the dark periphery; <1 darkens it.",
+      "noParams": "This filter has no configurable parameters",
+      "channel": "Channel",
+      "channelLuminance": "Luminance (preserves color)",
+      "channelGreen": "Green (vessels/lesions)",
+      "channelRed": "Red",
+      "channelBlue": "Blue",
+      "clipLimit": "Clip Limit",
+      "tileGridSize": "Tile Grid Size",
+      "type": "Type",
+      "value": "Value",
+      "thresholdBinary": "Binary",
+      "thresholdBinaryInv": "Binary Inverse",
+      "thresholdTrunc": "Truncate",
+      "thresholdToZero": "To Zero",
+      "thresholdToZeroInv": "To Zero Inverse",
+      "thresholdOtsu": "Otsu",
+      "method": "Method",
+      "threshold1": "Threshold 1",
+      "threshold2": "Threshold 2",
+      "intensity": "Intensity",
+      "kernelSize": "Kernel Size",
+      "morphDilate": "Dilation",
+      "morphErode": "Erosion",
+      "iterations": "Iterations",
+      "colorSpace": "Color Space",
+      "frangiInfo": "Blood vessel enhancement filter (no configurable parameters)"
+    },
+    "modal": {
+      "title": "Add Filter",
+      "description": "Select a filter to add to the processing pipeline ({{count}}/{{max}})"
+    },
+    "categories": {
+      "basic": "Basic",
+      "channels": "Channels",
+      "conversion": "Conversion",
+      "enhancement": "Enhancement",
+      "detection": "Detection",
+      "morphology": "Morphology",
+      "filters": "Filters"
+    },
+    "list": {
+      "brightness": {
+        "label": "Brightness",
+        "description": "Adjust image brightness"
+      },
+      "contrast": {
+        "label": "Contrast",
+        "description": "Adjust contrast"
+      },
+      "saturation": {
+        "label": "Saturation",
+        "description": "Adjust color saturation"
+      },
+      "gamma": {
+        "label": "Gamma",
+        "description": "Brighten dark periphery without blowing out highlights"
+      },
+      "greenChannel": {
+        "label": "Green Channel",
+        "description": "Extract green channel (best for retina)"
+      },
+      "redChannel": {
+        "label": "Red Channel",
+        "description": "Extract red channel"
+      },
+      "blueChannel": {
+        "label": "Blue Channel",
+        "description": "Extract blue channel"
+      },
+      "grayscale": {
+        "label": "Grayscale",
+        "description": "Convert to black and white"
+      },
+      "colorMapping": {
+        "label": "False Color",
+        "description": "Heatmap (highlights subtle variations)"
+      },
+      "invert": {
+        "label": "Invert Colors",
+        "description": "Image negative"
+      },
+      "clahe": {
+        "label": "CLAHE",
+        "description": "Adaptive contrast enhancement"
+      },
+      "histogramEqualization": {
+        "label": "Histogram Equalization",
+        "description": "Improve global contrast"
+      },
+      "sharpening": {
+        "label": "Sharpening",
+        "description": "Sharpen image edges"
+      },
+      "edgeDetection": {
+        "label": "Edge Detection",
+        "description": "Canny, Sobel, Laplacian"
+      },
+      "threshold": {
+        "label": "Thresholding",
+        "description": "Image binarization"
+      },
+      "morphology": {
+        "label": "Dilation/Erosion",
+        "description": "Morphological operations"
+      },
+      "tophat": {
+        "label": "Top-Hat (exudates)",
+        "description": "Highlights bright structures (exudates) in the green channel"
+      },
+      "blur": {
+        "label": "Blur",
+        "description": "Gaussian, Median, Bilateral"
+      },
+      "frangi": {
+        "label": "Vessel Enhancement",
+        "description": "Black-hat on the green channel (vessels/microhemorrhages)"
+      }
+    }
+  },
+  "migration": {
+    "preparing": "Preparing…",
+    "title": "Migration to encrypted database",
+    "introDescription": "We detected clinical data from an earlier version of DIRD+ stored unencrypted on this machine (IndexedDB). DIRD+ v2.0 will move it to a SQLite database encrypted with AES-256 (SQLCipher) protected by your password.",
+    "diagramFrom": "IndexedDB (plaintext)",
+    "diagramTo": "SQLite + SQLCipher",
+    "backupNoticeBefore": "Before migrating, DIRD+ will generate an",
+    "backupNoticeHighlight": "encrypted .dird backup",
+    "backupNoticeAfter": "with all your current data.",
+    "backupNoticeSave": "The backup will download automatically; keep it in a safe place.",
+    "warnNoExportPassphrase": "You need to set the export password in Settings → Security before starting the migration.",
+    "errorNoExportPassphrase": "First set the export password in Settings → Security so the encrypted backup can be generated.",
+    "later": "Later",
+    "start": "Start migration",
+    "generatingBackup": "Generating encrypted .dird backup…",
+    "doneTitle": "Migration complete",
+    "doneDescription": "Your data is now encrypted in SQLCipher. Closing this dialog…",
+    "errorTitle": "Migration error",
+    "cancel": "Cancel",
+    "retry": "Retry"
+  },
+  "wizard": {
+    "title": "DIRD+ initial setup",
+    "subtitle": "Step {{n}} of 4",
+    "strengthVeryWeak": "very weak",
+    "strengthWeak": "weak",
+    "strengthAcceptable": "acceptable",
+    "strengthGood": "good",
+    "strengthStrong": "strong",
+    "strengthVeryStrong": "very strong",
+    "welcomeIntro": "Before we start, we'll set up two passwords that protect your clinical data:",
+    "appPasswordTitle": "Application password.",
+    "appPasswordDescription": "Encrypts the local database with AES-256 (SQLCipher). Requested at every startup.",
+    "exportPasswordTitle": "Export password.",
+    "exportPasswordWelcomeDescription": "Encrypts the .dird files you export for sharing or backup.",
+    "noRecoveryWarning": "There is no password recovery. If you lose them, your encrypted data will be permanently inaccessible.",
+    "continue": "Continue",
+    "appPasswordHeading": "Application password",
+    "passwordLabelMin": "Password (min. {{n}} characters)",
+    "strengthPrefix": "Strength:",
+    "repeatPassword": "Repeat password",
+    "passwordsDoNotMatch": "Passwords do not match.",
+    "back": "Back",
+    "exportPasswordHeading": "Export password",
+    "exportPasswordDescription": "Recommended: different from the application password. It is used to encrypt the .dird files you send to colleagues or upload as backups.",
+    "password": "Password",
+    "confirmHeading": "Confirmation",
+    "confirmNoRecoveryHighlight": "No recovery.",
+    "confirmNoRecoveryText": "Anthropic, the DIRD+ developers, nor anyone else can recover lost passwords.",
+    "confirmInaccessible": "If you forget the application password, the stored clinical data will become inaccessible. No exceptions.",
+    "confirmUseManager": "Save both in a password manager (Bitwarden, KeePassXC) before continuing.",
+    "acknowledgeText": "I understand that if I lose the passwords I will permanently lose access to the encrypted data.",
+    "configuring": "Configuring...",
+    "createEncryptedDb": "Create encrypted database"
   }
 }

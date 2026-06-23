@@ -354,7 +354,7 @@ export function GuidelineSelector() {
                       handleDeleteCustom(guideline.id);
                     }}
                     className="flex-shrink-0 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Eliminar guía importada"
+                    title={t('settings.guidelines.deleteImported')}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

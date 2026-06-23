@@ -2,6 +2,7 @@ import type { FilterType, FilterConfig } from '@/stores/image-processing-store';
 import { Slider } from '@/components/ui/slider';
 import { Select } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { useTranslation } from 'react-i18next';
 
 interface FilterControlsProps {
   filterType: FilterType;
@@ -10,13 +11,14 @@ interface FilterControlsProps {
 }
 
 export function FilterControls({ filterType, config, onChange }: FilterControlsProps) {
+  const { t } = useTranslation();
   const renderControls = () => {
     switch (filterType) {
       case 'brightness':
         return (
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label className="text-xs">Brillo</Label>
+              <Label className="text-xs">{t('filters.controls.brightness')}</Label>
               <span className="text-xs text-smoke-600">{config.value || 0}</span>
             </div>
             <Slider
@@ -33,7 +35,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
         return (
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label className="text-xs">Contraste</Label>
+              <Label className="text-xs">{t('filters.controls.contrast')}</Label>
               <span className="text-xs text-smoke-600">{(config.value || 1.0).toFixed(2)}</span>
             </div>
             <Slider
@@ -50,7 +52,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
         return (
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label className="text-xs">Saturación</Label>
+              <Label className="text-xs">{t('filters.controls.saturation')}</Label>
               <span className="text-xs text-smoke-600">{(config.value || 1.0).toFixed(2)}</span>
             </div>
             <Slider
@@ -67,7 +69,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
         return (
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label className="text-xs">Gamma</Label>
+              <Label className="text-xs">{t('filters.controls.gamma')}</Label>
               <span className="text-xs text-smoke-600">{(config.value || 1.2).toFixed(2)}</span>
             </div>
             <Slider
@@ -77,7 +79,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
               value={[config.value || 1.2]}
               onValueChange={([value]) => onChange({ value })}
             />
-            <p className="text-[10px] text-smoke-500">&gt;1 aclara la periferia oscura; &lt;1 oscurece.</p>
+            <p className="text-[10px] text-smoke-500">{t('filters.controls.gammaHint')}</p>
           </div>
         );
 
@@ -89,7 +91,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
       case 'invert':
         return (
           <div className="text-xs text-smoke-600 italic">
-            Este filtro no tiene parámetros configurables
+            {t('filters.controls.noParams')}
           </div>
         );
 
@@ -97,22 +99,22 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
         return (
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label className="text-xs">Canal</Label>
+              <Label className="text-xs">{t('filters.controls.channel')}</Label>
               <Select
                 value={config.channel || 'luminance'}
                 onValueChange={(value) => onChange({ ...config, channel: value as any })}
                 options={[
-                  { value: 'luminance', label: 'Luminancia (preserva color)' },
-                  { value: 'green', label: 'Verde (vasos/lesiones)' },
-                  { value: 'red', label: 'Rojo' },
-                  { value: 'blue', label: 'Azul' }
+                  { value: 'luminance', label: t('filters.controls.channelLuminance') },
+                  { value: 'green', label: t('filters.controls.channelGreen') },
+                  { value: 'red', label: t('filters.controls.channelRed') },
+                  { value: 'blue', label: t('filters.controls.channelBlue') }
                 ]}
                 className="h-8 text-xs"
               />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label className="text-xs">Clip Limit</Label>
+                <Label className="text-xs">{t('filters.controls.clipLimit')}</Label>
                 <span className="text-xs text-smoke-600">{(config.clipLimit || 2.0).toFixed(1)}</span>
               </div>
               <Slider
@@ -125,7 +127,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label className="text-xs">Tile Grid Size</Label>
+                <Label className="text-xs">{t('filters.controls.tileGridSize')}</Label>
                 <span className="text-xs text-smoke-600">{config.tileGridSize || 8}</span>
               </div>
               <Slider
@@ -143,24 +145,24 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
         return (
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label className="text-xs">Tipo</Label>
+              <Label className="text-xs">{t('filters.controls.type')}</Label>
               <Select
                 value={config.type || 'binary'}
                 onValueChange={(value) => onChange({ ...config, type: value as any })}
                 options={[
-                  { value: 'binary', label: 'Binary' },
-                  { value: 'binary_inv', label: 'Binary Inverse' },
-                  { value: 'trunc', label: 'Truncate' },
-                  { value: 'tozero', label: 'To Zero' },
-                  { value: 'tozero_inv', label: 'To Zero Inverse' },
-                  { value: 'otsu', label: 'Otsu' }
+                  { value: 'binary', label: t('filters.controls.thresholdBinary') },
+                  { value: 'binary_inv', label: t('filters.controls.thresholdBinaryInv') },
+                  { value: 'trunc', label: t('filters.controls.thresholdTrunc') },
+                  { value: 'tozero', label: t('filters.controls.thresholdToZero') },
+                  { value: 'tozero_inv', label: t('filters.controls.thresholdToZeroInv') },
+                  { value: 'otsu', label: t('filters.controls.thresholdOtsu') }
                 ]}
                 className="h-8 text-xs"
               />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label className="text-xs">Valor</Label>
+                <Label className="text-xs">{t('filters.controls.value')}</Label>
                 <span className="text-xs text-smoke-600">{config.threshold || 127}</span>
               </div>
               <Slider
@@ -178,7 +180,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
         return (
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label className="text-xs">Método</Label>
+              <Label className="text-xs">{t('filters.controls.method')}</Label>
               <Select
                 value={config.method || 'canny'}
                 onValueChange={(value) => onChange({ ...config, method: value as any })}
@@ -194,7 +196,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
               <>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <Label className="text-xs">Threshold 1</Label>
+                    <Label className="text-xs">{t('filters.controls.threshold1')}</Label>
                     <span className="text-xs text-smoke-600">{config.threshold1 || 50}</span>
                   </div>
                   <Slider
@@ -207,7 +209,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <Label className="text-xs">Threshold 2</Label>
+                    <Label className="text-xs">{t('filters.controls.threshold2')}</Label>
                     <span className="text-xs text-smoke-600">{config.threshold2 || 150}</span>
                   </div>
                   <Slider
@@ -227,7 +229,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
         return (
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label className="text-xs">Intensidad</Label>
+              <Label className="text-xs">{t('filters.controls.intensity')}</Label>
               <span className="text-xs text-smoke-600">{(config.value || 1.0).toFixed(1)}</span>
             </div>
             <Slider
@@ -244,7 +246,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
         return (
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label className="text-xs">Tipo</Label>
+              <Label className="text-xs">{t('filters.controls.type')}</Label>
               <Select
                 value={config.blurType || 'gaussian'}
                 onValueChange={(value) => onChange({ ...config, blurType: value as any })}
@@ -258,7 +260,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label className="text-xs">Kernel Size</Label>
+                <Label className="text-xs">{t('filters.controls.kernelSize')}</Label>
                 <span className="text-xs text-smoke-600">{config.kernelSize || 5}</span>
               </div>
               <Slider
@@ -276,20 +278,20 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
         return (
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label className="text-xs">Tipo</Label>
+              <Label className="text-xs">{t('filters.controls.type')}</Label>
               <Select
                 value={config.morphType || 'dilate'}
                 onValueChange={(value) => onChange({ ...config, morphType: value as any })}
                 options={[
-                  { value: 'dilate', label: 'Dilatación' },
-                  { value: 'erode', label: 'Erosión' }
+                  { value: 'dilate', label: t('filters.controls.morphDilate') },
+                  { value: 'erode', label: t('filters.controls.morphErode') }
                 ]}
                 className="h-8 text-xs"
               />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label className="text-xs">Kernel Size</Label>
+                <Label className="text-xs">{t('filters.controls.kernelSize')}</Label>
                 <span className="text-xs text-smoke-600">{config.kernelSize || 3}</span>
               </div>
               <Slider
@@ -302,7 +304,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label className="text-xs">Iteraciones</Label>
+                <Label className="text-xs">{t('filters.controls.iterations')}</Label>
                 <span className="text-xs text-smoke-600">{config.iterations || 1}</span>
               </div>
               <Slider
@@ -320,7 +322,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
         return (
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <Label className="text-xs">Kernel Size</Label>
+              <Label className="text-xs">{t('filters.controls.kernelSize')}</Label>
               <span className="text-xs text-smoke-600">{config.kernelSize || 9}</span>
             </div>
             <Slider
@@ -336,7 +338,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
       case 'color_mapping':
         return (
           <div className="space-y-2">
-            <Label className="text-xs">Espacio de Color</Label>
+            <Label className="text-xs">{t('filters.controls.colorSpace')}</Label>
             <Select
               value={config.colorSpace || 'hsv'}
               onValueChange={(value) => onChange({ colorSpace: value as any })}
@@ -353,7 +355,7 @@ export function FilterControls({ filterType, config, onChange }: FilterControlsP
       case 'frangi':
         return (
           <div className="text-xs text-smoke-600 italic">
-            Filtro de realce de vasos sanguíneos (sin parámetros configurables)
+            {t('filters.controls.frangiInfo')}
           </div>
         );
 

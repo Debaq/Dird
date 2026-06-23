@@ -4,6 +4,7 @@
  * Modal that shows detailed hemorrhage analysis
  */
 
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -24,20 +25,21 @@ export function HemorrhageAnalysisModal({
   onOpenChange,
   analysis,
 }: HemorrhageAnalysisModalProps) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Análisis de Hemorragias Retinianas</DialogTitle>
+          <DialogTitle>{t('canvas.hemorrhage.title')}</DialogTitle>
           <DialogDescription>
-            Detección de hemorragias en la retina
+            {t('canvas.hemorrhage.description')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="mt-4 space-y-4">
           {/* Total Count */}
           <div className="bg-coal-50 dark:bg-gray-900 p-3 rounded">
-            <div className="text-xs text-smoke-600 dark:text-gray-400 mb-1">Total Detectadas</div>
+            <div className="text-xs text-smoke-600 dark:text-gray-400 mb-1">{t('canvas.hemorrhage.totalDetected')}</div>
             <div className="text-2xl font-bold text-coal-800 dark:text-gray-200">
               {analysis.totalCount}
             </div>
@@ -47,13 +49,13 @@ export function HemorrhageAnalysisModal({
           {analysis.totalCount > 0 && (
             <div>
               <div className="text-sm font-medium text-coal-800 dark:text-gray-200 mb-2">
-                Distribución por Cuadrante
+                {t('canvas.hemorrhage.distributionByQuadrant')}
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <QuadrantInfo label="Superior" count={analysis.byQuadrant.superior} />
-                <QuadrantInfo label="Temporal" count={analysis.byQuadrant.temporal} />
-                <QuadrantInfo label="Nasal" count={analysis.byQuadrant.nasal} />
-                <QuadrantInfo label="Inferior" count={analysis.byQuadrant.inferior} />
+                <QuadrantInfo label={t('canvas.hemorrhage.superior')} count={analysis.byQuadrant.superior} />
+                <QuadrantInfo label={t('canvas.hemorrhage.temporal')} count={analysis.byQuadrant.temporal} />
+                <QuadrantInfo label={t('canvas.hemorrhage.nasal')} count={analysis.byQuadrant.nasal} />
+                <QuadrantInfo label={t('canvas.hemorrhage.inferior')} count={analysis.byQuadrant.inferior} />
               </div>
             </div>
           )}

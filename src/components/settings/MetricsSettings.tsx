@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Activity, Timer, Gauge, Copy, Trash2 } from 'lucide-react';
@@ -10,6 +11,7 @@ const fmtDate = (ts: number | null) =>
   ts ? new Date(ts).toLocaleString() : '—';
 
 export const MetricsSettings: React.FC = () => {
+  const { t } = useTranslation();
   const history = useInferenceMetricsStore((s) => s.history);
   const sessionHistory = useInferenceMetricsStore((s) => s.sessionHistory);
   const usage = useInferenceMetricsStore((s) => s.usage);
@@ -57,36 +59,36 @@ export const MetricsSettings: React.FC = () => {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Activity className="w-5 h-5" />
-            Métricas de uso
+            {t('settings.metrics.usageMetrics')}
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
           <div>
-            <div className="text-smoke-600">Estudios procesados</div>
+            <div className="text-smoke-600">{t('settings.metrics.processedStudies')}</div>
             <div className="text-2xl font-semibold">{usage.totalStudies}</div>
           </div>
           <div>
-            <div className="text-smoke-600">Imágenes procesadas</div>
+            <div className="text-smoke-600">{t('settings.metrics.processedImages')}</div>
             <div className="text-2xl font-semibold">{usage.totalImages}</div>
           </div>
           <div>
-            <div className="text-smoke-600">Tiempo total de inferencia</div>
+            <div className="text-smoke-600">{t('settings.metrics.totalInferenceTime')}</div>
             <div className="text-2xl font-semibold">
               {fmtSec(usage.totalInferenceTime_ms)}
             </div>
           </div>
           <div>
-            <div className="text-smoke-600">Tiempo total de sesiones</div>
+            <div className="text-smoke-600">{t('settings.metrics.totalSessionTime')}</div>
             <div className="text-2xl font-semibold">
               {fmtSec(usage.totalSessionTime_ms)}
             </div>
           </div>
           <div>
-            <div className="text-smoke-600">Primer uso</div>
+            <div className="text-smoke-600">{t('settings.metrics.firstUse')}</div>
             <div className="font-medium">{fmtDate(usage.firstUseTs)}</div>
           </div>
           <div>
-            <div className="text-smoke-600">Último uso</div>
+            <div className="text-smoke-600">{t('settings.metrics.lastUse')}</div>
             <div className="font-medium">{fmtDate(usage.lastUseTs)}</div>
           </div>
         </CardContent>
@@ -96,24 +98,24 @@ export const MetricsSettings: React.FC = () => {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Timer className="w-5 h-5" />
-            Métricas por imagen (N={stats.count})
+            {t('settings.metrics.perImageMetrics', { count: stats.count })}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {stats.count === 0 ? (
-            <p className="text-sm text-smoke-600">Sin inferencias aún.</p>
+            <p className="text-sm text-smoke-600">{t('settings.metrics.noInferences')}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="text-xs w-full">
                 <thead>
                   <tr className="text-smoke-600 border-b">
-                    <th className="text-left py-1 pr-2">Fase</th>
-                    <th className="text-right px-2">Media ms</th>
-                    <th className="text-right px-2">Mediana</th>
-                    <th className="text-right px-2">Min</th>
-                    <th className="text-right px-2">Max</th>
-                    <th className="text-right px-2">Std</th>
-                    <th className="text-right px-2">% E2E</th>
+                    <th className="text-left py-1 pr-2">{t('settings.metrics.table.phase')}</th>
+                    <th className="text-right px-2">{t('settings.metrics.table.meanMs')}</th>
+                    <th className="text-right px-2">{t('settings.metrics.table.median')}</th>
+                    <th className="text-right px-2">{t('settings.metrics.table.min')}</th>
+                    <th className="text-right px-2">{t('settings.metrics.table.max')}</th>
+                    <th className="text-right px-2">{t('settings.metrics.table.std')}</th>
+                    <th className="text-right px-2">{t('settings.metrics.table.pctE2E')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -138,7 +140,7 @@ export const MetricsSettings: React.FC = () => {
                     </tr>
                   ))}
                   <tr className="font-medium">
-                    <td className="py-1 pr-2">Total E2E</td>
+                    <td className="py-1 pr-2">{t('settings.metrics.table.totalE2E')}</td>
                     <td className="text-right px-2">{fmt(stats.total_ms.mean)}</td>
                     <td className="text-right px-2">
                       {fmt(stats.total_ms.median)}
@@ -159,25 +161,25 @@ export const MetricsSettings: React.FC = () => {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Gauge className="w-5 h-5" />
-            Métricas por sesión (N={sessionHistory.length})
+            {t('settings.metrics.perSessionMetrics', { count: sessionHistory.length })}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {sessionHistory.length === 0 ? (
-            <p className="text-sm text-smoke-600">Sin sesiones procesadas.</p>
+            <p className="text-sm text-smoke-600">{t('settings.metrics.noSessions')}</p>
           ) : (
             <>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-4">
                 <div>
-                  <div className="text-smoke-600">Duración media sesión</div>
+                  <div className="text-smoke-600">{t('settings.metrics.meanSessionDuration')}</div>
                   <div className="font-medium">{fmtSec(sessionMean)}</div>
                 </div>
                 <div>
-                  <div className="text-smoke-600">Media por imagen (E2E sesión)</div>
+                  <div className="text-smoke-600">{t('settings.metrics.meanPerImageSession')}</div>
                   <div className="font-medium">{fmt(perImageMean)} ms</div>
                 </div>
                 <div>
-                  <div className="text-smoke-600">Overhead vs inferencia pura</div>
+                  <div className="text-smoke-600">{t('settings.metrics.overheadVsInference')}</div>
                   <div className="font-medium">{overheadPct.toFixed(1)}%</div>
                 </div>
               </div>
@@ -185,11 +187,11 @@ export const MetricsSettings: React.FC = () => {
                 <table className="text-xs w-full">
                   <thead>
                     <tr className="text-smoke-600 border-b">
-                      <th className="text-left py-1 pr-2">Fecha</th>
-                      <th className="text-right px-2">Imágenes</th>
-                      <th className="text-right px-2">Carga modelo</th>
-                      <th className="text-right px-2">Total sesión</th>
-                      <th className="text-right px-2">Media/img</th>
+                      <th className="text-left py-1 pr-2">{t('settings.metrics.sessionTable.date')}</th>
+                      <th className="text-right px-2">{t('settings.metrics.sessionTable.images')}</th>
+                      <th className="text-right px-2">{t('settings.metrics.sessionTable.modelLoad')}</th>
+                      <th className="text-right px-2">{t('settings.metrics.sessionTable.sessionTotal')}</th>
+                      <th className="text-right px-2">{t('settings.metrics.sessionTable.meanPerImage')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -221,15 +223,15 @@ export const MetricsSettings: React.FC = () => {
       <div className="flex gap-2">
         <Button size="sm" variant="outline" onClick={handleCopy}>
           <Copy className="w-4 h-4 mr-1" />
-          {copied ? 'Copiado' : 'Exportar JSON'}
+          {copied ? t('settings.metrics.copied') : t('settings.metrics.exportJson')}
         </Button>
         <Button size="sm" variant="outline" onClick={clear}>
           <Trash2 className="w-4 h-4 mr-1" />
-          Limpiar historial
+          {t('settings.metrics.clearHistory')}
         </Button>
         <Button size="sm" variant="destructive" onClick={clearAll}>
           <Trash2 className="w-4 h-4 mr-1" />
-          Reset total (incluye contadores)
+          {t('settings.metrics.resetAll')}
         </Button>
       </div>
     </div>

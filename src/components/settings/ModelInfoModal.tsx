@@ -279,7 +279,7 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
               <CardContent className="grid grid-cols-2 gap-4 text-sm">
                 {enrichedMetadata.training_info.dataset && (
                   <div className="col-span-2">
-                    <span className="text-smoke-600">Dataset</span>
+                    <span className="text-smoke-600">{t('settings.modelInfo.dataset')}</span>
                     <div className="font-medium text-coal-800">{enrichedMetadata.training_info.dataset}</div>
                   </div>
                 )}
@@ -297,13 +297,13 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
                 )}
                 {enrichedMetadata.training_info.epochs && (
                   <div>
-                    <span className="text-smoke-600">Epochs</span>
+                    <span className="text-smoke-600">{t('settings.modelInfo.epochs')}</span>
                     <div className="font-medium text-coal-800">{enrichedMetadata.training_info.epochs}</div>
                   </div>
                 )}
                 {enrichedMetadata.training_info.framework && (
                   <div>
-                    <span className="text-smoke-600">Framework</span>
+                    <span className="text-smoke-600">{t('settings.modelInfo.framework')}</span>
                     <div className="font-medium text-coal-800">{enrichedMetadata.training_info.framework}</div>
                   </div>
                 )}
@@ -364,6 +364,7 @@ const ModelInfoModal: React.FC<ModelInfoModalProps> = ({ open, onOpenChange, met
 };
 
 const InferencePerformanceSection: React.FC = () => {
+  const { t } = useTranslation();
   const history = useInferenceMetricsStore((s) => s.history);
   const clear = useInferenceMetricsStore((s) => s.clear);
   const getStats = useInferenceMetricsStore((s) => s.getStats);
@@ -375,12 +376,12 @@ const InferencePerformanceSection: React.FC = () => {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Timer className="w-5 h-5" />
-            Rendimiento medido
+            {t('settings.modelInfo.measuredPerformance')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-smoke-600">
-            Aún no hay inferencias medidas. Procesa una imagen para ver las métricas.
+            {t('settings.modelInfo.noMeasuredInferences')}
           </p>
         </CardContent>
       </Card>
@@ -412,26 +413,26 @@ const InferencePerformanceSection: React.FC = () => {
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
           <Timer className="w-5 h-5" />
-          Rendimiento medido ({history.length} inferencia{history.length === 1 ? '' : 's'})
+          {t('settings.modelInfo.measuredPerformanceCount', { count: history.length })}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <h4 className="text-sm font-medium mb-2">Última inferencia</h4>
+          <h4 className="text-sm font-medium mb-2">{t('settings.modelInfo.lastInference')}</h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-            <div><span className="text-smoke-600">Modelo:</span> {last.modelVersion}</div>
-            <div><span className="text-smoke-600">Imagen:</span> {last.imageWidth}×{last.imageHeight}</div>
-            <div><span className="text-smoke-600">Detecciones:</span> {last.numDetections}</div>
-            <div><span className="text-smoke-600">Preprocess:</span> {fmt(last.preprocess_ms)} ms</div>
-            <div><span className="text-smoke-600">ONNX Inference:</span> {fmt(last.inference_ms)} ms</div>
-            <div><span className="text-smoke-600">Post-processing:</span> {fmt(last.postprocess_ms)} ms</div>
+            <div><span className="text-smoke-600">{t('settings.modelInfo.lastFields.model')}</span> {last.modelVersion}</div>
+            <div><span className="text-smoke-600">{t('settings.modelInfo.lastFields.image')}</span> {last.imageWidth}×{last.imageHeight}</div>
+            <div><span className="text-smoke-600">{t('settings.modelInfo.lastFields.detections')}</span> {last.numDetections}</div>
+            <div><span className="text-smoke-600">{t('settings.modelInfo.lastFields.preprocess')}</span> {fmt(last.preprocess_ms)} ms</div>
+            <div><span className="text-smoke-600">{t('settings.modelInfo.lastFields.onnxInference')}</span> {fmt(last.inference_ms)} ms</div>
+            <div><span className="text-smoke-600">{t('settings.modelInfo.lastFields.postProcessing')}</span> {fmt(last.postprocess_ms)} ms</div>
             {last.nms_ms !== null && (
-              <div><span className="text-smoke-600">NMS:</span> {fmt(last.nms_ms)} ms</div>
+              <div><span className="text-smoke-600">{t('settings.modelInfo.lastFields.nms')}</span> {fmt(last.nms_ms)} ms</div>
             )}
-            <div><span className="text-smoke-600">Spatial analysis:</span> {fmt(last.spatial_ms ?? 0)} ms</div>
-            <div><span className="text-smoke-600">Clinical classification:</span> {fmt(last.clinical_ms ?? 0)} ms</div>
+            <div><span className="text-smoke-600">{t('settings.modelInfo.lastFields.spatialAnalysis')}</span> {fmt(last.spatial_ms ?? 0)} ms</div>
+            <div><span className="text-smoke-600">{t('settings.modelInfo.lastFields.clinicalClassification')}</span> {fmt(last.clinical_ms ?? 0)} ms</div>
             <div className="font-medium col-span-2 md:col-span-3 border-t pt-1 mt-1">
-              <span className="text-smoke-600">End-to-end:</span> {fmt(last.total_ms)} ms
+              <span className="text-smoke-600">{t('settings.modelInfo.lastFields.endToEnd')}</span> {fmt(last.total_ms)} ms
             </div>
           </div>
         </div>
@@ -439,19 +440,19 @@ const InferencePerformanceSection: React.FC = () => {
         {history.length >= 1 && (
           <div>
             <h4 className="text-sm font-medium mb-2">
-              Agregados E2E (N={stats.count}) · media total {fmt(stats.total_ms.mean)} ms
+              {t('settings.modelInfo.aggregatedE2E', { count: stats.count, mean: fmt(stats.total_ms.mean) })}
             </h4>
             <div className="overflow-x-auto">
               <table className="text-xs w-full">
                 <thead>
                   <tr className="text-smoke-600 border-b">
-                    <th className="text-left py-1 pr-2">Fase</th>
-                    <th className="text-right px-2">Media</th>
-                    <th className="text-right px-2">Mediana</th>
-                    <th className="text-right px-2">Min</th>
-                    <th className="text-right px-2">Max</th>
-                    <th className="text-right px-2">Std</th>
-                    <th className="text-right px-2">% E2E</th>
+                    <th className="text-left py-1 pr-2">{t('settings.metrics.table.phase')}</th>
+                    <th className="text-right px-2">{t('settings.modelInfo.table.mean')}</th>
+                    <th className="text-right px-2">{t('settings.metrics.table.median')}</th>
+                    <th className="text-right px-2">{t('settings.metrics.table.min')}</th>
+                    <th className="text-right px-2">{t('settings.metrics.table.max')}</th>
+                    <th className="text-right px-2">{t('settings.metrics.table.std')}</th>
+                    <th className="text-right px-2">{t('settings.metrics.table.pctE2E')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -474,7 +475,7 @@ const InferencePerformanceSection: React.FC = () => {
                     </tr>
                   ))}
                   <tr className="font-medium">
-                    <td className="py-1 pr-2">Total E2E</td>
+                    <td className="py-1 pr-2">{t('settings.metrics.table.totalE2E')}</td>
                     <td className="text-right px-2">{fmt(stats.total_ms.mean)}</td>
                     <td className="text-right px-2">{fmt(stats.total_ms.median)}</td>
                     <td className="text-right px-2">{fmt(stats.total_ms.min)}</td>
@@ -491,11 +492,11 @@ const InferencePerformanceSection: React.FC = () => {
         <div className="flex gap-2 pt-2">
           <Button size="sm" variant="outline" onClick={handleCopy}>
             <Copy className="w-4 h-4 mr-1" />
-            {copied ? 'Copiado' : 'Copiar JSON'}
+            {copied ? t('settings.metrics.copied') : t('settings.modelInfo.copyJson')}
           </Button>
           <Button size="sm" variant="outline" onClick={clear}>
             <Trash2 className="w-4 h-4 mr-1" />
-            Limpiar historial
+            {t('settings.metrics.clearHistory')}
           </Button>
         </div>
       </CardContent>

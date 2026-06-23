@@ -1,4 +1,5 @@
 import { Sun, Circle, Palette, Target, Scan, Sparkles, Blend, Grid3x3, Contrast, Wand, FlipVertical2, SunDim } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { FilterType } from '@/stores/image-processing-store';
 import {
   Dialog,
@@ -17,62 +18,63 @@ interface AddFilterModalProps {
 
 const filterCategories = [
   {
-    name: 'Básicos',
+    nameKey: 'filters.categories.basic',
     filters: [
-      { type: 'brightness' as FilterType, label: 'Brillo', icon: Sun, description: 'Ajustar brillo de la imagen' },
-      { type: 'contrast' as FilterType, label: 'Contraste', icon: Circle, description: 'Ajustar contraste' },
-      { type: 'saturation' as FilterType, label: 'Saturación', icon: Palette, description: 'Ajustar saturación de color' },
-      { type: 'gamma' as FilterType, label: 'Gamma', icon: SunDim, description: 'Aclarar periferia oscura sin quemar luces' }
+      { type: 'brightness' as FilterType, labelKey: 'filters.list.brightness.label', icon: Sun, descKey: 'filters.list.brightness.description' },
+      { type: 'contrast' as FilterType, labelKey: 'filters.list.contrast.label', icon: Circle, descKey: 'filters.list.contrast.description' },
+      { type: 'saturation' as FilterType, labelKey: 'filters.list.saturation.label', icon: Palette, descKey: 'filters.list.saturation.description' },
+      { type: 'gamma' as FilterType, labelKey: 'filters.list.gamma.label', icon: SunDim, descKey: 'filters.list.gamma.description' }
     ]
   },
   {
-    name: 'Canales',
+    nameKey: 'filters.categories.channels',
     filters: [
-      { type: 'green_channel' as FilterType, label: 'Canal Verde', icon: Target, description: 'Extraer canal verde (mejor para retina)' },
-      { type: 'red_channel' as FilterType, label: 'Canal Rojo', icon: Target, description: 'Extraer canal rojo' },
-      { type: 'blue_channel' as FilterType, label: 'Canal Azul', icon: Target, description: 'Extraer canal azul' }
+      { type: 'green_channel' as FilterType, labelKey: 'filters.list.greenChannel.label', icon: Target, descKey: 'filters.list.greenChannel.description' },
+      { type: 'red_channel' as FilterType, labelKey: 'filters.list.redChannel.label', icon: Target, descKey: 'filters.list.redChannel.description' },
+      { type: 'blue_channel' as FilterType, labelKey: 'filters.list.blueChannel.label', icon: Target, descKey: 'filters.list.blueChannel.description' }
     ]
   },
   {
-    name: 'Conversión',
+    nameKey: 'filters.categories.conversion',
     filters: [
-      { type: 'grayscale' as FilterType, label: 'Escala de Grises', icon: Contrast, description: 'Convertir a blanco y negro' },
-      { type: 'color_mapping' as FilterType, label: 'Falso color', icon: Palette, description: 'Mapa de calor (resalta variaciones sutiles)' },
-      { type: 'invert' as FilterType, label: 'Invertir Colores', icon: FlipVertical2, description: 'Negativo de la imagen' }
+      { type: 'grayscale' as FilterType, labelKey: 'filters.list.grayscale.label', icon: Contrast, descKey: 'filters.list.grayscale.description' },
+      { type: 'color_mapping' as FilterType, labelKey: 'filters.list.colorMapping.label', icon: Palette, descKey: 'filters.list.colorMapping.description' },
+      { type: 'invert' as FilterType, labelKey: 'filters.list.invert.label', icon: FlipVertical2, descKey: 'filters.list.invert.description' }
     ]
   },
   {
-    name: 'Realce',
+    nameKey: 'filters.categories.enhancement',
     filters: [
-      { type: 'clahe' as FilterType, label: 'CLAHE', icon: Sparkles, description: 'Realce adaptativo de contraste' },
-      { type: 'histogram_equalization' as FilterType, label: 'Ecualización de Histograma', icon: Contrast, description: 'Mejorar contraste global' },
-      { type: 'sharpening' as FilterType, label: 'Nitidez', icon: Wand, description: 'Afilar bordes de la imagen' }
+      { type: 'clahe' as FilterType, labelKey: 'filters.list.clahe.label', icon: Sparkles, descKey: 'filters.list.clahe.description' },
+      { type: 'histogram_equalization' as FilterType, labelKey: 'filters.list.histogramEqualization.label', icon: Contrast, descKey: 'filters.list.histogramEqualization.description' },
+      { type: 'sharpening' as FilterType, labelKey: 'filters.list.sharpening.label', icon: Wand, descKey: 'filters.list.sharpening.description' }
     ]
   },
   {
-    name: 'Detección',
+    nameKey: 'filters.categories.detection',
     filters: [
-      { type: 'edge_detection' as FilterType, label: 'Detección de Bordes', icon: Scan, description: 'Canny, Sobel, Laplacian' },
-      { type: 'threshold' as FilterType, label: 'Umbralización', icon: Contrast, description: 'Binarización de imagen' }
+      { type: 'edge_detection' as FilterType, labelKey: 'filters.list.edgeDetection.label', icon: Scan, descKey: 'filters.list.edgeDetection.description' },
+      { type: 'threshold' as FilterType, labelKey: 'filters.list.threshold.label', icon: Contrast, descKey: 'filters.list.threshold.description' }
     ]
   },
   {
-    name: 'Morfología',
+    nameKey: 'filters.categories.morphology',
     filters: [
-      { type: 'morphology' as FilterType, label: 'Dilatación/Erosión', icon: Grid3x3, description: 'Operaciones morfológicas' },
-      { type: 'tophat' as FilterType, label: 'Top-Hat (exudados)', icon: Grid3x3, description: 'Resalta estructuras claras (exudados) en canal verde' }
+      { type: 'morphology' as FilterType, labelKey: 'filters.list.morphology.label', icon: Grid3x3, descKey: 'filters.list.morphology.description' },
+      { type: 'tophat' as FilterType, labelKey: 'filters.list.tophat.label', icon: Grid3x3, descKey: 'filters.list.tophat.description' }
     ]
   },
   {
-    name: 'Filtros',
+    nameKey: 'filters.categories.filters',
     filters: [
-      { type: 'blur' as FilterType, label: 'Desenfoque', icon: Blend, description: 'Gaussian, Median, Bilateral' },
-      { type: 'frangi' as FilterType, label: 'Realce de Vasos', icon: Target, description: 'Black-hat en canal verde (vasos/microhemorragias)' }
+      { type: 'blur' as FilterType, labelKey: 'filters.list.blur.label', icon: Blend, descKey: 'filters.list.blur.description' },
+      { type: 'frangi' as FilterType, labelKey: 'filters.list.frangi.label', icon: Target, descKey: 'filters.list.frangi.description' }
     ]
   }
 ];
 
 export function AddFilterModal({ open, onOpenChange, onSelectFilter, currentCount }: AddFilterModalProps) {
+  const { t } = useTranslation();
   const handleSelect = (filterType: FilterType) => {
     if (currentCount >= 10) {
       return;
@@ -85,16 +87,16 @@ export function AddFilterModal({ open, onOpenChange, onSelectFilter, currentCoun
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Agregar Filtro</DialogTitle>
+          <DialogTitle>{t('filters.modal.title')}</DialogTitle>
           <DialogDescription>
-            Selecciona un filtro para agregar al pipeline de procesamiento ({currentCount}/10)
+            {t('filters.modal.description', { count: currentCount, max: 10 })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
           {filterCategories.map((category) => (
-            <div key={category.name}>
-              <h3 className="text-sm font-semibold text-coal-700 mb-2">{category.name}</h3>
+            <div key={category.nameKey}>
+              <h3 className="text-sm font-semibold text-coal-700 mb-2">{t(category.nameKey)}</h3>
               <div className="grid grid-cols-2 gap-2">
                 {category.filters.map((filter) => {
                   const Icon = filter.icon;
@@ -110,8 +112,8 @@ export function AddFilterModal({ open, onOpenChange, onSelectFilter, currentCoun
                       <div className="flex items-start gap-2">
                         <Icon className="w-4 h-4 text-primary-600 mt-0.5 flex-shrink-0" />
                         <div className="min-w-0">
-                          <div className="text-xs font-medium text-coal-800">{filter.label}</div>
-                          <div className="text-[10px] text-smoke-600 leading-tight mt-0.5">{filter.description}</div>
+                          <div className="text-xs font-medium text-coal-800">{t(filter.labelKey)}</div>
+                          <div className="text-[10px] text-smoke-600 leading-tight mt-0.5">{t(filter.descKey)}</div>
                         </div>
                       </div>
                     </button>

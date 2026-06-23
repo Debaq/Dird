@@ -6,6 +6,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -55,6 +56,7 @@ export function OpticDiscCupDrawer({
   imageBlob,
   onSaveCup,
 }: OpticDiscCupDrawerProps) {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mode, setMode] = useState<'points' | 'paint'>('points'); // Start with points mode
   const [tool, setTool] = useState<'brush' | 'eraser'>('brush'); // Brush or eraser tool
@@ -343,7 +345,7 @@ export function OpticDiscCupDrawer({
       // Label
       ctx.fillStyle = '#ef4444';
       ctx.font = 'bold 20px sans-serif';
-      ctx.fillText('Disco Óptico', relativeX, relativeY - 8);
+      ctx.fillText(t('canvas.cupDrawer.opticDiscLabel'), relativeX, relativeY - 8);
     }
 
     // Draw painted pixels (cup)
@@ -576,17 +578,17 @@ export function OpticDiscCupDrawer({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Definir Disco Óptico y Copa</DialogTitle>
+          <DialogTitle>{t('canvas.cupDrawer.title')}</DialogTitle>
           <DialogDescription className="h-10 flex items-center">
             {mode === 'points'
-              ? 'Paso 1: Marca 4 puntos en los límites del disco óptico (superior, inferior, nasal, temporal)'
-              : 'Paso 2: Pinta la copa (excavación) dentro del disco óptico'}
+              ? t('canvas.cupDrawer.descStep1')
+              : t('canvas.cupDrawer.descStep2')}
           </DialogDescription>
         </DialogHeader>
 
         {!opticDisc ? (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-            ⚠️ No se detectó disco óptico en esta imagen. Primero debes marcar el disco óptico.
+            {t('canvas.cupDrawer.noDiscDetected')}
           </div>
         ) : (
           <div className="grid grid-cols-[1fr_280px] gap-4 flex-1 overflow-hidden">
@@ -596,19 +598,19 @@ export function OpticDiscCupDrawer({
               {mode === 'points' ? (
                 <div className="flex items-center gap-4 p-3 bg-green-50 border border-green-200 rounded h-[72px] flex-shrink-0">
                   <div className="text-sm text-green-800 flex-1">
-                    <p className="font-medium mb-1">📍 Paso 1: Marca 4 puntos en los límites del disco</p>
-                    <p className="text-xs">Haz clic en los puntos: superior, inferior, nasal y temporal (en cualquier orden)</p>
+                    <p className="font-medium mb-1">{t('canvas.cupDrawer.step1Title')}</p>
+                    <p className="text-xs">{t('canvas.cupDrawer.step1Hint')}</p>
                   </div>
                   <div className="text-sm font-bold text-green-700">
-                    {discPoints.length}/4 puntos
+                    {t('canvas.cupDrawer.pointsCount', { count: discPoints.length })}
                   </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-4 p-3 bg-blue-50 border border-blue-200 rounded h-[72px] flex-shrink-0">
                   <Paintbrush className="w-5 h-5 text-blue-600 flex-shrink-0" />
                   <div className="text-sm text-blue-800 flex-1">
-                    <p className="font-medium">🎨 Paso 2: Pinta la copa</p>
-                    <p className="text-xs">Usa el pincel para pintar la copa (la parte más oscura dentro del disco). Ajusta el tamaño del pincel en el panel lateral.</p>
+                    <p className="font-medium">{t('canvas.cupDrawer.step2Title')}</p>
+                    <p className="text-xs">{t('canvas.cupDrawer.step2Hint')}</p>
                   </div>
                 </div>
               )}
@@ -630,15 +632,15 @@ export function OpticDiscCupDrawer({
               <div className="flex items-center gap-3 text-xs text-smoke-600 h-8 flex-shrink-0">
                 <div className="flex items-center gap-1">
                   <div className="w-4 h-4 border-2 border-red-500 rounded"></div>
-                  <span>Disco Óptico (detectado)</span>
+                  <span>{t('canvas.cupDrawer.legendDisc')}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                  <span>Puntos del disco</span>
+                  <span>{t('canvas.cupDrawer.legendPoints')}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="w-4 h-4 bg-blue-500 opacity-60 rounded"></div>
-                  <span>Copa (pintada)</span>
+                  <span>{t('canvas.cupDrawer.legendCup')}</span>
                 </div>
               </div>
             </div>
@@ -646,7 +648,7 @@ export function OpticDiscCupDrawer({
             {/* Right column - Image processing controls */}
             <div className="flex flex-col gap-4 border-l pl-4 overflow-y-auto">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-sm">Herramientas</h3>
+                <h3 className="font-semibold text-sm">{t('canvas.cupDrawer.tools')}</h3>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -654,7 +656,7 @@ export function OpticDiscCupDrawer({
                   className="h-7 text-xs"
                 >
                   <RotateCcw className="w-3 h-3 mr-1" />
-                  Reset
+                  {t('canvas.cupDrawer.reset')}
                 </Button>
               </div>
 
@@ -663,7 +665,7 @@ export function OpticDiscCupDrawer({
                 {mode === 'paint' && (
                   <>
                     <div className="space-y-2 pb-4 border-b">
-                      <Label className="text-xs font-medium">Herramienta</Label>
+                      <Label className="text-xs font-medium">{t('canvas.cupDrawer.tool')}</Label>
                       <div className="grid grid-cols-2 gap-2">
                         <Button
                           variant={tool === 'brush' ? 'default' : 'outline'}
@@ -672,7 +674,7 @@ export function OpticDiscCupDrawer({
                           className="w-full"
                         >
                           <Paintbrush className="w-4 h-4 mr-1" />
-                          Pincel
+                          {t('canvas.cupDrawer.brush')}
                         </Button>
                         <Button
                           variant={tool === 'eraser' ? 'default' : 'outline'}
@@ -681,13 +683,13 @@ export function OpticDiscCupDrawer({
                           className="w-full"
                         >
                           <Eraser className="w-4 h-4 mr-1" />
-                          Goma
+                          {t('canvas.cupDrawer.eraser')}
                         </Button>
                       </div>
                     </div>
                     {/* Brush Size */}
                     <div className="space-y-2 pb-4 border-b">
-                      <Label className="text-xs font-medium">Tamaño del {tool === 'brush' ? 'Pincel' : 'Goma'}</Label>
+                      <Label className="text-xs font-medium">{tool === 'brush' ? t('canvas.cupDrawer.brushSize') : t('canvas.cupDrawer.eraserSize')}</Label>
                       <div className="flex items-center gap-2">
                         <Slider
                           value={[brushSize]}
@@ -704,7 +706,7 @@ export function OpticDiscCupDrawer({
                 )}
                 {/* Brightness */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium">Brillo</Label>
+                  <Label className="text-xs font-medium">{t('canvas.cupDrawer.brightness')}</Label>
                   <div className="flex items-center gap-2">
                     <Slider
                       value={[brightness]}
@@ -720,7 +722,7 @@ export function OpticDiscCupDrawer({
 
                 {/* Contrast */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium">Contraste</Label>
+                  <Label className="text-xs font-medium">{t('canvas.cupDrawer.contrast')}</Label>
                   <div className="flex items-center gap-2">
                     <Slider
                       value={[contrast]}
@@ -736,7 +738,7 @@ export function OpticDiscCupDrawer({
 
                 {/* CLAHE */}
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-medium">CLAHE (realce adaptativo)</Label>
+                  <Label className="text-xs font-medium">{t('canvas.cupDrawer.clahe')}</Label>
                   <Switch
                     checked={useCLAHE}
                     onCheckedChange={setUseCLAHE}
@@ -745,7 +747,7 @@ export function OpticDiscCupDrawer({
 
                 {/* Green Channel */}
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-medium">Canal Verde</Label>
+                  <Label className="text-xs font-medium">{t('canvas.cupDrawer.greenChannel')}</Label>
                   <Switch
                     checked={useGreenChannel}
                     onCheckedChange={setUseGreenChannel}
@@ -754,7 +756,7 @@ export function OpticDiscCupDrawer({
 
                 {/* Grayscale */}
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-medium">Escala de Grises</Label>
+                  <Label className="text-xs font-medium">{t('canvas.cupDrawer.grayscale')}</Label>
                   <Switch
                     checked={useGrayscale}
                     onCheckedChange={setUseGrayscale}
@@ -763,7 +765,7 @@ export function OpticDiscCupDrawer({
 
                 {/* Sharpening */}
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-medium">Nitidez (Sharpening)</Label>
+                  <Label className="text-xs font-medium">{t('canvas.cupDrawer.sharpening')}</Label>
                   <Switch
                     checked={useSharpening}
                     onCheckedChange={setUseSharpening}
@@ -773,7 +775,7 @@ export function OpticDiscCupDrawer({
 
               <div className="pt-4 border-t">
                 <p className="text-[10px] text-smoke-600 leading-relaxed">
-                  💡 <strong>Tip:</strong> Activa "Canal Verde" o "CLAHE" para ver mejor la copa. El procesamiento no afecta la imagen original.
+                  💡 <strong>{t('canvas.cupDrawer.tipLabel')}</strong> {t('canvas.cupDrawer.tipText')}
                 </p>
               </div>
             </div>
@@ -788,14 +790,14 @@ export function OpticDiscCupDrawer({
               disabled={!canProceedToPaint}
               className={canProceedToPaint ? "bg-green-600 hover:bg-green-700" : ""}
             >
-              Continuar al Paso 2 →
+              {t('canvas.cupDrawer.continueToStep2')}
             </Button>
           ) : (
             <Button
               variant="outline"
               onClick={() => setMode('points')}
             >
-              ← Volver a Paso 1
+              {t('canvas.cupDrawer.backToStep1')}
             </Button>
           )}
 
@@ -807,7 +809,7 @@ export function OpticDiscCupDrawer({
             disabled={mode === 'points' ? discPoints.length === 0 : paintedPixels.size === 0}
           >
             <Trash2 className="w-4 h-4 mr-2" />
-            {mode === 'points' ? 'Limpiar Puntos' : 'Limpiar Copa'}
+            {mode === 'points' ? t('canvas.cupDrawer.clearPoints') : t('canvas.cupDrawer.clearCup')}
           </Button>
           {(discPoints.length > 0 || paintedPixels.size > 0) && (
             <Button
@@ -815,21 +817,21 @@ export function OpticDiscCupDrawer({
               onClick={handleClearAll}
               size="sm"
             >
-              Limpiar Todo
+              {t('canvas.cupDrawer.clearAll')}
             </Button>
           )}
           <Button
             variant="outline"
             onClick={handleClose}
           >
-            Cancelar
+            {t('canvas.cupDrawer.cancel')}
           </Button>
           <Button
             onClick={handleSave}
             disabled={!canSave || !opticDisc}
           >
             <Save className="w-4 h-4 mr-2" />
-            Guardar
+            {t('canvas.cupDrawer.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

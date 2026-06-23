@@ -11,16 +11,24 @@ type Step = 'welcome' | 'login' | 'export' | 'confirm';
 
 const MIN_PASSWORD_LEN = 12;
 
-function strengthHint(pw: string): { score: number; label: string } {
+function strengthScore(pw: string): number {
   let score = 0;
   if (pw.length >= MIN_PASSWORD_LEN) score++;
   if (pw.length >= 16) score++;
   if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
   if (/\d/.test(pw)) score++;
   if (/[^A-Za-z0-9]/.test(pw)) score++;
-  const labels = ['muy débil', 'débil', 'aceptable', 'buena', 'fuerte', 'muy fuerte'];
-  return { score, label: labels[Math.min(score, 5)] };
+  return score;
 }
+
+const STRENGTH_LABEL_KEYS = [
+  'wizard.strengthVeryWeak',
+  'wizard.strengthWeak',
+  'wizard.strengthAcceptable',
+  'wizard.strengthGood',
+  'wizard.strengthStrong',
+  'wizard.strengthVeryStrong',
+] as const;
 
 export function FirstRunWizard() {
   const { t } = useTranslation();
@@ -35,13 +43,15 @@ export function FirstRunWizard() {
 
   const setupFirstRun = useAuthStore((s) => s.setupFirstRun);
 
-  const loginStrength = strengthHint(loginPw);
-  const exportStrength = strengthHint(exportPw);
+  const loginScore = strengthScore(loginPw);
+  const exportScore = strengthScore(exportPw);
+  const loginStrengthLabel = t(STRENGTH_LABEL_KEYS[Math.min(loginScore, 5)]);
+  const exportStrengthLabel = t(STRENGTH_LABEL_KEYS[Math.min(exportScore, 5)]);
 
   const canAdvanceLogin =
-    loginPw.length >= MIN_PASSWORD_LEN && loginPw === loginPw2 && loginStrength.score >= 3;
+    loginPw.length >= MIN_PASSWORD_LEN && loginPw === loginPw2 && loginScore >= 3;
   const canAdvanceExport =
-    exportPw.length >= MIN_PASSWORD_LEN && exportPw === exportPw2 && exportStrength.score >= 3;
+    exportPw.length >= MIN_PASSWORD_LEN && exportPw === exportPw2 && exportScore >= 3;
 
   const handleFinish = async () => {
     setSubmitting(true);
@@ -73,24 +83,24 @@ export function FirstRunWizard() {
         {step === 'welcome' && (
           <div className="space-y-4">
             <p className="text-coal-800 dark:text-dark-text">
-              Antes de empezar configuraremos dos contraseñas que protegen tus datos clínicos:
+              {t('wizard.welcomeIntro')}
             </p>
             <ul className="space-y-3">
               <li className="flex gap-3">
                 <Lock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <strong className="text-coal-900 dark:text-dark-text">Contraseña de la aplicación.</strong>
+                  <strong className="text-coal-900 dark:text-dark-text">{t('wizard.appPasswordTitle')}</strong>
                   <p className="text-sm text-smoke-700 dark:text-dark-textSecondary">
-                    Cifra la base local con AES-256 (SQLCipher). Se pide en cada inicio.
+                    {t('wizard.appPasswordDescription')}
                   </p>
                 </div>
               </li>
               <li className="flex gap-3">
                 <KeyRound className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <strong className="text-coal-900 dark:text-dark-text">Contraseña de exportación.</strong>
+                  <strong className="text-coal-900 dark:text-dark-text">{t('wizard.exportPasswordTitle')}</strong>
                   <p className="text-sm text-smoke-700 dark:text-dark-textSecondary">
-                    Cifra los archivos <code>.dird</code> que exportes para compartir o respaldar.
+                    {t('wizard.exportPasswordWelcomeDescription')}
                   </p>
                 </div>
               </li>
@@ -98,12 +108,12 @@ export function FirstRunWizard() {
             <div className="flex gap-3 items-start p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 rounded-lg">
               <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-amber-800 dark:text-amber-200">
-                No existe recuperación de contraseña. Si las pierdes, tus datos cifrados quedarán inaccesibles permanentemente.
+                {t('wizard.noRecoveryWarning')}
               </p>
             </div>
             <div className="flex justify-end">
               <Button onClick={() => setStep('login')} className="gap-2">
-                Continuar <ArrowRight className="w-4 h-4" />
+                {t('wizard.continue')} <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -112,10 +122,10 @@ export function FirstRunWizard() {
         {step === 'login' && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-coal-900 dark:text-dark-text">
-              Contraseña de la aplicación
+              {t('wizard.appPasswordHeading')}
             </h2>
             <div className="space-y-2">
-              <Label htmlFor="login-pw">Contraseña (mín. {MIN_PASSWORD_LEN} caracteres)</Label>
+              <Label htmlFor="login-pw">{t('wizard.passwordLabelMin', { n: MIN_PASSWORD_LEN })}</Label>
               <Input
                 id="login-pw"
                 type="password"
@@ -125,12 +135,12 @@ export function FirstRunWizard() {
               />
               {loginPw.length > 0 && (
                 <p className="text-xs text-smoke-600 dark:text-dark-textSecondary">
-                  Fortaleza: <strong>{loginStrength.label}</strong>
+                  {t('wizard.strengthPrefix')} <strong>{loginStrengthLabel}</strong>
                 </p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="login-pw-2">Repetir contraseña</Label>
+              <Label htmlFor="login-pw-2">{t('wizard.repeatPassword')}</Label>
               <Input
                 id="login-pw-2"
                 type="password"
@@ -138,15 +148,15 @@ export function FirstRunWizard() {
                 onChange={(e) => setLoginPw2(e.target.value)}
               />
               {loginPw2.length > 0 && loginPw !== loginPw2 && (
-                <p className="text-xs text-red-600">Las contraseñas no coinciden.</p>
+                <p className="text-xs text-red-600">{t('wizard.passwordsDoNotMatch')}</p>
               )}
             </div>
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep('welcome')} className="gap-2">
-                <ArrowLeft className="w-4 h-4" /> Atrás
+                <ArrowLeft className="w-4 h-4" /> {t('wizard.back')}
               </Button>
               <Button onClick={() => setStep('export')} disabled={!canAdvanceLogin} className="gap-2">
-                Continuar <ArrowRight className="w-4 h-4" />
+                {t('wizard.continue')} <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -155,14 +165,13 @@ export function FirstRunWizard() {
         {step === 'export' && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-coal-900 dark:text-dark-text">
-              Contraseña de exportación
+              {t('wizard.exportPasswordHeading')}
             </h2>
             <p className="text-sm text-smoke-700 dark:text-dark-textSecondary">
-              Recomendado: distinta a la de la aplicación. Se usa para cifrar los archivos
-              <code className="mx-1">.dird</code> que envíes a colegas o subas a respaldos.
+              {t('wizard.exportPasswordDescription')}
             </p>
             <div className="space-y-2">
-              <Label htmlFor="export-pw">Contraseña</Label>
+              <Label htmlFor="export-pw">{t('wizard.password')}</Label>
               <Input
                 id="export-pw"
                 type="password"
@@ -172,12 +181,12 @@ export function FirstRunWizard() {
               />
               {exportPw.length > 0 && (
                 <p className="text-xs text-smoke-600 dark:text-dark-textSecondary">
-                  Fortaleza: <strong>{exportStrength.label}</strong>
+                  {t('wizard.strengthPrefix')} <strong>{exportStrengthLabel}</strong>
                 </p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="export-pw-2">Repetir contraseña</Label>
+              <Label htmlFor="export-pw-2">{t('wizard.repeatPassword')}</Label>
               <Input
                 id="export-pw-2"
                 type="password"
@@ -185,15 +194,15 @@ export function FirstRunWizard() {
                 onChange={(e) => setExportPw2(e.target.value)}
               />
               {exportPw2.length > 0 && exportPw !== exportPw2 && (
-                <p className="text-xs text-red-600">Las contraseñas no coinciden.</p>
+                <p className="text-xs text-red-600">{t('wizard.passwordsDoNotMatch')}</p>
               )}
             </div>
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep('login')} className="gap-2">
-                <ArrowLeft className="w-4 h-4" /> Atrás
+                <ArrowLeft className="w-4 h-4" /> {t('wizard.back')}
               </Button>
               <Button onClick={() => setStep('confirm')} disabled={!canAdvanceExport} className="gap-2">
-                Continuar <ArrowRight className="w-4 h-4" />
+                {t('wizard.continue')} <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -202,15 +211,15 @@ export function FirstRunWizard() {
         {step === 'confirm' && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-coal-900 dark:text-dark-text">
-              Confirmación
+              {t('wizard.confirmHeading')}
             </h2>
             <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-900 rounded-lg space-y-2">
               <div className="flex gap-3">
                 <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                 <div className="space-y-2 text-sm text-red-800 dark:text-red-200">
-                  <p><strong>Sin recuperación.</strong> Anthropic, los desarrolladores de DIRD+ ni nadie puede recuperar contraseñas perdidas.</p>
-                  <p>Si olvidas la contraseña de la aplicación, los datos clínicos almacenados quedarán inaccesibles. Sin excepciones.</p>
-                  <p>Guarda ambas en un gestor de contraseñas (Bitwarden, KeePassXC) antes de continuar.</p>
+                  <p><strong>{t('wizard.confirmNoRecoveryHighlight')}</strong> {t('wizard.confirmNoRecoveryText')}</p>
+                  <p>{t('wizard.confirmInaccessible')}</p>
+                  <p>{t('wizard.confirmUseManager')}</p>
                 </div>
               </div>
             </div>
@@ -222,7 +231,7 @@ export function FirstRunWizard() {
                 className="mt-1"
               />
               <span className="text-sm text-coal-800 dark:text-dark-text">
-                Entiendo que si pierdo las contraseñas perderé el acceso a los datos cifrados permanentemente.
+                {t('wizard.acknowledgeText')}
               </span>
             </label>
             {error && (
@@ -230,14 +239,14 @@ export function FirstRunWizard() {
             )}
             <div className="flex justify-between">
               <Button variant="outline" onClick={() => setStep('export')} disabled={submitting} className="gap-2">
-                <ArrowLeft className="w-4 h-4" /> Atrás
+                <ArrowLeft className="w-4 h-4" /> {t('wizard.back')}
               </Button>
               <Button
                 onClick={handleFinish}
                 disabled={!acknowledged || submitting}
                 className="gap-2 bg-green-600 hover:bg-green-700"
               >
-                {submitting ? 'Configurando...' : <><Check className="w-4 h-4" /> Crear base cifrada</>}
+                {submitting ? t('wizard.configuring') : <><Check className="w-4 h-4" /> {t('wizard.createEncryptedDb')}</>}
               </Button>
             </div>
           </div>

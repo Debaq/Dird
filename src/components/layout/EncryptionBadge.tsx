@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Shield, ShieldAlert, ShieldCheck, X, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
@@ -11,6 +12,7 @@ import { Button } from '@/components/ui/button';
  * momento que sus datos clínicos están cifrados localmente.
  */
 export function EncryptionBadge() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const status = useAuthStore((s) => s.status);
   const exportPassphrase = useAuthStore((s) => s.exportPassphrase);
@@ -58,7 +60,7 @@ export function EncryptionBadge() {
               <button
                 onClick={() => setOpen(false)}
                 className="text-smoke-500 hover:text-coal-800 dark:hover:text-white"
-                aria-label="Cerrar"
+                aria-label={t('ui.close')}
               >
                 <X className="w-5 h-5" />
               </button>

@@ -210,7 +210,7 @@ export function GuidelineEditor({
     const newLevel: SeverityLevel = {
       ...level,
       id: `${level.id}_copy_${Date.now()}`,
-      name: `${level.name} (Copy)`,
+      name: `${level.name} (${t('settings.guidelines.copy')})`,
       order: guideline.severity_levels.length,
     };
 
@@ -635,8 +635,8 @@ export function GuidelineEditor({
             onChange={(e) => updateMetadata('language', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
           >
-            <option value="es">Spanish</option>
-            <option value="en">English</option>
+            <option value="es">{t('settings.guidelines.editor.metadata.languageOptions.es')}</option>
+            <option value="en">{t('settings.guidelines.editor.metadata.languageOptions.en')}</option>
           </select>
         </div>
       </div>
@@ -651,10 +651,10 @@ export function GuidelineEditor({
             onChange={(e) => updateMetadata('status', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
           >
-            <option value="draft">Draft</option>
-            <option value="official">Official</option>
-            <option value="custom">Custom</option>
-            <option value="deprecated">Deprecated</option>
+            <option value="draft">{t('settings.guidelines.editor.metadata.statusOptions.draft')}</option>
+            <option value="official">{t('settings.guidelines.editor.metadata.statusOptions.official')}</option>
+            <option value="custom">{t('settings.guidelines.editor.metadata.statusOptions.custom')}</option>
+            <option value="deprecated">{t('settings.guidelines.editor.metadata.statusOptions.deprecated')}</option>
           </select>
         </div>
 
@@ -787,7 +787,7 @@ export function GuidelineEditor({
                   value={level.name}
                   onChange={(e) => updateSeverityLevel(index, 'name', e.target.value)}
                   className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-sky-500"
-                  placeholder="Sin RD Aparente"
+                  placeholder={t('settings.guidelines.editor.severity.level.namePlaceholder')}
                 />
               </div>
 
@@ -813,7 +813,7 @@ export function GuidelineEditor({
                 onChange={(e) => updateSeverityLevel(index, 'description', e.target.value)}
                 rows={2}
                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-sky-500"
-                placeholder="Description of this severity level..."
+                placeholder={t('settings.guidelines.editor.severity.level.descriptionPlaceholder')}
               />
             </div>
           </div>
@@ -1052,7 +1052,7 @@ export function GuidelineEditor({
               onChange={(e) => updateRule421('description', e.target.value)}
               rows={2}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500"
-              placeholder="Criterios de severidad RDNP según ETDRS..."
+              placeholder={t('settings.guidelines.editor.rule421.descriptionPlaceholder')}
             />
           </div>
 
@@ -1195,7 +1195,7 @@ export function GuidelineEditor({
                       }
                       rows={2}
                       className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                      placeholder="Description of this criterion..."
+                      placeholder={t('settings.guidelines.editor.rule421.fields.descriptionPlaceholder')}
                     />
                   </div>
                 </div>
@@ -1399,7 +1399,7 @@ export function GuidelineEditor({
                         updateTreatmentAction(index, actionIndex, e.target.value)
                       }
                       className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded"
-                      placeholder="Treatment action..."
+                      placeholder={t('settings.guidelines.editor.treatment.actionPlaceholder')}
                     />
                     <button
                       onClick={() => deleteTreatmentAction(index, actionIndex)}
@@ -1423,7 +1423,7 @@ export function GuidelineEditor({
                 }
                 rows={2}
                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-sky-500"
-                placeholder="Clinical rationale for this protocol..."
+                placeholder={t('settings.guidelines.editor.treatment.rationalePlaceholder')}
               />
             </div>
           </div>

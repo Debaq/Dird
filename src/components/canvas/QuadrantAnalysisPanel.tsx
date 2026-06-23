@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { QuadrantAnalysis } from '@/lib/analysis/quadrant-calculator';
@@ -15,12 +16,13 @@ interface QuadrantAnalysisPanelProps {
  * Displays quadrant analysis results in a structured, visual format
  */
 export function QuadrantAnalysisPanel({ analysis, className = '', eyeType = 'OD' }: QuadrantAnalysisPanelProps) {
+  const { t } = useTranslation();
   if (!analysis) {
     return (
       <Card className={`p-4 ${className}`}>
         <div className="flex items-center gap-2 text-gray-500">
           <Eye className="w-4 h-4" />
-          <span className="text-sm">No analysis available</span>
+          <span className="text-sm">{t('canvas.quadrant.noAnalysisAvailable')}</span>
         </div>
       </Card>
     );
@@ -34,17 +36,17 @@ export function QuadrantAnalysisPanel({ analysis, className = '', eyeType = 'OD'
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold text-sm flex items-center gap-2">
           <Eye className="w-4 h-4" />
-          Quadrant Analysis
+          {t('canvas.quadrant.title')}
         </h3>
         {hasLandmarks ? (
           <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-300">
             <CheckCircle2 className="w-3 h-3 mr-1" />
-            Anatomical
+            {t('canvas.quadrant.anatomical')}
           </Badge>
         ) : (
           <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-300">
             <AlertTriangle className="w-3 h-3 mr-1" />
-            Fallback
+            {t('canvas.quadrant.fallback')}
           </Badge>
         )}
       </div>
@@ -52,10 +54,10 @@ export function QuadrantAnalysisPanel({ analysis, className = '', eyeType = 'OD'
       {/* Landmark Status */}
       <div className="flex gap-2 mb-3 text-xs">
         <div className={`flex items-center gap-1 ${analysis.opticDiscFound ? 'text-green-600' : 'text-gray-400'}`}>
-          {analysis.opticDiscFound ? '✓' : '✗'} Optic Disc
+          {analysis.opticDiscFound ? '✓' : '✗'} {t('canvas.quadrant.opticDisc')}
         </div>
         <div className={`flex items-center gap-1 ${analysis.foveaFound ? 'text-green-600' : 'text-gray-400'}`}>
-          {analysis.foveaFound ? '✓' : '✗'} Fovea
+          {analysis.foveaFound ? '✓' : '✗'} {t('canvas.quadrant.fovea')}
         </div>
       </div>
 
@@ -66,7 +68,7 @@ export function QuadrantAnalysisPanel({ analysis, className = '', eyeType = 'OD'
 
       {/* Total */}
       <div className="mt-3 pt-3 border-t flex items-center justify-between text-sm font-semibold">
-        <span>Total Lesions</span>
+        <span>{t('canvas.quadrant.totalLesions')}</span>
         <span className="text-lg">{analysis.total}</span>
       </div>
 
@@ -74,7 +76,7 @@ export function QuadrantAnalysisPanel({ analysis, className = '', eyeType = 'OD'
       {analysis.usedFallback && (
         <div className="mt-3 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-800">
           <AlertTriangle className="w-3 h-3 inline mr-1" />
-          Using center-based division. Place landmarks for accurate anatomical reference.
+          {t('canvas.quadrant.fallbackWarning')}
         </div>
       )}
     </Card>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { Wand2, Download, RotateCcw, Plus, Loader2 } from 'lucide-react';
@@ -20,6 +21,7 @@ interface ImageProcessingPanelProps {
 }
 
 export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: ImageProcessingPanelProps) {
+  const { t } = useTranslation();
   const {
     filters,
     showOriginal,
@@ -54,7 +56,7 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
   // Mostrar errores
   useEffect(() => {
     if (error) {
-      toast.error('Error al procesar imagen', {
+      toast.error(t('canvas.imageProcessing.errorProcessing'), {
         description: error
       });
     }
@@ -74,7 +76,7 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
 
   const handleAddFilter = (type: FilterType) => {
     addFilter(type);
-    toast.success('Filtro agregado');
+    toast.success(t('canvas.imageProcessing.filterAdded'));
   };
 
   const handleToggleExpand = (id: string) => {
@@ -91,13 +93,13 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
 
   const handleDownload = () => {
     if (!processedCanvas) {
-      toast.error('No hay imagen procesada para descargar');
+      toast.error(t('canvas.imageProcessing.noProcessedImage'));
       return;
     }
 
     processedCanvas.toBlob((blob) => {
       if (!blob) {
-        toast.error('Error al generar imagen');
+        toast.error(t('canvas.imageProcessing.errorGenerating'));
         return;
       }
 
@@ -110,14 +112,14 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast.success('Imagen descargada');
+      toast.success(t('canvas.imageProcessing.imageDownloaded'));
     }, 'image/png');
   };
 
   const handleReset = () => {
     resetFilters();
     setExpandedFilters(new Set());
-    toast.success('Filtros reseteados');
+    toast.success(t('canvas.imageProcessing.filtersReset'));
   };
 
   return (
@@ -126,7 +128,7 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-coal-800 text-sm flex items-center gap-2">
           <Wand2 className="w-4 h-4" />
-          Procesamiento Avanzado
+          {t('canvas.imageProcessing.title')}
         </h3>
         <div className="flex gap-1">
           <Button
@@ -134,7 +136,7 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
             variant="ghost"
             onClick={handleDownload}
             disabled={!processedCanvas || disabled}
-            title="Descargar imagen procesada"
+            title={t('canvas.imageProcessing.downloadTitle')}
             className="h-7 w-7"
           >
             <Download className="w-3.5 h-3.5" />
@@ -144,7 +146,7 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
             variant="ghost"
             onClick={handleReset}
             disabled={filters.length === 0 || disabled}
-            title="Resetear filtros"
+            title={t('canvas.imageProcessing.resetTitle')}
             className="h-7 w-7"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -155,7 +157,7 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
       {/* Comparación */}
       <div className="space-y-2 p-2 bg-smoke-50 rounded border border-smoke-200">
         <div className="flex items-center justify-between">
-          <Label className="text-xs font-medium text-coal-700">Superponer Original</Label>
+          <Label className="text-xs font-medium text-coal-700">{t('canvas.imageProcessing.overlayOriginal')}</Label>
           <Switch
             checked={showOriginal}
             onCheckedChange={setShowOriginal}
@@ -166,7 +168,7 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
         {showOriginal && processedCanvas && (
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <Label className="text-xs text-smoke-600">Opacidad Original</Label>
+              <Label className="text-xs text-smoke-600">{t('canvas.imageProcessing.originalOpacity')}</Label>
               <span className="text-xs text-smoke-600">{Math.round(comparisonOpacity * 100)}%</span>
             </div>
             <Slider
@@ -185,7 +187,7 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
       <div className="space-y-2 flex-1 min-h-0 flex flex-col">
         <div className="flex items-center justify-between flex-shrink-0">
           <span className="text-xs font-medium text-coal-700">
-            Filtros ({filters.length}/10)
+            {t('canvas.imageProcessing.filters', { count: filters.length })}
           </span>
           <Button
             size="sm"
@@ -194,7 +196,7 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
             className="h-7 text-xs"
           >
             <Plus className="w-3 h-3 mr-1" />
-            Agregar
+            {t('canvas.imageProcessing.add')}
           </Button>
         </div>
 
@@ -226,7 +228,7 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
 
         {filters.length === 0 && (
           <div className="text-center py-8 text-smoke-400 text-xs">
-            No hay filtros aplicados
+            {t('canvas.imageProcessing.noFilters')}
           </div>
         )}
       </div>
@@ -235,7 +237,7 @@ export function ImageProcessingPanel({ imageBlob, onProcessedImage, disabled }: 
       {isProcessing && (
         <div className="flex items-center gap-2 text-xs text-primary-600 p-2 bg-primary-50 rounded border border-primary-100">
           <Loader2 className="w-3 h-3 animate-spin" />
-          Procesando imagen...
+          {t('canvas.imageProcessing.processing')}
         </div>
       )}
 

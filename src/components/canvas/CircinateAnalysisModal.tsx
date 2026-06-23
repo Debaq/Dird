@@ -4,6 +4,7 @@
  * Modal that shows detailed circinate ring analysis
  */
 
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -27,13 +28,14 @@ export function CircinateAnalysisModal({
   analysis,
   macularEdemaResult,
 }: CircinateAnalysisModalProps) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Análisis de Anillos Circinados</DialogTitle>
+          <DialogTitle>{t('canvas.circinate.title')}</DialogTitle>
           <DialogDescription>
-            Detección de patrones de exudados duros formando anillos alrededor de la fóvea
+            {t('canvas.circinate.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -45,13 +47,13 @@ export function CircinateAnalysisModal({
           <div className="mt-4 pt-4 border-t border-coal-200 dark:border-gray-700">
             <div className="text-xs space-y-2">
               <div className="flex justify-between">
-                <span className="text-smoke-600 dark:text-gray-400">Método:</span>
+                <span className="text-smoke-600 dark:text-gray-400">{t('canvas.circinate.method')}</span>
                 <span className="font-medium text-coal-800 dark:text-gray-200">
                   {macularEdemaResult.method.toUpperCase()}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-smoke-600 dark:text-gray-400">Exudados en zona macular:</span>
+                <span className="text-smoke-600 dark:text-gray-400">{t('canvas.circinate.exudatesInMacularZone')}</span>
                 <span className="font-medium text-coal-800 dark:text-gray-200">
                   {macularEdemaResult.exudatesInZone.length}
                 </span>
