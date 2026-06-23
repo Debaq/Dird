@@ -21,7 +21,7 @@ Task: binary DR screening (normal grade 0 vs pathological 1–4).
 ## Introduction
 | Item | Status | Evidence / gap |
 |---|---|---|
-| 3a Background, clinical context, **intended use** | 🟡 | `README.md`, `REFERENCES.md`. Add explicit intended-use statement (screening assist, not autonomous Dx) |
+| 3a Background, clinical context, **intended use** | ✅ | `validation/README.md` §Intended use; `dird_models/MODEL_CARD.md` §2 |
 | 3b Objectives | ✅ | `validation/README.md` |
 
 ## Methods — data & participants
@@ -77,7 +77,7 @@ Task: binary DR screening (normal grade 0 vs pathological 1–4).
 | Item | Status | Evidence / gap |
 |---|---|---|
 | 21 Limitations | ✅ | Messidor mirror confound, hemorrhage low recall, micro-class merge, IDRiD negative, mild-DR sensitivity drop |
-| 22 Interpretation / clinical use | 🟡 | implicit; add intended-use + risk section |
+| 22 Interpretation / clinical use | ✅ | `validation/README.md` §Clinical risk; `MODEL_CARD.md` §2 |
 
 ---
 
@@ -89,9 +89,10 @@ Task: binary DR screening (normal grade 0 vs pathological 1–4).
 
 ## Priority gaps to close
 1. **Dev documentation** → `dird_models/MODEL_CARD.md`: training data source/size, hyperparameters, splits, seed, gradability. *Only the trainer holds these — not on disk.*
-2. **Intended-use + clinical-risk statement** (items 3a, 22).
-3. **Open science** (13a–c): funding, COI, (pre)registration.
-4. **Participant flow diagram** (item 16).
+2. **Open science** (13a–c): funding, COI, (pre)registration.
+3. **Participant flow diagram** (item 16).
+
+*Closed: intended-use + clinical-risk statement (items 3a, 22).*
 
 ## Strengths (publication-grade already)
 Metrics + bootstrap CI · multi-site external validation · threshold transportability · honest limitations · subgroup/fairness analysis · shared code.
