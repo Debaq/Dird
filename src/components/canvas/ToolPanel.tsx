@@ -11,6 +11,8 @@ interface ToolPanelProps {
   activeTool: CanvasTool;
   onToolChange: (tool: CanvasTool) => void;
   disabled?: boolean;
+  /** Whether enhance mode is on (image-processing is a toggle, not a marking tool). */
+  enhanceMode?: boolean;
   selectedLandmarkType?: LandmarkType;
   onLandmarkTypeChange?: (type: LandmarkType) => void;
 }
@@ -19,6 +21,7 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
   activeTool,
   onToolChange,
   disabled,
+  enhanceMode,
   selectedLandmarkType = 'optic_disc',
   onLandmarkTypeChange
 }) => {
@@ -43,7 +46,8 @@ const ToolPanel: React.FC<ToolPanelProps> = ({
       <div className="flex flex-wrap gap-1">
         {tools.map((tool) => {
           const Icon = tool.icon;
-          const isActive = activeTool === tool.id;
+          // image-processing is a toggle (enhance mode), the rest are marking tools
+          const isActive = tool.id === 'image-processing' ? !!enhanceMode : activeTool === tool.id;
 
           return (
             <button

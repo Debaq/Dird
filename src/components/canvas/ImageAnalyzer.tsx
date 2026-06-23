@@ -98,6 +98,9 @@ const ImageAnalyzer: React.FC = () => {
   const { showOriginal, comparisonOpacity } = useImageProcessingStore();
   const [layers, setLayers] = useState<CanvasLayer[]>(DEFAULT_LAYERS);
   const [activeTool, setActiveTool] = useState<CanvasTool>('select');
+  // Enhance mode is a TOGGLE, independent of the marking tool: apply visual
+  // enhancement, then keep it while switching to bbox/landmark/etc. to mark on top.
+  const [enhanceMode, setEnhanceMode] = useState(false);
   const [selectedLandmarkType, setSelectedLandmarkType] = useState<'optic_disc' | 'fovea'>('optic_disc');
   const [processedImageCanvas, setProcessedImageCanvas] = useState<HTMLCanvasElement | null>(null);
   const { selectedAnnotationId, setSelectedAnnotation } = useCanvasStore();
@@ -449,12 +452,8 @@ const ImageAnalyzer: React.FC = () => {
     }
   }, [activeTool]);
 
-  // Limpiar imagen procesada al cambiar de herramienta
-  useEffect(() => {
-    if (activeTool !== 'image-processing') {
-      setProcessedImageCanvas(null);
-    }
-  }, [activeTool]);
+  // La imagen procesada persiste mientras enhanceMode esté activo (se limpia al
+  // apagar el toggle en handleToolChange), para poder marcar sobre el realce.
 
   const handleSaveCup = async (data: {
     cupBbox: { x: number; y: number; width: number; height: number };
@@ -517,17 +516,18 @@ const ImageAnalyzer: React.FC = () => {
     // useLiveQuery automáticamente detectará cambios en db.detections
   };
 
-  // Handle tool change
+  // Handle tool change. 'image-processing' is a TOGGLE for enhance mode (it does
+  // not become the active marking tool), so the enhancement persists while the
+  // clinician switches to bbox/landmark/etc. and marks on the enhanced image.
   const handleToolChange = (tool: CanvasTool) => {
     if (tool === 'image-processing') {
-      // Dim original layer so processed/enhanced view stands out
-      handleLayerUpdate('original', { opacity: 0.4 });
-    } else {
-      // Restore original layer opacity when switching away
-      const originalLayer = layers.find(l => l.id === 'original');
-      if (originalLayer && originalLayer.opacity !== 1) {
-        handleLayerUpdate('original', { opacity: 1 });
-      }
+      setEnhanceMode((prev) => {
+        const next = !prev;
+        handleLayerUpdate('original', { opacity: next ? 0.4 : 1 });
+        if (!next) setProcessedImageCanvas(null); // exiting -> drop the enhancement
+        return next;
+      });
+      return;
     }
     setActiveTool(tool);
   };
@@ -542,10 +542,6 @@ const ImageAnalyzer: React.FC = () => {
       </div>
     );
   }
-
-  // "Enhance mode": when the image-processing tool is active, use a full-width
-  // workspace with two side rails (left = filter config, right = layers).
-  const enhanceMode = activeTool === 'image-processing';
 
   const mainContent = (
     <div className={cn(
@@ -609,6 +605,7 @@ const ImageAnalyzer: React.FC = () => {
               <ToolPanel
                 activeTool={activeTool}
                 onToolChange={handleToolChange}
+                enhanceMode={enhanceMode}
                 disabled={session?.locked}
                 selectedLandmarkType={selectedLandmarkType}
                 onLandmarkTypeChange={setSelectedLandmarkType}
@@ -649,6 +646,7 @@ const ImageAnalyzer: React.FC = () => {
             <ToolPanel
               activeTool={activeTool}
               onToolChange={handleToolChange}
+              enhanceMode={enhanceMode}
               disabled={session?.locked}
               selectedLandmarkType={selectedLandmarkType}
               onLandmarkTypeChange={setSelectedLandmarkType}
@@ -744,6 +742,7 @@ const ImageAnalyzer: React.FC = () => {
                 <ToolPanel
                   activeTool={activeTool}
                   onToolChange={handleToolChange}
+                enhanceMode={enhanceMode}
                   disabled={session?.locked}
                   selectedLandmarkType={selectedLandmarkType}
                   onLandmarkTypeChange={setSelectedLandmarkType}

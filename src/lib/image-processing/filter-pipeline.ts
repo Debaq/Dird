@@ -243,13 +243,16 @@ function applyCLAHE(
         if (chans) chans.delete();
       }
     } else {
+      // Apply CLAHE to the chosen RGB channel and recombine -> stays in COLOR
+      // (for a grayscale single-channel view use the "Canal Verde/Rojo/Azul" filter).
       let chans: any = null;
       try {
         chans = new cv.MatVector();
         cv.split(rgb, chans);
         const c = chans.get(RGB_CHANNEL_INDEX[channel] ?? 1);
         clahe.apply(c, c);
-        showMat(c, output); // enhanced single channel as grayscale
+        cv.merge(chans, rgb);
+        showMat(rgb, output);
       } finally {
         if (chans) chans.delete();
       }
