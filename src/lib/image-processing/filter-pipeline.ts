@@ -203,21 +203,34 @@ function applyGamma(canvas: HTMLCanvasElement, gamma: number): HTMLCanvasElement
 
 // ============ OPENCV FILTERS (RGB convention) ============
 
-/** Extract a single RGB channel and show it as grayscale (green = best for retinal lesions/vessels). */
+/** Extract a single RGB channel, shown tinted in its own color (other channels zeroed). */
 function applyChannelExtraction(canvas: HTMLCanvasElement, channel: 'red' | 'green' | 'blue'): HTMLCanvasElement {
   let rgb: any = null;
   let channels: any = null;
+  let zero: any = null;
+  let outVec: any = null;
+  let merged: any = null;
   try {
     rgb = readRGB(canvas);
     channels = new cv.MatVector();
     cv.split(rgb, channels);
-    const sel = channels.get(RGB_CHANNEL_INDEX[channel]);
+    const idx = RGB_CHANNEL_INDEX[channel];
+    zero = cv.Mat.zeros(rgb.rows, rgb.cols, cv.CV_8UC1);
+    outVec = new cv.MatVector();
+    for (let i = 0; i < 3; i++) {
+      outVec.push_back(i === idx ? channels.get(i) : zero);
+    }
+    merged = new cv.Mat();
+    cv.merge(outVec, merged); // only the selected channel carries data -> color tint
     const output = makeCanvas(canvas.width, canvas.height);
-    showMat(sel, output); // 1-channel -> shown as grayscale
+    showMat(merged, output);
     return output;
   } finally {
     if (rgb) rgb.delete();
     if (channels) channels.delete();
+    if (zero) zero.delete();
+    if (outVec) outVec.delete();
+    if (merged) merged.delete();
   }
 }
 
