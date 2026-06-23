@@ -1,9 +1,7 @@
 {
   "app": {
     "name": "DIRD+",
-    "tagline": "Detección de Retinopatía Diabética",
-    "longDescription": "Plataforma de análisis de imágenes oftalmológicas con IA edge-computing. Todos los datos permanecen en tu dispositivo.",
-    "start": "Comenzar"
+    "tagline": "Detección de Retinopatía Diabética"
   },
   "ui": {
     "close": "Cerrar",
@@ -13,28 +11,14 @@
     "saving": "Guardando...",
     "saveChanges": "Guardar Cambios",
     "createSession": "Crear Estudio",
-    "confirmDelete": "¿Estás seguro de que deseas eliminar esto?",
     "error": "Error",
     "success": "Éxito",
-    "search": "Buscar",
-    "filter": "Filtrar",
-    "clear": "Limpiar",
-    "apply": "Aplicar",
-    "reset": "Restablecer",
     "export": "Exportar",
-    "import": "Importar",
     "download": "Descargar",
-    "upload": "Subir",
-    "browse": "Explorar",
     "select": "Seleccionar",
-    "next": "Siguiente",
-    "previous": "Anterior",
-    "finish": "Finalizar",
-    "back": "Atrás",
     "continue": "Continuar",
     "yes": "Sí",
     "no": "No",
-    "ok": "Aceptar",
     "refresh": "Actualizar",
     "comingSoon": {
       "general": "Próximamente...",
@@ -60,10 +44,7 @@
   },
   "messages": {
     "info": "Información",
-    "message": "Mensaje",
-    "warning": "Advertencia",
-    "attention": "Atención",
-    "accept": "Aceptar"
+    "warning": "Advertencia"
   },
   "success": {
     "deletePatient": "Paciente eliminado correctamente",
@@ -77,10 +58,8 @@
     "exportSession": "Error al exportar el estudio.",
     "deleteImage": "Error al eliminar la imagen",
     "imageProcessing": "Error al procesar la imagen",
-    "exportPatient": "Error al exportar el paciente.",
     "deleteSession": "Error al eliminar el estudio.",
     "duplicateSession": "Error al duplicar el estudio.",
-    "import": "Error de Importación",
     "deletePatient": "Error al eliminar el paciente.",
     "archivePatient": "Error al archivar el paciente.",
     "unarchivePatient": "Error al desarchivar el paciente.",
@@ -112,9 +91,6 @@
     "create": "Crear Paciente",
     "edit": "Editar Paciente",
     "delete": "Eliminar Paciente",
-    "search": "Buscar pacientes...",
-    "noPatients": "No se encontraron pacientes",
-    "addFirst": "Agrega tu primer paciente",
     "name": "Nombre",
     "id": "ID de Paciente",
     "years": "años",
@@ -139,18 +115,9 @@
     },
     "fields": {
       "name": "Nombre",
-      "email": "Correo Electrónico",
-      "phone": "Teléfono",
-      "birthDate": "Fecha de Nacimiento",
-      "gender": "Género",
-      "medicalHistory": "Historial Médico",
-      "medications": "Medicamentos",
-      "address": "Dirección",
-      "results": "Resultados"
+      "medications": "Medicamentos"
     },
     "gender": {
-      "male": "Masculino",
-      "female": "Femenino",
       "other": "Otro"
     },
     "filter": {
@@ -190,11 +157,7 @@
     "create": "Nuevo Estudio",
     "edit": "Editar Estudio",
     "delete": "Eliminar Estudio",
-    "search": "Buscar estudios...",
-    "noSessions": "No se encontraron estudios",
-    "addFirst": "Agrega tu primer estudio",
     "locked": "Estudio Bloqueado",
-    "unlock": "Desbloquear",
     "compareTitle": "Comparación de Estudios",
     "compareAction": "Comparar ({{count}}) Estudios",
     "notesTitle": "Notas del Estudio",
@@ -213,13 +176,7 @@
       "date": "Fecha",
       "type": "Tipo",
       "description": "Descripción",
-      "images": "Imágenes",
-      "results": "Resultados"
-    },
-    "types": {
-      "fundus": "Fondo de Ojo",
-      "oct": "OCT",
-      "visualAcuity": "Agudeza Visual"
+      "images": "Imágenes"
     },
     "form": {
       "name": "Nombre del estudio",
@@ -271,7 +228,6 @@
       "processingAI": "Procesando IA...",
       "detectedCount": "detectadas",
       "deleteImage": "Eliminar imagen",
-      "deleteImageSuccess": "Imagen eliminada exitosamente",
       "reprocessAI": "Reprocesar con IA",
       "moveToRight": "A Ojo Derecho",
       "moveToLeft": "A Ojo Izquierdo",
@@ -280,7 +236,6 @@
     "photoLimitExceeded": "Límite de {{limit}} fotos por estudio alcanzado. No se pueden subir más imágenes.",
     "photoLimitWarning": "Solo se pueden subir {{available}} imágenes más (máximo {{limit}} por estudio).",
     "imagesCount": "{{count}} de {{limit}} imágenes subidas",
-    "deleteImage": "Eliminar imagen",
     "deleteImageSuccess": "Imagen eliminada exitosamente"
   },
   "canvas": {
@@ -328,8 +283,6 @@
       "hideLabels": "Ocultar etiquetas",
       "lock": "Bloquear capa",
       "unlock": "Desbloquear capa",
-      "expand": "Expandir",
-      "collapse": "Cerrar",
       "deleteAnnotation": "Eliminar",
       "editAnnotationClass": "Editar clase",
       "convertAndEdit": "Convertir a manual / Editar",
@@ -496,32 +449,6 @@
       "save": "Guardar"
     }
   },
-  "advancedEditor": {
-    "dialogTitle": "Modo Editor Avanzado",
-    "dialogDescription": "Desbloquea funcionalidades profesionales de edición",
-    "activate": "Activar Modo Avanzado",
-    "exit": "Salir",
-    "exitMode": "Salir del Modo Avanzado",
-    "cancel": "Cancelar",
-    "save": "Guardar",
-    "undo": "Deshacer",
-    "redo": "Rehacer",
-    "screenshot": "Captura de Pantalla",
-    "toggleGrid": "Mostrar Grilla",
-    "toggleRulers": "Mostrar Reglas",
-    "toggleSnap": "Ajustar a Grilla",
-    "settings": "Configuración",
-    "colorPicker": "Selector de Color",
-    "focusMode": "Modo Foco",
-    "miniMap": "Mini Mapa",
-    "layers": "Capas",
-    "properties": "Propiedades",
-    "histogram": "Histograma",
-    "colors": "Colores",
-    "tip": "Consejo",
-    "tipDescription": "Puedes salir del modo avanzado en cualquier momento presionando el botón 'Salir' en la barra superior o usando Esc.",
-    "desktopOnly": "Esta función está optimizada para pantallas de escritorio (Desktop). En dispositivos móviles, algunas funcionalidades pueden estar limitadas."
-  },
   "analysis": {
     "title": "Análisis de Imagen",
     "detections": "Detecciones",
@@ -533,49 +460,25 @@
       "noAnalysisAvailable": "Sin análisis disponibles",
       "hint": "Activa capas de análisis para ver métricas"
     },
-    "circinate": {
-      "title": "Análisis de Patrón Circinado",
-      "completeRing": "Anillo Completo",
-      "partialRing": "Anillo Parcial",
-      "noRing": "Sin Patrón de Anillo",
-      "overallScore": "Score General",
-      "angularDispersion": "Dispersión Angular",
-      "radialConcentration": "Concentración Radial",
-      "completeness": "Completitud",
-      "circleFit": "Ajuste Circular",
-      "maxGap": "Brecha Máxima",
-      "fittedRadius": "Radio Ajustado",
-      "meanDistance": "Distancia Media"
-    },
     "classes": {
-      "background": "Fondo",
       "optic_disc": "Disco Óptico",
       "optic_cup": "Copa Óptica",
       "macula": "Mácula",
       "fovea": "Fóvea",
-      "vessels": "Vasos Sanguíneos",
       "exudates": "Exudados",
       "hemorrhages": "Hemorragias",
       "microaneurysms": "Microaneurismas",
-      "drusen": "Drusas",
       "lesions": "Lesiones"
     },
     "tools": {
       "select": "Seleccionar",
       "pan": "Desplazar",
-      "zoomIn": "Acercar",
-      "zoomOut": "Alejar",
-      "reset": "Restablecer Vista",
-      "addAnnotation": "Agregar Anotación",
       "delete": "Eliminar",
       "prevImage": "Imagen anterior",
       "nextImage": "Siguiente imagen"
     },
     "layers": {
-      "original": "Imagen Original",
-      "segmentationsAI": "Segmentaciones IA",
-      "detectionsAI": "Detecciones IA",
-      "manualAnnotations": "Anotaciones Manuales"
+      "original": "Imagen Original"
     },
     "view": {
       "noImages": "No hay imágenes para analizar",
@@ -585,9 +488,6 @@
         "avgPerImage": "Promedio por Imagen",
         "processedImages": "Imágenes Procesadas"
       },
-      "detectionsPerClass": "Detecciones por Clase",
-      "analyzedImages": "Imágenes Analizadas",
-      "noDetections": "No se encontraron detecciones. Procesa las imágenes con IA primero.",
       "viewDetails": "Ver detalles",
       "detectionsCount": "detecciones",
       "noDetectionsLabel": "Sin detecciones",
@@ -597,8 +497,6 @@
     },
     "drClassification": {
       "title": "Clasificación de Retinopatía Diabética",
-      "generate": "Generar Clasificación",
-      "analyzing": "Analizando...",
       "notGenerated": "Procesa las imágenes con IA primero para generar la clasificación",
       "overallSeverity": "Severidad Global",
       "rightEye": "Ojo Derecho (OD)",
@@ -635,11 +533,7 @@
         }
       },
       "image": "Imagen {{id}}",
-      "showDetails": "Ver Detalles Completos",
-      "hideDetails": "Ocultar Detalles",
-      "recommendations": "Recomendaciones",
       "warnings": "Advertencias",
-      "consoleHint": "Datos completos disponibles en la consola del navegador",
       "imagesAvailable": "{{count}} imágenes disponibles",
       "imageSelected": "Imagen {{id}} seleccionada ({{total}} disponibles)",
       "singleImage": "1 imagen",
@@ -693,20 +587,17 @@
     "generate": "Generar Informe",
     "preview": "Vista Preliminar",
     "finalize": "Finalizar y Cerrar Caso",
-    "reportType": "Tipo de Reporte",
     "evaluatorNotes": "Conclusiones",
     "evaluatorNotesPlaceholder": "Escriba sus conclusiones iniciales aquí (la IA las refinará e integrará)...",
     "finalWarning": "Nota: El reporte final bloqueará la estudio y no se podrán añadir o eliminar imágenes ni análisis.",
     "dialogDescription": "Asegúrese de que todos los hallazgos han sido revisados antes de generar el informe.",
     "previewDescription": "Genera un borrador para revisión interna. Incluye marca de agua y no bloquea la estudio para futuras ediciones.",
     "previewButton": "Generar Borrador",
-    "finalizeDescription": "Genera el informe clínico oficial. Bloquea la estudio permanentemente para garantizar la integridad de los datos.",
     "importantNoteTitle": "Importante:",
     "importantNoteBody": "Los informes generados se guardan localmente en la base de datos local de la aplicación. Puede acceder a ellos desde la pestaña \"Reporte\" de esta estudio en cualquier momento.",
     "generated": "Informe generado exitosamente",
     "processingWithAI": "Procesando con IA...",
     "previewGenerated": "Vista preliminar generada",
-    "approveAndFinalize": "Aprobar y Finalizar",
     "dialog": {
       "withAI": "Con procesamiento IA de conclusión",
       "previewExists": "Ya existe una vista previa para esta estudio",
@@ -769,7 +660,6 @@
       "searchPlaceholder": "Buscar en conclusiones...",
       "showPreliminary": "Mostrar informes preliminares",
       "foundCount": "{{count}} informe encontrado",
-      "foundCount_plural": "{{count}} informes encontrados",
       "categories": {
         "all": "Todas las categorías",
         "single": "Estudios únicas",
@@ -790,11 +680,8 @@
     "generateWithoutAIDescription": "Usa solo la clasificación local de la guía activa, sin pulir el texto con el LLM local."
   },
   "models": {
-    "title": "Modelos de IA",
     "detection": "Detección",
     "segmentation": "Segmentación",
-    "beta": "Beta",
-    "planned": "Planificado (no disponible aún)",
     "classes": {
       "microaneurysm": "Microaneurisma",
       "hard_exudate": "Exudado Duro",
@@ -807,15 +694,13 @@
     "patient": "Exportar Paciente",
     "session": "Exportar Estudio",
     "all": "Exportar Todo",
-    "import": "Importar .dird",
     "exporting": "Exportando...",
     "dragAndDrop": "O arrastra y suelta aquí",
     "errorPatient": "Error al exportar el paciente",
     "errorData": "Error al exportar los datos",
     "patientSuccess": "Paciente exportado exitosamente",
     "sessionSuccess": "Estudio exportado exitosamente",
-    "fullSuccess": "Todos los datos exportados exitosamente",
-    "sessionExport": "sesion"
+    "fullSuccess": "Todos los datos exportados exitosamente"
   },
   "import": {
     "patientTitle": "Importar paciente(s)",
@@ -844,136 +729,33 @@
     "auto": "Automático (Sistema)"
   },
   "admin": {
-    "sessionClosed": "Estudio cerrado",
-    "panelTitle": "Panel de Administración",
-    "systemLabel": "DIRD+ - Sistema de Gestión",
-    "logout": "Cerrar Estudio",
     "tabs": {
-      "installations": "Instalaciones",
-      "contributions": "Contribuciones",
-      "messages": "Mensajes",
-      "beacons": "Balizas",
-      "ai": "IA / Groq",
-      "logs": "Logs",
-      "settings": "Configuración"
+      "ai": "IA / Groq"
     },
     "login": {
-      "title": "Acceso Administrativo",
-      "usernameLabel": "Usuario",
-      "passwordLabel": "Contraseña",
       "submit": "Iniciar Estudio",
-      "loading": "Iniciando estudio...",
-      "errors": {
-        "missingCredentials": "Por favor ingresa usuario y contraseña",
-        "loginError": "Error al iniciar estudio",
-        "invalidCredentials": "Credenciales incorrectas"
-      },
       "success": "Inicio de estudio exitoso"
     },
     "changePassword": {
-      "title": "Cambiar Contraseña",
       "description": "Actualiza tu contraseña de administrador",
-      "currentPasswordLabel": "Contraseña Actual",
-      "newPasswordLabel": "Nueva Contraseña",
-      "confirmPasswordLabel": "Confirmar Nueva Contraseña",
-      "currentPasswordPlaceholder": "Ingresa tu contraseña actual",
-      "newPasswordPlaceholder": "Mínimo 8 caracteres",
-      "confirmPasswordPlaceholder": "Confirma tu nueva contraseña",
-      "passwordLengthMessage": "La contraseña debe tener al menos 8 caracteres",
-      "passwordMismatchMessage": "Las contraseñas no coinciden",
-      "securityNoteTitle": "Nota de seguridad",
-      "securityNoteText": "Al cambiar tu contraseña, se cerrarán todas las estudios activas y deberás iniciar estudio nuevamente.",
-      "resetButton": "Limpiar",
-      "submitButton": "Cambiar Contraseña",
-      "updating": "Actualizando...",
-      "errors": {
-        "requiredFields": "Todos los campos son requeridos",
-        "passwordMismatch": "Las contraseñas nuevas no coinciden",
-        "passwordLength": "La nueva contraseña debe tener al menos 8 caracteres",
-        "passwordSame": "La nueva contraseña debe ser diferente a la actual",
-        "changeError": "Error al cambiar contraseña"
-      },
       "success": "Contraseña actualizada correctamente"
     },
     "beaconMonitor": {
-      "title": "Balizas de Ayuda Activas",
-      "description_one": "Actualización automática cada 10 segundos · {{count}} activa",
-      "description_other": "Actualización automática cada 10 segundos · {{count}} activas",
-      "refreshButton": "Actualizar",
-      "noBeacons": "No hay balizas activas en este momento",
-      "instructions": "Los usuarios pueden activar balizas desde su panel de tokens",
-      "activeBeacon": "Baliza Activa",
-      "installationLabel": "Installation:",
-      "activatedLabel": "Activada:",
-      "timeRemaining": "tiempo restante",
-      "infoLabel": "ℹ️ Información",
-      "infoDescription": "Las balizas tienen una duración de 5 minutos. Los usuarios las activan cuando necesitan ayuda urgente. Se eliminan automáticamente al expirar.",
-      "success": "Lista actualizada",
-      "errors": {
-        "loadError": "Error al cargar balizas"
-      }
+      "success": "Lista actualizada"
     },
     "installations": {
-      "title": "Instalaciones Registradas",
-      "total": "Total: {{count}}",
-      "refreshButton": "Actualizar",
-      "noInstallations": "No hay instalaciones registradas",
       "columns": {
-        "token": "Installation Token",
         "tokens": "Tokens",
-        "created": "Creado",
-        "lastAccess": "Último Acceso",
         "status": "Estado",
         "actions": "Acciones"
       },
-      "activeBeacon": "Baliza Activa",
-      "editTokens": "Editar Tokens",
-      "updating": "Actualizando...",
-      "saveChanges": "Guardar Cambios",
       "success": "Lista actualizada",
       "dialog": {
-        "title": "Actualizar Tokens",
-        "tokenLabel": "Installation Token",
-        "currentTokens": "Tokens Actuales",
-        "newTotal": "Nuevo Total",
-        "newTotalLabel": "Nuevo Total de Tokens",
-        "placeholder": "Ej: 50",
         "range": "Rango permitido: 0 - 9999"
-      },
-      "errors": {
-        "loadError": "Error al cargar instalaciones",
-        "invalidAmount": "Ingresa una cantidad válida",
-        "exceedsLimit": "El total no puede exceder 9999",
-        "updateError": "Error al actualizar tokens"
-      },
-      "info": {
-        "noChanges": "No hay cambios en la cantidad de tokens"
-      },
-      "tokensUpdated": "Tokens actualizados a: {{tokens}}"
+      }
     },
     "messageBroadcast": {
-      "title": "Enviar Mensaje a Todos los Usuarios",
-      "messageLabel": "Mensaje",
-      "messagePlaceholder": "Escribe el mensaje que verán todos los usuarios...",
-      "characterCount": "{{count}} caracteres",
-      "typeLabel": "Tipo de Notificación",
-      "styleLabel": "Estilo",
-      "durationLabel": "Duración (horas)",
-      "durationDescription": "El mensaje expirará automáticamente después de este tiempo",
-      "sendButton": "Enviar Mensaje",
-      "sending": "Enviando...",
-      "previewTitle": "Vista Previa",
-      "previewDescription": "Así verán el mensaje los usuarios:",
-      "previewMessage": "El mensaje aparecerá aquí...",
-      "acceptButton": "Aceptar",
       "type": "Tipo",
-      "style": "Estilo",
-      "expiresIn": "Expira en",
-      "hours": "{{count}} horas",
-      "types": {
-        "toast": "Toast (Notificación)",
-        "modal": "Modal (Ventana)"
-      },
       "variants": {
         "info": "Información",
         "success": "Éxito",
@@ -982,16 +764,7 @@
       },
       "duration": {
         "1": "1 hora",
-        "6": "6 horas",
-        "12": "12 horas",
-        "24": "24 horas (1 día)",
-        "48": "48 horas (2 días)",
-        "168": "168 horas (1 semana)"
-      },
-      "errors": {
-        "emptyMessage": "Escribe un mensaje",
-        "invalidDuration": "Duración inválida",
-        "sendError": "Error al enviar mensaje"
+        "6": "6 horas"
       },
       "success": "Mensaje enviado a todos los usuarios"
     }
@@ -1013,21 +786,12 @@
     },
     "guidelines": {
       "copy": "Copia",
-      "exportJson": "Exportar JSON",
-      "models": {
-        "metadataNotLoaded": "Metadatos no cargados",
-        "metadataNotLoadedDesc": "No se pudieron cargar los metadatos del modelo",
-        "viewInfo": "Ver información",
-        "viewDetails": "Ver detalles",
-        "contributeModifiedConclusion": "Contribuir esta conclusión modificada"
-      },
       "title": "Selección de Guía Clínica",
       "description": "Selecciona la guía clínica para clasificar la retinopatía diabética según diferentes estándares internacionales",
       "loading": "Cargando guías clínicas...",
       "active": "Activa",
       "official": "Oficial",
       "severityPreview": "Vista Previa de Niveles de Severidad",
-      "applyButton": "Aplicar Guía",
       "confirmDialog": {
         "title": "¿Cambiar Guía Clínica?",
         "description": "Cambiar la guía clínica activa afectará todas las clasificaciones futuras. Las clasificaciones existentes mantendrán su guía original.",
@@ -1263,7 +1027,6 @@
       "title": "Configuración de Apariencia",
       "primaryColor": "Color Principal",
       "logo": "Logo (URL o ruta)",
-      "logoPlaceholder": "/logo.svg",
       "logoPreview": "Vista previa del logo",
       "uploadNewLogo": "Subir nuevo logo",
       "theme": "Tema",
@@ -1285,9 +1048,7 @@
       "local": {
         "title": "Configuración de Modelos Locales",
         "detection": "Modelo de Detección",
-        "segmentation": "Modelo de Segmentación",
-        "detectionPlaceholder": "/models/detection-v1.0.0.onnx",
-        "segmentationPlaceholder": "/models/segmentation-v1.0.0.onnx"
+        "segmentation": "Modelo de Segmentación"
       },
       "api": {
         "title": "Configuración de API",
@@ -1298,13 +1059,7 @@
         "headers": "Headers Personalizados (JSON)",
         "test": "Probar Conexión",
         "testing": "Probando...",
-        "connectionSuccess": "Conexión exitosa",
-        "connectionFailed": "Conexión fallida",
-        "unknownError": "Error desconocido",
-        "endpointPlaceholder": "https://api.example.com/inference",
-        "keyPlaceholder": "sk-…",
-        "modelNamePlaceholder": "______?????",
-        "headersPlaceholder": "{ \"X-Custom-Header\": \"value\" }"
+        "unknownError": "Error desconocido"
       },
       "title": "Configuración de Modelos",
       "description": "Gestiona los modelos de IA descargados desde GitHub o locales",
@@ -1352,26 +1107,11 @@
       "dateTrained": "Fecha de Entrenamiento:",
       "inputSize": "Tamaño de Entrada:",
       "modelStatus": "Estado del Modelo:",
-      "metricLabel": "Métrica:",
-      "causeLabel": "Causa:",
-      "implicationLabel": "Implicación:",
       "statusTexts": {
         "excellent": "Excelente",
         "good": "Bueno",
         "improvement": "Requiere Mejora",
         "critical": "Crítico"
-      },
-      "loader": {
-        "errorLoading": "No se pudieron cargar los modelos",
-        "detectionUnavailable": "Modelo de detección no disponible",
-        "detectionLoadError": "Error al cargar el modelo de detección",
-        "segmentationUnavailable": "Modelo de segmentación no disponible",
-        "segmentationLoadError": "Error al cargar el modelo de segmentación",
-        "detectionModel": "Modelo de Detección",
-        "segmentationModel": "Modelo de Segmentación",
-        "accuracy": "Precisión: ",
-        "noModels": "No hay modelos disponibles",
-        "load": "Cargar"
       },
       "numAnnotations": "Anotaciones",
       "numImages": "Imágenes",
@@ -1432,7 +1172,6 @@
       "table": {
         "phase": "Fase",
         "meanMs": "Media ms",
-        "mean": "Media",
         "median": "Mediana",
         "min": "Min",
         "max": "Max",
@@ -1609,7 +1348,6 @@
     "complete": "Procesamiento completado con éxito",
     "inProgress": "Procesando {{current}}/{{total}}...",
     "start": "Procesar con IA",
-    "detectionsFound": "Detecciones encontradas: ",
     "imagesProcessed": "Imágenes procesadas",
     "pleaseWait": "Por favor espera, este proceso puede tardar unos momentos..."
   },
