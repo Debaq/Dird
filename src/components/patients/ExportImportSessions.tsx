@@ -46,7 +46,7 @@ const ExportImportSessions: React.FC<ExportImportSessionsProps> = ({
     if (!patient) return;
     const exportPw = useAuthStore.getState().exportPassphrase;
     if (!exportPw) {
-      toast.error('Configura la contraseña de exportación en Ajustes → Seguridad.');
+      toast.error(t('errors.exportPasswordRequired'));
       return;
     }
     setIsExporting(true);

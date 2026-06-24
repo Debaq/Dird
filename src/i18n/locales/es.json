@@ -68,7 +68,8 @@
       "noClassification": "No se pudo generar la clasificación",
       "noClassifications": "No se pudieron generar las clasificaciones"
     },
-    "sessionCreation": "Error al crear el estudio"
+    "sessionCreation": "Error al crear el estudio",
+    "exportPasswordRequired": "Configura la contraseña de exportación en Ajustes → Seguridad."
   },
   "confirmations": {
     "deleteImage": "¿Estás seguro de que quieres eliminar esta imagen y todos sus análisis asociados?",
@@ -1340,6 +1341,34 @@
       "confirmDelete": "¿Eliminar el modelo \"{{name}}\"?",
       "deleted": "Modelo eliminado.",
       "deleteError": "No se pudo eliminar: "
+    },
+    "localLlm": {
+      "title": "Asistente IA local (opcional)",
+      "description": "Descarga un modelo de lenguaje pequeño que corre 100% local (llama.cpp). Útil para resumir conclusiones, traducir términos o sugerir frases sin enviar datos a la nube. El modelo se baja una vez y queda guardado offline.",
+      "activeModel": "Modelo activo: {{name}}",
+      "testPlaceholder": "Escribe un prompt de prueba…",
+      "defaultTestPrompt": "Explica en una frase qué es la retinopatía diabética.",
+      "generating": "Generando…",
+      "test": "Probar",
+      "unloadFromMemory": "Descargar de memoria",
+      "catalog": "Catálogo ({{n}})",
+      "loadingCatalog": "Cargando…",
+      "active": "Activo",
+      "activate": "Activar",
+      "download": "Descargar",
+      "disclaimer": "Los modelos se descargan desde HuggingFace. No incluyen pesos en el bundle de DIRD+. Una vez descargados, la inferencia es 100% local — los datos clínicos nunca salen del dispositivo. La calidad del modelo depende del tamaño elegido; los más pequeños (<1 GB) pueden cometer errores en terminología clínica especializada.",
+      "confirmUninstall": "¿Eliminar el modelo \"{{name}}\" del disco?",
+      "toast": {
+        "unavailable": "LLM local no disponible: {{error}}",
+        "downloaded": "Modelo \"{{name}}\" descargado.",
+        "downloadError": "Error al descargar: {{error}}",
+        "loaded": "Modelo cargado.",
+        "loadError": "Error al cargar: {{error}}",
+        "unloaded": "Modelo descargado de memoria.",
+        "deleted": "Modelo eliminado.",
+        "deleteError": "Error al eliminar: {{error}}",
+        "error": "Error: {{error}}"
+      }
     }
   },
   "processing": {

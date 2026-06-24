@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Bot, Download, Trash2, Check, Loader2, Play, AlertCircle, X,
   Sparkles, Languages,
@@ -18,11 +19,12 @@ interface DownloadState {
 }
 
 export function LocalLLMSection() {
+  const { t } = useTranslation();
   const [catalog, setCatalog] = useState<CatalogEntry[]>([]);
   const [installed, setInstalled] = useState<InstalledLlm[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloads, setDownloads] = useState<Record<string, DownloadState>>({});
-  const [testPrompt, setTestPrompt] = useState('Explica en una frase qué es la retinopatía diabética.');
+  const [testPrompt, setTestPrompt] = useState(t('settings.localLlm.defaultTestPrompt'));
   const [testOutput, setTestOutput] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const unlistenRef = useRef<(() => void) | null>(null);
@@ -33,7 +35,7 @@ export function LocalLLMSection() {
       setCatalog(c);
       setInstalled(i);
     } catch (e) {
-      toast.error('LLM local no disponible: ' + String(e));
+      toast.error(t('settings.localLlm.toast.unavailable', { error: String(e) }));
     } finally {
       setLoading(false);
     }
@@ -62,9 +64,9 @@ export function LocalLLMSection() {
     setDownloads((prev) => ({ ...prev, [entry.id]: { received: 0, total: entry.size_mb * 1024 * 1024 } }));
     try {
       await llmDownload(entry.id);
-      toast.success(`Modelo "${entry.name}" descargado.`);
+      toast.success(t('settings.localLlm.toast.downloaded', { name: entry.name }));
     } catch (e) {
-      toast.error('Error al descargar: ' + String(e));
+      toast.error(t('settings.localLlm.toast.downloadError', { error: String(e) }));
       setDownloads((prev) => {
         const next = { ...prev };
         delete next[entry.id];
@@ -76,27 +78,27 @@ export function LocalLLMSection() {
   const handleActivate = async (id: string) => {
     try {
       await llmLoad(id);
-      toast.success('Modelo cargado.');
+      toast.success(t('settings.localLlm.toast.loaded'));
       await refresh();
     } catch (e) {
-      toast.error('Error al cargar: ' + String(e));
+      toast.error(t('settings.localLlm.toast.loadError', { error: String(e) }));
     }
   };
 
   const handleUnload = async () => {
     await llmUnload();
     await refresh();
-    toast.success('Modelo descargado de memoria.');
+    toast.success(t('settings.localLlm.toast.unloaded'));
   };
 
   const handleUninstall = async (id: string, name: string) => {
-    if (!confirm(`¿Eliminar el modelo "${name}" del disco?`)) return;
+    if (!confirm(t('settings.localLlm.confirmUninstall', { name }))) return;
     try {
       await llmUninstall(id);
-      toast.success('Modelo eliminado.');
+      toast.success(t('settings.localLlm.toast.deleted'));
       await refresh();
     } catch (e) {
-      toast.error('Error al eliminar: ' + String(e));
+      toast.error(t('settings.localLlm.toast.deleteError', { error: String(e) }));
     }
   };
 
@@ -108,7 +110,7 @@ export function LocalLLMSection() {
       const out = await llmGenerate({ prompt: testPrompt, max_tokens: 256, temperature: 0.6 });
       setTestOutput(out);
     } catch (e) {
-      toast.error('Error: ' + String(e));
+      toast.error(t('settings.localLlm.toast.error', { error: String(e) }));
     } finally {
       setTesting(false);
     }
@@ -122,19 +124,17 @@ export function LocalLLMSection() {
       <div>
         <h3 className="text-lg font-semibold text-coal-900 dark:text-dark-text flex items-center gap-2">
           <Bot className="w-5 h-5" />
-          Asistente IA local (opcional)
+          {t('settings.localLlm.title')}
         </h3>
         <p className="text-sm text-smoke-600 dark:text-dark-textSecondary mt-1">
-          Descarga un modelo de lenguaje pequeño que corre 100% local (llama.cpp).
-          Útil para resumir conclusiones, traducir términos o sugerir frases sin enviar
-          datos a la nube. El modelo se baja una vez y queda guardado offline.
+          {t('settings.localLlm.description')}
         </p>
       </div>
 
       {installedActive && (
         <Card className="p-4 space-y-3 border-green-300 dark:border-green-800">
           <h4 className="font-semibold text-coal-900 dark:text-dark-text flex items-center gap-2">
-            <Check className="w-4 h-4 text-green-600" /> Modelo activo: {installedActive.name}
+            <Check className="w-4 h-4 text-green-600" /> {t('settings.localLlm.activeModel', { name: installedActive.name })}
           </h4>
           <div className="space-y-2">
             <textarea
@@ -142,15 +142,15 @@ export function LocalLLMSection() {
               onChange={(e) => setTestPrompt(e.target.value)}
               rows={3}
               className="w-full text-sm rounded-md border border-smoke-300 dark:border-coal-600 dark:bg-coal-900 dark:text-dark-text p-2"
-              placeholder="Escribe un prompt de prueba…"
+              placeholder={t('settings.localLlm.testPlaceholder')}
             />
             <div className="flex gap-2">
               <Button onClick={handleTest} disabled={testing || !testPrompt.trim()} size="sm" className="gap-2">
                 {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                {testing ? 'Generando…' : 'Probar'}
+                {testing ? t('settings.localLlm.generating') : t('settings.localLlm.test')}
               </Button>
               <Button onClick={handleUnload} variant="outline" size="sm" className="gap-2">
-                <X className="w-4 h-4" /> Descargar de memoria
+                <X className="w-4 h-4" /> {t('settings.localLlm.unloadFromMemory')}
               </Button>
             </div>
             {testOutput !== null && (
@@ -164,10 +164,10 @@ export function LocalLLMSection() {
 
       <Card className="p-4 space-y-3">
         <h4 className="font-semibold text-coal-900 dark:text-dark-text">
-          Catálogo ({loading ? '…' : catalog.length})
+          {t('settings.localLlm.catalog', { n: loading ? '…' : catalog.length })}
         </h4>
         {loading ? (
-          <p className="text-sm text-smoke-500">Cargando…</p>
+          <p className="text-sm text-smoke-500">{t('settings.localLlm.loadingCatalog')}</p>
         ) : (
           <ul className="divide-y divide-smoke-200 dark:divide-coal-700">
             {catalog.map((entry) => {
@@ -190,7 +190,7 @@ export function LocalLLMSection() {
                         )}
                         {installedRecord?.active && (
                           <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded">
-                            Activo
+                            {t('settings.localLlm.active')}
                           </span>
                         )}
                       </div>
@@ -218,7 +218,7 @@ export function LocalLLMSection() {
                         <>
                           {!installedRecord?.active && (
                             <Button size="sm" variant="outline" onClick={() => handleActivate(entry.id)} className="gap-1">
-                              <Sparkles className="w-3.5 h-3.5" /> Activar
+                              <Sparkles className="w-3.5 h-3.5" /> {t('settings.localLlm.activate')}
                             </Button>
                           )}
                           <Button
@@ -232,7 +232,7 @@ export function LocalLLMSection() {
                         </>
                       ) : (
                         <Button size="sm" onClick={() => handleDownload(entry)} className="gap-1">
-                          <Download className="w-3.5 h-3.5" /> Descargar
+                          <Download className="w-3.5 h-3.5" /> {t('settings.localLlm.download')}
                         </Button>
                       )}
                     </div>
@@ -247,11 +247,7 @@ export function LocalLLMSection() {
       <div className="flex gap-3 items-start p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 rounded-lg">
         <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-amber-800 dark:text-amber-200">
-          Los modelos se descargan desde HuggingFace. No incluyen pesos en el bundle
-          de DIRD+. Una vez descargados, la inferencia es 100% local — los datos
-          clínicos nunca salen del dispositivo. La calidad del modelo depende del
-          tamaño elegido; los más pequeños (&lt;1 GB) pueden cometer errores en
-          terminología clínica especializada.
+          {t('settings.localLlm.disclaimer')}
         </p>
       </div>
     </div>

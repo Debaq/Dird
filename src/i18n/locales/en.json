@@ -52,14 +52,14 @@
     "unarchivePatient": "Patient unarchived"
   },
   "errors": {
-    "savePatient": "Error while guardar el paciente",
-    "saveSession": "Error while guardar el estudio",
+    "savePatient": "Error saving the patient",
+    "saveSession": "Error saving the study",
     "unknown": "Unknown error",
-    "exportSession": "Error while exportar el estudio.",
+    "exportSession": "Error exporting the study.",
     "deleteImage": "Error deleting image",
     "imageProcessing": "Error processing image",
-    "deleteSession": "Error while eliminar el estudio.",
-    "duplicateSession": "Error while duplicar el estudio.",
+    "deleteSession": "Error deleting the study.",
+    "duplicateSession": "Error duplicating the study.",
     "deletePatient": "Error deleting patient.",
     "archivePatient": "Error archiving patient.",
     "unarchivePatient": "Error unarchiving patient.",
@@ -68,7 +68,8 @@
       "noClassification": "Could not generate classification",
       "noClassifications": "Could not generate classifications"
     },
-    "sessionCreation": "Error creating study"
+    "sessionCreation": "Error creating study",
+    "exportPasswordRequired": "Set the export password in Settings → Security."
   },
   "confirmations": {
     "deleteImage": "Are you sure you want to delete this image and all associated analyses?",
@@ -186,7 +187,7 @@
       "operator": "Operator (clinician)",
       "operatorPlaceholder": "Name of the professional performing the session",
       "create": "Create Study",
-      "createDescription": "Fill in the information to crear un nuevo estudio",
+      "createDescription": "Fill in the information to create a new study",
       "update": "Update Study",
       "editDescription": "Update session information"
     },
@@ -696,8 +697,8 @@
     "all": "Export All",
     "exporting": "Exporting...",
     "dragAndDrop": "Or drag and drop here",
-    "errorPatient": "Error while exportar el paciente",
-    "errorData": "Error while exportar los datos",
+    "errorPatient": "Error exporting the patient",
+    "errorData": "Error exporting the data",
     "patientSuccess": "Patient exported successfully",
     "sessionSuccess": "Study exported successfully",
     "fullSuccess": "All data exported successfully"
@@ -720,7 +721,7 @@
     "segmentationsImported": "Segmentaciones importadas: ",
     "measurementsImported": "Mediciones importadas: ",
     "errorTitle": "Import Error",
-    "processError": "Error while procesar el archivo",
+    "processError": "Error processing the file",
     "invalidFile": "Invalid file. Please select a valid patient(s) .dird file."
   },
   "languages": {
@@ -1340,6 +1341,34 @@
       "confirmDelete": "Delete the model \"{{name}}\"?",
       "deleted": "Model deleted.",
       "deleteError": "Could not delete: "
+    },
+    "localLlm": {
+      "title": "Local AI assistant (optional)",
+      "description": "Download a small language model that runs 100% locally (llama.cpp). Useful for summarizing conclusions, translating terms or suggesting phrasing without sending data to the cloud. The model is downloaded once and kept offline.",
+      "activeModel": "Active model: {{name}}",
+      "testPlaceholder": "Write a test prompt…",
+      "defaultTestPrompt": "Explain in one sentence what diabetic retinopathy is.",
+      "generating": "Generating…",
+      "test": "Test",
+      "unloadFromMemory": "Unload from memory",
+      "catalog": "Catalog ({{n}})",
+      "loadingCatalog": "Loading…",
+      "active": "Active",
+      "activate": "Activate",
+      "download": "Download",
+      "disclaimer": "Models are downloaded from HuggingFace. They are not bundled with DIRD+. Once downloaded, inference is 100% local — clinical data never leaves the device. Model quality depends on the chosen size; the smallest ones (<1 GB) may make mistakes with specialized clinical terminology.",
+      "confirmUninstall": "Delete the model \"{{name}}\" from disk?",
+      "toast": {
+        "unavailable": "Local LLM unavailable: {{error}}",
+        "downloaded": "Model \"{{name}}\" downloaded.",
+        "downloadError": "Download error: {{error}}",
+        "loaded": "Model loaded.",
+        "loadError": "Load error: {{error}}",
+        "unloaded": "Model unloaded from memory.",
+        "deleted": "Model deleted.",
+        "deleteError": "Delete error: {{error}}",
+        "error": "Error: {{error}}"
+      }
     }
   },
   "processing": {

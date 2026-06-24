@@ -120,7 +120,7 @@ const SessionView: React.FC = () => {
     if (!sessionId) return;
     const exportPw = useAuthStore.getState().exportPassphrase;
     if (!exportPw) {
-      toast.error('Configura la contraseña de exportación en Ajustes → Seguridad.');
+      toast.error(t('errors.exportPasswordRequired'));
       return;
     }
     setIsExporting(true);

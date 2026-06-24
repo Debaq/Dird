@@ -36,7 +36,7 @@ const ExportImportPatients: React.FC<ExportImportPatientsProps> = ({
   const handleExportAll = async () => {
     const exportPw = useAuthStore.getState().exportPassphrase;
     if (!exportPw) {
-      toast.error('Configura la contraseña de exportación en Ajustes → Seguridad.');
+      toast.error(t('errors.exportPasswordRequired'));
       return;
     }
     setExporting(true);
