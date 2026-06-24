@@ -129,7 +129,7 @@ class ReportsShim extends TableShim<Report> {
 async function transaction(mode: 'r' | 'rw', ...rest: unknown[]): Promise<void> {
   const fn = rest[rest.length - 1] as () => Promise<unknown>;
   if (typeof fn !== 'function') {
-    throw new Error('transaction: el último argumento debe ser la función');
+    throw new Error('transaction: the last argument must be the function');
   }
   void mode; // SQLite no distingue rw/r para una sola conexión
   await dbExecute('BEGIN', []);

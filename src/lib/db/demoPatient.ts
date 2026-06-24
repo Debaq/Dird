@@ -365,7 +365,7 @@ export async function loadDemoImage(
 ): Promise<void> {
   const demoPatient = await getDemoPatient();
   if (!demoPatient) {
-    throw new Error('El paciente demo no existe. Ejecuta initializeDemoPatient() primero.');
+    throw new Error('Demo patient does not exist. Run initializeDemoPatient() first.');
   }
 
   const sessions = await db.sessions
@@ -375,7 +375,7 @@ export async function loadDemoImage(
 
   const session = sessions.find(s => s.sessionNumber === sessionNumber);
   if (!session) {
-    throw new Error(`Sesión ${sessionNumber} no encontrada en el paciente demo`);
+    throw new Error(`Session ${sessionNumber} not found in demo patient`);
   }
 
   try {
@@ -398,7 +398,7 @@ export async function loadDemoImage(
     const imageUrl = `${basePath}/demo-images/${sessionFolder}/${filename}`;
     const imageResponse = await fetch(imageUrl);
     if (!imageResponse.ok) {
-      throw new Error(`No se pudo cargar la imagen: ${imageUrl}`);
+      throw new Error(`Could not load image: ${imageUrl}`);
     }
     const imageBlob = await imageResponse.blob();
 
@@ -530,7 +530,7 @@ export async function loadAllDemoImages(onProgress?: ProgressCallback): Promise<
 export async function loadDemoPreviewReport(): Promise<void> {
   const demoPatient = await getDemoPatient();
   if (!demoPatient) {
-    throw new Error('El paciente demo no existe');
+    throw new Error('Demo patient does not exist');
   }
 
   const sessions = await db.sessions
@@ -540,7 +540,7 @@ export async function loadDemoPreviewReport(): Promise<void> {
 
   const session2 = sessions.find(s => s.sessionNumber === 2);
   if (!session2) {
-    throw new Error('Sesión 2 no encontrada');
+    throw new Error('Session 2 not found');
   }
 
   // Verificar si ya tiene reporte
@@ -556,7 +556,7 @@ export async function loadDemoPreviewReport(): Promise<void> {
 
     const response = await fetch(pdfUrl);
     if (!response.ok) {
-      throw new Error(`No se pudo cargar el PDF: ${pdfUrl}`);
+      throw new Error(`Could not load PDF: ${pdfUrl}`);
     }
 
     const pdfBlob = await response.blob();
@@ -616,7 +616,7 @@ NOTA: Este es un reporte PRELIMINAR generado para demostración. Permite visuali
 export async function loadDemoReportAndLockSession(): Promise<void> {
   const demoPatient = await getDemoPatient();
   if (!demoPatient) {
-    throw new Error('El paciente demo no existe');
+    throw new Error('Demo patient does not exist');
   }
 
   const sessions = await db.sessions
@@ -626,7 +626,7 @@ export async function loadDemoReportAndLockSession(): Promise<void> {
 
   const session1 = sessions.find(s => s.sessionNumber === 1);
   if (!session1) {
-    throw new Error('Sesión 1 no encontrada');
+    throw new Error('Session 1 not found');
   }
 
   // Verificar si ya tiene reporte
@@ -649,7 +649,7 @@ export async function loadDemoReportAndLockSession(): Promise<void> {
 
     const response = await fetch(pdfUrl);
     if (!response.ok) {
-      throw new Error(`No se pudo cargar el PDF: ${pdfUrl}`);
+      throw new Error(`Could not load PDF: ${pdfUrl}`);
     }
 
     const pdfBlob = await response.blob();

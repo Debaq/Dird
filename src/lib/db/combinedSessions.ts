@@ -14,7 +14,7 @@ export async function createCombinedSession(
   name?: string
 ): Promise<number> {
   if (sessionIds.length < 2) {
-    throw new Error('Se requieren al menos 2 sesiones para crear una sesión combinada');
+    throw new Error('At least 2 sessions are required to create a combined session');
   }
 
   // Obtener todas las sesiones a combinar
@@ -25,11 +25,11 @@ export async function createCombinedSession(
   // Verificar que todas las sesiones existen y pertenecen al mismo paciente
   const validSessions = sessions.filter((s): s is Session => s !== undefined);
   if (validSessions.length !== sessionIds.length) {
-    throw new Error('Una o más sesiones no existen');
+    throw new Error('One or more sessions do not exist');
   }
 
   if (validSessions.some(s => s.patientId !== patientId)) {
-    throw new Error('Todas las sesiones deben pertenecer al mismo paciente');
+    throw new Error('All sessions must belong to the same patient');
   }
 
   // Ordenar sesiones por fecha

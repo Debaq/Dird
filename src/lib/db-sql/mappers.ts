@@ -174,7 +174,7 @@ export const imagesMapper: TableMapper<Image> = {
     // así que aquí guardamos un placeholder reconocible. El llamador que persiste
     // imágenes debe usar `addImageWithBlob()` del helper.
     if (o.originalBlob !== undefined) {
-      throw new Error('Usa images.addImage()/updateImageBlob() para persistir Blobs');
+      throw new Error('Use images.addImage()/updateImageBlob() to persist Blobs');
     }
     if (o.width !== undefined) row.width = P.int(o.width);
     if (o.height !== undefined) row.height = P.int(o.height);
@@ -329,7 +329,7 @@ export const reportsMapper: TableMapper<Report> = {
     if (o.type !== undefined) row.type = P.text(o.type);
     if (o.reportCategory !== undefined) row.report_category = P.text(o.reportCategory);
     if (o.pdfBlob !== undefined) {
-      throw new Error('Usa reports.addReport()/updateReportBlob() para persistir PDFs');
+      throw new Error('Use reports.addReport()/updateReportBlob() to persist PDFs');
     }
     if (o.evaluatorNotes !== undefined) row.evaluator_notes = P.text(o.evaluatorNotes);
     if ('originalNotes' in o) row.original_notes = o.originalNotes ? P.text(o.originalNotes) : P.null();

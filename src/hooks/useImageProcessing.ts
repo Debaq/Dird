@@ -38,7 +38,7 @@ export function useImageProcessing(imageBlob: Blob | null) {
       if (hasOpenCVFilters) {
         const ready = await waitForOpenCV(5000);
         if (!ready) {
-          throw new Error('OpenCV no disponible. Recarga la página.');
+          throw new Error('OpenCV not available. Reload the page.');
         }
       }
 
