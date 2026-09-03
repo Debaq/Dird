@@ -310,7 +310,7 @@ Reports are **standard PDF/A-compatible documents** that can be opened by any PD
 
 ## 5. Database mapping
 
-For implementers extending DIRD+ or building compatible tools, this is the mapping between `.dird` file contents and the internal Dexie/IndexedDB schema used by the reference implementation:
+For implementers extending DIRD+ or building compatible tools, this is the mapping between `.dird` file contents and the internal SQLCipher schema used by the reference implementation (DIRD+ v2.0+; pre-v2.0 installations used a Dexie/IndexedDB schema, migrated automatically on upgrade):
 
 | File in `.dird` | Database table | Notes |
 |-----------------|----------------|-------|
@@ -332,22 +332,11 @@ Reference implementation:
 
 ## 6. Encryption (v2.0+)
 
-From DIRD+ v2.0 onward, `.dird` files may be **encrypted at rest** using **AES-256-GCM**, with the key derived from a user-provided password via **Argon2id**.
+From DIRD+ v2.0 onward, `.dird` files are **encrypted at rest** using **AES-256-GCM** in an envelope-encryption scheme (KEK/DEK), with the KEK derived from a user-provided password via **Argon2id**. The exact binary layout, field sizes, and decryption flow are specified in §1.1 — this section does not restate them to avoid drift between the two.
 
-Encrypted `.dird` files have the following outer structure:
+Unencrypted (legacy v1.0.1) `.dird` files do not have the `DIRD` magic; they begin with the standard ZIP `PK\x03\x04` signature. Tools must check the first 4 bytes to determine whether decryption is required.
 
-```
-encrypted.dird (binary)
-├── magic: "DIRDENC1" (8 bytes)
-├── argon2_params: { time, memory, parallelism, salt } (256 bytes)
-├── nonce: 12 bytes (random)
-├── ciphertext: encrypted ZIP content (variable length)
-└── auth_tag: 16 bytes (GCM authentication)
-```
-
-Unencrypted `.dird` files do not have the `DIRDENC1` magic; they begin with the standard ZIP `PK\x03\x04` signature. Tools must check the first 8 bytes to determine whether decryption is required.
-
-Detailed encryption format will be specified in `docs/dird-encryption.md` (to be released alongside v2.0).
+Reference implementation of the container format: `src/lib/export/dird-container.ts` (binary layout documented in its header comment, kept in sync with `src-tauri/src/crypto.rs`).
 
 ---
 
