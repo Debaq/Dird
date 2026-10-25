@@ -6,68 +6,87 @@ Items move through these states: **Planned → In progress → Released → Vali
 
 ---
 
-## v2.0 — Security and openness (in progress)
+## v2.0 — Security and openness (**released**: v2.0.0 2026-04-20 → v2.2.1 2026-06-24)
 
-Target: before submission to the Digital Public Goods Alliance (DPGA).
+All items below shipped and are verifiable in the repository (`src-tauri/src/crypto.rs`, `db.rs`, `models.rs`; `src/components/onboarding/FirstRunWizard.tsx`; `src/components/layout/EncryptionBadge.tsx`; `docs/`). Audited 2026-10-24.
 
 ### Security
-- [ ] **At-rest encryption for the SQLite database** using SQLCipher (AES-256).
-- [ ] **At-rest encryption for `.dird` export files** using AES-256-GCM.
-- [ ] **Argon2id key derivation** from user-provided encryption password (OWASP 2025 parameters).
-- [ ] **Dual-password model**: separate user login password and encryption password.
-- [ ] **First-launch security wizard** to set up both passwords with clear UX.
-- [ ] **Encryption status indicator** visible in the main UI.
+- [x] **At-rest encryption for the SQLite database** using SQLCipher (AES-256).
+- [x] **At-rest encryption for `.dird` export files** using AES-256-GCM.
+- [x] **Argon2id key derivation** from user-provided encryption password (OWASP 2025 parameters).
+- [x] **Dual-password model**: separate user login password and encryption password.
+- [x] **First-launch security wizard** to set up both passwords with clear UX.
+- [x] **Encryption status indicator** visible in the main UI.
 
 ### Model agnosticism
-- [ ] **External ONNX model loader**: in-app dialog to select a local `.onnx` model file.
-- [ ] **Model registry** within the application configuration directory.
-- [ ] **Model validation** on load: input/output tensor shapes, class metadata.
-- [ ] **Documentation**: `docs/reference/model-interface.md` specifying the model contract.
+- [x] **External ONNX model loader**: in-app dialog to select a local `.onnx` model file.
+- [x] **Model registry** within the application configuration directory.
+- [x] **Model validation** on load: input/output tensor shapes, class metadata.
+- [x] **Documentation**: `docs/reference/model-interface.md` specifying the model contract.
 
 ### Documentation
-- [ ] `PRIVACY.md` published.
-- [ ] `SECURITY.md` published.
-- [ ] `ROADMAP.md` published (this document).
-- [ ] `docs/reference/dird-format.md` published.
-- [ ] `docs/reference/model-interface.md` published.
-- [ ] `LICENSE` confirmed in `dird_models`.
-- [ ] DPG Standard compliance section added to README.
-- [ ] GitHub Security Advisories enabled on the repository.
+- [x] `PRIVACY.md` published.
+- [x] `SECURITY.md` published.
+- [x] `ROADMAP.md` published (this document).
+- [x] `docs/reference/dird-format.md` published.
+- [x] `docs/reference/model-interface.md` published.
+- [x] `LICENSE` confirmed in `dird_models`.
+- [x] DPG Standard compliance section added to README.
+- [x] GitHub Security Advisories / private vulnerability reporting enabled on the repository (see `SECURITY.md`).
 
 ### Internationalization
-- [ ] English version of the project website at full feature parity with Spanish.
+- [x] English version of the project website at full feature parity with Spanish.
 
 ---
 
-## v2.1 — Clinical usability (planned, Q3 2026)
+## v2.1 — Clinical usability (partially released)
 
 ### Workflow improvements
-- [ ] Bulk import of retinal images for screening campaigns.
+- [ ] Bulk import of retinal images for screening campaigns (not started).
 - [ ] Improved patient search and filtering.
 - [ ] Configurable PDF report templates.
-- [ ] Multi-language UI: English, Spanish, Portuguese.
+- [x] Multi-language UI: English, Spanish (released v2.2.1; ~1,650 keys, no hardcoded strings).
+- [ ] Portuguese UI.
 
 ### Audit and accountability
-- [ ] **Audit log** of access and modifications, stored encrypted alongside the database.
-- [ ] **Session timeout** for in-app inactivity.
+- [x] **Audit trail of human correction** of AI findings (`manuallyModified`, operator per session) — released v2.2.
+- [ ] Encrypted access/modification log and session timeout → moved to v3.1.
 
 ---
 
-## v2.2 — Model improvements (planned, Q4 2026)
+## v2.2 — Model validation and improvements (validation released; retraining moved to v3.0)
 
 ### Validation
-- [ ] **External validation on Messidor-2** (European cohort, heterogeneous fundus cameras).
+- [x] **External validation on DDR** (China, n = 12,522, raw images) — `validation/experiment-4-ddr/`, AUC 0.84 OOD, frozen thresholds transport.
+- [x] **Subgroup / fairness analysis** (severity, lesion type, site) — `validation/experiment-5-fairness/`.
+- [~] **External validation on Messidor-2** — preliminary on a preprocessed mirror (`experiment-3-messidor/`); re-run on raw ADCIS images pending.
+- [x] **APTOS 2019 re-labelled as in-distribution** for detector v2 (the model was trained on 500 APTOS images; IDs not recoverable).
 - [ ] **External validation on EyePACS** (US cohort).
-- [ ] Publication of validation report and operating point recalibration.
+- [x] Validation reports with bootstrap 95 % CIs, intended-use and clinical-risk statements, TRIPOD+AI mapping (`validation/`).
 
 ### Reference model
-- [ ] **Targeted retraining** for weaker classes: hemorrhage (current mAP 0.16), hard exudate (0.36).
-- [ ] **Dedicated annotation** for microhemorrhage vs. microaneurysm separation.
-- [ ] Release of DIRDv3 reference model.
+Moved to **v3.0** below.
 
 ---
 
-## v3.0 — Interoperability (planned, 2027)
+## v3.0 — Reference models v3 and native inference (in progress, target Q4 2026)
+
+### Reference models
+- [ ] **Detector v3** retrained from scratch on public datasets with auditable provenance (DDR lesion-detection + IDRiD; no APTOS), microaneurysm and hemorrhage as separate classes, scale-normalised tiling for small lesions.
+- [ ] **Expert-in-the-loop annotation pipeline** in Annotix: blinded double reading, inter-reader agreement, hash-chained audit log, published as `dird_annotations` (annotations only, no images).
+- [ ] **Image-level grader** (5-grade classifier, referable probability, calibrated) — new model role `grader`, model-card schema 2.1.
+- [ ] **Fusion and discrepancy flag** between detector and grader, configurable per clinical guideline (JSON).
+
+### Runtime
+- [ ] **Native ONNX Runtime** in the Rust backend (`ort`), two-pass (global + tiled) inference; WebAssembly kept as fallback.
+- [ ] Model and grader versions in the PDF report and in `.dird` exports (format 2.1).
+
+### Publication
+- [ ] Software article submitted to *Computer Methods and Programs in Biomedicine*.
+
+---
+
+## v3.1 — Interoperability (planned, 2027)
 
 ### Clinical standards
 - [ ] **DICOM input support** for retinal images.
@@ -75,13 +94,15 @@ Target: before submission to the Digital Public Goods Alliance (DPGA).
 - [ ] **SNOMED CT mapping** for diagnostic terms.
 - [ ] **ICD-11 export** in clinical reports.
 
-### Multi-user
+### Multi-user and workflow
 - [ ] **Optional local multi-user mode** for shared workstations in clinics.
 - [ ] **Role-based access control** within the application.
+- [ ] **Blind-read mode** (clinician grades before seeing AI output) to mitigate automation bias.
+- [ ] **Session timeout** and encrypted access/modification log.
 
 ---
 
-## v3.1 — Segmentation (planned, 2027)
+## v3.2 — Segmentation (planned, 2027)
 
 ### New AI capabilities
 - [ ] Vessel segmentation
