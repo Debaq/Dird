@@ -69,3 +69,9 @@ The Messidor / Messidor-2 images used in the validation experiments are
 24. **Abràmoff MD, Folk JC, Han DP, Walker JD, Williams DF, Russell SR, Massin P, Cochener B, Gain P, Tang L, Lamard M, Moga DC, Quellec G, Niemeijer M.** "Automated analysis of retinal images for detection of referable diabetic retinopathy." *JAMA Ophthalmology*, 2013; 131(3):351-357. <https://doi.org/10.1001/jamaophthalmol.2013.1743>
 
 25. **Krause J, Gulshan V, Rahimy E, et al.** "Grader variability and the importance of reference standards for evaluating machine learning models for diabetic retinopathy." *Ophthalmology*, 2018; 125(8):1264-1272. <https://doi.org/10.1016/j.ophtha.2018.01.034> — *source of the adjudicated Messidor-2 grades.*
+
+26. **Porwal P, Pachade S, Kokare M, et al.** "IDRiD: Diabetic Retinopathy – Segmentation and Grading Challenge." *Medical Image Analysis*, 2020; 59:101561. <https://doi.org/10.1016/j.media.2019.101561> — *IDRiD dataset (segmentation, localization, grading); licensed CC BY 4.0. Data descriptor: Porwal P, et al. "Indian Diabetic Retinopathy Image Dataset (IDRiD): A Database for Diabetic Retinopathy Screening Research." Data, 2018; 3(3):25. <https://doi.org/10.3390/data3030025>*
+
+27. **Li T, Gao Y, Wang K, Guo S, Liu H, Kang H.** "Diagnostic assessment of deep learning algorithms for diabetic retinopathy screening." *Information Sciences*, 2019; 501:511-522. <https://doi.org/10.1016/j.ins.2019.06.011> — *DDR dataset (DR grading, lesion segmentation and detection); research use only, images not redistributable.*
+
+28. **Asia Pacific Tele-Ophthalmology Society (APTOS).** "APTOS 2019 Blindness Detection." Kaggle, 2019. <https://www.kaggle.com/c/aptos2019-blindness-detection> — *3,662 training images with ICDR grades (single grader); used under the competition data rules.*

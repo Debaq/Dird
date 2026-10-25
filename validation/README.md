@@ -95,6 +95,12 @@ The Messidor / Messidor-2 images are **kindly provided by the Messidor program p
 et al. 2014 (database), Abràmoff et al. 2013, and Krause et al. 2018 (adjudicated Messidor-2
 grades) — full entries in [REFERENCES.md](../REFERENCES.md) §Public Datasets.
 
+IDRiD is distributed under CC BY 4.0 — cite Porwal et al. 2020 (*Med Image Anal*) and Porwal et al.
+2018 (*Data*). DDR is for research use only and its images must not be redistributed — cite Li et al.
+2019 (*Information Sciences*). APTOS 2019 images are used under the Kaggle competition rules — cite
+"APTOS 2019 Blindness Detection" (Kaggle, 2019). Full entries in [REFERENCES.md](../REFERENCES.md)
+§Public Datasets (refs 26–28).
+
 ## Setup
 
 ```bash
