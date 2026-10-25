@@ -1,10 +1,11 @@
 [package]
 name = "app"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+version = "2.2.1"
+description = "DIRD+ — Diabetic Imaging Retinopathy Detector (Tauri desktop backend)"
+authors = ["Nicolás Baier Quezada <davil004@gmail.com>"]
 license = "AGPL-3.0-or-later"
-repository = ""
+repository = "https://github.com/Debaq/Dird"
+homepage = "https://debaq.github.io/Dird/"
 edition = "2021"
 rust-version = "1.77.2"
 
