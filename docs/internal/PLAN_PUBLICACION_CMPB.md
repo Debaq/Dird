@@ -66,24 +66,24 @@ de software para tamizaje** → hueco.
 | # | Hallazgo | Evidencia | Consecuencia |
 |---|---|---|---|
 | H1 | **La inferencia corre en `onnxruntime-web` (WASM) dentro del webview de Tauri. No hay ONNX Runtime nativo.** | `package.json` → `onnxruntime-web ^1.23.2`; `src-tauri/Cargo.toml` sin crate `ort`; `model-registry.ts` usa `executionProviders: ['wasm']` | **Decidido (§6-1): backend nativo `ort` en Rust (P4.1)**; WASM queda como fallback y brazo de comparación en E11 |
-| H2 | **El preprocesamiento documentado no es el implementado.** Spec dice letterbox gris 114; app y scripts de validación hacen *resize* directo a 640×640 | `model-interface.md` §3.2 vs `onnx-manager.ts:156-195` y `run_aptos_binary_experiment.py:42` | Corregir la spec. El detector v3 teselado y el grader usan **una sola función de preprocesado, replicada en Python, TS y Rust, con test de paridad** |
+| H2 | **El preprocesamiento documentado no era el implementado.** Spec decía letterbox gris 114; app y scripts hacen *resize* directo a 640×640 | `onnx-manager.ts:156-195`, `run_aptos_binary_experiment.py:42` | ✅ Spec corregida 2026-10-24 (v2.0.1, commit `e81fbc56`). Pendiente P1.2/P1.3: spec v2.1 con `inference.tiling`. El detector v3 teselado y el grader usan **una sola función de preprocesado, replicada en Python, TS y Rust, con test de paridad** |
 | H3 | El validador de fichas solo acepta `schema_version "2.0"` y `format ∈ {yolo_end2end_v2, yolo_v8_native}` | `model-card-validator.ts:32,155,205` | `schema_version "2.1"`: `role`, `format "classifier_v1"`, bloque `inference.tiling` |
 | H4 | El registro de modelos tiene **un solo modelo activo** | `src-tauri/src/models.rs:172` | Activo por rol (`detector` / `grader`) |
 | H5 | La sesión guarda `modelVersions.{detection, segmentation}`; el PDF imprime solo `detection` | `schema.ts:28-31`, `report-generator.ts:279` | Añadir `classification`; `.dird` y PDF |
 | H6 | Ya existe un "clasificador" en `src/lib/analysis/*classifier*`: es el motor de guías por reglas | `image-dr-classifier.ts` | Nuevo componente = **`image-grader`**; en el paper: "lesion detector" + "image-level grader" + "guideline engine" |
-| H7 | `Cargo.toml` con metadatos placeholder (`0.1.0`, `"A Tauri App"`, `authors ["you"]`) | `src-tauri/Cargo.toml:1-9` | Corregir antes de v3.0.0 |
-| H8 | `ROADMAP.md` desactualizado (v2.0 sin marcar, v2.2.1 liberado) | `ROADMAP.md` | Auditoría (P5.5) |
-| H9 | **No existe `CITATION.cff`**; DOIs inconsistentes (19666272 / 19687226 / 19685466) | `README.md:16,512,534` | DOI de concepto único + DOI de versión |
-| H10 | `REFERENCES.md` sin IDRiD, APTOS ni DDR | `grep` | Añadir Porwal 2020, Li 2019, APTOS/Kaggle |
+| H7 | `Cargo.toml` con metadatos placeholder | `src-tauri/Cargo.toml:1-9` | ✅ **Resuelto 2026-10-24** (commit `5158ae74`) |
+| H8 | `ROADMAP.md` desactualizado | `ROADMAP.md` | ✅ **Resuelto 2026-10-24** (commit `d4961bd4`): v2.0 liberado, v2.1 parcial, v2.2 validación, nuevo v3.0. P5.5 solo marca lo que se libere en v3.0.0 |
+| H9 | Sin `CITATION.cff`; DOIs inconsistentes | `README.md` | ✅ **Resuelto 2026-10-24** (commit `3e2b7dd2`). Verificado en la API de Zenodo: **concepto app 10.5281/zenodo.19666272** (versión v2.2.1 = 20821728); **concepto modelos 10.5281/zenodo.19666694** (v2.0.0 = 19685466). README, landing es/en, `.zenodo.json` y `CITATION.cff` usan los de concepto |
+| H10 | `REFERENCES.md` sin IDRiD, APTOS ni DDR | `grep` | ✅ **Resuelto 2026-10-24** (commit `48079a5a`): refs 26–28 + atribución en `validation/README.md` |
 | H11 | **Sin GPU local** (AMD Renoir, 13 GB); `torch` no instalado | `lspci`, `free` | Entrenar en **Kaggle** (API disponible, §6-3) |
-| H12 | `node_modules` ausente → `vitest` no corre | `ERR_MODULE_NOT_FOUND` | `pnpm install` antes de E12 |
-| H13 | Detector v2: preprint dice **YOLOv26n, 500 APTOS pseudoetiquetadas, 120 épocas**; ficha dice YOLOv26s; `MODEL_CARD.md` §4–5 "TODO"; **IDs probablemente irrecuperables** | preprint líneas 215–249 | **Decidido (§6-6): reentrenar detector v3 con procedencia limpia (E14).** v2 se documenta como "trained on 500 APTOS images, IDs not recoverable" y queda como baseline histórico |
+| H12 | `node_modules` ausente | — | ✅ **Resuelto 2026-10-24**: `pnpm install --frozen-lockfile`; `vitest run` → **7 archivos, 52 tests, todos verdes** (línea base para E12) |
+| H13 | Detector v2: preprint dice **YOLOv26n, 500 APTOS pseudoetiquetadas, 120 épocas**; ficha dice YOLOv26s; **IDs probablemente irrecuperables** | preprint líneas 215–249 | ✅ n vs s resuelto 2026-10-24: ONNX de 38,17 MB ≈ 9,47 M parámetros = **YOLOv26s** (el "n" del preprint es error). `dird_models/MODEL_CARD.md` §1 y §4 actualizados (commit `285fa3b`). | **Decidido (§6-6): reentrenar detector v3 con procedencia limpia (E14).** v2 se documenta como "trained on 500 APTOS images, IDs not recoverable" y queda como baseline histórico |
 | H14 | IDRiD-grading/localization (516) y IDRiD-segmentation (81) no están completos en disco; **DDR lesion-detection (757 imgs con cajas) tampoco** | `validation/data/ddr/DDR-dataset/` solo tiene `DR_grading` | Descargar en semana 1 (P1.6) |
 | H15 | Figuras SVG del preprint existen y son editables | `~/Escritorio/Archivo_disco_duro_2026-10-16/Publicaciones/preparación/Dird/` | Base para Figs. 1–2 |
 | H16 | Preprint: 9 autores; correspondencia F. López; financiamiento "INES-52" | preprint | **Decidido (§6-2): 6 autores** |
 | H17 | **Annotix** tiene lo necesario para un pipeline auditable: `audit.jsonl` con cadena SHA-256, lectura múltiple cegada, acuerdo entre evaluadores (κ/IoU/Dice), teselado con solape, contrato de modelo, export YOLO/COCO | `Annotix/docs/audit-log.md`, `lectura-multiple.md`, `acuerdo-evaluadores.md`, `src-tauri/src/augment/tiling.rs` | Pipeline E14 se ejecuta **dentro de Annotix** y el proyecto se publica (P2.4) |
 | H18 | Annotix **no hace inferencia por teselas** (lo declara su propio código) | `tiling.rs` cabecera | La inferencia teselada se implementa en DIRD+ (`ort` nativo, P4.1) |
-| H19 | Annotix **no tiene archivo `LICENSE`** en la raíz (badge dice MIT) | `ls Annotix/` | Arreglar antes de publicar el proyecto auditable (P2.4) |
+| H19 | Annotix sin archivo `LICENSE` | `ls Annotix/` | ✅ **Resuelto 2026-10-24**: `LICENSE` MIT añadido y pusheado (Annotix commit `87d7e98`) |
 
 ---
 
@@ -143,8 +143,8 @@ editadas / rechazadas por lector, κ (presencia) e IoU medio (caja) entre Almend
 - Test de paridad: 5 imágenes demo, tensores Python ↔ TS ↔ Rust, diferencia ≤ 1/255; incluye la rejilla de teselas (mismas coordenadas).
 - [DoD: paridad verde en vitest y `cargo test`]
 
-**P1.4 🔴 Procedencia del detector v2 — cierre** [R: Uribe] [DoD: `dird_models/MODEL_CARD.md` §4–5 rellenados con lo que haya; si no hay IDs: "500 APTOS 2019 images, pseudo-labeled; image IDs not recoverable"]
-- Intentar `torch.load(best.pt)['train_args']` y contar parámetros (n vs s). Una tarde, no más.
+**P1.4 🟡 Procedencia del detector v2 — cierre** [R: Uribe] [DoD: `MODEL_CARD.md` §4–5 sin "TODO" o marcados "not recoverable"]
+- Ya registrado (2026-10-24): fuente APTOS-500, 120 épocas, YOLOv26s. Falta: split train/val, semilla, versión ultralytics, hardware, augmentations → `torch.load(best.pt)['train_args']` en Kaggle. Una tarde, no más.
 
 **P1.5 🔴 E0 — exp-2 reetiquetado** [R: Baier] [dep: P1.4] — cabecera de `experiment-2-aptos/REPORT.md`: "in-distribution para v2; externo para v3 (ver E14)". `validation/README.md`, `TRIPOD-AI-mapping.md`. [DoD: ningún archivo llama "externo/OOD" a APTOS respecto a v2]
 
@@ -169,7 +169,7 @@ editadas / rechazadas por lector, κ (presencia) e IoU medio (caja) entre Almend
 - Puerta B/A (semana 4): grader AUC DDR-val ≥ 0,85 ∧ ≤ 60 ms nativo; detector v3 ≥ v2 en mAP50 medio de lesiones en DDR-det val **y** no peor en AUC imagen DDR-grading val. Si v3 falla → se publica v2 declarado (APTOS in-distribution).
 - Opcional: depositar en OSF/Zenodo con fecha (TRIPOD+AI 13c).
 
-**P1.10 🟡 Higiene** [R: Baier] — `pnpm install` + `vitest` verde; `Cargo.toml` real; `CITATION.cff` + DOI de concepto; `REFERENCES.md` (IDRiD, DDR, APTOS); `LICENSE` en Annotix (H19).
+**P1.10 ✅ Higiene — hecho 2026-10-24** (H7, H8, H9, H10, H12, H19; 6 commits en Dird, 1 en Annotix, 1 en dird_models, todo pusheado).
 
 **P1.11 🔴 Autoría y financiamiento** [R: López] — comunicar lista de 6 (§6-2); CRediT borrador; texto oficial INES-52 a VIDCA.
 
