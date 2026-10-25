@@ -6,11 +6,21 @@
       "name": "Baier Quezada, Nicolás",
       "orcid": "0000-0003-2818-0990"
     },
-    { "name": "Uribe, Vanessa" },
-    { "name": "López, Fernanda" },
-    { "name": "Almendras, Carolina" },
-    { "name": "Barrientos, Haydee" },
-    { "name": "Leiva, Cristian" }
+    {
+      "name": "Uribe, Vanessa"
+    },
+    {
+      "name": "López, Fernanda"
+    },
+    {
+      "name": "Almendras, Carolina"
+    },
+    {
+      "name": "Barrientos, Haydee"
+    },
+    {
+      "name": "Leiva, Cristian"
+    }
   ],
   "license": "AGPL-3.0-or-later",
   "upload_type": "software",
@@ -27,5 +37,24 @@
     "on-device-inference",
     "ophthalmology"
   ],
-  "language": "spa"
+  "language": "spa",
+  "related_identifiers": [
+    {
+      "identifier": "10.5281/zenodo.19666694",
+      "relation": "isSupplementedBy",
+      "resource_type": "software",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "https://github.com/Debaq/Dird",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    },
+    {
+      "identifier": "10.64898/2026.04.26.26351745",
+      "relation": "isDescribedBy",
+      "resource_type": "publication-preprint",
+      "scheme": "doi"
+    }
+  ]
 }

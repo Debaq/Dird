@@ -1,0 +1,63 @@
+cff-version: 1.2.0
+message: "If you use DIRD+ in research, please cite it using the metadata below (concept DOI, resolves to the latest release)."
+type: software
+title: "DIRD+ — Diabetic Imaging Retinopathy Detector"
+abstract: "Cross-platform desktop application (Tauri v2) for diabetic retinopathy screening support with deep learning executed entirely on-device. Research and development system; not an approved medical device."
+authors:
+  - family-names: "Baier Quezada"
+    given-names: "Nicolás"
+    orcid: "https://orcid.org/0000-0003-2818-0990"
+    affiliation: "Universidad Austral de Chile, Sede Puerto Montt"
+  - family-names: "Uribe"
+    given-names: "Vanessa"
+    affiliation: "Universidad Austral de Chile"
+  - family-names: "López"
+    given-names: "Fernanda"
+    affiliation: "Universidad Austral de Chile"
+  - family-names: "Almendras"
+    given-names: "Carolina"
+    affiliation: "Universidad Austral de Chile"
+  - family-names: "Barrientos"
+    given-names: "Haydee"
+    affiliation: "Universidad Austral de Chile"
+  - family-names: "Leiva"
+    given-names: "Cristian"
+    affiliation: "Universidad Austral de Chile"
+version: "2.2.1"
+date-released: "2026-06-24"
+license: AGPL-3.0-or-later
+repository-code: "https://github.com/Debaq/Dird"
+url: "https://debaq.github.io/Dird/"
+doi: "10.5281/zenodo.19666272"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.19666272"
+    description: "Concept DOI (all versions of the application)"
+  - type: doi
+    value: "10.5281/zenodo.20821728"
+    description: "Version DOI for v2.2.1"
+  - type: doi
+    value: "10.5281/zenodo.19666694"
+    description: "Concept DOI of the reference models (dird_models)"
+keywords:
+  - diabetic-retinopathy
+  - deep-learning
+  - medical-imaging
+  - edge-computing
+  - tauri
+  - retinal-screening
+  - ophthalmology
+references:
+  - type: software
+    title: "DIRD Models — reference detection models for DIRD+"
+    doi: "10.5281/zenodo.19666694"
+    repository-code: "https://github.com/Debaq/dird_models"
+    license: AGPL-3.0-or-later
+  - type: article
+    title: "Annotix: open-source desktop platform for ML dataset annotation, training and collaboration"
+    journal: "Computers"
+    year: 2026
+    volume: 15
+    issue: 8
+    start: 496
+    doi: "10.3390/computers15080496"
