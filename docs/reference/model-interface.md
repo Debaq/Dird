@@ -59,7 +59,7 @@ Input tensor name should be `images` (default) or declared in the model card (se
 
 Before invoking the model, DIRD+ applies the following preprocessing:
 
-1. **Resize** the input image to 640×640 using bilinear interpolation, preserving aspect ratio with letterbox padding (gray border, value 114/255).
+1. **Resize** the input image directly to 640×640 (bilinear; the canvas `drawImage` path in the desktop runtime). **No letterbox padding is applied**: the aspect ratio is not preserved, so a non-square fundus photograph is stretched. The reference models were trained and validated with this same direct resize (see `validation/`), and any plug-in model must be trained or evaluated with it too. A `letterbox: true` declaration in the model card is reserved for a future runtime version and is currently ignored.
 2. **Convert** to RGB (if input is grayscale, replicate the single channel; if BGR, swap).
 3. **Normalize** pixel values: divide by 255.0 so that values lie in [0.0, 1.0]. **No mean subtraction or ImageNet normalization** is applied by default.
 4. **Transpose** to NCHW (channels first).
@@ -69,7 +69,7 @@ Models trained with a different normalization scheme (e.g., ImageNet mean/std) m
 
 ### 3.3 Coordinate system
 
-After resize+letterbox, all coordinates produced by the model are in the **640×640 letterboxed image space**. DIRD+ transforms them back to original-image coordinates for display.
+After the direct resize, all coordinates produced by the model are in the **640×640 letterboxed image space**. DIRD+ transforms them back to original-image coordinates for display.
 
 ---
 
@@ -175,8 +175,7 @@ The model card declares all metadata needed by DIRD+ to load and use the model c
     "dtype": "float32",
     "preprocessing": {
       "resize_to": [640, 640],
-      "letterbox": true,
-      "letterbox_color": [114, 114, 114],
+      "letterbox": false,
       "normalize": "divide_by_255",
       "color_order": "RGB"
     }
@@ -268,7 +267,7 @@ A minimal `my-model.json` for a model trained on a custom 2-class detector (back
     "dtype": "float32",
     "preprocessing": {
       "resize_to": [640, 640],
-      "letterbox": true,
+      "letterbox": false,
       "normalize": "divide_by_255",
       "color_order": "RGB"
     }
@@ -308,6 +307,7 @@ python scripts/validate_model_card.py my-model.onnx my-model.json
 | Version | Changes |
 |---------|---------|
 | 2.0     | Initial public specification (DIRD+ v2.0 release). |
+| 2.0.1   | §3.2 corrected to match the implementation: direct resize, no letterbox (2026-10-24). |
 
 Future versions of this specification will preserve backwards compatibility for at least one DIRD+ major version. Breaking changes will be announced with at least 6 months of notice.
 
